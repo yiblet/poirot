@@ -58,9 +58,9 @@ fn relocated_parts_alternate_prefix_and_skipped_scope_execute_correctly() {
     assert_eq!(report.sheets().len(), 1);
     let sheet = &report.sheets()[0];
     assert_eq!(sheet.name(), "Values");
-    let cell = sheet.get("A1".parse().unwrap()).unwrap();
-    assert_eq!(cell.value, poirot::model::CellValue::Number(17.0));
-    assert_eq!(cell.style.number_format.as_deref(), Some("0.000"));
+    let cell = sheet.get("A1").unwrap();
+    assert_eq!(cell.unwrap().value, poirot::model::CellValue::Number(17.0));
+    assert_eq!(cell.unwrap().style.number_format.as_deref(), Some("0.000"));
     assert_eq!(report.named_ranges.len(), 1);
     assert_eq!(report.named_ranges[0].sheet_scope, Some(0));
     assert!(
@@ -99,7 +99,7 @@ fn dangling_duplicate_wrong_namespace_and_external_required_relationships_fail_t
     p.parts.remove("data/cells.xml");
     assert!(matches!(
         p.plan(),
-        Err(IoError::Opc(OpcError::MissingPart(_)))
+        Err(IoError::Opc(OpcError::MissingPart {path})) if path == "data/cells.xml"
     ));
     let mut p = inventory();
     let rels = p.parts.get_mut("documents/_rels/book.xml.rels").unwrap();
@@ -109,7 +109,7 @@ fn dangling_duplicate_wrong_namespace_and_external_required_relationships_fail_t
         .into_bytes();
     assert!(matches!(
         p.plan(),
-        Err(IoError::Opc(OpcError::DuplicateIdentity(_)))
+        Err(IoError::Opc(OpcError::DuplicateRelationship {path,id})) if path == "documents/_rels/book.xml.rels" && id == "cells"
     ));
     let mut p = inventory();
     let workbook = p.parts.get_mut("documents/book.xml").unwrap();
@@ -122,7 +122,7 @@ fn dangling_duplicate_wrong_namespace_and_external_required_relationships_fail_t
         .into_bytes();
     assert!(matches!(
         p.plan(),
-        Err(IoError::Opc(OpcError::SheetMismatch(_)))
+        Err(IoError::Opc(OpcError::MissingSheetRelationship {name})) if name == "Chart"
     ));
     let mut p = inventory();
     let root = p.parts.get_mut("_rels/.rels").unwrap();
@@ -132,7 +132,7 @@ fn dangling_duplicate_wrong_namespace_and_external_required_relationships_fail_t
         .into_bytes();
     assert!(matches!(
         p.plan(),
-        Err(IoError::Opc(OpcError::ExternalRelationship(_)))
+        Err(IoError::Opc(OpcError::ExternalRelationship {owner: None,id})) if id == "doc"
     ));
 }
 
@@ -158,17 +158,17 @@ fn missing_sheet_relationship_and_wrong_relationship_type_fail_before_backend() 
         .into_bytes();
     assert!(matches!(
         p.plan(),
-        Err(IoError::Opc(OpcError::InvalidRelationship(_)))
+        Err(IoError::Opc(OpcError::MissingRelationship {id})) if id == "absent"
     ));
     let mut p = inventory();
     let rels = p.parts.get_mut("documents/_rels/book.xml.rels").unwrap();
     *rels = String::from_utf8(rels.clone())
         .unwrap()
-        .replace("relationships/worksheet", "relationships/styles")
+        .replace("relationships/worksheet", "relationships/theme")
         .into_bytes();
     assert!(matches!(
         p.plan(),
-        Err(IoError::Opc(OpcError::InvalidRelationship(_)))
+        Err(IoError::Opc(OpcError::InvalidSheetRelationshipType {name,kind})) if name == "Values" && kind == "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme"
     ));
 }
 
@@ -180,22 +180,18 @@ fn external_link_policy_is_inspectable_and_executed_by_byte_adapter() {
     assert!(p.plan().unwrap().warnings.iter().any(|w| w.kind
         == poirot::model::ImportDiagnosticKind::ExternalLink
         && w.detail.contains("external relationship")));
-    let policy = poirot_io::opc::OpcImportPolicy {
-        external_relationships: poirot_io::opc::ExternalRelationshipPolicy::Reject,
+    let policy = poirot::files::OpcImportPolicy {
+        external_relationships: poirot::files::ExternalRelationshipPolicy::Reject,
     };
     assert!(matches!(
         p.plan_with_policy(policy),
-        Err(IoError::Opc(OpcError::ExternalRelationship(_)))
+        Err(IoError::Opc(OpcError::ExternalRelationship {owner: Some(owner),id})) if owner == "documents/book.xml" && id == "link"
     ));
     assert!(matches!(
-        poirot_io::read_workbook_bytes_with_options::<poirot::model::Workbook>(
-            &bytes(p),
-            poirot_io::ReadOptions {
-                xlsx_policy: policy,
-                ..poirot_io::ReadOptions::default()
-            }
-        ),
-        Err(IoError::Opc(OpcError::ExternalRelationship(_)))
+        poirot::Workbook::load()
+            .xlsx_policy(policy)
+            .from_bytes(&bytes(p)),
+        Err(IoError::Opc(OpcError::ExternalRelationship {owner: Some(owner),id})) if owner == "documents/book.xml" && id == "link"
     ));
 }
 
@@ -223,9 +219,9 @@ fn legal_percent_encoded_parts_use_raw_zip_names_through_backend() {
     assert_eq!(plan.workbook_part, "documents/book%20name.xml");
     assert_eq!(plan.sheets[1].part, "data/cells%23%E2%82%AC.xml");
     let report = read_workbook_bytes::<poirot::model::Workbook>(&bytes(p)).unwrap();
-    let cell = report.sheets()[0].get("A1".parse().unwrap()).unwrap();
-    assert_eq!(cell.value, poirot::model::CellValue::Number(17.0));
-    assert_eq!(cell.style.number_format.as_deref(), Some("0.000"));
+    let cell = report.sheets()[0].get("A1").unwrap();
+    assert_eq!(cell.unwrap().value, poirot::model::CellValue::Number(17.0));
+    assert_eq!(cell.unwrap().style.number_format.as_deref(), Some("0.000"));
     assert_eq!(report.named_ranges[0].sheet_scope, Some(0));
 }
 
@@ -274,7 +270,7 @@ fn encoded_uri_boundaries_are_checked_without_decoding_or_fallback() {
     let cell_xml = p.parts.remove("data/cells.xml").unwrap();
     p.parts.insert("data/cells name.xml".into(), cell_xml);
     assert!(
-        matches!(p.plan(), Err(IoError::Opc(OpcError::MissingPart(path))) if path == "data/cells%20name.xml")
+        matches!(p.plan(), Err(IoError::Opc(OpcError::MissingPart {path})) if path == "data/cells%20name.xml")
     );
 }
 
@@ -290,7 +286,7 @@ fn identifier_plan_uses_shared_policy_and_preserves_raw_names() {
         .insert("documents/book.xml".into(), xml.into_bytes());
     assert!(matches!(
         package.plan(),
-        Err(IoError::Opc(OpcError::DuplicateIdentity(_)))
+        Err(IoError::Opc(OpcError::DuplicateIdentity {identity})) if identity == "ä"
     ));
     let xml = String::from_utf8(package.parts["documents/book.xml"].clone())
         .unwrap()

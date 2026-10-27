@@ -1,11 +1,11 @@
 use crate::eval::compile;
 use crate::eval::config::RunConfiguration;
 use crate::eval::entry::{run_formula_with_configuration, run_plan_with_configuration};
-use crate::eval::limits::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::limits::{EvaluationBudgets, EvaluationOutcome};
 use crate::eval::values::value::VALUE_ERROR;
 use crate::model::CellError::{Div0, Num};
 use crate::model::CellValue::{Boolean, Error, Number, Text};
-use crate::model::{CellAddress, CellValue, KnownSourceException, Workbook};
+use crate::model::{CellAddress, CellValue, Workbook};
 
 fn book() -> Workbook {
     let mut w = Workbook::new();
@@ -152,10 +152,7 @@ fn special_operand_handlers_follow_source_type_and_error_order() {
         assert_eq!(bits(value(formula(&w, f, &c))), expected.to_bits());
     }
     for f in ["0<A1", "B1<A1"] {
-        assert!(
-            matches!(formula(&w,f,&c),EvaluationOutcome::Aborted {failure:EvaluationFailure::KnownSourceException {
-            exception:KnownSourceException::SpecialDoubleComparison {argument:1,bits},..},..} if bits.bits()==f64::NEG_INFINITY.to_bits())
-        );
+        assert_eq!(value(formula(&w, f, &c)), Error(Num));
     }
     assert_eq!(value(formula(&w, "A1<TRUE", &c)), Boolean(true));
     assert_eq!(value(formula(&w, "TRUE>A1", &c)), Boolean(true));

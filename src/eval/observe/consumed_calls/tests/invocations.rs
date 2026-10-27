@@ -4,7 +4,7 @@ use crate::eval::compile::bound::Expression;
 use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::registry::FunctionId;
-use crate::eval::limits::{BudgetKind, EvaluationFailure};
+use crate::eval::limits::{BudgetKind, EvaluationError};
 use crate::eval::session::{FormulaExecution, Session};
 use crate::model::CellValue;
 use poirot_parsing::formula::Expr as Syntax;
@@ -297,7 +297,7 @@ fn exact_alias_lookup_metadata_and_stale_namespace_are_preserved() {
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     session.sources.extensions = Some(&registry);
     session.ports.builtin_invocation_observer = Some(&mut observer);
-    assert_eq!(
+    assert!(matches!(
         FormulaExecution::new(&mut session).bound_at(
             EvaluationTarget {
                 sheet: 0,
@@ -305,8 +305,8 @@ fn exact_alias_lookup_metadata_and_stale_namespace_are_preserved() {
             },
             &first
         ),
-        Err(EvaluationFailure::StalePlan)
-    );
+        Err(EvaluationError::StalePlan)
+    ));
     assert_eq!(
         FormulaExecution::new(&mut session)
             .bound_at(
@@ -428,7 +428,7 @@ fn extension_execution_and_external_cache_values_do_not_fabricate_builtin_entrie
         fn cached_cell(
             &mut self,
             _target: EvaluationTarget,
-        ) -> Result<Option<std::sync::Arc<CellValue>>, EvaluationFailure> {
+        ) -> Result<Option<std::sync::Arc<CellValue>>, EvaluationError> {
             Ok(Some(std::sync::Arc::new(CellValue::Number(19.))))
         }
     }

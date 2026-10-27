@@ -154,27 +154,13 @@ fn direct_overlay_arrays_source_edits_and_snapshot_recovery() {
     );
 }
 #[test]
-fn host_owns_lazy_calls_profile_spills_and_resource_failures() {
+fn host_owns_lazy_calls_spills_and_resource_failures() {
     let mut b = book();
     near(
         call(&b, "IF(FALSE,GAMMA.DIST(10000000000,5000000000,2,TRUE),7)"),
         7.,
     );
-    let config = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    assert!(matches!(
-        run_formula_with_configuration(
-            &b,
-            0,
-            target("Z100").address,
-            "PHI(0)",
-            &config,
-            Default::default()
-        ),
-        EvaluationOutcome::Complete {
-            value: CellValue::Error(CellError::Name),
-            ..
-        }
-    ));
+
     for f in [
         "IFERROR(CHISQ.DIST(10000000000,10000000000,TRUE),99)",
         "IFERROR(HYPGEOM.DIST(100,1000000,50000000,100000000,TRUE),99)",

@@ -10,15 +10,12 @@ use poirot::model::{CellError, CellValue, Workbook};
 fn workbook() -> Workbook {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 2.).unwrap();
-    sheet.set_value("A2".parse().unwrap(), 3.).unwrap();
+    sheet.set_value("A1", 2.).unwrap();
+    sheet.set_value("A2", 3.).unwrap();
     sheet
-        .set_value(
-            "A3".parse().unwrap(),
-            CellValue::Error(CellError::GettingData),
-        )
+        .set_value("A3", CellValue::Error(CellError::GettingData))
         .unwrap();
-    sheet.set_formula("A4".parse().unwrap(), "RAND()").unwrap();
+    sheet.set_formula("A4", "RAND()").unwrap();
     workbook
 }
 
@@ -99,7 +96,7 @@ fn scalar_arity_rejects_without_forcing_invalid_operands() {
 }
 
 #[test]
-fn error_handlers_do_not_catch_operational_budget_failures() {
+fn error_handlers_do_not_catch_operational_budget_errors() {
     for formula in [
         "IFERROR(NOT(SUM(SEQUENCE(100))),7)",
         "IFNA(SUM(SEQUENCE(100)),7)",
@@ -222,8 +219,8 @@ fn recovery_overlay_tracks_source_and_selected_fallback_members() {
 fn recovery_skips_uncaught_fallback_reference_cells() {
     let mut book = workbook();
     let sheet = book.sheet_mut(0).unwrap();
-    sheet.set_value("B1".parse().unwrap(), 7.).unwrap();
-    sheet.set_formula("B2".parse().unwrap(), "RAND()").unwrap();
+    sheet.set_value("B1", 7.).unwrap();
+    sheet.set_formula("B2", "RAND()").unwrap();
     let outcome = run_formula(
         &book,
         0,
@@ -272,8 +269,7 @@ fn late_variadic_probe_expansion_replicates_settled_coordinates() {
     // Existing selection probes establish singleton-axis broadcasting and
     // first-match order. The sums below are hand calculated from those rules:
     // IFS/SWITCH yield {2,3;2,5}; CHOOSE yields {2,3;4,5}.
-    let configuration = poirot::eval::RunConfiguration::default()
-        .with_builtin_policy(poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation);
+    let configuration = poirot::eval::RunConfiguration::default();
     for (formula, expected) in [
         ("SUM(IFS({TRUE,FALSE},2,{TRUE;FALSE},{3;4},TRUE,5))", 12.),
         ("SUM(SWITCH({1,2},1,2,{2;3},{3;4},5))", 12.),

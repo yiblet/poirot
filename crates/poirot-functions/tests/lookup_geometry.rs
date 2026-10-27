@@ -1,4 +1,6 @@
-use poirot_functions::lookup::{Array, Error, Reference, ReferenceKind, Scalar, SignedReference};
+use poirot_functions::lookup::{
+    Array, LookupValueError, Reference, ReferenceKind, Scalar, SignedReference,
+};
 
 #[test]
 fn ordinary_reference_rejects_reversed_and_off_grid_bounds() {
@@ -14,7 +16,7 @@ fn ordinary_reference_rejects_reversed_and_off_grid_bounds() {
     ] {
         assert_eq!(
             Reference::new(ReferenceKind::Area, None, sheets, rows, cols),
-            Err(Error::Ref.into())
+            Err(LookupValueError::Ref.into())
         );
     }
 }
@@ -110,7 +112,10 @@ fn offset_axes_follow_documented_modern_grid_without_short_narrowing() {
         (1, i64::MAX, 1, 1_048_576),
         (0, i64::MIN, -2, 1_048_576),
     ] {
-        assert_eq!(offset_extent(start, delta, length, limit), Err(Error::Ref));
+        assert_eq!(
+            offset_extent(start, delta, length, limit),
+            Err(LookupValueError::Ref)
+        );
     }
 }
 
@@ -120,6 +125,12 @@ fn negative_offset_extents_normalize_without_original_endpoint_quirks() {
     use poirot_functions::lookup::offset_extent;
     assert_eq!(offset_extent(4, 0, -2, 1_048_576), Ok((3, 4)));
     assert_eq!(offset_extent(3, 0, -2, 16_384), Ok((2, 3)));
-    assert_eq!(offset_extent(0, 0, -2, 1_048_576), Err(Error::Ref));
-    assert_eq!(offset_extent(4, 0, i64::MIN, 1_048_576), Err(Error::Ref));
+    assert_eq!(
+        offset_extent(0, 0, -2, 1_048_576),
+        Err(LookupValueError::Ref)
+    );
+    assert_eq!(
+        offset_extent(4, 0, i64::MIN, 1_048_576),
+        Err(LookupValueError::Ref)
+    );
 }

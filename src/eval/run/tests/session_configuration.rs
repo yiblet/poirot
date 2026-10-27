@@ -1,19 +1,17 @@
 //! Public constructor contracts for borrowed execution settings.
 use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
 use crate::eval::config::{
-    ArrayResultPolicy, BuiltinSemanticsPolicy, CurrencyContext, EvaluationInputs,
-    FormattingConfiguration, RunConfiguration,
+    ArrayResultPolicy, CurrencyContext, EvaluationInputs, FormattingConfiguration, RunConfiguration,
 };
 use crate::eval::config::{EvaluationContext, EvaluationPolicy};
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::extensions::*;
 use crate::eval::functions::registry::Arity;
-use crate::eval::limits::{BudgetFailure, BudgetKind, EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{BudgetError, BudgetKind, EvaluationBudgets, EvaluationError};
 use crate::eval::overlay::{Evaluation, Overlay};
 use crate::eval::run::evaluation_run::EvaluationRun;
 use crate::eval::run::workbook_view::WorkbookView;
 use crate::model::{CellValue, Workbook};
-use poirot_functions::text_units::{SourceVersion as TextSourceVersion, TextSemanticsPolicy};
 use poirot_parsing::number::NumberLocale;
 
 fn at(cell: &str) -> EvaluationTarget {
@@ -76,7 +74,7 @@ fn formatting() -> FormattingConfiguration {
 #[test]
 fn configured_extensions_retain_borrowed_settings_and_provider_binding() {
     // Existing execution_configuration and text_semantics061 contracts: explicit
-    // currency, comma decimal parsing, and POI UTF-16 LEN are execution settings.
+    // currency, comma decimal parsing, and documented pair-counting LEN are execution settings.
     let book = workbook(&[
         ("A1", "CUSTOM(DOLLAR(1))"),
         ("B1", "CUSTOM(\"1,234\"*1)"),
@@ -86,10 +84,7 @@ fn configured_extensions_retain_borrowed_settings_and_provider_binding() {
     let policy = PreparationPolicy::with_extensions(Default::default(), &registry);
     let plan = FormulaCompiler::new().compile_workbook_with_extensions(&book, &policy, &registry);
     let configuration = RunConfiguration::new(EvaluationInputs::default(), formatting())
-        .with_number_locale(NumberLocale::new(",", Some("."), Some("EUR"), "%", ":").unwrap())
-        .with_text_policy(TextSemanticsPolicy {
-            source: TextSourceVersion::Poi7321209,
-        });
+        .with_number_locale(NumberLocale::new(",", Some("."), Some("EUR"), "%", ":").unwrap());
     let mut run = EvaluationRun::new_with_configuration_and_extensions(
         WorkbookView::new(&book, &plan, &policy).unwrap(),
         &configuration,
@@ -100,7 +95,7 @@ fn configured_extensions_retain_borrowed_settings_and_provider_binding() {
     for (cell, expected) in [
         ("A1", CellValue::Text("USD 1.00".into())),
         ("B1", CellValue::Number(1.234)),
-        ("C1", CellValue::Number(2.)),
+        ("C1", CellValue::Number(1.)),
     ] {
         assert_eq!(run.evaluate_cell(at(cell)).unwrap(), expected);
     }
@@ -137,14 +132,14 @@ fn every_checked_constructor_validates_budgets_before_registry_identity() {
             if budgets.depth == 129 {
                 assert!(matches!(
                     failure,
-                    EvaluationFailure::Budget(BudgetFailure {
+                    EvaluationError::Budget(BudgetError {
                         kind: BudgetKind::Configuration,
                         requested: 129,
                         ..
                     })
                 ));
             } else {
-                assert_eq!(failure, EvaluationFailure::StalePlan);
+                assert!(matches!(failure, EvaluationError::StalePlan));
             }
         }
     }
@@ -175,11 +170,8 @@ fn direct_and_overlay_combine_context_settings_with_workspace_policies() {
         ..Default::default()
     };
     let policy = EvaluationPolicy {
-        builtin: BuiltinSemanticsPolicy::PinnedPoi,
         arrays: ArrayResultPolicy::ScalarIntersection,
-        text: TextSemanticsPolicy {
-            source: TextSourceVersion::Poi7321209,
-        },
+
         ..Default::default()
     };
     let mut direct = Evaluation::with_workbook(&book)
@@ -194,7 +186,7 @@ fn direct_and_overlay_combine_context_settings_with_workspace_policies() {
     for (cell, expected) in [
         ("A1", CellValue::Text("USD 1.00".into())),
         ("B1", CellValue::Number(1.234)),
-        ("C1", CellValue::Number(2.)),
+        ("C1", CellValue::Number(1.)),
         // Array indices select each position: {3,5,7}, whose sum is 15.
         // https://support.microsoft.com/en-us/excel/functions/choose-function
         ("D1", CellValue::Number(15.)),

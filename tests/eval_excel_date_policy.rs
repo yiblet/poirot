@@ -1,20 +1,15 @@
 use poirot::eval::{
-    BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationOutcome, RunConfiguration,
-    run_formula_with_configuration,
+    EvaluationBudgets, EvaluationOutcome, RunConfiguration, run_formula_with_configuration,
 };
 use poirot::model::{CellAddress, CellError, CellValue, DateSystem, Workbook};
 
 fn run(
     w: &Workbook,
     source: &str,
-    excel: bool,
+    _excel: bool,
     budgets: EvaluationBudgets,
 ) -> EvaluationOutcome<CellValue> {
-    let config = RunConfiguration::default().with_builtin_policy(if excel {
-        BuiltinSemanticsPolicy::ExcelDocumentation
-    } else {
-        BuiltinSemanticsPolicy::PinnedPoi
-    });
+    let config = RunConfiguration::default();
     run_formula_with_configuration(
         w,
         0,
@@ -411,10 +406,7 @@ fn date_argument_requests_preserve_context_and_error_precedence() {
     // independently establish these admission results. Modern numeric arguments
     // share their numeric and calendar continuation.
     let mut w = book(DateSystem::Excel1900);
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("B1".parse().unwrap(), "1/2/2020")
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("B1", "1/2/2020").unwrap();
     for (formula, expected) in [
         ("VALUE(\"1/2/2020\")", 43832.),
         ("ABS(\"01/02/2020\")", 43832.),
@@ -662,16 +654,13 @@ fn datedif_preserves_reference_inputs_policies_and_operational_limits() {
         let mut w = book(system);
         w.sheet_mut(0)
             .unwrap()
-            .set_value("B1".parse().unwrap(), "2020-01-31")
+            .set_value("B1", "2020-01-31")
             .unwrap();
         w.sheet_mut(0)
             .unwrap()
-            .set_value("B2".parse().unwrap(), "2024-03-01")
+            .set_value("B2", "2024-03-01")
             .unwrap();
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value("B3".parse().unwrap(), "md")
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value("B3", "md").unwrap();
         {
             let excel = true;
             assert_eq!(

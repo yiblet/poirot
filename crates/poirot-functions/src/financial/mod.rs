@@ -13,6 +13,14 @@
 //! [`fixed`](crate::financial::fixed) and [`dollar`](crate::financial::dollar) format financial text. They are separate from cell display
 //! formatting in [format](https://docs.rs/poirot-functions/latest/poirot_functions/format).
 
+mod financial_calculation_error;
+
+pub use financial_calculation_error::FinancialCalculationError;
+
+mod financial_error;
+
+pub use financial_error::FinancialError;
+
 /// Fixed-rate historical euro currency conversion.
 pub mod euro;
 /// Modern cash-flow and depreciation calculations.
@@ -34,16 +42,6 @@ mod security_tests;
 // Algorithms are based on pinned POI FinanceLib, Finance, Irr, Mirr and Rate;
 // formatting follows ExcelArithmetic's 15 significant decimal digits.
 
-/// Spreadsheet failures produced by financial kernels after adapter coercion.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum FinancialError {
-    /// An operand cannot satisfy the function's value contract.
-    Value,
-    /// Numeric domain, overflow, or convergence failure.
-    Num,
-    /// A financial expression has a zero denominator.
-    DivZero,
-}
 /// Financial kernel result, with spreadsheet value/domain failures in [`FinancialError`].
 pub type Result<T> = std::result::Result<T, FinancialError>;
 fn checked(x: f64) -> Result<f64> {

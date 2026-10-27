@@ -1,6 +1,6 @@
 //! Calculated value with optional detailed profiling.
 
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 
 /// Completion with optional profiling; absence is distinct from a zero-work report.
 ///
@@ -8,7 +8,7 @@ use crate::eval::limits::EvaluationFailure;
 /// use poirot::eval::{EvaluationContext, overlay::Evaluation};
 /// use poirot::model::Workbook;
 /// let mut book = Workbook::new();
-/// book.add_sheet("Data")?.set_formula("A1".parse()?, "2*3")?;
+/// book.add_sheet("Data")?.set_formula("A1", "2*3")?;
 /// let mut run = Evaluation::with_workbook(&book).build_calculation(EvaluationContext::default())?;
 /// run.all()?;
 /// let report = run.finish();
@@ -20,7 +20,7 @@ use crate::eval::limits::EvaluationFailure;
 #[derive(Clone, Debug)]
 pub struct EvaluationReport<T> {
     /// Calculated result or an operational refusal, never a worksheet error conversion.
-    pub result: Result<T, EvaluationFailure>,
+    pub result: Result<T, EvaluationError>,
     /// Detailed category counters, present only when explicitly requested.
     pub usage: Option<crate::eval::limits::EvaluationUsage>,
     /// Detailed execution/reuse counters, present only when explicitly requested.

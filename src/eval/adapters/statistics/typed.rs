@@ -4,13 +4,13 @@ use crate::eval::adapters::elementwise::{
     WholeCollection,
     collections::{self, Admission, CollectionKernel},
 };
-use crate::eval::adapters::failure::operational_only;
+use crate::eval::adapters::operational_only::operational_only;
 use crate::eval::functions::registry::{FunctionId, StatisticsFunction};
 use crate::eval::host::CallHost;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::session::Session;
 use crate::eval::values::{
-    FunctionFailure, FunctionResult, VALUE_ERROR, Value, err, numeric_outcome,
+    FunctionError, FunctionResult, VALUE_ERROR, Value, err, numeric_outcome,
 };
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::{NA, Num};
@@ -20,14 +20,16 @@ use poirot_functions::statistics as domain;
 /// Map numerical computation failures without catching operational aborts.
 fn computation(
     host: &CallHost<'_, '_>,
-    failure: domain::KernelFailure<EvaluationFailure>,
-) -> FunctionFailure {
+    failure: domain::StatisticalKernelError<EvaluationError>,
+) -> FunctionError {
     match failure {
-        domain::KernelFailure::Spreadsheet(error) => error.into(),
-        domain::KernelFailure::Operational(error) => error.into(),
-        domain::KernelFailure::SourceConvergence(_) => host.unsupported(
+        domain::StatisticalKernelError::Spreadsheet(error) => error.into(),
+        domain::StatisticalKernelError::Operational(error) => error.into(),
+        domain::StatisticalKernelError::SourceConvergence(source) => host.unsupported(
             CapabilityId::FunctionAdapter,
-            "statistical numerical search did not converge",
+            crate::eval::limits::EvaluationReasonError::StatisticalConvergence(
+                std::sync::Arc::new(source),
+            ),
         ),
     }
 }
@@ -152,12 +154,8 @@ impl CollectionKernel for Aggregate {
         let values = collections::statistics(host, arguments.iter(), admission)?;
         host.charge_work((values.len() as u64).saturating_mul(16))?;
         Ok(
-            numeric_outcome::convert_checked_numeric_result(domain::aggregate_with_policy(
-                operation,
-                &values,
-                domain::SamplePolicy::ExcelDocumentation,
-            )?)
-            .into(),
+            numeric_outcome::convert_checked_numeric_result(domain::aggregate(operation, &values)?)
+                .into(),
         )
     }
 }
@@ -270,14 +268,11 @@ impl<R: OrderRoles> Kernel for Order<R> {
             .charge_work((self.values.len() as u64).saturating_mul(64))?;
         let value = match self.function {
             Large | Small => {
-                let rank = poirot_functions::coercion::compatibility::coerce_statistics_kth_rank(
-                    first,
-                    if self.function == Large {
-                        poirot_functions::coercion::compatibility::KthRankPolicy::DocumentedLarge
-                    } else {
-                        poirot_functions::coercion::compatibility::KthRankPolicy::PinnedPoi
-                    },
-                )?;
+                if self.function == Small && first < 1.0 {
+                    return Err(poirot_functions::scalar::CellError::Num.into());
+                }
+                let rank =
+                    poirot_functions::coercion::compatibility::coerce_statistics_kth_rank(first)?;
                 domain::order_statistic(&self.values, rank, self.function == Large)?
             }
             Percentile => domain::percentile(&self.values, first)?,
@@ -412,12 +407,7 @@ impl<R: PairRoles> Kernel for Paired<R> {
                 SumXMY2 => domain::PairOperation::SumXMinusYSquared,
                 _ => return Err(VALUE_ERROR.into()),
             };
-            domain::paired_with_policy(
-                operation,
-                &self.y,
-                &self.x,
-                domain::SamplePolicy::ExcelDocumentation,
-            )?
+            domain::paired(operation, &self.y, &self.x)?
         };
         Ok(numeric_outcome::convert_checked_numeric_result(value))
     }
@@ -479,7 +469,7 @@ pub(super) fn execute(
     };
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
         Err(error) => Err(operational_only(error)),
     }
 }

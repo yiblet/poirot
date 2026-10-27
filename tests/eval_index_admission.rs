@@ -14,22 +14,19 @@ fn book() -> Workbook {
     let mut w = Workbook::new();
     w.add_sheet("S").unwrap();
     for (address, value) in [("A1", 1.), ("B1", 2.), ("A2", 3.), ("B2", 4.), ("C1", 9.)] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(address.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(address, value).unwrap();
     }
     w.sheet_mut(0)
         .unwrap()
         .set_value(
-            "D1".parse().unwrap(),
+            "D1",
             CellValue::TextUtf16(ExcelText::from_units(vec![65, 0xd800])),
         )
         .unwrap();
     w
 }
 fn config() -> RunConfiguration {
-    RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
+    RunConfiguration::default()
 }
 fn value(w: &Workbook, formula: &str, config: &RunConfiguration) -> CellValue {
     match run_formula_with_configuration(
@@ -190,12 +187,11 @@ fn selected_index_results_refresh_after_source_edits() {
     ] {
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(address.parse().unwrap(), formula)
+            .set_formula(address, formula)
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&w)
         .with_policy(poirot::eval::EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .build()
@@ -250,7 +246,7 @@ fn index_resource_failures_escape_semantic_error_handlers() {
                     }
                 ),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::Budget(_),
+                    failure: EvaluationError::Budget(_),
                     ..
                 }
             ),
@@ -302,12 +298,9 @@ fn index_array_slices_publish_actual_dynamic_footprints() {
 }
 
 #[test]
-fn intact_index_projection_uses_modern_publication_under_both_policy_labels() {
-    for policy in [
-        BuiltinSemanticsPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-    ] {
-        let config = RunConfiguration::default().with_builtin_policy(policy);
+fn intact_index_projection_uses_modern_publication_under_documented_rules() {
+    {
+        let config = RunConfiguration::default();
         let w = book();
         for (formula, expected) in [
             ("INDEX((A1:B2,C1:D2),1,1)", CellValue::Number(1.)),
@@ -317,11 +310,7 @@ fn intact_index_projection_uses_modern_publication_under_both_policy_labels() {
             ("SUM(INDEX({1,2;3,4},2,0))", CellValue::Number(7.)),
             ("ISREF(INDEX(A1:B2,2,2))", CellValue::Boolean(true)),
         ] {
-            assert_eq!(
-                value(&w, formula, &config),
-                expected,
-                "{policy:?}: {formula}"
-            );
+            assert_eq!(value(&w, formula, &config), expected, "{formula}");
         }
     }
 }

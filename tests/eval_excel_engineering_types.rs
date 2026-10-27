@@ -1,6 +1,6 @@
 use poirot::eval::{
-    BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationFailure, EvaluationOutcome,
-    RunConfiguration, TextSemanticsPolicy, TextSourceVersion, run_formula_with_configuration,
+    EvaluationBudgets, EvaluationError, EvaluationOutcome, RunConfiguration,
+    run_formula_with_configuration,
 };
 use poirot::model::{CellAddress, CellError, CellValue, ExcelText, Workbook};
 
@@ -17,10 +17,7 @@ fn book() -> Workbook {
         ("A4", CellValue::Number(0.)),
         ("A5", CellValue::Error(CellError::NA)),
     ] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(address.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(address, value).unwrap();
     }
     w
 }
@@ -45,7 +42,7 @@ fn value(formula: &str, config: &RunConfiguration) -> CellValue {
     }
 }
 fn excel() -> RunConfiguration {
-    RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
+    RunConfiguration::default()
 }
 
 #[test]
@@ -76,13 +73,8 @@ fn numeric_results_flow_through_predicates_references_and_arithmetic() {
 
 #[test]
 fn code_uses_exact_first_unit_independently_of_text_policy() {
-    for source in [
-        TextSourceVersion::Poi7321209,
-        TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-        TextSourceVersion::ExcelCompatibilityV2Unverified,
-        TextSourceVersion::ExcelCompatibilityV2Documented,
-    ] {
-        let config = excel().with_text_policy(TextSemanticsPolicy { source });
+    {
+        let config = excel();
         assert_eq!(value("CODE(A1)", &config), CellValue::Number(65.));
         assert_eq!(value("CODE(123)", &config), CellValue::Number(49.));
         for formula in [r#"IFERROR(CODE("é"),7)"#, r#"CODE("😀")"#] {
@@ -90,11 +82,11 @@ fn code_uses_exact_first_unit_independently_of_text_policy() {
                 matches!(
                     run(formula, &config, EvaluationBudgets::default()),
                     EvaluationOutcome::Aborted {
-                        failure: EvaluationFailure::UnsupportedCapability { .. },
+                        failure: EvaluationError::UnsupportedCapability { .. },
                         ..
                     }
                 ),
-                "{source:?}: {formula}"
+                "{formula}"
             );
         }
     }
@@ -144,7 +136,7 @@ fn budgets_cannot_be_masked_by_iferror() {
                     }
                 ),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::Budget(_),
+                    failure: EvaluationError::Budget(_),
                     ..
                 }
             ),
@@ -161,7 +153,7 @@ fn budgets_cannot_be_masked_by_iferror() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -219,7 +211,7 @@ fn complex_reference_origins_and_utf16_failures_preserve_admission() {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_value(address.parse().unwrap(), input)
+            .set_value(address, input)
             .unwrap();
     }
     for (formula, expected) in [
@@ -247,7 +239,7 @@ fn complex_reference_origins_and_utf16_failures_preserve_admission() {
             matches!(
                 run(formula, &excel(), EvaluationBudgets::default()),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability { .. },
+                    failure: EvaluationError::UnsupportedCapability { .. },
                     ..
                 }
             ),

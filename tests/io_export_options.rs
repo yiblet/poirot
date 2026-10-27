@@ -10,10 +10,7 @@ fn plan_is_pure_borrowed_and_wrapper_content_matches_except_creation_clock() {
     workbook
         .add_sheet("Data")
         .unwrap()
-        .set(
-            "A1".parse().unwrap(),
-            Cell::new(CellValue::Text("payload".into())),
-        )
+        .set("A1", Cell::new(CellValue::Text("payload".into())))
         .unwrap();
     let before = format!("{workbook:?}");
     let plan = plan_xlsx_export(&workbook, WriteOptions::default()).unwrap();
@@ -61,11 +58,7 @@ fn typed_cache_patch_is_counted_before_allocation_and_output() {
     workbook
         .add_sheet("Data")
         .unwrap()
-        .set_formula_with_cached_value(
-            "A1".parse().unwrap(),
-            "1",
-            CellValue::Text("&".repeat(4000)),
-        )
+        .set_formula_with_cached_value("A1", "1", CellValue::Text("&".repeat(4000)))
         .unwrap();
     let options = WriteOptions {
         max_zip_entry_bytes: 30_000,
@@ -83,7 +76,7 @@ fn typed_cache_patch_is_counted_before_allocation_and_output() {
     )
     .unwrap_err();
     assert!(
-        matches!(failure, IoError::Limit(ref message) if message.contains("before allocation"))
+        matches!(failure, IoError::Limit(poirot_io::ExportLimitError::PackageBytes {entry_bytes,entry_limit:10_000,total_bytes,total_limit}) if entry_bytes > 10_000 && total_bytes >= entry_bytes && total_limit == options.max_zip_total_bytes)
     );
     assert!(matches!(
         write_xlsx_to_buffer_with_options(
@@ -98,7 +91,7 @@ fn typed_cache_patch_is_counted_before_allocation_and_output() {
 }
 
 /// Exercises the 32 MiB per-entry limit using typed formula caches.
-/// Run explicitly: `cargo test -p poirot-io --test export_options -- --ignored`.
+/// Run explicitly: `cargo test --test integration adequate_writer_budget -- --ignored`.
 #[test]
 #[ignore = "large workbook resource profile; run explicitly"]
 fn adequate_writer_budget_crosses_former_hidden_entry_threshold() {
@@ -227,24 +220,37 @@ fn styled_grid(rows: u32, cols: u32) -> Workbook {
     workbook
 }
 
-#[test]
-fn large_styled_workbook_exports_and_round_trips_without_a_hidden_cap() {
-    // rxls 0.1.4 charged at least 512 B per cell plus 1 KiB per styled cell
-    // against a fixed 256 MiB cap (write/validate.rs estimated_output_size), so
-    // 180,000 styled cells were refused although the real package is small.
-    let workbook = styled_grid(600, 300);
+/// Verify styles, literals and formula caches survive an XLSX round trip.
+fn assert_styled_round_trip(rows: u32, cols: u32) {
+    let workbook = styled_grid(rows, cols);
     let bytes = write_xlsx_to_buffer_with_options(&workbook, WriteOptions::default()).unwrap();
     assert!(bytes.len() < 4 * 1024 * 1024, "{}", bytes.len());
     let restored = poirot_io::read_workbook_bytes::<Workbook>(&bytes).unwrap();
     let (source, restored) = (workbook.sheet(0).unwrap(), restored.sheet(0).unwrap());
     assert_eq!(restored.name(), "Model");
-    assert_eq!(restored.cells().len(), 180_000);
+    assert_eq!(restored.cells().len(), (rows * cols) as usize);
     assert!(source.cells() == restored.cells());
 }
 
 #[test]
+fn styled_workbook_exports_and_round_trips() {
+    assert_styled_round_trip(4, 3);
+}
+
+#[test]
+#[ignore = "180,000-cell export resource profile; run explicitly"]
+fn large_styled_workbook_exports_and_round_trips_without_a_hidden_cap() {
+    // rxls 0.1.4 charged at least 512 B per cell plus 1 KiB per styled cell
+    // against a fixed 256 MiB cap (write/validate.rs estimated_output_size), so
+    // 180,000 styled cells were refused although the real package is small.
+    assert_styled_round_trip(600, 300);
+}
+
+#[test]
 fn write_options_still_refuse_oversize_output_before_returning_bytes() {
-    let workbook = styled_grid(200, 30);
+    // Keep the final package larger than the transient writer package so the
+    // exact output-byte limit below also admits the intermediate package.
+    let workbook = styled_grid(20, 30);
     let unrestricted = write_xlsx_to_buffer_with_options(&workbook, WriteOptions::default())
         .unwrap()
         .len() as u64;
@@ -254,11 +260,11 @@ fn write_options_still_refuse_oversize_output_before_returning_bytes() {
             ..WriteOptions::default()
         },
         WriteOptions {
-            max_zip_entry_bytes: 64 * 1024,
+            max_zip_entry_bytes: 256,
             ..WriteOptions::default()
         },
         WriteOptions {
-            max_zip_total_bytes: 64 * 1024,
+            max_zip_total_bytes: 512,
             ..WriteOptions::default()
         },
         WriteOptions {

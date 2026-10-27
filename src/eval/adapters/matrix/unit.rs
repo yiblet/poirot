@@ -1,10 +1,10 @@
 //! Identity-array generation through the independent matrix kernel.
 use crate::eval::adapters::elementwise::{FixedScalar, NumericParameter, matrices};
-use crate::eval::adapters::failure::operational_only;
+use crate::eval::adapters::operational_only::operational_only;
 use crate::eval::host::CallHost;
 use crate::eval::limits::EvalResult;
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellValue::Number;
 use crate::model::{CellAddress, MAX_COLUMNS};
@@ -33,7 +33,7 @@ pub(super) fn execute(
     })();
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
         Err(error) => Err(operational_only(error)),
     }
 }

@@ -11,7 +11,7 @@
 //! existing adapter service contracts; forwarding reference identity does not claim
 //! native Excel hyperlink-navigation or validation compatibility. No upstream code
 //! or fixtures are reused.
-use poirot::eval::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome, run_formula};
+use poirot::eval::{EvaluationBudgets, EvaluationError, EvaluationOutcome, run_formula};
 use poirot::model::{CellError, CellValue, Workbook};
 
 /// Evaluate one public expression with a caller position away from its source.
@@ -35,7 +35,7 @@ fn intact_reference_metadata_never_reads_source_values() {
     workbook
         .add_sheet("Data")
         .unwrap()
-        .set_formula("B2".parse().unwrap(), "UNKNOWN_FUNCTION()")
+        .set_formula("B2", "UNKNOWN_FUNCTION()")
         .unwrap();
     workbook.add_sheet("Other").unwrap();
     workbook.add_sheet("Third").unwrap();
@@ -184,8 +184,8 @@ fn axis_publication_limits_and_selected_operational_failures_survive_iferror() {
             matches!(
                 outcome,
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::Budget(_)
-                        | EvaluationFailure::UnsupportedCapability { .. },
+                    failure: EvaluationError::Budget(_)
+                        | EvaluationError::UnsupportedCapability { .. },
                     ..
                 }
             ),
@@ -202,7 +202,7 @@ fn utf16_labels_are_forwarded_and_sheet_projection_keeps_supplementary_text() {
     workbook
         .add_sheet("Data")
         .unwrap()
-        .set_value("A1".parse().unwrap(), isolated.clone())
+        .set_value("A1", isolated.clone())
         .unwrap();
     workbook.add_sheet("Other😀").unwrap();
     assert_eq!(value(&workbook, "HYPERLINK(0,A1)"), isolated);
@@ -226,7 +226,7 @@ fn utf16_labels_are_forwarded_and_sheet_projection_keeps_supplementary_text() {
             Default::default()
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability { .. },
+            failure: EvaluationError::UnsupportedCapability { .. },
             ..
         }
     ));

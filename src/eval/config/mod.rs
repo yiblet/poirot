@@ -1,13 +1,11 @@
 //! Immutable evaluation inputs: execution policies, clock, random streams, calendar
 //! bounds, localization, and the context fields a cell may consume.
 //!
-//! Depends on: materialization (cache publication policy), values (numeric source
-//! identity) and limits (work and retention limits of an evaluation context).
+//! Depends on: limits (work and retention limits of an evaluation context).
 
 /// Worksheet publication of final array results.
 mod array_result_policy;
-/// Builtin contracts selected at execution time.
-mod builtin_semantics_policy;
+
 /// Calculation calendar bounds and workbook serial conversion.
 pub(in crate::eval) mod calendar;
 /// Numeric conversion of captured evaluation instants.
@@ -51,7 +49,6 @@ mod tests;
 pub(in crate::eval) mod timestamp;
 
 pub use array_result_policy::ArrayResultPolicy;
-pub use builtin_semantics_policy::BuiltinSemanticsPolicy;
 pub use computation_fingerprint::ComputationFingerprint;
 pub use configuration_fingerprint::ConfigurationFingerprint;
 pub use context_fingerprint::ContextFingerprint;

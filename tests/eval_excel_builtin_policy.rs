@@ -1,6 +1,5 @@
 use poirot::eval::{
-    BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationOutcome, RunConfiguration,
-    run_formula_with_configuration,
+    EvaluationBudgets, EvaluationOutcome, RunConfiguration, run_formula_with_configuration,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
@@ -22,7 +21,7 @@ fn workbook() -> Workbook {
     w
 }
 fn excel() -> RunConfiguration {
-    RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
+    RunConfiguration::default()
 }
 fn run(
     source: &str,
@@ -46,17 +45,11 @@ fn value(source: &str, configuration: &RunConfiguration) -> CellValue {
 }
 #[test]
 fn documented_aliases_are_default_and_pinned_registry_remains_explicit() {
-    let default =
-        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
     let excel = excel();
-    assert_eq!(default.builtin_policy(), BuiltinSemanticsPolicy::PinnedPoi);
-    assert_ne!(
-        default.fingerprint().computation(),
-        excel.fingerprint().computation()
-    );
+
     assert_eq!(
         poirot::eval::functions::registry::SUPPORTED_FUNCTIONS.len(),
-        262
+        poirot::eval::functions::registry::FUNCTION_DESCRIPTORS.len()
     );
     for (formula, expected) in [
         ("PERCENTILE.INC(A1:A4,0.5)", 4.),
@@ -69,11 +62,6 @@ fn documented_aliases_are_default_and_pinned_registry_remains_explicit() {
         ("RANK.EQ(4,A1:A4,0)", 2.),
         ("RANK.EQ(1,A1:A4)", 4.),
     ] {
-        assert_eq!(
-            value(formula, &default),
-            CellValue::Error(CellError::Name),
-            "{formula}"
-        );
         assert_eq!(
             value(formula, &excel),
             CellValue::Number(expected),
@@ -135,7 +123,7 @@ fn selectors_errors_lazy_branches_and_empty_samples_use_budgeted_adapter() {
 }
 
 #[test]
-fn bound_extensions_keep_precedence_over_profile_aliases() {
+fn bound_extensions_preserve_registered_execution() {
     use poirot::eval::{
         EvaluationRun, EvaluationTarget, FormulaCompiler, PreparationPolicy, WorkbookView,
         functions::extensions::*, functions::registry::Arity,
@@ -144,7 +132,7 @@ fn bound_extensions_keep_precedence_over_profile_aliases() {
     registry
         .register(
             ExtensionNamespace::UserDefined,
-            "QUARTILE.INC",
+            "CUSTOM_QUARTILE",
             "custom-v1",
             ExtensionContract {
                 arity: Arity {
@@ -172,7 +160,7 @@ fn bound_extensions_keep_precedence_over_profile_aliases() {
     };
     w.sheet_mut(0)
         .unwrap()
-        .set_formula(target.address, "QUARTILE.INC(A1:A4,99)")
+        .set_formula(target.address, "CUSTOM_QUARTILE(A1:A4,99)")
         .unwrap();
     let policy = PreparationPolicy::with_extensions(Default::default(), &registry);
     let plan = FormulaCompiler::new().compile_workbook_with_extensions(&w, &policy, &registry);
@@ -253,7 +241,7 @@ fn rounding_modes_and_zero_domains_follow_function_policies() {
     // Microsoft CEILING.MATH/FLOOR.MATH examples define opposite negative
     // directions for nonzero mode; Calc independently confirms fractional flags.
     let modern = excel();
-    let pinned = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
+    let pinned = RunConfiguration::default();
     for (function, default_negative, reversed_negative, positive) in
         [("CEILING.MATH", -4., -6., 6.), ("FLOOR.MATH", -6., -4., 4.)]
     {

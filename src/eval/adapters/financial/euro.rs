@@ -3,12 +3,12 @@ use crate::eval::adapters::{
     elementwise::{
         self, Broadcast, Kernel, MemberContext, NumericParameter, NumericSignature, Optional,
     },
-    failure::operational_only,
+    operational_only::operational_only,
 };
 use crate::eval::host::{ArgumentCoercion, CallHost};
 use crate::eval::limits::EvalResult;
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellValue::{Error, Number};
 use crate::model::{CellAddress, CellValue};
@@ -90,7 +90,7 @@ pub(super) fn execute(
     let mut host = CallHost::new_array(session, sheet, address, args, args.len());
     match elementwise::execute(&mut host, address, EuroKernel) {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
         Err(error) => Err(operational_only(error)),
     }
 }

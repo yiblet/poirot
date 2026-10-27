@@ -20,7 +20,7 @@ pub(crate) fn bounds(
                 || sheet.get(owner).is_none_or(|c| c.formula.is_none())
             {
                 return Err(IoError::Unsupported(
-                    "invalid spill cache anchor geometry".into(),
+                    crate::WorkbookFeatureError::InvalidSpillCacheAnchorGeometry,
                 ));
             }
             if sheet
@@ -28,7 +28,7 @@ pub(crate) fn bounds(
                 .is_some_and(|last| address.row > last.row || address.col > last.col)
             {
                 return Err(IoError::Unsupported(
-                    "spill child lies outside declared extent".into(),
+                    crate::WorkbookFeatureError::SpillChildLiesOutsideDeclaredExtent,
                 ));
             }
             let last = ranges.entry(owner).or_insert(owner);
@@ -70,7 +70,7 @@ pub(super) fn validate_disjoint_ranges(
                 .is_some_and(|(start, _)| *start <= last.col)
         {
             return Err(IoError::Read(
-                "overlapping array formula cache ranges".into(),
+                crate::WorkbookReadError::OverlappingArrayFormulaCacheRanges,
             ));
         }
         active.insert(anchor.col, last.col);
@@ -96,10 +96,12 @@ pub(crate) fn validate_spills(workbook: &impl WorkbookSource) -> Result<(), IoEr
                     || cell.formula.is_some()
                     || cell.value != CellValue::Blank
                 {
-                    return Err(IoError::Unsupported(format!(
-                        "spill cache rectangle contains authored content at {}!{address}",
-                        sheet.name()
-                    )));
+                    return Err(IoError::Unsupported(
+                        crate::WorkbookFeatureError::AuthoredSpillContent {
+                            sheet: sheet.name().into(),
+                            address: *address,
+                        },
+                    ));
                 }
             }
         }
@@ -113,9 +115,9 @@ pub(crate) fn apply_sheet_spills(
     name: &str,
     workbook: &mut impl WorkbookSink<Sheet: SheetSink>,
 ) -> Result<(), IoError> {
-    let sheet = workbook
-        .sheet_by_name_mut(name)
-        .ok_or_else(|| IoError::Read("missing array worksheet".into()))?;
+    let sheet = workbook.sheet_by_name_mut(name).ok_or(IoError::Read(
+        crate::WorkbookReadError::MissingArrayWorksheet,
+    ))?;
     let mut reader = events(bytes);
     let mut address = None;
     let mut arrays = Vec::new();
@@ -131,12 +133,12 @@ pub(crate) fn apply_sheet_spills(
                         .parse::<u32>()
                         .map_err(xml)?
                         .checked_sub(1)
-                        .ok_or_else(|| IoError::Read("zero row index".into()))?,
+                        .ok_or(IoError::Read(crate::WorkbookReadError::ZeroRowIndex))?,
                     None => next_row,
                 };
                 next_row = row
                     .checked_add(1)
-                    .ok_or_else(|| IoError::Read("row overflow".into()))?;
+                    .ok_or(IoError::Read(crate::WorkbookReadError::RowOverflow))?;
                 next_col = 0;
             }
             Event::Start(e) if e.local_name().as_ref() == "c" => {
@@ -148,7 +150,7 @@ pub(crate) fn apply_sheet_spills(
                 next_col = at
                     .col
                     .checked_add(1)
-                    .ok_or_else(|| IoError::Read("column overflow".into()))?;
+                    .ok_or(IoError::Read(crate::WorkbookReadError::ColumnOverflow))?;
                 address = Some(at);
             }
             Event::End(e) if e.local_name().as_ref() == "c" => address = None,
@@ -160,7 +162,9 @@ pub(crate) fn apply_sheet_spills(
                     let first = first.parse::<CellAddress>()?;
                     let last = last.parse::<CellAddress>()?;
                     if first != anchor || last.row < first.row || last.col < first.col {
-                        return Err(IoError::Read("invalid array formula cache range".into()));
+                        return Err(IoError::Read(
+                            crate::WorkbookReadError::InvalidArrayFormulaCacheRange,
+                        ));
                     }
                     arrays.push((anchor, last));
                 }
@@ -168,10 +172,12 @@ pub(crate) fn apply_sheet_spills(
             Event::Start(e) if error_cell && e.local_name().as_ref() == "v" => {
                 let raw = text(&mut reader, e.name())?;
                 if matches!(raw.as_str(), "#SPILL!" | "#CALC!") {
-                    let value = raw.parse::<crate::CellError>().map_err(xml)?;
-                    let cell = address
-                        .and_then(|at| sheet.get_mut(at))
-                        .ok_or_else(|| IoError::Read("missing modern error cell".into()))?;
+                    let value = raw
+                        .parse::<crate::CellError>()
+                        .map_err(crate::ModelError::from)?;
+                    let cell = address.and_then(|at| sheet.get_mut(at)).ok_or({
+                        IoError::Read(crate::WorkbookReadError::MissingModernErrorCell)
+                    })?;
                     cell.value = CellValue::Error(value);
                 }
             }
@@ -184,7 +190,9 @@ pub(crate) fn apply_sheet_spills(
         .sheets()
         .iter()
         .position(|sheet| sheet.name() == name)
-        .ok_or_else(|| IoError::Read("missing array worksheet".into()))?;
+        .ok_or(IoError::Read(
+            crate::WorkbookReadError::MissingArrayWorksheet,
+        ))?;
     let mut replacements = Vec::new();
     let mut publication = Vec::new();
     for (anchor, last) in arrays {
@@ -193,12 +201,16 @@ pub(crate) fn apply_sheet_spills(
             .get(sheet_index)
             .and_then(|s| s.get(anchor))
             .and_then(|c| c.formula.clone())
-            .ok_or_else(|| IoError::Read("array cache has no formula anchor".into()))?;
+            .ok_or(IoError::Read(
+                crate::WorkbookReadError::ArrayCacheHasNoFormulaAnchor,
+            ))?;
         let mut children = Vec::new();
         for (at, child) in workbook
             .sheets()
             .get(sheet_index)
-            .ok_or_else(|| IoError::Read("missing array worksheet".into()))?
+            .ok_or(IoError::Read(
+                crate::WorkbookReadError::MissingArrayWorksheet,
+            ))?
             .stored_range(anchor, last)
         {
             if *at == anchor {
@@ -206,7 +218,7 @@ pub(crate) fn apply_sheet_spills(
             }
             if child.formula.is_some() {
                 return Err(IoError::Read(
-                    "array cache overlaps an authored formula".into(),
+                    crate::WorkbookReadError::ArrayCacheOverlapsAnAuthoredFormula,
                 ));
             }
             let source = if child.style == CellStyle::default() {
@@ -227,9 +239,9 @@ pub(crate) fn apply_sheet_spills(
     // Clear decoded scalar sources in one sparse batch before attaching any
     // ownership; per-child Worksheet::set/remove would repeatedly scan caches.
     workbook.replace_cells(replacements)?;
-    let sheet = workbook
-        .sheet_mut(sheet_index)
-        .ok_or_else(|| IoError::Read("missing array worksheet".into()))?;
+    let sheet = workbook.sheet_mut(sheet_index).ok_or(IoError::Read(
+        crate::WorkbookReadError::MissingArrayWorksheet,
+    ))?;
     for (anchor, last, formula, children) in publication {
         sheet.set_spill_extent(anchor, last, &formula)?;
         for (at, value) in children {

@@ -1,14 +1,13 @@
 use crate::eval::adapters::elementwise::text as shared;
 use crate::eval::compile;
-use crate::eval::config::{BuiltinSemanticsPolicy, EvaluationInputs};
-use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationBudgets, EvaluationFailure};
+use crate::eval::config::EvaluationInputs;
+use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationBudgets, EvaluationError};
 use crate::eval::session::{ResultProjection, Session};
 use crate::eval::values::VALUE_ERROR;
 use crate::eval::vm::ExpressionRunner;
 use crate::model::CellError::NA;
 use crate::model::CellValue::{Error, Number, Text};
 use crate::model::{CellValue, Workbook};
-use poirot_functions::text_units::{SourceVersion as TextSourceVersion, TextSemanticsPolicy};
 use poirot_parsing::formula::parse_formula;
 
 fn evaluate(formula: &str, budgets: EvaluationBudgets) -> EvalResult<CellValue> {
@@ -16,10 +15,7 @@ fn evaluate(formula: &str, budgets: EvaluationBudgets) -> EvalResult<CellValue> 
     workbook.add_sheet("Sheet1").unwrap();
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     session.state.runtime.budget = BudgetMeter::new(budgets).unwrap();
-    session.policies.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
-    session.policies.text_policy = TextSemanticsPolicy {
-        source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-    };
+
     let at = "A1".parse().unwrap();
     let expr = compile::bound::bind(&parse_formula(formula).unwrap());
     let v = ExpressionRunner::new(&mut session).expr(0, at, &expr)?;
@@ -27,34 +23,12 @@ fn evaluate(formula: &str, budgets: EvaluationBudgets) -> EvalResult<CellValue> 
 }
 
 #[test]
-fn captured_unit_results_flow_through_handlers() {
-    for (formula, expected) in [
-        ("LEFT(\"😀\",1)", vec![0xd83d]),
-        ("RIGHT(\"😀\",1)", vec![0xde00]),
-        ("MID(\"😀\",2,1)", vec![0xde00]),
-        (
-            "CONCAT(LEFT(\"😀\",1),RIGHT(\"😀\",1))",
-            vec![0xd83d, 0xde00],
-        ),
-        ("REPT(LEFT(\"😀\",1),2)", vec![0xd83d, 0xd83d]),
-        ("UPPER(LEFT(\"😀\",1))", vec![0xd83d]),
-    ] {
-        let value = evaluate(formula, EvaluationBudgets::default()).unwrap();
-        assert_eq!(
-            value.text_ref().unwrap().units().collect::<Vec<_>>(),
-            expected,
-            "{formula}"
-        );
-    }
-}
-
-#[test]
 fn source_search_and_ascii_cases_flow_through_handlers() {
     for (formula, expected) in [
-        ("LEN(\"😀\")", Number(2.)),
+        ("LEN(\"😀\")", Number(1.)),
         ("CODE(\"A\")", Number(65.)),
         ("CODE(\"\")", Error(VALUE_ERROR)),
-        ("FIND(\"Z\",\"😀Z\")", Number(3.)),
+        ("FIND(\"Z\",\"😀Z\")", Number(2.)),
         ("SEARCH(\"*\",\"a*b\")", Number(1.)),
         ("SEARCH(\"ß\",\"Straße\")", Number(5.)),
         ("SEARCH(\"Z\",\"ßZ\")", Number(2.)),
@@ -78,14 +52,14 @@ fn source_search_and_ascii_cases_flow_through_handlers() {
 }
 
 #[test]
-fn budget_failures_are_operational_and_cannot_be_caught() {
+fn budget_errors_are_operational_and_cannot_be_caught() {
     let budgets = EvaluationBudgets {
         text_bytes: 8,
         ..EvaluationBudgets::default()
     };
     assert!(matches!(
         evaluate("IFERROR(UPPER(\"abcdefgh\"),\"caught\")", budgets),
-        Err(EvaluationFailure::Budget(_))
+        Err(EvaluationError::Budget(_))
     ));
     assert_eq!(
         evaluate("REPT(\"\",100000)", EvaluationBudgets::default()).unwrap(),
@@ -104,7 +78,7 @@ fn budget_failures_are_operational_and_cannot_be_caught() {
 
 fn evaluate_source(
     formula: &str,
-    source: TextSourceVersion,
+
     input: Vec<u16>,
     budgets: EvaluationBudgets,
 ) -> EvalResult<CellValue> {
@@ -113,10 +87,10 @@ fn evaluate_source(
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), shared::value(input))
+        .set_value("A1", shared::value(input))
         .unwrap();
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
-    session.policies.text_policy = TextSemanticsPolicy { source };
+
     session.state.runtime.budget = BudgetMeter::new(budgets).unwrap();
     let at = "B1".parse().unwrap();
     let result = ExpressionRunner::new(&mut session).expr(
@@ -129,7 +103,6 @@ fn evaluate_source(
 
 #[test]
 fn documented_v2_scans_and_replacement_preserve_exact_units() {
-    let source = TextSourceVersion::ExcelCompatibilityV2Documented;
     let input = vec![0xd800, 0xd83d, 0xde00, 0xdc00, 0x301, 0xfe0f];
     for (formula, expected) in [
         ("LEFT(A1,2)", vec![0xd800, 0xd83d, 0xde00]),
@@ -154,8 +127,7 @@ fn documented_v2_scans_and_replacement_preserve_exact_units() {
         ),
         ("MID(A1,99,1)", vec![]),
     ] {
-        let result =
-            evaluate_source(formula, source, input.clone(), EvaluationBudgets::default()).unwrap();
+        let result = evaluate_source(formula, input.clone(), EvaluationBudgets::default()).unwrap();
         assert_eq!(
             result.text_ref().unwrap().units().collect::<Vec<_>>(),
             expected,
@@ -163,13 +135,7 @@ fn documented_v2_scans_and_replacement_preserve_exact_units() {
         );
     }
     assert_eq!(
-        evaluate_source(
-            "LEN(A1)",
-            source,
-            input.clone(),
-            EvaluationBudgets::default()
-        )
-        .unwrap(),
+        evaluate_source("LEN(A1)", input.clone(), EvaluationBudgets::default()).unwrap(),
         Number(5.)
     );
     for formula in [
@@ -180,26 +146,24 @@ fn documented_v2_scans_and_replacement_preserve_exact_units() {
         "REPLACE(A1,1,-0.1,\"X\")",
     ] {
         assert_eq!(
-            evaluate_source(formula, source, input.clone(), EvaluationBudgets::default()).unwrap(),
+            evaluate_source(formula, input.clone(), EvaluationBudgets::default()).unwrap(),
             Error(VALUE_ERROR),
             "{formula}"
         );
     }
     let result = evaluate_source(
         "REPLACE(A1,2,1,LEFT(\"😀\",1))",
-        TextSourceVersion::Poi7321209,
         vec![0xd83d, 0xde00],
         EvaluationBudgets::default(),
     )
     .unwrap();
     assert_eq!(
         result.text_ref().unwrap().units().collect::<Vec<_>>(),
-        vec![0xd83d, 0xd83d]
+        vec![0xd83d, 0xde00, 0xd83d, 0xde00]
     );
     assert_eq!(
         evaluate_source(
             "LOWER(A1)",
-            source,
             "😀ASCII".encode_utf16().collect(),
             EvaluationBudgets::default()
         )
@@ -214,7 +178,6 @@ fn documented_v2_scans_and_replacement_admit_work_and_storage() {
         assert!(matches!(
             evaluate_source(
                 formula,
-                TextSourceVersion::ExcelCompatibilityV2Documented,
                 vec![65; 100],
                 EvaluationBudgets {
                     cell_work: 50,
@@ -222,19 +185,18 @@ fn documented_v2_scans_and_replacement_admit_work_and_storage() {
                     ..EvaluationBudgets::default()
                 }
             ),
-            Err(EvaluationFailure::Budget(_))
+            Err(EvaluationError::Budget(_))
         ));
     }
     assert!(matches!(
         evaluate_source(
             "IFERROR(REPLACE(A1,1,0,A1),7)",
-            TextSourceVersion::Poi7321209,
             vec![65; 100],
             EvaluationBudgets {
                 text_bytes: 250,
                 ..EvaluationBudgets::default()
             }
         ),
-        Err(EvaluationFailure::Budget(_))
+        Err(EvaluationError::Budget(_))
     ));
 }

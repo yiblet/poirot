@@ -1,7 +1,6 @@
 use crate::eval::limits::EvalResult;
 use crate::eval::observe::{BuiltinInvocationObserver, ExecutionEvent, ExecutionObserver};
 use crate::eval::ports::{CachedCellReader, CellObserver, DependencyReadSink};
-use crate::eval::vm::ResolvedCall;
 
 /// Caller-installed ports that observe or supply values during one run.
 #[derive(Default)]
@@ -33,10 +32,10 @@ impl RunPorts<'_> {
     /// Offer a resolved builtin invocation to the installed observer, if any.
     pub(in crate::eval) fn observe_resolved_call(
         &mut self,
-        call: ResolvedCall<'_>,
+        invocation: Option<crate::eval::observe::ConsumedBuiltinInvocation<'_>>,
     ) -> EvalResult<()> {
         if let (Some(observer), Some(invocation)) =
-            (&mut self.builtin_invocation_observer, call.invocation)
+            (&mut self.builtin_invocation_observer, invocation)
         {
             observer.consumed(invocation)?;
         }

@@ -14,7 +14,7 @@ use super::currency_context::CurrencyContext;
 ///     negative_prefix: "($".into(), negative_suffix: ")".into(),
 /// };
 /// let mut book = Workbook::new();
-/// book.add_sheet("Data")?.set_formula("A1".parse()?, "DOLLAR(12.5,2)")?;
+/// book.add_sheet("Data")?.set_formula("A1", "DOLLAR(12.5,2)")?;
 /// let context = EvaluationContext {
 ///     formatting: FormattingConfiguration::with_currency(currency), ..Default::default()
 /// };

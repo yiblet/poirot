@@ -1,6 +1,6 @@
 //! Checked decoding of operand bytes written by the bytecode `Bytes` encoder.
 
-use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::limits::{EvalResult, EvaluationError};
 
 /// Cursor decoding checked reference words and UTF-8 strings.
 pub(in crate::eval) struct OperandCursor<'a>(pub(in crate::eval) &'a [u8]);
@@ -11,9 +11,9 @@ impl<'a> OperandCursor<'a> {
         let (value, rest) = self
             .0
             .split_at_checked(4)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         self.0 = rest;
-        let bytes = value.try_into().map_err(|_| EvaluationFailure::StalePlan)?;
+        let bytes = value.try_into().map_err(|_| EvaluationError::StalePlan)?;
         Ok(u32::from_le_bytes(bytes))
     }
 
@@ -23,9 +23,9 @@ impl<'a> OperandCursor<'a> {
         let (text, rest) = self
             .0
             .split_at_checked(count)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         self.0 = rest;
-        std::str::from_utf8(text).map_err(|_| EvaluationFailure::StalePlan)
+        std::str::from_utf8(text).map_err(|_| EvaluationError::StalePlan)
     }
 
     /// Read a presence flag followed by an optional string.
@@ -44,7 +44,7 @@ impl<'a> OperandCursor<'a> {
         let row_absolute = self.word()? != 0;
         let column_absolute = self.word()? != 0;
         if self.optional()?.is_some() {
-            return Err(EvaluationFailure::StalePlan);
+            return Err(EvaluationError::StalePlan);
         }
         Ok(poirot_parsing::formula::CellReference {
             row,

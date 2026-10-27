@@ -1,9 +1,7 @@
 use crate::eval::config::{
-    ArrayResultPolicy, BuiltinSemanticsPolicy, CurrencyContext, EvaluationInputs, ProducerPolicy,
-    RunConfiguration,
+    ArrayResultPolicy, CurrencyContext, EvaluationInputs, ProducerPolicy, RunConfiguration,
 };
 use crate::eval::session::expression_demand::ExpressionDemand;
-use poirot_functions::text_units::TextSemanticsPolicy;
 
 /// Execution policies and borrowed formatting settings selected for one run.
 pub(in crate::eval) struct RunPolicies<'a> {
@@ -13,10 +11,9 @@ pub(in crate::eval) struct RunPolicies<'a> {
     pub(in crate::eval) currency: Option<&'a CurrencyContext>,
     /// Numeric token conventions for parsing text arguments.
     pub(in crate::eval) number_locale: &'a poirot_parsing::number::NumberLocale,
-    /// Text unit semantics for string functions.
-    pub(in crate::eval) text_policy: TextSemanticsPolicy,
+
     /// Builtin contracts selected at execution time.
-    pub(in crate::eval) builtin_policy: BuiltinSemanticsPolicy,
+
     /// Publication of final array results.
     pub(in crate::eval) array_result_policy: ArrayResultPolicy,
     /// Whether formulas compute or trust saved results.
@@ -32,8 +29,7 @@ impl<'a> RunPolicies<'a> {
             context,
             currency: None,
             number_locale: &poirot_parsing::number::NumberLocale::EN_US,
-            text_policy: TextSemanticsPolicy::default(),
-            builtin_policy: BuiltinSemanticsPolicy::default(),
+
             array_result_policy: ArrayResultPolicy::default(),
             producer_policy: ProducerPolicy::default(),
             regex: Default::default(),
@@ -46,8 +42,7 @@ impl<'a> RunPolicies<'a> {
             context: configuration.context(),
             currency: configuration.formatting().currency(),
             number_locale: configuration.number_locale(),
-            text_policy: configuration.text_policy(),
-            builtin_policy: configuration.builtin_policy(),
+
             array_result_policy: configuration.array_result_policy(),
             producer_policy: configuration.producer_policy(),
             regex: Default::default(),
@@ -63,8 +58,7 @@ impl<'a> RunPolicies<'a> {
             context: context.inputs(),
             currency: context.formatting.currency(),
             number_locale: &context.number_locale,
-            text_policy: policy.text,
-            builtin_policy: policy.builtin,
+
             array_result_policy: policy.arrays,
             producer_policy: policy.producers,
             regex: context.regex,

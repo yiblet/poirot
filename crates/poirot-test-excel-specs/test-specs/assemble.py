@@ -43,7 +43,7 @@ def legacy_obligations(case, known):
         texts = [cell.get("value", {}).get("value", "") for cell in case["cells"]
                  if cell.get("value", {}).get("type") == "text"]
         if any(ord(char) > 65535 for text in texts for char in text):
-            links.append("workbook.utf16_v2.pairs" if case["text_policy"] == "excel_v2"
+            links.append("workbook.utf16_v2.pairs" if "Version 2" in case["compatibility"]
                          else "workbook.utf16_v1.pairs")
         if case["expected"]["type"] == "utf16":
             links.append("workbook.utf16_v1.isolated")

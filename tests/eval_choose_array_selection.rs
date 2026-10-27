@@ -27,9 +27,7 @@ fn book() -> Workbook {
     book
 }
 fn config(arrays: ArrayResultPolicy) -> RunConfiguration {
-    RunConfiguration::default()
-        .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
-        .with_array_result_policy(arrays)
+    RunConfiguration::default().with_array_result_policy(arrays)
 }
 fn result(
     book: &Workbook,
@@ -241,7 +239,6 @@ fn modern_selection_survives_policy_labels_and_restored_index_edits() {
     }
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(poirot::eval::EvaluationPolicy {
-            builtin: poirot::eval::BuiltinSemanticsPolicy::PinnedPoi,
             ..Default::default()
         })
         .build()
@@ -257,7 +254,6 @@ fn modern_selection_survives_policy_labels_and_restored_index_edits() {
     );
     overlay
         .set_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .unwrap();
@@ -294,7 +290,6 @@ fn modern_selection_survives_policy_labels_and_restored_index_edits() {
     );
     overlay
         .set_policy(EvaluationPolicy {
-            builtin: poirot::eval::BuiltinSemanticsPolicy::PinnedPoi,
             ..Default::default()
         })
         .unwrap();
@@ -317,7 +312,7 @@ fn index_and_branch_dimensions_bound_child_first_spills() {
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(EvaluationPolicy {
             arrays: ArrayResultPolicy::DynamicSpill,
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
+
             ..Default::default()
         })
         .build()

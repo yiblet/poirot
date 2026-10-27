@@ -5,8 +5,6 @@
 //! The implementation and tests are independently authored. Global matching
 //! follows PCRE2's documented empty-match iteration rule (see Cursor below); no
 //! upstream source or tests were copied. Provenance is in LICENSES/PCRE2.md.
-use pcre2::bytes::{CaptureLocations, Regex, RegexBuilder};
-
 /// Case comparison selected by the spreadsheet argument.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Case {
@@ -66,41 +64,23 @@ impl ExecutionLimits {
 /// Caller-controlled admission before native searches and owned allocations.
 pub trait Host {
     /// Operational failure propagated unchanged to the caller.
-    type Failure;
+    type Error;
     /// Native execution guards independent of estimated caller work.
     fn execution_limits(&self) -> ExecutionLimits {
         ExecutionLimits::default()
     }
     /// Admit estimated search work before an uninterruptible native call.
-    fn work(&mut self, units: usize) -> Result<(), Self::Failure>;
+    fn work(&mut self, units: usize) -> Result<(), Self::Error>;
     /// Admit the byte capacity of a single owned text buffer.
-    fn text(&mut self, bytes: usize) -> Result<(), Self::Failure>;
+    fn text(&mut self, bytes: usize) -> Result<(), Self::Error>;
     /// Admit the logical size of a single collection.
-    fn values(&mut self, count: usize) -> Result<(), Self::Failure>;
+    fn values(&mut self, count: usize) -> Result<(), Self::Error>;
 }
-/// Formula-domain failures remain distinct from backend and caller failures.
-#[derive(Debug, PartialEq, Eq)]
-pub enum Failure<E> {
-    /// Invalid PCRE2 pattern syntax.
-    Pattern,
-    /// No matching text, or no groups in capture-group mode.
-    NoMatch,
-    /// A result exceeds Excel's 32,767 UTF-16-unit text limit.
-    TextLimit,
-    /// A backend feature cannot preserve the model's text semantics.
-    Unsupported(&'static str),
-    /// Native execution or compilation failed; this is never a valid no-match.
-    Native(i32),
-    /// A fallible allocation could not be admitted.
-    Resource,
-    /// A checked byte or collection size cannot be represented.
-    SizeOverflow,
-    /// Backend capture geometry did not satisfy the checked adapter state.
-    InvalidState,
-    /// The caller refused work or allocation.
-    Host(E),
-}
-fn compile_failure<E>(error: pcre2::Error) -> Failure<E> {
+
+use super::regex_error::RegexError;
+use pcre2::bytes::{CaptureLocations, Regex, RegexBuilder};
+
+fn compile_failure<E>(error: pcre2::Error) -> RegexError<E> {
     // Numeric codes are the PCRE2 public ABI, verified in pcre2-sys 0.2.10's
     // src/bindings.rs at fd05026e1bf3ad62b3876cf9bd952dc742368462:
     // https://github.com/BurntSushi/rust-pcre2/blob/fd05026e1bf3ad62b3876cf9bd952dc742368462/pcre2-sys/src/bindings.rs
@@ -115,9 +95,9 @@ fn compile_failure<E>(error: pcre2::Error) -> Failure<E> {
         | 135 | 187 | 200 // native lookbehind complexity/length limits
     );
     if matches!(error.kind(), pcre2::ErrorKind::Compile) && !operational {
-        Failure::Pattern
+        RegexError::Pattern(error)
     } else {
-        Failure::Native(error.code())
+        RegexError::Native(error)
     }
 }
 /// A growing result with a running UTF-16 length, avoiding repeated prefix scans.
@@ -130,26 +110,26 @@ fn push_text<H: Host>(
     out: &mut TextBuffer,
     text: &str,
     host: &mut H,
-) -> Result<(), Failure<H::Failure>> {
+) -> Result<(), RegexError<H::Error>> {
     let bytes = out
         .text
         .len()
         .checked_add(text.len())
-        .ok_or(Failure::TextLimit)?;
+        .ok_or(RegexError::TextLimit)?;
     let units = out.units.saturating_add(text.encode_utf16().count());
     if units > 32767 {
-        return Err(Failure::TextLimit);
+        return Err(RegexError::TextLimit);
     }
-    host.text(bytes).map_err(Failure::Host)?;
+    host.text(bytes).map_err(RegexError::Host)?;
     out.text
         .try_reserve(text.len())
-        .map_err(|_| Failure::Resource)?;
+        .map_err(|_| RegexError::Resource)?;
     // SAFETY: The local checked byte sum and try_reserve admit this append.
     out.text.push_str(text);
     out.units = units;
     Ok(())
 }
-fn copy_text<H: Host>(text: &str, host: &mut H) -> Result<String, Failure<H::Failure>> {
+fn copy_text<H: Host>(text: &str, host: &mut H) -> Result<String, RegexError<H::Error>> {
     let mut result = TextBuffer::default();
     push_text(&mut result, text, host)?;
     Ok(result.text)
@@ -192,14 +172,12 @@ impl Program {
         pattern: &str,
         case: Case,
         host: &mut H,
-    ) -> Result<Self, Failure<H::Failure>> {
+    ) -> Result<Self, RegexError<H::Error>> {
         if pattern.encode_utf16().count() > 32767 {
-            return Err(Failure::TextLimit);
+            return Err(RegexError::TextLimit);
         }
         if active_byte_escape(pattern) {
-            return Err(Failure::Unsupported(
-                "PCRE2 byte escape \\C cannot preserve UTF-16 code-unit semantics",
-            ));
+            return Err(RegexError::ByteEscape);
         }
         let limits = host.execution_limits();
         let guards = if limits == ExecutionLimits::default() {
@@ -214,12 +192,12 @@ impl Program {
         let bytes = guards
             .len()
             .checked_add(pattern.len())
-            .ok_or(Failure::SizeOverflow)?;
-        host.text(bytes).map_err(Failure::Host)?;
-        host.work(bytes).map_err(Failure::Host)?;
+            .ok_or(RegexError::SizeOverflow)?;
+        host.text(bytes).map_err(RegexError::Host)?;
+        host.work(bytes).map_err(RegexError::Host)?;
         source
             .try_reserve_exact(bytes)
-            .map_err(|_| Failure::Resource)?;
+            .map_err(|_| RegexError::Resource)?;
         // SAFETY: The checked local reservation covers both appended strings.
         source.push_str(&guards);
         // SAFETY: guards.len()+pattern.len() was checked and reserved locally above.
@@ -230,16 +208,17 @@ impl Program {
             .caseless(case == Case::Insensitive)
             .build(&source)
             .map_err(compile_failure)?;
-        host.values(regex.captures_len()).map_err(Failure::Host)?;
+        host.values(regex.captures_len())
+            .map_err(RegexError::Host)?;
         Ok(Self { regex, case })
     }
     /// Test whether any substring matches, preserving all native failures.
-    pub fn test<H: Host>(&self, text: &str, host: &mut H) -> Result<bool, Failure<H::Failure>> {
+    pub fn test<H: Host>(&self, text: &str, host: &mut H) -> Result<bool, RegexError<H::Error>> {
         host.work(text.len().saturating_add(1))
-            .map_err(Failure::Host)?;
+            .map_err(RegexError::Host)?;
         self.regex
             .is_match(text.as_bytes())
-            .map_err(|e| Failure::Native(e.code()))
+            .map_err(RegexError::Native)
     }
     /// Extract the first match, all matches, or the first match's capture groups.
     pub fn extract<H: Host>(
@@ -247,7 +226,7 @@ impl Program {
         text: &str,
         mode: Extraction,
         host: &mut H,
-    ) -> Result<Vec<String>, Failure<H::Failure>> {
+    ) -> Result<Vec<String>, RegexError<H::Error>> {
         let mut cursor = Cursor::new(self, host)?;
         let mut result = Vec::new();
         while cursor.next(text, host)? {
@@ -259,8 +238,8 @@ impl Program {
             for group in groups {
                 let value = cursor.group(text, group)?.unwrap_or("");
                 host.values(result.len().saturating_add(1))
-                    .map_err(Failure::Host)?;
-                result.try_reserve(1).map_err(|_| Failure::Resource)?;
+                    .map_err(RegexError::Host)?;
+                result.try_reserve(1).map_err(|_| RegexError::Resource)?;
                 let value = copy_text(value, host)?;
                 // SAFETY: One additional element was reserved immediately above.
                 result.push(value);
@@ -270,7 +249,7 @@ impl Program {
             }
         }
         if result.is_empty() {
-            Err(Failure::NoMatch)
+            Err(RegexError::NoMatch)
         } else {
             Ok(result)
         }
@@ -284,7 +263,7 @@ impl Program {
         replacement: &str,
         occurrence: i64,
         host: &mut H,
-    ) -> Result<String, Failure<H::Failure>> {
+    ) -> Result<String, RegexError<H::Error>> {
         let selected = if occurrence < 0 {
             let mut cursor = Cursor::new(self, host)?;
             let mut count = 0u64;
@@ -311,11 +290,10 @@ impl Program {
             if occurrence != 0 && selected != Some(ordinal) {
                 continue;
             }
-            let (start, end) = cursor.locations.get(0).ok_or(Failure::InvalidState)?;
+            let (start, end) = cursor.locations.get(0).ok_or(RegexError::InvalidState)?;
             push_text(
                 &mut out,
-                text.get(copied..start)
-                    .ok_or(Failure::Unsupported("non-Unicode PCRE2 match boundary"))?,
+                text.get(copied..start).ok_or(RegexError::MatchBoundary)?,
                 host,
             )?;
             expand(replacement, text, &cursor, &mut out, host)?;
@@ -326,8 +304,7 @@ impl Program {
         }
         push_text(
             &mut out,
-            text.get(copied..)
-                .ok_or(Failure::Unsupported("non-Unicode PCRE2 match boundary"))?,
+            text.get(copied..).ok_or(RegexError::MatchBoundary)?,
             host,
         )?;
         Ok(out.text)
@@ -343,9 +320,9 @@ struct Cursor<'a> {
     retry_regex: Option<Regex>,
 }
 impl<'a> Cursor<'a> {
-    fn new<H: Host>(program: &'a Program, host: &mut H) -> Result<Self, Failure<H::Failure>> {
+    fn new<H: Host>(program: &'a Program, host: &mut H) -> Result<Self, RegexError<H::Error>> {
         host.values(program.regex.captures_len())
-            .map_err(Failure::Host)?;
+            .map_err(RegexError::Host)?;
         Ok(Self {
             program,
             locations: program.regex.capture_locations(),
@@ -354,23 +331,23 @@ impl<'a> Cursor<'a> {
             retry_regex: None,
         })
     }
-    fn next<H: Host>(&mut self, text: &str, host: &mut H) -> Result<bool, Failure<H::Failure>> {
+    fn next<H: Host>(&mut self, text: &str, host: &mut H) -> Result<bool, RegexError<H::Error>> {
         let Some(offset) = self.offset else {
             return Ok(false);
         };
         host.work(text.len().saturating_sub(offset).saturating_add(1))
-            .map_err(Failure::Host)?;
+            .map_err(RegexError::Host)?;
         let regex = if self.retry_empty {
             if self.retry_regex.is_none() {
                 self.retry_regex = Some(retry_regex(self.program, host)?);
             }
-            self.retry_regex.as_ref().ok_or(Failure::InvalidState)?
+            self.retry_regex.as_ref().ok_or(RegexError::InvalidState)?
         } else {
             &self.program.regex
         };
         let found = regex
             .captures_read_at(&mut self.locations, text.as_bytes(), offset)
-            .map_err(|e| Failure::Native(e.code()))?;
+            .map_err(RegexError::Native)?;
         let Some(found) = found else {
             self.offset = None;
             return Ok(false);
@@ -378,26 +355,23 @@ impl<'a> Cursor<'a> {
         let start = found.start();
         let end = found.end();
         if start > end || !text.is_char_boundary(start) || !text.is_char_boundary(end) {
-            return Err(Failure::Unsupported("non-Unicode PCRE2 match boundary"));
+            return Err(RegexError::MatchBoundary);
         }
         if self.retry_empty && end <= offset {
-            return Err(Failure::InvalidState);
+            return Err(RegexError::InvalidState);
         }
         self.offset = Some(end);
         self.retry_empty = start == end;
         Ok(true)
     }
-    fn group<'s, E>(&self, text: &'s str, group: usize) -> Result<Option<&'s str>, Failure<E>> {
+    fn group<'s, E>(&self, text: &'s str, group: usize) -> Result<Option<&'s str>, RegexError<E>> {
         self.locations
             .get(group)
-            .map(|(start, end)| {
-                text.get(start..end)
-                    .ok_or(Failure::Unsupported("non-Unicode PCRE2 capture boundary"))
-            })
+            .map(|(start, end)| text.get(start..end).ok_or(RegexError::CaptureBoundary))
             .transpose()
     }
 }
-fn retry_regex<H: Host>(program: &Program, host: &mut H) -> Result<Regex, Failure<H::Failure>> {
+fn retry_regex<H: Host>(program: &Program, host: &mut H) -> Result<Regex, RegexError<H::Error>> {
     // Iteration rule from PCRE2's documented NOTEMPTY_ATSTART semantics:
     // https://www.pcre.org/current/doc/html/pcre2api.html (match option and
     // "Iterating over all matches") and PCRE2 10.46 pcre2pattern manual:
@@ -411,13 +385,13 @@ fn retry_regex<H: Host>(program: &Program, host: &mut H) -> Result<Regex, Failur
     let bytes = source
         .len()
         .checked_add(prefix.len())
-        .ok_or(Failure::SizeOverflow)?;
-    host.text(bytes).map_err(Failure::Host)?;
-    host.work(bytes).map_err(Failure::Host)?;
+        .ok_or(RegexError::SizeOverflow)?;
+    host.text(bytes).map_err(RegexError::Host)?;
+    host.work(bytes).map_err(RegexError::Host)?;
     let mut retry = String::new();
     retry
         .try_reserve_exact(bytes)
-        .map_err(|_| Failure::Resource)?;
+        .map_err(|_| RegexError::Resource)?;
     // SAFETY: The checked local reservation covers the prefix and original body.
     retry.push_str(prefix);
     // SAFETY: prefix.len()+source.len() was checked and reserved locally above.
@@ -435,17 +409,17 @@ fn expand<H: Host>(
     cursor: &Cursor<'_>,
     out: &mut TextBuffer,
     host: &mut H,
-) -> Result<(), Failure<H::Failure>> {
+) -> Result<(), RegexError<H::Error>> {
     let mut remaining = replacement;
     while let Some(dollar) = remaining.find('$') {
         push_text(
             out,
-            remaining.get(..dollar).ok_or(Failure::InvalidState)?,
+            remaining.get(..dollar).ok_or(RegexError::InvalidState)?,
             host,
         )?;
         remaining = remaining
             .get(dollar.saturating_add(1)..)
-            .ok_or(Failure::InvalidState)?;
+            .ok_or(RegexError::InvalidState)?;
         if let Some(rest) = remaining.strip_prefix('$') {
             push_text(out, "$", host)?;
             remaining = rest;
@@ -465,11 +439,11 @@ fn expand<H: Host>(
             push_text(out, "$", host)?;
             push_text(
                 out,
-                remaining.get(..digits).ok_or(Failure::InvalidState)?,
+                remaining.get(..digits).ok_or(RegexError::InvalidState)?,
                 host,
             )?;
         }
-        remaining = remaining.get(digits..).ok_or(Failure::InvalidState)?;
+        remaining = remaining.get(digits..).ok_or(RegexError::InvalidState)?;
     }
     push_text(out, remaining, host)
 }

@@ -32,16 +32,9 @@ fn book() -> Workbook {
 #[test]
 fn database_average_distinguishes_empty_samples_from_zero_values() {
     let book = book();
-    for policy in [
-        BuiltinSemanticsPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-    ] {
-        let config = RunConfiguration::default().with_builtin_policy(policy);
-        let empty = if policy == BuiltinSemanticsPolicy::ExcelDocumentation {
-            CellValue::Error(CellError::Div0)
-        } else {
-            0.0.into()
-        };
+    {
+        let config = RunConfiguration::default();
+        let empty = { CellValue::Error(CellError::Div0) };
         for (formula, expected) in [
             ("DAVERAGE(A1:A1,1,E1:E2)", empty.clone()),
             ("DAVERAGE(A1:A4,1,E1:E2)", empty.clone()),
@@ -49,7 +42,6 @@ fn database_average_distinguishes_empty_samples_from_zero_values() {
             ("DAVERAGE(B1:B3,1,F1:F2)", empty.clone()),
             ("DAVERAGE(A1:A2,1,F1:F2)", 0.0.into()),
             ("DAVERAGE(A1:A4,1,F1:F2)", 0.0.into()),
-            // Deliberately preserved candidate-error behavior; Calc returns #N/A.
             ("DAVERAGE(C1:C2,1,F1:F2)", empty.clone()),
             ("DCOUNT(A1:A4,1,E1:E2)", 0.0.into()),
             ("DSUM(A1:A4,1,E1:E2)", 0.0.into()),
@@ -69,8 +61,8 @@ fn database_average_distinguishes_empty_samples_from_zero_values() {
                 EvaluationBudgets::default(),
             );
             assert!(
-                matches!(&result, EvaluationOutcome::Complete {value, ..} if value == &expected),
-                "{policy:?} {formula}: {result:?}"
+                matches ! (& result , EvaluationOutcome :: Complete { value , .. } if value == & expected),
+                "{formula}: {result:?}"
             );
         }
         for budgets in [
@@ -98,7 +90,7 @@ fn database_average_distinguishes_empty_samples_from_zero_values() {
     }
 }
 #[test]
-fn database_policy_and_criteria_edits_invalidate_retained_results() {
+fn database_criteria_edits_invalidate_retained_results() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
@@ -106,7 +98,6 @@ fn database_policy_and_criteria_edits_invalidate_retained_results() {
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(poirot::eval::EvaluationPolicy {
-            builtin: poirot::eval::BuiltinSemanticsPolicy::PinnedPoi,
             ..Default::default()
         })
         .build()
@@ -118,11 +109,10 @@ fn database_policy_and_criteria_edits_invalidate_retained_results() {
             .unwrap()
             .cell(target("Z1"))
             .unwrap(),
-        0.0.into()
+        CellValue::Error(CellError::Div0)
     );
     overlay
         .set_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .unwrap();
@@ -154,7 +144,6 @@ fn database_policy_and_criteria_edits_invalidate_retained_results() {
     );
     overlay
         .set_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::PinnedPoi,
             ..Default::default()
         })
         .unwrap();
@@ -164,6 +153,6 @@ fn database_policy_and_criteria_edits_invalidate_retained_results() {
             .unwrap()
             .cell(target("Z1"))
             .unwrap(),
-        0.0.into()
+        CellValue::Error(CellError::Div0)
     );
 }

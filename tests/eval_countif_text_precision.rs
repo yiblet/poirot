@@ -8,7 +8,7 @@ fn countif_text_precision_preserves_poi_comparison_and_raw_numeric_criteria() {
     workbook
         .add_sheet("Probe")
         .unwrap()
-        .set_value("A1".parse().unwrap(), 86.47 / 86400.0)
+        .set_value("A1", 86.47 / 86400.0)
         .unwrap();
     for configuration in [RunConfiguration::default(), RunConfiguration::default()] {
         for (formula, expected) in [

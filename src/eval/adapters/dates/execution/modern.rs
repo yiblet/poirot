@@ -11,10 +11,8 @@ use crate::eval::adapters::elementwise::{
 use crate::eval::config::calendar::{calendar_date, max_serial, serial};
 use crate::eval::functions::registry::{DateFunction, FunctionId};
 use crate::eval::host::{ArgumentCoercion, CallHost, ContextReads, SelectionAccess};
-use crate::eval::limits::{EvalResult, EvaluationFailure, WorkKind};
-use crate::eval::values::{
-    FunctionFailure, FunctionResult, OperandOrigin, VALUE_ERROR, Value, err,
-};
+use crate::eval::limits::{EvalResult, EvaluationError, WorkKind};
+use crate::eval::values::{FunctionError, FunctionResult, OperandOrigin, VALUE_ERROR, Value, err};
 use crate::model::CellError::Num;
 use crate::model::CellValue::{Blank, Number};
 use crate::model::{CellError, CellValue};
@@ -128,7 +126,7 @@ impl Kernel for NumericDate {
             Year | Month | Day | Hour | Minute | Second => {
                 component(function, start, modern_date(start, system)?, system)?
             }
-            _ => return Err(EvaluationFailure::StalePlan.into()),
+            _ => return Err(EvaluationError::StalePlan.into()),
         };
         Ok(Number(result))
     }
@@ -262,7 +260,7 @@ impl BusinessDate {
         if self
             .holidays
             .try_borrow()
-            .map_err(|_| EvaluationFailure::StalePlan)?
+            .map_err(|_| EvaluationError::StalePlan)?
             .is_some()
         {
             return Ok(());
@@ -272,14 +270,14 @@ impl BusinessDate {
             *self
                 .holidays
                 .try_borrow_mut()
-                .map_err(|_| EvaluationFailure::StalePlan)? = Some(holidays);
+                .map_err(|_| EvaluationError::StalePlan)? = Some(holidays);
             return Ok(());
         };
         let count = collection.len(host)?;
         host.check_values(count)?;
         holidays
             .try_reserve_exact(count)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         let policy = if matches!(
             self.function,
             DateFunction::NetworkDays | DateFunction::NetworkDaysIntl
@@ -309,9 +307,9 @@ impl BusinessDate {
                     ArgumentCoercion::new(host).coerce_calendar_date(&value)
                 })? {
                     if holidays.len() == holidays.capacity() {
-                        holidays
-                            .try_reserve(1)
-                            .map_err(|_| host.allocation_failure())?;
+                        holidays.try_reserve(1).map_err(|reservation_source| {
+                            host.reservation_failure(reservation_source)
+                        })?;
                     }
                     // SAFETY: the capacity check above reserves a slot whenever none remains.
                     holidays.push(day.trunc() as i64);
@@ -325,7 +323,7 @@ impl BusinessDate {
         *self
             .holidays
             .try_borrow_mut()
-            .map_err(|_| EvaluationFailure::StalePlan)? = Some(holidays);
+            .map_err(|_| EvaluationError::StalePlan)? = Some(holidays);
         Ok(())
     }
 }
@@ -383,8 +381,8 @@ impl Kernel for BusinessDate {
         let holidays = self
             .holidays
             .try_borrow()
-            .map_err(|_| EvaluationFailure::StalePlan)?;
-        let holidays = holidays.as_ref().ok_or(EvaluationFailure::StalePlan)?;
+            .map_err(|_| EvaluationError::StalePlan)?;
+        let holidays = holidays.as_ref().ok_or(EvaluationError::StalePlan)?;
         if network {
             return Ok(Number(poirot_functions::dates::network_days(
                 start,
@@ -485,7 +483,7 @@ pub(super) fn execute(host: &mut CallHost<'_, '_>, function: DateFunction) -> Ev
     };
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }

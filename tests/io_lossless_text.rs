@@ -47,11 +47,16 @@ fn xlsx_roundtrip_retains_units_formula_caches_and_escape_collisions() {
                 .get(CellAddress::new(row, index as u32).unwrap())
                 .unwrap();
             assert_eq!(
-                cell.value.text_ref().unwrap().units().collect::<Vec<_>>(),
+                cell.unwrap()
+                    .value
+                    .text_ref()
+                    .unwrap()
+                    .units()
+                    .collect::<Vec<_>>(),
                 *units
             );
             assert_eq!(
-                cell.formula.as_deref(),
+                cell.unwrap().formula.as_deref(),
                 if row == 1 { Some("1") } else { None }
             );
         }
@@ -66,7 +71,7 @@ fn utf16_storage_admission_and_escaped_output_limits_are_ordered() {
         .add_sheet("Data")
         .unwrap()
         .set(
-            "A1".parse().unwrap(),
+            "A1",
             Cell::new(CellValue::TextUtf16(ExcelText::from_units(vec![
                 0xd83d;
                 4000
@@ -93,7 +98,9 @@ fn utf16_storage_admission_and_escaped_output_limits_are_ordered() {
         },
     )
     .unwrap_err();
-    assert!(matches!(error, IoError::Limit(ref detail) if detail.contains("before allocation")));
+    assert!(
+        matches!(error, IoError::Limit(poirot_io::ExportLimitError::PackageBytes {entry_bytes,entry_limit:10_000,total_bytes,total_limit}) if entry_bytes > 10_000 && total_bytes >= entry_bytes && total_limit == WriteOptions::default().max_zip_total_bytes)
+    );
     assert!(matches!(
         write_xlsx_to_buffer_with_options(
             &workbook,

@@ -1,7 +1,7 @@
 use super::super::self_read::SelfRead;
 use super::super::spill_preparation::SpillPreparation;
 use crate::eval::config::ArrayResultPolicy;
-use crate::eval::limits::{BudgetMeter, EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, EvaluationBudgets, EvaluationError};
 use crate::eval::reuse::SpillRole;
 use crate::eval::session::{CellEvaluator, Session};
 use crate::eval::values::{Area, AreaKind};
@@ -37,7 +37,7 @@ fn publication_requires_successful_settlement_and_acknowledges_without_reallocat
             .is_empty()
     );
     assert_eq!(preparation.journal.capacity(), capacity);
-    preparation.failure = Some(EvaluationFailure::StalePlan);
+    preparation.failure = Some(EvaluationError::StalePlan);
     assert!(preparation.publication().is_err());
     assert!(matches!(preparation.admitted_role(key), SpillRole::Anchor { last } if last == key.1));
 }
@@ -52,11 +52,9 @@ fn evaluated_roles_distinguish_one_cell_error_blocked_and_child_results() {
         ("F1", "{3,4}"),
         ("I1", "{5,6}"),
     ] {
-        sheet
-            .set_formula(address.parse().unwrap(), formula)
-            .unwrap();
+        sheet.set_formula(address, formula).unwrap();
     }
-    sheet.set_value("J1".parse().unwrap(), 99.).unwrap();
+    sheet.set_value("J1", 99.).unwrap();
     let mut session = Session::with_context(&book, Default::default());
     session.policies.array_result_policy = ArrayResultPolicy::DynamicSpill;
     for (address, expected, extent) in [
@@ -159,7 +157,7 @@ fn preparation_reset_clears_both_observation_channels_and_reuses_their_buffers()
         preparation.producer_reads.blank_points.capacity(),
         preparation.producer_reads.sparse_ranges.capacity(),
     );
-    preparation.failure = Some(EvaluationFailure::StalePlan);
+    preparation.failure = Some(EvaluationError::StalePlan);
     preparation
         .roles
         .insert(key, SpillRole::Anchor { last: key.1 });

@@ -16,7 +16,7 @@ fn book() -> Workbook {
         ("B2", 5.),
         ("B3", 7.),
     ] {
-        sheet.set_value(cell.parse().unwrap(), value).unwrap();
+        sheet.set_value(cell, value).unwrap();
     }
     book
 }
@@ -54,8 +54,7 @@ fn prediction_requires_a_fit_without_residual_degrees_of_freedom() {
     let policy = PreparationPolicy::default();
     let mut compiler = FormulaCompiler::new();
     let plan = compiler.compile_workbook(&book, &policy);
-    let config =
-        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
+    let config = RunConfiguration::default();
     for (formula, expected) in [
         ("TREND({3;5},{1;2},{3},TRUE)", 7.),
         ("TREND(B1:B2,A1:A2,{3},TRUE)", 7.),

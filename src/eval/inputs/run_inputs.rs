@@ -2,6 +2,7 @@
 
 use super::cell_edit::CellEdit;
 use super::input_cells::InputCells;
+use super::input_error::InputError;
 use crate::model::{Cell, CellAddress, CellValue, ModelError, Workbook, WorkbookChange};
 use std::collections::BTreeMap;
 
@@ -30,25 +31,26 @@ impl RunInputs {
         assignments: impl IntoIterator<Item = (usize, CellAddress, CellValue)>,
         max_assignments: usize,
         source: std::sync::Arc<()>,
-    ) -> Result<Self, ModelError> {
+    ) -> Result<Self, InputError> {
         let mut inputs = Self {
             sheets: BTreeMap::new(),
             source,
         };
         let mut count = 0usize;
         for (sheet, address, value) in assignments {
-            address.validate()?;
+            address.validate().map_err(ModelError::from)?;
             let worksheet = workbook
                 .sheet(sheet)
-                .ok_or_else(|| ModelError("input worksheet index out of bounds".into()))?;
-            count = count
-                .checked_add(1)
-                .ok_or_else(|| ModelError("input assignment count overflow".into()))?;
+                .ok_or(ModelError::InvalidWorksheetIndex { index: sheet })?;
+            count = count.checked_add(1).ok_or(InputError::CountOverflow)?;
             if count > max_assignments {
-                return Err(ModelError("input assignment budget exceeded".into()));
+                return Err(InputError::Limit {
+                    limit: max_assignments,
+                    requested: count,
+                });
             }
             let mut cell = Cell::new(value);
-            if let Some(original) = worksheet.get(address) {
+            if let Some(original) = worksheet.get_validated(address) {
                 cell.style = original.style.clone();
             }
             if inputs
@@ -57,7 +59,7 @@ impl RunInputs {
                 .or_default()
                 .set_cell(address, cell, false)?
             {
-                return Err(ModelError("duplicate input assignment".into()));
+                return Err(InputError::Duplicate { sheet, address });
             }
         }
         Ok(inputs)

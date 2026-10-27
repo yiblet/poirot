@@ -53,54 +53,29 @@ impl Names {
     }
 }
 
-/// Spelling indexes of one builtin registry: ordinary and profile-only namespaces, each
-/// with the `_xlfn.`-prefixed spellings it admits. Earlier positions win duplicate
-/// spellings, so callers insert registrations in precedence order.
+/// Spelling index of one builtin registry, including serialized namespace qualifiers.
+/// Earlier positions win duplicate spellings.
 #[derive(Clone)]
 pub(in crate::eval) struct FunctionNames {
     names: Names,
-    prefixed: Names,
-    profile: Names,
-    profile_prefixed: Names,
 }
 
 impl FunctionNames {
-    /// Create empty ordinary and profile-only indexes.
+    /// Create an empty spelling index.
     pub(in crate::eval) fn new() -> Self {
         Self {
             names: Names::new(),
-            prefixed: Names::new(),
-            profile: Names::new(),
-            profile_prefixed: Names::new(),
         }
     }
 
-    /// Index a registration position under its spelling. Ordinary names admit the
-    /// `_xlfn.` prefix only for pinned Analysis ToolPak functions; profile-only names
-    /// always admit it.
-    pub(in crate::eval) fn insert(&mut self, name: &str, profile: bool, position: usize) {
-        if profile {
-            self.profile.insert(name, position);
-            self.profile_prefixed.insert(name, position);
-        } else {
-            self.names.insert(name, position);
-            if crate::eval::functions::atp::PINNED_ATP_FUNCTIONS
-                .iter()
-                .any(|supported| supported.eq_ignore_ascii_case(name))
-            {
-                self.prefixed.insert(name, position);
-            }
-        }
+    /// Index a builtin spelling and its serialized `_xlfn.` alias.
+    pub(in crate::eval) fn insert(&mut self, name: &str, position: usize) {
+        self.names.insert(name, position);
     }
 
     /// Resolve an ordinary spelling to its registration position.
     pub(in crate::eval) fn resolve(&self, name: &FunctionName) -> Option<usize> {
-        Self::lookup(name, &self.names, &self.prefixed)
-    }
-
-    /// Resolve a profile-only spelling to its registration position.
-    pub(in crate::eval) fn resolve_profile(&self, name: &FunctionName) -> Option<usize> {
-        Self::lookup(name, &self.profile, &self.profile_prefixed)
+        Self::lookup(name, &self.names)
     }
 
     /// Ordinary position held in the direct slot of a common spelling.
@@ -115,7 +90,7 @@ impl FunctionNames {
         self.names.other.len()
     }
 
-    fn lookup(name: &FunctionName, names: &Names, prefixed: &Names) -> Option<usize> {
+    fn lookup(name: &FunctionName, names: &Names) -> Option<usize> {
         match name {
             FunctionName::Unknown(name) if name.starts_with("_xlfn.") => {
                 let suffix = name.strip_prefix("_xlfn.")?;
@@ -134,7 +109,7 @@ impl FunctionNames {
                 } else {
                     suffix
                 };
-                prefixed.get_spelling(suffix)
+                names.get_spelling(suffix)
             }
             _ => names.get(name),
         }

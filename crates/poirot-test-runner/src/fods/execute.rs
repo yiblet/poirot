@@ -1,6 +1,6 @@
 //! Execute immutable fixture plans on an isolated Rayon pool.
 use crate::fods::{
-    Error,
+    FodsError,
     corpus::BaselineStatus,
     gaps::{self, GapKind},
     plan::{FixturePlan, PlannedCase, RunPlan, WorkbookPreparation},
@@ -26,20 +26,20 @@ fn failure(kind: FailureKind, message: impl Into<String>) -> CaseFailure {
     }
 }
 
-fn aborted(abort: poirot::eval::EvaluationFailure) -> CaseFailure {
+fn aborted(abort: poirot::eval::EvaluationError) -> CaseFailure {
     let mut reason = failure(
         FailureKind::EvaluationAbort,
         format!("evaluation aborted: {abort:?}"),
     );
     reason.gap_type = match abort {
-        poirot::eval::EvaluationFailure::Budget(_)
-        | poirot::eval::EvaluationFailure::ResourceLimit { .. }
-        | poirot::eval::EvaluationFailure::MemoRetentionLimit { .. } => GapKind::ResourceLimit,
-        poirot::eval::EvaluationFailure::UnsupportedCapability { .. } => {
+        poirot::eval::EvaluationError::Budget(_)
+        | poirot::eval::EvaluationError::ResourceLimit { .. }
+        | poirot::eval::EvaluationError::MemoRetentionLimit { .. } => GapKind::ResourceLimit,
+        poirot::eval::EvaluationError::UnsupportedCapability { .. } => {
             GapKind::UnsupportedCapability
         }
-        poirot::eval::EvaluationFailure::KnownSourceException { .. } => GapKind::SourceException,
-        _ => GapKind::HarnessError,
+        poirot::eval::EvaluationError::Resource { .. }
+        | poirot::eval::EvaluationError::StalePlan => GapKind::HarnessError,
     };
     reason
 }
@@ -124,33 +124,33 @@ fn check(
         .evaluate_cell(target(case.row, case.col))
         .map_err(aborted)?;
     if borrow_failed.get() {
-        return Err(aborted(poirot::eval::EvaluationFailure::StalePlan));
+        return Err(aborted(poirot::eval::EvaluationError::StalePlan));
     }
     if let Some(reason) = trace
         .try_borrow()
-        .map_err(|_| aborted(poirot::eval::EvaluationFailure::StalePlan))?
+        .map_err(|_| aborted(poirot::eval::EvaluationError::StalePlan))?
         .failure("actual")
     {
         return Err(reason);
     }
     let actual_unresolved_name = trace
         .try_borrow()
-        .map_err(|_| aborted(poirot::eval::EvaluationFailure::StalePlan))?
+        .map_err(|_| aborted(poirot::eval::EvaluationError::StalePlan))?
         .unresolved_name()
         .map(str::to_owned);
     *trace
         .try_borrow_mut()
-        .map_err(|_| aborted(poirot::eval::EvaluationFailure::StalePlan))? =
+        .map_err(|_| aborted(poirot::eval::EvaluationError::StalePlan))? =
         crate::fods::execution_trace::Trace::default();
     let correct = run
         .evaluate_cell(target(case.correct_row, case.correct_col))
         .map_err(aborted)?;
     if borrow_failed.get() {
-        return Err(aborted(poirot::eval::EvaluationFailure::StalePlan));
+        return Err(aborted(poirot::eval::EvaluationError::StalePlan));
     }
     if let Some(reason) = trace
         .try_borrow()
-        .map_err(|_| aborted(poirot::eval::EvaluationFailure::StalePlan))?
+        .map_err(|_| aborted(poirot::eval::EvaluationError::StalePlan))?
         .failure("Correct")
     {
         return Err(reason);
@@ -167,21 +167,38 @@ fn check(
         let expected = if gaps::expected_is_error_flag(case) {
             None
         } else if let Some(formula) = &case.expected.formula {
-            poirot_parsing::formula::parse_formula(formula)
-                .ok()
-                .filter(|expr| gaps::missing_functions(expr).is_empty())
-                .and_then(|_| {
-                    evaluate(
-                        book,
-                        case.sheet,
-                        CellAddress {
-                            row: case.expected.row,
-                            col: case.expected.col,
-                        },
-                        formula,
-                    )
-                    .ok()
-                })
+            // The native Correct predicate has already established the mismatch.
+            // Evaluating Expected is only supplementary diagnostic classification:
+            // an unsupported, resource-bound, or otherwise failed diagnostic keeps
+            // the authoritative mismatch, with no fabricated expected value.
+            match poirot_parsing::formula::parse_formula(formula) {
+                Ok(expression) if !gaps::missing_functions(&expression).is_empty() => None,
+                Ok(_) => match evaluate(
+                    book,
+                    case.sheet,
+                    CellAddress {
+                        row: case.expected.row,
+                        col: case.expected.col,
+                    },
+                    formula,
+                ) {
+                    Ok(value) => Some(value),
+                    Err(diagnostic) => match diagnostic.kind {
+                        FailureKind::SourceSyntax
+                        | FailureKind::WorkbookContext
+                        | FailureKind::UnsupportedName
+                        | FailureKind::EvaluationAbort
+                        | FailureKind::MatrixContext
+                        | FailureKind::PredicateMismatch
+                        | FailureKind::EvaluatorPanic => None,
+                    },
+                },
+                Err(error) => match error.kind() {
+                    poirot_parsing::formula::ParseErrorKind::Syntax
+                    | poirot_parsing::formula::ParseErrorKind::ResourceLimit
+                    | poirot_parsing::formula::ParseErrorKind::InvalidPolicy => None,
+                },
+            }
         } else {
             Some(gaps::literal_expected(&case.expected.value))
         };
@@ -206,7 +223,7 @@ fn check(
         }
         if let Some(name) = trace
             .try_borrow()
-            .map_err(|_| aborted(poirot::eval::EvaluationFailure::StalePlan))?
+            .map_err(|_| aborted(poirot::eval::EvaluationError::StalePlan))?
             .unresolved_name()
         {
             reason.gap_type = GapKind::NameResolution;
@@ -221,16 +238,16 @@ fn check(
 
 pub(crate) fn fixture_results(
     plan: &FixturePlan,
-    observer: &(impl Fn(&CaseResult) -> Result<(), Error> + Sync),
-) -> Result<Vec<CaseResult>, Error> {
+    observer: &(impl Fn(&CaseResult) -> Result<(), FodsError> + Sync),
+) -> Result<Vec<CaseResult>, FodsError> {
     fixture_observations(plan, observer)
         .map(|results| results.into_iter().map(|(result, _)| result).collect())
 }
 
 pub(crate) fn fixture_observations(
     plan: &FixturePlan,
-    observer: &(impl Fn(&CaseResult) -> Result<(), Error> + Sync),
-) -> Result<Vec<(CaseResult, Option<CheckObservation>)>, Error> {
+    observer: &(impl Fn(&CaseResult) -> Result<(), FodsError> + Sync),
+) -> Result<Vec<(CaseResult, Option<CheckObservation>)>, FodsError> {
     plan.cases
         .iter()
         .map(|case| {
@@ -286,7 +303,7 @@ pub(crate) fn fixture_observations(
 }
 
 /// Evaluate a prepared fixture plan in bounded parallel workers and assemble ordered case results.
-pub fn execute(plan: &RunPlan) -> Result<EvaluationReport, Error> {
+pub fn execute(plan: &RunPlan) -> Result<EvaluationReport, FodsError> {
     execute_with_observer(plan, &|_| Ok(()))
 }
 
@@ -294,15 +311,15 @@ pub fn execute(plan: &RunPlan) -> Result<EvaluationReport, Error> {
 /// The final report retains source order regardless of completion order.
 pub fn execute_with_observer(
     plan: &RunPlan,
-    observer: &(impl Fn(&CaseResult) -> Result<(), Error> + Sync),
-) -> Result<EvaluationReport, Error> {
+    observer: &(impl Fn(&CaseResult) -> Result<(), FodsError> + Sync),
+) -> Result<EvaluationReport, FodsError> {
     let pool = rayon::ThreadPoolBuilder::new()
         .num_threads(plan.jobs.get())
         .stack_size(16 * 1024 * 1024)
         .thread_name(|i| format!("fods-{i}"))
         .build()
-        .map_err(|e| Error::Parallel(e.to_string()))?;
-    let groups: Vec<Result<Vec<CaseResult>, Error>> = pool.install(|| {
+        .map_err(FodsError::Parallel)?;
+    let groups: Vec<Result<Vec<CaseResult>, FodsError>> = pool.install(|| {
         plan.fixtures
             .par_iter()
             .map(|fixture| fixture_results(fixture, observer))

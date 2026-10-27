@@ -1,6 +1,5 @@
-//! File representation policy, independent from evaluation/source exceptions.
-use crate::{CellAddress, IeeeNumberBits};
-use std::fmt;
+//! File representation policy for numeric payloads.
+use crate::{CellAddress, IeeeNumberBits, NumericFidelityError};
 
 /// File format whose numeric representation is being checked.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -21,7 +20,7 @@ pub enum FiniteNumericRepresentationPolicy {
 /// Worksheet name, cell address, and literal-versus-formula-cache location of a number.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct NumericLocation {
-    /// Zero-based worksheet index containing the numeric value.
+    /// Worksheet name containing the numeric value.
     pub sheet: String,
     /// Coordinate containing the numeric value.
     pub address: CellAddress,
@@ -36,22 +35,7 @@ pub enum NumericFidelityReason {
     /// Target decimal encoding cannot recover the original binary64 bits.
     DecimalRoundTripMismatch,
 }
-/// Export diagnostic explaining why a number cannot satisfy the target file's representation policy.
-/// It retains the exact bits and source location so callers can report the refusal
-/// without turning it into a spreadsheet error value.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct NumericFidelityRefusal {
-    /// Exact numeric payload refused by the target policy.
-    pub bits: IeeeNumberBits,
-    /// Source coordinate and literal/cache provenance.
-    pub location: NumericLocation,
-    /// Target workbook file format.
-    pub format: NumericFileFormat,
-    /// Representation contract that refused the value.
-    pub policy: FiniteNumericRepresentationPolicy,
-    /// Specific representation failure.
-    pub reason: NumericFidelityReason,
-}
+
 impl FiniteNumericRepresentationPolicy {
     /// Admit a number only when the target representation satisfies this policy.
     pub fn check(
@@ -59,19 +43,19 @@ impl FiniteNumericRepresentationPolicy {
         number: f64,
         format: NumericFileFormat,
         location: NumericLocation,
-    ) -> Result<(), NumericFidelityRefusal> {
+    ) -> Result<(), NumericFidelityError> {
         let bits = IeeeNumberBits::from_number(number);
         let reason = if !number.is_finite() {
             Some(NumericFidelityReason::Nonfinite)
         } else if self == Self::DecimalRoundTripFinite
-            && number.to_string().parse::<f64>().ok().map(f64::to_bits) != Some(bits.bits())
+            && !matches!(number.to_string().parse::<f64>(), Ok(value) if value.to_bits() == bits.bits())
         {
             Some(NumericFidelityReason::DecimalRoundTripMismatch)
         } else {
             None
         };
         if let Some(reason) = reason {
-            Err(NumericFidelityRefusal {
+            Err(NumericFidelityError {
                 bits,
                 location,
                 format,
@@ -83,19 +67,3 @@ impl FiniteNumericRepresentationPolicy {
         }
     }
 }
-impl fmt::Display for NumericFidelityRefusal {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{:?} numeric fidelity refusal at {}!{} (formula_cache={}, bits={:016x}, policy={:?}, reason={:?})",
-            self.format,
-            self.location.sheet,
-            self.location.address,
-            self.location.formula_cache,
-            self.bits.bits(),
-            self.policy,
-            self.reason
-        )
-    }
-}
-impl std::error::Error for NumericFidelityRefusal {}

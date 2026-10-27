@@ -44,9 +44,9 @@ fn shared_membership_and_relative_absolute_sources() {
     let book = read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
     let sheet = book.sheet(0).unwrap();
     let anchor = sheet.get(at("B1")).unwrap();
-    let follower = sheet.get(at("C2")).unwrap();
+    let follower = sheet.get(at("C2")).unwrap().unwrap();
     assert_eq!(
-        anchor.formula.as_deref(),
+        anchor.unwrap().formula.as_deref(),
         Some("A1+$B2+C$3+$D$4+LEN(\"A1\")")
     );
     assert_eq!(
@@ -54,7 +54,7 @@ fn shared_membership_and_relative_absolute_sources() {
         Some("B2+$B3+D$3+$D$4+LEN(\"A1\")")
     );
     assert_eq!(follower.value, CellValue::Number(8.));
-    assert!(anchor.shared_formula.is_none());
+    assert!(anchor.unwrap().shared_formula.is_none());
     assert!(follower.shared_formula.is_none());
 }
 #[test]
@@ -66,9 +66,9 @@ fn group_ids_are_worksheet_local() {
     .unwrap();
     for (index, source) in [(0, "1"), (1, "2")] {
         let cell = book.sheet(index).unwrap().get(at("B1")).unwrap();
-        assert_eq!(cell.formula.as_deref(), Some(source));
-        assert!(cell.shared_formula.is_none());
-        assert_eq!(cell.value, CellValue::Blank);
+        assert_eq!(cell.unwrap().formula.as_deref(), Some(source));
+        assert!(cell.unwrap().shared_formula.is_none());
+        assert_eq!(cell.unwrap().value, CellValue::Blank);
     }
 }
 #[test]
@@ -76,15 +76,42 @@ fn independent_holes_are_not_members_and_overlapping_bounds_are_recovered() {
     let book = read_workbook_bytes::<poirot::model::Workbook>(&package(&[r#"<row r="1"><c r="A1"><f t="shared" si="0" ref="A1:D2">1</f><v>1</v></c><c r="B1"><f>UNKNOWN_VENDOR_FN(1)</f><v>2</v></c><c r="C1"><v>3</v></c><c r="D1"><f t="shared" si="1" ref="C1:D2">4</f><v>4</v></c></row><row r="2"><c r="A2"><f t="shared" si="0"/></c><c r="D2"><f t="shared" si="1"/></c></row>"#])).unwrap();
     let sheet = book.sheet(0).unwrap();
     assert_eq!(sheet.cells().len(), 6);
-    assert!(sheet.get(at("B1")).unwrap().shared_formula.is_none());
+    assert!(
+        sheet
+            .get(at("B1"))
+            .unwrap()
+            .unwrap()
+            .shared_formula
+            .is_none()
+    );
     assert_eq!(
-        sheet.get(at("B1")).unwrap().formula.as_deref(),
+        sheet.get(at("B1")).unwrap().unwrap().formula.as_deref(),
         Some("UNKNOWN_VENDOR_FN(1)")
     );
-    assert!(sheet.get(at("C1")).unwrap().shared_formula.is_none());
-    assert_eq!(sheet.get(at("C1")).unwrap().value, CellValue::Number(3.));
-    assert!(sheet.get(at("D2")).unwrap().shared_formula.is_none());
-    assert_eq!(sheet.get(at("D2")).unwrap().formula.as_deref(), Some("4"));
+    assert!(
+        sheet
+            .get(at("C1"))
+            .unwrap()
+            .unwrap()
+            .shared_formula
+            .is_none()
+    );
+    assert_eq!(
+        sheet.get(at("C1")).unwrap().unwrap().value,
+        CellValue::Number(3.)
+    );
+    assert!(
+        sheet
+            .get(at("D2"))
+            .unwrap()
+            .unwrap()
+            .shared_formula
+            .is_none()
+    );
+    assert_eq!(
+        sheet.get(at("D2")).unwrap().unwrap().formula.as_deref(),
+        Some("4")
+    );
 }
 #[test]
 fn forward_shared_followers_translate_from_actual_master() {
@@ -98,6 +125,7 @@ fn forward_shared_followers_translate_from_actual_master() {
             .unwrap()
             .get(at("A1"))
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("A1+$C2+C$4+$E$5")
@@ -107,9 +135,23 @@ fn forward_shared_followers_translate_from_actual_master() {
 fn shared_and_array_formulas_remain_distinct() {
     let book = read_workbook_bytes::<poirot::model::Workbook>(&package(&[r#"<row><c r="A1"><f t="shared" si="0" ref="A1:B1">1</f><v>1</v></c><c r="B1"><f t="shared" si="0"/><v>1</v></c><c r="D1"><f t="array" ref="D1:E1">{2,3}</f><v>2</v></c><c r="E1"><v>3</v></c></row>"#])).unwrap();
     let sheet = book.sheet(0).unwrap();
-    assert!(sheet.get(at("B1")).unwrap().shared_formula.is_none());
+    assert!(
+        sheet
+            .get(at("B1"))
+            .unwrap()
+            .unwrap()
+            .shared_formula
+            .is_none()
+    );
     assert!(sheet.spill_owner(at("B1")).is_none());
-    assert!(sheet.get(at("D1")).unwrap().shared_formula.is_none());
+    assert!(
+        sheet
+            .get(at("D1"))
+            .unwrap()
+            .unwrap()
+            .shared_formula
+            .is_none()
+    );
     assert_eq!(sheet.spill_owner(at("E1")), Some(at("D1")));
 }
 #[test]
@@ -123,6 +165,7 @@ fn backend_shared_structured_source_and_ordinary_source_survive() {
                 .unwrap()
                 .get(at(coordinate))
                 .unwrap()
+                .unwrap()
                 .formula
                 .as_deref(),
             Some("Table1[Column]")
@@ -134,6 +177,7 @@ fn backend_shared_structured_source_and_ordinary_source_survive() {
         book.sheet(0)
             .unwrap()
             .get(at("A1"))
+            .unwrap()
             .unwrap()
             .formula
             .as_deref(),
@@ -152,6 +196,7 @@ fn nonempty_shared_follower_expression_is_ignored_in_favor_of_master() {
             .unwrap()
             .get(at("B1"))
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("B2")
@@ -160,6 +205,7 @@ fn nonempty_shared_follower_expression_is_ignored_in_favor_of_master() {
         book.sheet(0)
             .unwrap()
             .get(at("C1"))
+            .unwrap()
             .unwrap()
             .formula
             .as_deref(),
@@ -185,6 +231,7 @@ fn extension_formula_outside_cells_does_not_join_or_break_shared_groups() {
             .unwrap()
             .get(at("B1"))
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("1")
@@ -207,6 +254,7 @@ fn mark_group(book: &mut Workbook, coordinates: &[&str], origin: &str) {
             .unwrap()
             .get_mut(at(coordinate))
             .unwrap()
+            .unwrap()
             .shared_formula = Some(poirot::model::SharedFormula {
             group: SharedFormulaId(17),
             origin: at(origin),
@@ -226,7 +274,7 @@ fn deleting_or_replacing_original_anchor_promotes_a_live_master() {
         if replace {
             sheet.set_formula(at("B1"), "99").unwrap();
         } else {
-            sheet.remove(at("B1"));
+            sheet.remove(at("B1")).unwrap();
         }
         let original = book.clone();
         let (bytes, xml) = exported_xml(&book);
@@ -240,8 +288,8 @@ fn deleting_or_replacing_original_anchor_promotes_a_live_master() {
         let reopened = read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
         for (coordinate, source, cache) in [("B2", "A2+1", 22.), ("B3", "A3+1", 33.)] {
             let cell = reopened.sheet(0).unwrap().get(at(coordinate)).unwrap();
-            assert_eq!(cell.formula.as_deref(), Some(source));
-            assert_eq!(cell.value, CellValue::Number(cache));
+            assert_eq!(cell.unwrap().formula.as_deref(), Some(source));
+            assert_eq!(cell.unwrap().value, CellValue::Number(cache));
         }
         assert_eq!(exported_xml(&book).1, xml);
     }
@@ -263,6 +311,7 @@ fn follower_edits_clears_singletons_and_empty_groups_are_independent() {
             .unwrap()
             .get(at("B2"))
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("42")
@@ -280,10 +329,11 @@ fn follower_edits_clears_singletons_and_empty_groups_are_independent() {
             .unwrap()
             .get(at("B1"))
             .unwrap()
+            .unwrap()
             .shared_formula
             .is_none()
     );
-    book.sheet_mut(0).unwrap().remove(at("B1"));
+    book.sheet_mut(0).unwrap().remove(at("B1")).unwrap();
     let (_, xml) = exported_xml(&book);
     assert!(!xml.contains(r#"t="shared""#));
 }
@@ -294,6 +344,7 @@ fn stale_or_unsupported_sources_fall_back_without_losing_formulas() {
         book.sheet_mut(0)
             .unwrap()
             .get_mut(at("B2"))
+            .unwrap()
             .unwrap()
             .formula = Some(replacement.into());
         let (bytes, xml) = exported_xml(&book);
@@ -306,6 +357,7 @@ fn stale_or_unsupported_sources_fall_back_without_losing_formulas() {
                     .unwrap()
                     .get(at(coordinate))
                     .unwrap()
+                    .unwrap()
                     .formula
                     .as_deref(),
                 Some(source)
@@ -317,7 +369,12 @@ fn stale_or_unsupported_sources_fall_back_without_losing_formulas() {
 fn verified_mixed_references_string_literals_cache_and_style_survive() {
     let mut book = read_workbook_bytes::<poirot::model::Workbook>(&package(&[r#"<row r="1"><c r="B1"><f t="shared" si="3" ref="B1:C2">A1+$B2+C$3+$D$4+LEN("A1")</f><v>7</v></c></row><row r="2"><c r="C2"><f t="shared" si="3"/><v>8</v></c></row>"#])).unwrap();
     mark_group(&mut book, &["B1", "C2"], "B1");
-    let follower = book.sheet_mut(0).unwrap().get_mut(at("C2")).unwrap();
+    let follower = book
+        .sheet_mut(0)
+        .unwrap()
+        .get_mut(at("C2"))
+        .unwrap()
+        .unwrap();
     follower.value = CellValue::Text("cache\r\nA1".into());
     follower.style.number_format = Some("0.000".into());
     let (bytes, xml) = exported_xml(&book);
@@ -326,7 +383,7 @@ fn verified_mixed_references_string_literals_cache_and_style_survive() {
         "{xml}"
     );
     let reopened = read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
-    let follower = reopened.sheet(0).unwrap().get(at("C2")).unwrap();
+    let follower = reopened.sheet(0).unwrap().get(at("C2")).unwrap().unwrap();
     assert_eq!(
         follower.formula.as_deref(),
         Some("B2+$B3+D$3+$D$4+LEN(\"A1\")")
@@ -338,7 +395,7 @@ fn verified_mixed_references_string_literals_cache_and_style_survive() {
 fn promoted_master_can_be_right_of_the_bounding_corner() {
     let mut book = read_workbook_bytes::<poirot::model::Workbook>(&package(&[r#"<row r="1"><c r="C1"><f t="shared" si="9" ref="B1:D3">C1+$F2</f></c></row><row r="2"><c r="D2"><f t="shared" si="9"/></c></row><row r="3"><c r="B3"><f t="shared" si="9"/></c></row>"#])).unwrap();
     mark_group(&mut book, &["C1", "D2", "B3"], "C1");
-    book.sheet_mut(0).unwrap().remove(at("C1"));
+    book.sheet_mut(0).unwrap().remove(at("C1")).unwrap();
     let (bytes, xml) = exported_xml(&book);
     assert!(
         xml.contains(r#"<f t="shared" si="0" ref="B2:D3">D2+$F3</f>"#),
@@ -350,6 +407,7 @@ fn promoted_master_can_be_right_of_the_bounding_corner() {
             .sheet(0)
             .unwrap()
             .get(at("B3"))
+            .unwrap()
             .unwrap()
             .formula
             .as_deref(),
@@ -385,6 +443,7 @@ fn group_origins_prevent_id_collisions_and_overlapping_output_bounds_fall_back()
             .unwrap()
             .get(at("A2"))
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("1")
@@ -395,12 +454,13 @@ fn group_origins_prevent_id_collisions_and_overlapping_output_bounds_fall_back()
             .unwrap()
             .get(at("C2"))
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("2")
     );
     let sheet = book.sheet_mut(0).unwrap();
-    let cell = sheet.remove(at("A2")).unwrap();
+    let cell = sheet.remove(at("A2")).unwrap().unwrap();
     sheet.set(at("D2"), cell).unwrap();
     let (bytes, xml) = exported_xml(&book);
     assert!(!xml.contains(r#"t="shared""#), "{xml}");
@@ -410,6 +470,7 @@ fn group_origins_prevent_id_collisions_and_overlapping_output_bounds_fall_back()
             .sheet(0)
             .unwrap()
             .get(at("D2"))
+            .unwrap()
             .unwrap()
             .formula
             .as_deref(),
@@ -424,11 +485,12 @@ fn unsupported_templates_and_stale_literal_members_never_omit_source() {
         let sheet = book.sheet_mut(0).unwrap();
         if unsupported {
             for coordinate in ["B1", "B2", "B3"] {
-                sheet.get_mut(at(coordinate)).unwrap().formula = Some("Table1[Column]".into());
+                sheet.get_mut(at(coordinate)).unwrap().unwrap().formula =
+                    Some("Table1[Column]".into());
             }
         } else {
             // Public mutation can leave a provenance tag on a newly literal cell.
-            sheet.get_mut(at("B2")).unwrap().formula = None;
+            sheet.get_mut(at("B2")).unwrap().unwrap().formula = None;
         }
         let (bytes, xml) = exported_xml(&book);
         assert!(!xml.contains(r#"t="shared""#));
@@ -440,8 +502,14 @@ fn unsupported_templates_and_stale_literal_members_never_omit_source() {
                     .unwrap()
                     .get(at(coordinate))
                     .unwrap()
+                    .unwrap()
                     .formula,
-                book.sheet(0).unwrap().get(at(coordinate)).unwrap().formula
+                book.sheet(0)
+                    .unwrap()
+                    .get(at(coordinate))
+                    .unwrap()
+                    .unwrap()
+                    .formula
             );
         }
     }
@@ -464,6 +532,7 @@ fn shared_bounds_must_not_overlap_independent_array_ownership() {
             .unwrap()
             .get(at("C3"))
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("1")
@@ -483,6 +552,7 @@ fn forward_shared_structured_source_survives_backend_translation() {
             .unwrap()
             .get(at("A1"))
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("Table1[Column]")
@@ -498,18 +568,27 @@ fn modern_error_retry_preserves_following_implicit_coordinates_and_formulas() {
     let sheet = workbook.sheet(0).unwrap();
     assert_eq!(sheet.cells().len(), 5);
     assert_eq!(
-        sheet.get(at("A1")).unwrap().value,
+        sheet.get(at("A1")).unwrap().unwrap().value,
         CellValue::Error(poirot::model::CellError::Spill)
     );
-    assert_eq!(sheet.get(at("B1")).unwrap().formula.as_deref(), Some("1+2"));
-    assert_eq!(sheet.get(at("B1")).unwrap().value, CellValue::Number(3.));
     assert_eq!(
-        sheet.get(at("C1")).unwrap().value,
+        sheet.get(at("B1")).unwrap().unwrap().formula.as_deref(),
+        Some("1+2")
+    );
+    assert_eq!(
+        sheet.get(at("B1")).unwrap().unwrap().value,
+        CellValue::Number(3.)
+    );
+    assert_eq!(
+        sheet.get(at("C1")).unwrap().unwrap().value,
         CellValue::Text("rich text".into())
     );
     assert_eq!(
-        sheet.get(at("A2")).unwrap().value,
+        sheet.get(at("A2")).unwrap().unwrap().value,
         CellValue::Error(poirot::model::CellError::Calc)
     );
-    assert_eq!(sheet.get(at("B2")).unwrap().value, CellValue::Number(9.));
+    assert_eq!(
+        sheet.get(at("B2")).unwrap().unwrap().value,
+        CellValue::Number(9.)
+    );
 }

@@ -41,7 +41,7 @@ class FunctionArchitectureTests(unittest.TestCase):
                 if "test" in path.name:
                     continue
                 code = production_code(path.read_text())
-                self.assertNotRegex(code, r"\bpoirot\s*::|\bcrate\s*::\s*(?:model|eval|workflow)\b", str(path))
+                self.assertNotRegex(code, r"\bpoirot\s*::|\bcrate\s*::\s*(?:model|eval|calculation|cells|editing|files|snapshots|styles)\b", str(path))
 
 
 

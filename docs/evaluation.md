@@ -23,8 +23,8 @@ use poirot::{CellValue, Workbook};
 # fn main() -> Result<(), Box<dyn std::error::Error>> {
 let mut book = Workbook::new();
 let sheet = book.add_sheet("Energy")?;
-sheet.set_value("A1".parse()?, 12.)?;
-sheet.set_formula("B1".parse()?, "A1*25")?;
+sheet.set_value("A1", 12.)?;
+sheet.set_formula("B1", "A1*25")?;
 let mut evaluation = book.evaluation().build()?;
 let hours = evaluation.target("Energy!A1")?;
 let energy = evaluation.target("Energy!B1")?;
@@ -39,7 +39,7 @@ The builder captures one default context when built. `.context(context)` replace
 
 Resolve string targets once for repeated reads. Resolution accepts quoted sheet names such as `'Annual summary'!B12`. A missing sheet is an error; an unstored coordinate on an existing sheet is a valid target. It calculates as blank when no source, scenario edit or spill supplies a value. Targets bind to the source workbook's sheet topology and are not guaranteed to survive structural edits. Worksheet errors such as `#DIV/0!` are calculated values; operational refusals are Rust errors.
 
-Use `book.stored_cell(sheet, address)` to inspect authored formulas, style and saved values without calculation. Saved values may be stale. It returns `None` for either a missing sheet or an unstored cell. Resolve `book.sheet_by_name(name)` first when you need to distinguish those cases.
+Use `book.stored_cell(sheet, address)` to inspect authored formulas, style and saved values without calculation. Saved values may be stale. It accepts A1 text, a typed address, or zero-based `(row, column)` integers. Invalid coordinates return an error; `Ok(None)` means either a missing sheet or an unstored cell. Resolve `book.sheet_by_name(name)` first when you need to distinguish those cases.
 
 ## Retain unaffected results with an overlay
 
@@ -48,7 +48,7 @@ Use `book.stored_cell(sheet, address)` to inspect authored formulas, style and s
 use poirot::calculation::EvaluationContext;
 # fn main() -> Result<(), Box<dyn std::error::Error>> {
 # let mut book = Workbook::new();
-# book.add_sheet("Energy")?.set_formula("B1".parse()?, "A1*25")?;
+# book.add_sheet("Energy")?.set_formula("B1", "A1*25")?;
 let mut overlay = book.overlay().build()?;
 let hours = overlay.target("Energy!A1")?;
 let energy = overlay.target("Energy!B1")?;
@@ -85,13 +85,25 @@ overlay.edit(|edits| -> Result<(), ModelError> {
 
 The closure exposes only edits; reads and evaluation resume after it returns. Edits apply in order. If an operation fails or the closure unwinds, earlier successful edits remain applied and their results are invalidated. This groups invalidation without rollback or a separate commit step.
 
-An overlay also stops propagating changes when an intermediate result remains identical. For example, changing an input from `1.1` to `1.2` reruns `ROUND(input,0)` but can reuse formulas that depend on its unchanged result. Reuse follows the dependencies actually consumed, including lazy branches and range membership. Dirty dependencies are validated in their original consumption order. If they all retain their previous results, the parent stays cached; the first changed result resumes ordinary formula execution so an obsolete lazy branch is not evaluated. Replacing a formula forces it to execute; style edits conservatively force direct readers. Volatile, opaque and changed-context dependencies retain their own invalidation rules.
+An overlay can reuse downstream formulas when a changed input produces the same
+intermediate result. Reuse follows consumed dependencies, including lazy branches,
+ranges and the execution context. Replacing formulas and changing styles can
+invalidate readers even when a numeric result is unchanged. The
+[architecture guide](architecture.md#reuse-and-edits) explains the engine's
+dependency validation.
 
-Functions backed by shared kernels follow modern Excel array and argument rules under both builtin policies. Broadcast arguments combine singleton axes: `ROUND(A1:A3,{0,1})` can spill a three-row, two-column result. Collection arguments consume whole operands without enlarging the output rectangle. Errors remain local to each result member. Remaining manual family adapters may still declare legacy policy behavior.
+Array arguments follow the selected spreadsheet policy. Shared kernels broadcast
+singleton axes: `ROUND(A1:A3,{0,1})` can spill a three-row, two-column result;
+collection consumers such as `SUM` consume whole operands. Errors can belong to
+individual array members. Some manual function adapters retain policy-specific
+behavior; see the [compatibility guide](compatibility.md).
 
-An explicit `@A1:A3` selects the source cell in the formula's row before the function consumes it. `ArrayResultPolicy::ScalarIntersection` projects only the final result; intermediate arrays remain available to consumers such as `SUM(ROUND(A1:A3,1))`.
-
-Under dynamic spilling, an eligible blank coordinate retains dependencies on possible incoming spill owners, including an empty spatial query. Adding or removing an anchor invalidates matching coordinate reads. Value-only edits can reuse an unchanged producer and its complete array footprint; array shape and ownership are part of validation. Authored formulas and nonblank values block incoming spills. Source metadata changes and sparse range consumers still invalidate conservatively, and child reads restore the complete footprint before exposing retained spill values.
+An explicit `@A1:A3` selects the source cell in the formula's row.
+`ArrayResultPolicy::ScalarIntersection` projects only the final result;
+intermediate arrays remain available to consumers such as `SUM(ROUND(A1:A3,1))`.
+Authored formulas and nonblank values block incoming spills. Overlay reuse tracks
+array shape and ownership as well as values, including changes to possible spill
+anchors and previously empty coordinates.
 
 After an edit, dirty results remain private evidence until a successful output call validates or replaces them. `cached_value()` and `cached_cells()` expose only current results. `retained_usage()` includes dirty storage as well as current values, so storage limits still apply before recalculation. Export and native snapshots omit dirty evidence. A failed output batch publishes none of its new results or validations.
 
@@ -131,7 +143,7 @@ let value = restored.evaluation.cell(output)?;
 
 `prepared_status` distinguishes reused preparation, absent preparation, incompatible preparation discarded during recovery, and explicit source-only recovery. Compatible saved spreadsheet policies take precedence. When preparation is absent or discarded, default `EvaluationPolicy` semantics apply; `into_evaluation_with_policy(context, fallback)` overrides only that recovery fallback. The context always starts a new direct cycle; direct result caches are not restored as warm incremental state.
 
-Use `.prepared_policy(poirot::snapshots::PreparedPolicy::RequireCompatible)` to require present, compatible preparation (refusing source-only snapshots as well), or `SourceOnly` to discard it deliberately. Component decoding enforces the same strict requirement. `into_artifact()` exposes incremental checkpoint attachment and custom provider management through `poirot::eval::artifact`. Checkpoints store the workbook once; preparation saved by an earlier engine revision is discarded (or refused under `RequireCompatible`) while its source still restores.
+Use `.prepared_policy(poirot::snapshots::PreparedPolicy::RequireCompatible)` to require present, compatible preparation (refusing source-only snapshots as well), or `SourceOnly` to discard it deliberately. Component decoding enforces the same strict requirement. `restored.into_overlay()` retains compatible incremental results; `restored.into_workbook()` recovers authored source including edits, without promoting calculated results. Attach runtime providers with `Workbook::restore_snapshot().shared_extensions(registry)` before restoring custom-function preparation. Provider identities must match exactly; source-only recovery binds against the newly attached registry. Checkpoints store the workbook once; preparation saved by an earlier engine revision is discarded (or refused under `RequireCompatible`) while its source still restores.
 
 Prepared incremental checkpoints retain calculated results and bounded exact-lookup search evidence. Attachment rebuilds the previously inspected spill-discovery regions from authored source without evaluating formulas. This work belongs to restoration; subsequent cycles retain the same discovery and lookup reuse as an in-memory overlay. New source edits, execution-context changes and resource admission still invalidate or discard affected state normally.
 
@@ -148,10 +160,17 @@ one cycle, and `EvaluationReport` represents completion with optional profiling.
 `PreparationPolicy` selects compiler preparation; it is a different concept.
 `NumberLocale` controls numeric input parsing; display formatting is separate.
 
-The component APIs under `poirot::eval::overlay` support additional ownership forms,
-custom extensions and snapshot attachment. Use `Evaluation::from_calculation` or
-`Overlay::from_overlay` to wrap them in the application API without resetting state.
-`into_calculation` and `into_overlay` return to the component API.
+Use `Evaluation::with_workbook(source)` or `Overlay::with_workbook(source)` for a
+borrowed, owned or shared model, including `Arc<poirot::Workbook>`. Both
+builders accept `.extensions(&registry)` and `.shared_extensions(Arc::clone(&registry))`;
+registration types live in `poirot::calculation::extensions`. `Evaluation::set_style`
+changes scenario presentation and clears results while preserving work and failure,
+just like value edits.
+
+Advanced integrations can wrap an already configured engine with
+`Evaluation::from_calculation` or `Overlay::from_overlay` without resetting state.
+`into_calculation` and `into_overlay` return that engine state. Compiler, observer
+and run instrumentation remain available through `poirot::eval`.
 
 
 Consuming builders (`book.into_evaluation()` and `book.into_overlay()`) move the
@@ -159,4 +178,4 @@ model into the engine without copying it. `into_workbook()` recovers that origin
 baseline and discards pending edits and computed results. On an owned overlay,
 call `apply_edits_to_workbook()` first to preserve authored edits; call
 `recalculate()` on the recovered workbook when you need stored computed values.
-The persistent flush preserves warm compiled programs and valid scenario results.
+Applying edits preserves warm compiled programs and valid scenario results.

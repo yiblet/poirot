@@ -1,19 +1,15 @@
 use super::super::incremental::Overlay;
 use crate::eval::config::EvaluationContext;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::model::{CellAddress, CellValue, Workbook};
 
 #[test]
 fn separate_public_calls_preserve_complete_exports_while_reusing_empty_buffers() {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
-    sheet
-        .set_formula("A1".parse().unwrap(), "SEQUENCE(2,2)")
-        .unwrap();
-    sheet
-        .set_formula("A4".parse().unwrap(), "SEQUENCE(2,2)")
-        .unwrap();
+    sheet.set_formula("A1", "SEQUENCE(2,2)").unwrap();
+    sheet.set_formula("A4", "SEQUENCE(2,2)").unwrap();
     let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
     let context = EvaluationContext::default();
     let mut evaluation = overlay.evaluation(&context).unwrap();
@@ -62,6 +58,7 @@ fn separate_public_calls_preserve_complete_exports_while_reusing_empty_buffers()
                             col
                         })
                         .unwrap()
+                        .unwrap()
                         .value,
                     CellValue::from(f64::from(row * 2 + col + 1))
                 );
@@ -76,7 +73,7 @@ fn rejected_cache_commit_keeps_pending_spill_evidence_and_publishes_nothing() {
     workbook
         .add_sheet("S")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "{1,2}")
+        .set_formula("A1", "{1,2}")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
     let context = EvaluationContext::default();
@@ -89,7 +86,7 @@ fn rejected_cache_commit_keeps_pending_spill_evidence_and_publishes_nothing() {
     };
     assert!(matches!(
         evaluation.cell(target),
-        Err(EvaluationFailure::MemoRetentionLimit { .. })
+        Err(EvaluationError::MemoRetentionLimit { .. })
     ));
     let publication = evaluation
         .session
@@ -125,8 +122,8 @@ fn conflicting_cache_borrow_returns_stale_plan() {
     let context = EvaluationContext::default();
     let evaluation = overlay.evaluation(&context).unwrap();
     let _held = evaluation.cache.borrow_mut();
-    assert_eq!(
+    assert!(matches!(
         evaluation.result_changes(),
-        Err(EvaluationFailure::StalePlan)
-    );
+        Err(EvaluationError::StalePlan)
+    ));
 }

@@ -1,6 +1,6 @@
 use super::call_context::CallContext;
 use super::function_value::FunctionValue;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::values::Value;
 use crate::eval::vm::{ExecutableRef, ExpressionRunner};
 use poirot_functions::scalar::Input;
@@ -18,9 +18,9 @@ impl Input for FunctionInput<'_, '_, '_> {
     type Value = FunctionValue;
 
     /// Operational failure propagated when forcing the argument.
-    type Error = EvaluationFailure;
+    type Error = EvaluationError;
 
-    fn force(&mut self) -> Result<FunctionValue, EvaluationFailure> {
+    fn force(&mut self) -> Result<FunctionValue, EvaluationError> {
         if self.value.is_none() {
             let target = self.context.target;
             self.context.session.state.runtime.budget.allocation(1)?;

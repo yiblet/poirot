@@ -37,8 +37,10 @@ tokens! { ReadingOrder { Context => "0", LeftToRight => "1", RightToLeft => "2" 
 tokens! { ThemeColor { Light1 => "0", Dark1 => "1", Light2 => "2", Dark2 => "3", Accent1 => "4", Accent2 => "5", Accent3 => "6", Accent4 => "7", Accent5 => "8", Accent6 => "9", Hyperlink => "10", FollowedHyperlink => "11" } }
 
 /// Reject a malformed supported style value.
-pub(super) fn invalid(value: impl std::fmt::Display) -> IoError {
-    IoError::Read(format!("invalid SpreadsheetML style value: {value}"))
+pub(super) fn invalid(value: impl Into<String>) -> IoError {
+    IoError::Style(crate::StyleDecodeError::InvalidToken {
+        input: value.into(),
+    })
 }
 /// Parse a present XML boolean, retaining the element's specified default.
 pub(super) fn boolean(e: &BytesStart<'_>, name: &str, default: bool) -> Result<bool, IoError> {
@@ -87,10 +89,14 @@ pub(super) fn color(e: &BytesStart<'_>) -> Result<StyleColor, IoError> {
         sources.push(ColorSource::Automatic);
     }
     if sources.len() != 1 {
-        return Err(invalid("color requires one source"));
+        return Err(IoError::Style(
+            crate::StyleDecodeError::ColorRequiresOneSource,
+        ));
     }
     Ok(StyleColor {
-        source: sources.pop().ok_or_else(|| invalid("missing color"))?,
+        source: sources
+            .pop()
+            .ok_or(IoError::Style(crate::StyleDecodeError::MissingColor))?,
         tint: number(e, "tint")?.map(Tint::new).transpose()?,
     })
 }
@@ -100,7 +106,7 @@ pub(super) fn valid(value: &str) -> Result<(), IoError> {
     if value.chars().any(|c| {
         !matches!(c, '\u{9}' | '\u{a}' | '\u{d}' | '\u{20}'..='\u{d7ff}' | '\u{e000}'..='\u{fffd}' | '\u{10000}'..='\u{10ffff}')
     }) {
-        return Err(IoError::Unsupported("style string contains invalid XML character".into()));
+        return Err(IoError::Unsupported(crate::WorkbookFeatureError::StyleStringContainsInvalidXmlCharacter));
     }
     Ok(())
 }

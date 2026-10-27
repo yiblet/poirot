@@ -21,7 +21,7 @@ pub(crate) fn stored_formula(source: &str) -> Result<Cow<'_, str>, IoError> {
     }
     FormulaPrinter::print(&expression)
         .map(Cow::Owned)
-        .map_err(|error| IoError::Unsupported(error.to_string()))
+        .map_err(IoError::Formula)
 }
 /// Assign XLSX storage names independently of the evaluator's support catalog.
 /// MS-XLSX §2.2.3 lists the future-function spellings, retrieved 2026-10-21:
@@ -209,7 +209,7 @@ fn modern_stored_name(name: &str) -> Option<&'static str> {
 }
 /// Rewrite storage-only syntax using a fallibly grown stack of disjoint mutable nodes.
 fn rewrite(expression: &mut Expr) -> Result<bool, IoError> {
-    let allocation = |_| IoError::Unsupported("spill formula export allocation failed".into());
+    let allocation = |source| IoError::Allocation(crate::AllocationError::SpillFormula(source));
     let mut pending = Vec::new();
     pending.try_reserve(1).map_err(allocation)?;
     // SAFETY: try_reserve(1) just succeeded on the empty stack.
@@ -253,7 +253,11 @@ fn rewrite(expression: &mut Expr) -> Result<bool, IoError> {
             Expr::Array(rows) => rows
                 .iter()
                 .try_fold(0usize, |count, row| count.checked_add(row.len()))
-                .ok_or_else(|| IoError::Unsupported("spill formula export size overflow".into()))?,
+                .ok_or({
+                    IoError::Unsupported(
+                        crate::WorkbookFeatureError::SpillFormulaExportSizeOverflow,
+                    )
+                })?,
             _ => 0,
         };
         pending.try_reserve(children).map_err(allocation)?;
@@ -303,9 +307,7 @@ mod tests {
         // visits it safely, and the existing printer rejects its excessive depth.
         let formula = format!("A1{}", "#".repeat(512));
         assert!(parse_formula(&formula).is_ok());
-        assert!(
-            matches!(stored_formula(&formula), Err(IoError::Unsupported(detail)) if detail.contains("printer complexity limit exceeded"))
-        );
+        assert!(matches!(stored_formula(&formula), Err(IoError::Formula(_))));
     }
     #[test]
     fn deep_ordinary_formula_with_hash_literal_is_preserved_without_printing() {

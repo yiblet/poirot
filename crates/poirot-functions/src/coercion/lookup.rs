@@ -1,22 +1,6 @@
 //! Lookup-specific scalar admission rules.
-/// Spreadsheet error vocabulary shared by lookup kernels and host adapters.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Error {
-    /// Invalid operand or argument shape (`#VALUE!`).
-    Value,
-    /// Invalid reference (`#REF!`).
-    Ref,
-    /// No matching value (`#N/A`).
-    Na,
-    /// Invalid numeric argument or result (`#NUM!`).
-    Num,
-    /// Zero denominator (`#DIV/0!`).
-    Div0,
-    /// Unresolved name (`#NAME?`).
-    Name,
-    /// Empty intersection (`#NULL!`).
-    Null,
-}
+pub use crate::coercion::LookupValueError;
+
 /// Workbook-independent scalar channel used by lookup and reference kernels.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Scalar {
@@ -31,11 +15,11 @@ pub enum Scalar {
     /// Omitted argument slot.
     Missing,
     /// Catchable spreadsheet error operand.
-    Error(Error),
+    Error(LookupValueError),
 }
 
 /// Convert a lookup option, including omitted-as-false source behavior.
-pub fn coerce_lookup_boolean(v: Scalar) -> Result<bool, Error> {
+pub fn coerce_lookup_boolean(v: Scalar) -> Result<bool, LookupValueError> {
     match v {
         Scalar::Bool(b) => Ok(b),
         Scalar::Number(n) => Ok(n != 0.0),
@@ -43,7 +27,7 @@ pub fn coerce_lookup_boolean(v: Scalar) -> Result<bool, Error> {
         Scalar::Text(s) if s.eq_ignore_ascii_case("TRUE") => Ok(true),
         Scalar::Text(s) if s.eq_ignore_ascii_case("FALSE") => Ok(false),
         Scalar::Error(e) => Err(e),
-        _ => Err(Error::Value),
+        _ => Err(LookupValueError::Value),
     }
 }
 
@@ -57,7 +41,7 @@ pub fn coerce_lookup_blank_key(tolerant: bool) -> Scalar {
 }
 
 /// Lookup numbers preserve existing nonfinite values; missing numeric arguments fail.
-pub fn coerce_lookup_number<E: From<Error>>(
+pub fn coerce_lookup_number<E: From<LookupValueError>>(
     value: Scalar,
     parse: impl FnOnce(&str) -> Result<f64, E>,
 ) -> Result<f64, E> {
@@ -65,17 +49,17 @@ pub fn coerce_lookup_number<E: From<Error>>(
         Scalar::Number(n) => Ok(n),
         Scalar::Bool(b) => Ok(f64::from(u8::from(b))),
         Scalar::Blank => Ok(0.0),
-        Scalar::Missing => Err(Error::Value.into()),
+        Scalar::Missing => Err(LookupValueError::Value.into()),
         Scalar::Text(t) => parse(&t),
         Scalar::Error(e) => Err(e.into()),
     }
 }
 /// Finite signed-32 lookup ordinal with the requested floor/truncate rule.
-pub fn coerce_lookup_integer(number: f64, floor: bool) -> Result<i32, Error> {
-    crate::coercion::compatibility::coerce_integer(number, floor).map_err(|_| Error::Num)
+pub fn coerce_lookup_integer(number: f64, floor: bool) -> Result<i32, LookupValueError> {
+    crate::coercion::compatibility::coerce_integer(number, floor).map_err(|_| LookupValueError::Num)
 }
 /// Lookup text supports omitted-as-empty and a fallible, metered number renderer.
-pub fn coerce_lookup_text<E: From<Error>>(
+pub fn coerce_lookup_text<E: From<LookupValueError>>(
     value: &Scalar,
     render: impl FnOnce(f64) -> Result<String, E>,
 ) -> Result<String, E> {

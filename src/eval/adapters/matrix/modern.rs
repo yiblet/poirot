@@ -7,7 +7,7 @@ use crate::eval::functions::registry::MatrixFunction;
 use crate::eval::host::CallHost;
 use crate::eval::limits::EvalResult;
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellValue::{Blank, Error};
 use crate::model::{CellAddress, CellError, CellValue};
@@ -39,7 +39,7 @@ fn evaluate(
     let mut inputs = Vec::new();
     inputs
         .try_reserve_exact(length)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     inputs.push(first);
     let mut padding = Error(CellError::NA);
     let transform = match function {
@@ -278,8 +278,8 @@ pub(in crate::eval) fn execute(
     let mut host = CallHost::new_array(session, sheet, address, args, arrays);
     match evaluate(&mut host, function, length, address) {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }
 
@@ -287,7 +287,7 @@ pub(in crate::eval) fn execute(
 mod resource_mapping_tests {
     use super::*;
     use crate::eval::coordinates::EvaluationTarget;
-    use crate::eval::limits::{EvaluationFailure, ResourceFailureKind};
+    use crate::eval::limits::{EvaluationError, ResourceFailureKind};
     use crate::model::Workbook;
 
     #[test]
@@ -298,35 +298,28 @@ mod resource_mapping_tests {
         let mut host = CallHost::new_array(&mut session, 0, address, ArgumentsRef::Empty, 0);
         for (error, expected) in [
             (
-                poirot_functions::matrix::Error::SizeOverflow,
+                poirot_functions::matrix::MatrixError::SizeOverflow,
                 ResourceFailureKind::SizeOverflow,
             ),
             (
-                poirot_functions::matrix::Error::AllocationFailure,
+                poirot_functions::matrix::MatrixError::AllocationFailure,
                 ResourceFailureKind::Allocation,
             ),
             (
-                poirot_functions::matrix::Error::BudgetExceeded,
+                poirot_functions::matrix::MatrixError::BudgetExceeded,
                 ResourceFailureKind::BackendGuard,
             ),
         ] {
             assert!(
-                matches!(failure(&mut host, error), FunctionFailure::Operational(EvaluationFailure::Resource { kind, source: Some(source), .. }) if kind == expected && source == EvaluationTarget { sheet: 0, address })
+                matches!(failure(&mut host, error), FunctionError::Operational(EvaluationError::Resource { kind, target: Some(source), .. }) if kind == expected && source == EvaluationTarget { sheet: 0, address })
             );
         }
         assert!(matches!(
             failure(
                 &mut host,
-                poirot_functions::matrix::Error::SourceUnsupported("source behavior")
+                poirot_functions::matrix::MatrixError::Formula(CellError::Value)
             ),
-            FunctionFailure::Operational(EvaluationFailure::UnsupportedCapability { .. })
-        ));
-        assert!(matches!(
-            failure(
-                &mut host,
-                poirot_functions::matrix::Error::Formula(CellError::Value)
-            ),
-            FunctionFailure::Spreadsheet(CellError::Value)
+            FunctionError::Spreadsheet(CellError::Value)
         ));
     }
 }

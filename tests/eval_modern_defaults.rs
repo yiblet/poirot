@@ -26,29 +26,14 @@ fn complete(outcome: EvaluationOutcome<CellValue>) -> CellValue {
 fn defaults_are_consistent_and_serialized_policy_ordinals_are_preserved() {
     let configuration = RunConfiguration::default();
     let overlay = EvaluationPolicy::default();
-    assert_eq!(
-        configuration.builtin_policy(),
-        BuiltinSemanticsPolicy::ExcelDocumentation
-    );
-    assert_eq!(
-        configuration.text_policy().source,
-        TextSourceVersion::ExcelCompatibilityV2Documented
-    );
+
     assert_eq!(
         configuration.array_result_policy(),
         ArrayResultPolicy::DynamicSpill
     );
-    assert_eq!(configuration.builtin_policy(), overlay.builtin);
-    assert_eq!(configuration.text_policy(), overlay.text);
+
     assert_eq!(configuration.array_result_policy(), overlay.arrays);
-    assert_eq!(
-        postcard::to_allocvec(&BuiltinSemanticsPolicy::PinnedPoi).unwrap(),
-        [0]
-    );
-    assert_eq!(
-        postcard::to_allocvec(&BuiltinSemanticsPolicy::ExcelDocumentation).unwrap(),
-        [1]
-    );
+
     assert_eq!(
         postcard::to_allocvec(&ArrayResultPolicy::ScalarIntersection).unwrap(),
         [0]
@@ -198,7 +183,7 @@ fn text_and_unary_regressions_work_in_prepared_bound_and_overlay_paths() {
 }
 
 #[test]
-fn logical_units_preserve_unpaired_surrogates_and_policy_changes_invalidate_snapshots() {
+fn logical_units_preserve_unpaired_surrogates_across_snapshots() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
@@ -240,8 +225,8 @@ fn logical_units_preserve_unpaired_surrogates_and_policy_changes_invalidate_snap
     let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
     let (book, state) = Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
     let mut overlay = state.attach(&book).unwrap();
-    let mut policy = overlay.policy().clone();
-    policy.text.source = TextSourceVersion::Poi7321209;
+    let policy = overlay.policy().clone();
+
     overlay.set_policy(policy).unwrap();
     assert_eq!(
         overlay
@@ -249,7 +234,7 @@ fn logical_units_preserve_unpaired_surrogates_and_policy_changes_invalidate_snap
             .unwrap()
             .cell(target("B2"))
             .unwrap(),
-        CellValue::Number(4.)
+        CellValue::Number(3.)
     );
     overlay.set_value(target("A1"), "😀").unwrap();
     assert_eq!(
@@ -258,7 +243,7 @@ fn logical_units_preserve_unpaired_surrogates_and_policy_changes_invalidate_snap
             .unwrap()
             .cell(target("B2"))
             .unwrap(),
-        CellValue::Number(2.)
+        CellValue::Number(1.)
     );
 }
 
@@ -277,6 +262,7 @@ fn default_recalculation_atomically_publishes_and_replaces_spill_children() {
         book.sheet(0)
             .unwrap()
             .get(target("B2").address)
+            .unwrap()
             .unwrap()
             .value,
         CellValue::Number(4.)
@@ -316,11 +302,18 @@ fn default_recalculation_atomically_publishes_and_replaces_spill_children() {
         ),
         EvaluationOutcome::Complete { .. }
     ));
-    assert!(book.sheet(0).unwrap().get(target("B2").address).is_none());
+    assert!(
+        book.sheet(0)
+            .unwrap()
+            .get(target("B2").address)
+            .unwrap()
+            .is_none()
+    );
     assert_eq!(
         book.sheet(0)
             .unwrap()
             .get(target("A1").address)
+            .unwrap()
             .unwrap()
             .value,
         CellValue::Number(9.)

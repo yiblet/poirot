@@ -10,7 +10,7 @@ use poirot_parsing::formula::FormulaParsePolicy;
 /// use poirot::eval::{FormulaCompiler, PreparationPolicy, WorkbookView};
 /// use poirot::model::Workbook;
 /// let mut book = Workbook::new();
-/// book.add_sheet("Data")?.set_formula("A1".parse()?, "2*3")?;
+/// book.add_sheet("Data")?.set_formula("A1", "2*3")?;
 /// let policy = PreparationPolicy::default();
 /// let plan = FormulaCompiler::new().compile_workbook(&book, &policy);
 /// let _view = WorkbookView::new(&book, &plan, &policy)?;

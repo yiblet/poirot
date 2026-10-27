@@ -6,7 +6,7 @@
 //! No external implementation, tests or fixture data were copied or adapted.
 use poirot::eval::EvaluationContext;
 use poirot::eval::overlay::{Evaluation, Overlay};
-use poirot::eval::{BudgetKind, EvaluationFailure, EvaluationTarget};
+use poirot::eval::{BudgetKind, EvaluationError, EvaluationTarget};
 use poirot::model::{CellError, CellValue, Workbook};
 
 fn at(address: &str) -> EvaluationTarget {
@@ -315,6 +315,7 @@ fn direct_changes_and_xlsx_reopen_preserve_singleton_and_rectangular_extents() {
             .unwrap()
             .get(at("D1").address)
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("_xlfn.ANCHORARRAY(A1)")
@@ -328,7 +329,7 @@ fn full_column_reference_root_obeys_materialization_budget_atomically() {
     context.limits = context.limits.max_collection_values(100);
     let mut e = Evaluation::with_workbook(&book).build(context).unwrap();
     assert!(
-        matches!(e.cell(at("D1")),Err(EvaluationFailure::Budget(f)) if f.kind==BudgetKind::Materialization)
+        matches!(e.cell(at("D1")),Err(EvaluationError::Budget(f)) if f.kind==BudgetKind::Materialization)
     );
     assert!(e.changes().is_empty());
     assert_eq!(e.values().count(), 0);
@@ -425,10 +426,14 @@ fn overlay_flush_preserves_singleton_extent_and_authored_child_style() {
         sheet.complete_spill_extent(at("A1").address),
         Some(at("A1").address)
     );
-    assert_eq!(sheet.get(at("B1").address).unwrap().value, CellValue::Blank);
+    assert_eq!(
+        sheet.get(at("B1").address).unwrap().unwrap().value,
+        CellValue::Blank
+    );
     assert_eq!(
         sheet
             .get(at("B1").address)
+            .unwrap()
             .unwrap()
             .style
             .number_format

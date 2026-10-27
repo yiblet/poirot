@@ -16,14 +16,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let mut book = Workbook::open(input)?;
-    if let Some(metadata) = &book.model().file_metadata {
+    if let Some(metadata) = &book.file_metadata {
         for warning in &metadata.import_warnings {
             eprintln!("{warning}");
         }
     }
 
     let sheet = book.sheet_mut(0).ok_or("the workbook has no sheets")?;
-    sheet.set_value("A1".parse()?, 24.)?;
+    sheet.set_value("A1", 24)?;
     book.recalculate()?;
     book.save_xlsx().write_file(output)?;
     Ok(())

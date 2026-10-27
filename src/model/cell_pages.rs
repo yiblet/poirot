@@ -430,7 +430,7 @@ impl<'a, T, const HEIGHT: u32, const WIDTH: u32> RowCursor<'a, T, HEIGHT, WIDTH>
 ///
 /// let mut sheet = Worksheet::new("Data")?;
 /// for address in ["B1", "A2", "D2", "C3", "D3"] {
-///     sheet.set_value(address.parse()?, 1.)?;
+///     sheet.set_value(address, 1.)?;
 /// }
 /// let start: CellAddress = "B1".parse()?;
 /// let end: CellAddress = "C3".parse()?;

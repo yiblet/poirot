@@ -1,15 +1,16 @@
-//! Store and edit workbook data independently of file handling and calculation.
+//! Sparse workbook data and source editing.
 //!
 //! Use this module as the data layer when you want to supply your own evaluator or
 //! file adapters, or build a workbook model programmatically.
 //!
-//! [`Workbook`](crate::model::Workbook) holds sparse worksheets, cell values, formulas, named formulas, and
+//! [`Workbook`] holds sparse worksheets, cell values, formulas, named formulas, and
 //! a date system. [`Worksheet`] provides cell access through zero-based [`CellAddress`]
 //! coordinates.
 //!
 //! A formula cell stores both its formula and a saved result. Changing workbook data
-//! does not calculate a new result. This module stores data without running file codecs or the evaluator;
-//! use [poirot](https://docs.rs/poirot) for those workflows.
+//! does not calculate a new result. [`Workbook::recalculate`] explicitly updates saved
+//! results; [`Workbook::open`] and [`Workbook::save_xlsx`] handle file workflows.
+//! This is the same [`Workbook`] exported at the crate root.
 //!
 //! Each formula cell owns its complete source. Optional [`SharedFormula`](crate::model::SharedFormula)
 //! provenance can describe an XLSX group; its original anchor is not a live
@@ -20,16 +21,20 @@
 //! use poirot::model::{CellValue, Workbook};
 //!
 //! let mut book = Workbook::new();
-//! book.add_sheet("Sales")?.set_value("B2".parse()?, 125.)?;
+//! book.add_sheet("Sales")?.set_value("B2", 125.)?;
 //! book.define_name("TaxRate", "0.08", None)?;
 //! let sheet = book.sheet_by_name_mut("sales").ok_or("missing sheet")?;
-//! sheet.set_formula_with_cached_value("C2".parse()?, "B2*TaxRate", CellValue::Number(10.))?;
-//! assert_eq!(sheet.get("C2".parse()?).ok_or("missing result")?.value, CellValue::Number(10.));
+//! sheet.set_formula_with_cached_value("C2", "B2*TaxRate", CellValue::Number(10.))?;
+//! assert_eq!(sheet.get("C2")?.ok_or("missing result")?.value, CellValue::Number(10.));
 //! // Source edits preserve the saved result until an evaluator publishes a new one.
-//! sheet.set_value("B2".parse()?, 200.)?;
-//! assert_eq!(sheet.get("C2".parse()?).ok_or("missing result")?.value, CellValue::Number(10.));
+//! sheet.set_value("B2", 200.)?;
+//! assert_eq!(sheet.get("C2")?.ok_or("missing result")?.value, CellValue::Number(10.));
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
+mod model_error;
+mod snapshot_collection;
+pub use model_error::ModelError;
+pub use snapshot_collection::SnapshotCollection;
 mod formula_types;
 use poirot_io::styles;
 pub use styles::{
@@ -43,16 +48,15 @@ pub use formula_types::{FormulaType, ScalarKinds, ShapeBounds};
 use poirot_io::numeric_fidelity;
 // Numeric file-representation checks shared by import and export adapters.
 pub use numeric_fidelity::{
-    FiniteNumericRepresentationPolicy, NumericFidelityReason, NumericFidelityRefusal,
-    NumericFileFormat, NumericLocation,
+    FiniteNumericRepresentationPolicy, NumericFidelityReason, NumericFileFormat, NumericLocation,
 };
 use poirot_io::numeric_bits;
 
-// Exact binary64 identity and pinned source exceptions retained across evaluation boundaries.
-pub use numeric_bits::{CommonsConvergence, IeeeNumberBits, IeeeNumberClass, KnownSourceException};
+// Exact binary64 identities retained across evaluation boundaries.
+pub use numeric_bits::{IeeeNumberBits, IeeeNumberClass};
 // Shared scalar, exact-text, and error values used by source cells and formula kernels.
 pub use poirot_functions::scalar::{
-    CellError, CellValue, ExcelText, TextRef, TextUnits, TextUnitsError, ValueError as ModelError,
+    CellError, CellValue, ExcelText, TextRef, TextUnits, TextUnitsError,
 };
 mod cell_pages;
 // Generic sparse storage and ordered views used by workbook and overlay grids.
@@ -97,3 +101,5 @@ pub mod snapshot;
 /// Unit tests for workbook, cell storage, style and shared-formula contracts.
 #[cfg(test)]
 mod tests;
+
+pub use poirot_io::NumericFidelityError;

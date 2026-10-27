@@ -1,9 +1,9 @@
 use poirot::eval::{
-    BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationFailure, EvaluationOutcome,
-    RunConfiguration, run_formula_with_configuration,
+    EvaluationBudgets, EvaluationError, EvaluationOutcome, RunConfiguration,
+    run_formula_with_configuration,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
-fn run(f: &str, excel: bool, budgets: EvaluationBudgets) -> EvaluationOutcome<CellValue> {
+fn run(f: &str, _excel: bool, budgets: EvaluationBudgets) -> EvaluationOutcome<CellValue> {
     let mut w = Workbook::new();
     w.add_sheet("Sheet1").unwrap();
     for (r, v) in [
@@ -28,11 +28,7 @@ fn run(f: &str, excel: bool, budgets: EvaluationBudgets) -> EvaluationOutcome<Ce
             )
             .unwrap();
     }
-    let c = RunConfiguration::default().with_builtin_policy(if excel {
-        BuiltinSemanticsPolicy::ExcelDocumentation
-    } else {
-        BuiltinSemanticsPolicy::PinnedPoi
-    });
+    let c = RunConfiguration::default();
     run_formula_with_configuration(&w, 0, CellAddress { row: 0, col: 25 }, f, &c, budgets)
 }
 fn value(f: &str, excel: bool) -> CellValue {
@@ -110,7 +106,7 @@ fn rank_array_budgets_remain_operational_inside_iferror() {
                 matches!(
                     run(&formula, true, budgets),
                     EvaluationOutcome::Aborted {
-                        failure: EvaluationFailure::Budget(_),
+                        failure: EvaluationError::Budget(_),
                         ..
                     }
                 ),

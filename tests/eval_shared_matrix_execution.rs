@@ -5,8 +5,8 @@
 //! Other transforms use their named Microsoft function contracts, with explicit small permutations.
 use poirot::eval::overlay::{Evaluation, Overlay};
 use poirot::eval::{
-    BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationContext, EvaluationFailure,
-    EvaluationInputs, EvaluationOutcome, EvaluationPolicy, EvaluationTarget, run_formula,
+    EvaluationBudgets, EvaluationContext, EvaluationError, EvaluationInputs, EvaluationOutcome,
+    EvaluationPolicy, EvaluationTarget, run_formula,
 };
 use poirot::model::{CellError, CellValue, ExcelText, Workbook};
 
@@ -69,7 +69,6 @@ fn every_matrix_handler_reaches_public_direct_and_overlay_execution() {
             .set_formula(at("D10").address, formula)
             .unwrap();
         let policy = EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         };
         let context = EvaluationContext::default();
@@ -144,7 +143,7 @@ fn matrix_failures_remain_cells_or_uncatchable_operational_failures() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));

@@ -16,7 +16,7 @@ use super::{output, snapshot, source};
 use crate::eval::compile::compiler::FormulaCompiler;
 use crate::eval::config::{EvaluationContext, EvaluationPolicy};
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::session::CellEvaluator;
 use crate::model::{Cell, CellStyle, CellValue, ModelError, Workbook, WorkbookChange};
 use std::borrow::Borrow;
@@ -35,7 +35,7 @@ pub struct Evaluation<'a, W = &'a Workbook> {
     state: Continuation,
     completed: crate::eval::coordinates::CellSet,
     spill_resets: crate::eval::coordinates::CellSet,
-    failure: Option<EvaluationFailure>,
+    failure: Option<EvaluationError>,
 }
 
 impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
@@ -152,7 +152,7 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     }
 
     /// Calculate a cell and the dependencies needed for its value.
-    pub fn cell(&mut self, target: EvaluationTarget) -> Result<CellValue, EvaluationFailure> {
+    pub fn cell(&mut self, target: EvaluationTarget) -> Result<CellValue, EvaluationError> {
         self.perform(|session| CellEvaluator::new(session).cell(target.sheet, target.address))
     }
 
@@ -162,12 +162,12 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
     pub fn outputs(
         &mut self,
         targets: &[EvaluationTarget],
-    ) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationFailure> {
+    ) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationError> {
         self.perform(|session| output::outputs(session, targets))
     }
 
     /// Calculate occupied cells and any spill cells produced by their formulas.
-    pub fn all(&mut self) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationFailure> {
+    pub fn all(&mut self) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationError> {
         self.perform(output::all)
     }
 
@@ -231,13 +231,11 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
         let state = &self.state;
         let mut completed = self.completed.iter().copied().collect::<Vec<_>>();
         completed.sort_unstable();
-        changes.extend(completed.into_iter().filter_map(|key| {
-            state.change(
-                self.source.effective(),
-                key,
-                self.source.policy.materialization,
-            )
-        }));
+        changes.extend(
+            completed
+                .into_iter()
+                .filter_map(|key| state.change(self.source.effective(), key)),
+        );
         changes
     }
 
@@ -253,8 +251,8 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
 
     fn perform<T>(
         &mut self,
-        evaluate: impl FnOnce(&mut crate::eval::session::Session<'_>) -> Result<T, EvaluationFailure>,
-    ) -> Result<T, EvaluationFailure> {
+        evaluate: impl FnOnce(&mut crate::eval::session::Session<'_>) -> Result<T, EvaluationError>,
+    ) -> Result<T, EvaluationError> {
         if let Some(failure) = &self.failure {
             return Err(failure.clone());
         }

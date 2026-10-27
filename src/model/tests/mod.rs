@@ -2,6 +2,8 @@
 
 /// Column query counters over row pages and stored slots.
 mod column_counters;
+/// Typed validation failures and preserved causes.
+mod error_contracts;
 /// Owned formula normalization and empty-source rejection.
 mod formula_normalization;
 /// Sheet and defined-name identifier lookup policy.

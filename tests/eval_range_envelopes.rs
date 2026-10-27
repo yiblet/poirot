@@ -21,10 +21,7 @@ fn book(cell_named_sheet: bool) -> Workbook {
         }
     }
     if cell_named_sheet {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value("D3".parse().unwrap(), 100.)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value("D3", 100.).unwrap();
     }
     w
 }
@@ -130,7 +127,7 @@ fn envelope_membership_and_retained_dependents_refresh_after_edits() {
     for (address, formula) in [("P1", "SUM((A1,C3):B2)"), ("Q1", "P1+1")] {
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(address.parse().unwrap(), formula)
+            .set_formula(address, formula)
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&w).build().unwrap();
@@ -207,7 +204,7 @@ fn envelope_construction_is_lazy_and_resource_failures_escape_masks() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));

@@ -31,7 +31,7 @@ struct Guard {
     deny: Option<Work>,
     args: Vec<Value>,
     requested: Vec<usize>,
-    query_failure: Option<Failure>,
+    query_failure: Option<LookupError>,
     reads: usize,
     charges: Vec<BudgetRequest>,
 }
@@ -46,37 +46,51 @@ fn guard() -> Guard {
     }
 }
 impl Workbook for Guard {
-    fn preflight(&mut self, r: BudgetRequest) -> Result<(), Failure> {
+    fn preflight(&mut self, r: BudgetRequest) -> Result<(), LookupError> {
         self.charges.push(r);
         if self.deny == Some(r.work) {
-            Err(Failure::Operational(OperationalFailure::BudgetExceeded))
+            Err(LookupError::Operational(
+                LookupOperationalError::BudgetExceeded,
+            ))
         } else {
             Ok(())
         }
     }
-    fn argument(&mut self, index: usize, _: Context) -> Result<Value, Failure> {
+    fn argument(&mut self, index: usize, _: Context) -> Result<Value, LookupError> {
         self.requested.push(index);
         self.args
             .get(index)
             .cloned()
-            .ok_or(Failure::Unsupported(Unsupported::DeferredArguments))
+            .ok_or(LookupError::Unsupported(
+                LookupUnsupportedError::DeferredArguments,
+            ))
     }
-    fn coerce_numeric_text(&mut self, value: &str) -> Result<f64, Failure> {
-        value.parse().map_err(|_| Error::Value.into())
+    fn coerce_numeric_text(&mut self, value: &str) -> Result<f64, LookupError> {
+        value.parse().map_err(|_| LookupValueError::Value.into())
     }
-    fn coerce_number_to_text(&mut self, value: f64) -> Result<String, Failure> {
+    fn coerce_number_to_text(&mut self, value: f64) -> Result<String, LookupError> {
         Ok(value.to_string())
     }
-    fn cell(&mut self, _: &Reference, _: u32, _: u32, _: u32) -> Result<Scalar, Failure> {
+    fn cell(&mut self, _: &Reference, _: u32, _: u32, _: u32) -> Result<Scalar, LookupError> {
         self.reads += 1;
         Ok(Scalar::Number(1.))
     }
 
-    fn dynamic_reference(&mut self, _: &DynamicReference, _: Context) -> Result<Value, Failure> {
-        Err(self.query_failure.clone().unwrap_or(Error::Name.into()))
+    fn dynamic_reference(
+        &mut self,
+        _: &DynamicReference,
+        _: Context,
+    ) -> Result<Value, LookupError> {
+        Err(self
+            .query_failure
+            .clone()
+            .unwrap_or(LookupValueError::Name.into()))
     }
-    fn structured_reference(&mut self, _: &str, _: Context) -> Result<Value, Failure> {
-        Err(self.query_failure.clone().unwrap_or(Error::Name.into()))
+    fn structured_reference(&mut self, _: &str, _: Context) -> Result<Value, LookupError> {
+        Err(self
+            .query_failure
+            .clone()
+            .unwrap_or(LookupValueError::Name.into()))
     }
 }
 #[test]
@@ -90,12 +104,12 @@ fn indirect_maps_only_semantic_resolution_failures() {
                 C,
                 &mut w
             ),
-            Err(Error::Ref.into())
+            Err(LookupValueError::Ref.into())
         );
         for failure in [
-            Failure::Operational(OperationalFailure::BudgetExceeded),
-            Failure::Operational(OperationalFailure::Cancelled),
-            Failure::Unsupported(Unsupported::DynamicReference),
+            LookupError::Operational(LookupOperationalError::BudgetExceeded),
+            LookupError::Operational(LookupOperationalError::Cancelled),
+            LookupError::Unsupported(LookupUnsupportedError::DynamicReference),
         ] {
             w.query_failure = Some(failure.clone());
             assert_eq!(
@@ -117,13 +131,13 @@ fn deferred_error_order_requests_only_operands_before_failure() {
         n(2.),
         reference(0, 3, 1),
         reference(0, 3, 2),
-        Value::Scalar(Scalar::Error(Error::Div0)),
+        Value::Scalar(Scalar::Error(LookupValueError::Div0)),
     ];
     assert_eq!(
         CallPlan::prepare(Function::Search(Search::XLookup), 4)
             .unwrap()
             .execute(C, &mut w),
-        Err(Error::Div0.into())
+        Err(LookupValueError::Div0.into())
     );
     assert_eq!(w.requested, vec![3]);
 }
@@ -138,7 +152,9 @@ fn vector_budget_fails_before_workbook_cells_are_read() {
             C,
             &mut w
         ),
-        Err(Failure::Operational(OperationalFailure::BudgetExceeded))
+        Err(LookupError::Operational(
+            LookupOperationalError::BudgetExceeded
+        ))
     );
     assert_eq!(w.reads, 0);
 }
@@ -158,7 +174,9 @@ fn search_budget_failure_never_becomes_no_match_or_fallback() {
             C,
             &mut w
         ),
-        Err(Failure::Operational(OperationalFailure::BudgetExceeded))
+        Err(LookupError::Operational(
+            LookupOperationalError::BudgetExceeded
+        ))
     );
 }
 #[test]
@@ -173,7 +191,9 @@ fn casefold_and_wildcard_states_have_preflight_boundaries() {
             SearchMode::Forward,
             &mut w
         ),
-        Err(Failure::Operational(OperationalFailure::BudgetExceeded))
+        Err(LookupError::Operational(
+            LookupOperationalError::BudgetExceeded
+        ))
     );
     w.deny = Some(Work::WildcardStates);
     assert_eq!(
@@ -184,7 +204,9 @@ fn casefold_and_wildcard_states_have_preflight_boundaries() {
             SearchMode::Forward,
             &mut w
         ),
-        Err(Failure::Operational(OperationalFailure::BudgetExceeded))
+        Err(LookupError::Operational(
+            LookupOperationalError::BudgetExceeded
+        ))
     );
 }
 #[test]
@@ -203,7 +225,9 @@ fn query_return_budget_precedes_fallback_row_allocation() {
             C,
             &mut w
         ),
-        Err(Failure::Operational(OperationalFailure::BudgetExceeded))
+        Err(LookupError::Operational(
+            LookupOperationalError::BudgetExceeded
+        ))
     );
 }
 #[test]
@@ -217,7 +241,9 @@ fn source_exception_regions_are_unsupported_and_short_casts_retain_identity() {
             C,
             &mut w
         ),
-        Err(Failure::Unsupported(Unsupported::LookupNonVector))
+        Err(LookupError::Unsupported(
+            LookupUnsupportedError::LookupNonVector
+        ))
     );
     assert_eq!(
         evaluate(
@@ -230,7 +256,9 @@ fn source_exception_regions_are_unsupported_and_short_casts_retain_identity() {
             C,
             &mut w
         ),
-        Err(Failure::Unsupported(Unsupported::LookupShortResult))
+        Err(LookupError::Unsupported(
+            LookupUnsupportedError::LookupShortResult
+        ))
     );
 }
 
@@ -244,12 +272,12 @@ fn lookup_resolves_result_table_before_copying_or_searching_lookup_vector() {
             &[
                 n(0.),
                 reference(0, 100, 1),
-                Value::Scalar(Scalar::Error(Error::Div0))
+                Value::Scalar(Scalar::Error(LookupValueError::Div0))
             ],
             C,
             &mut w
         ),
-        Err(Error::Div0.into())
+        Err(LookupValueError::Div0.into())
     );
     assert_eq!(w.reads, 0);
 }
@@ -264,6 +292,6 @@ fn unicode_search_and_unknown_scalar_array_shape_remain_typed() {
             SearchMode::Forward,
             &mut w
         ),
-        Err(Error::Na.into())
+        Err(LookupValueError::Na.into())
     );
 }

@@ -5,9 +5,7 @@ use crate::eval::adapters::elementwise::{
     collections::{self, CollectionKernel},
 };
 use crate::eval::functions::registry::StatisticsFunction;
-use crate::eval::host::{
-    ArgumentCoercion, CallHost, HostOperand, NumericPolicy, OperandReader, ScalarOperand,
-};
+use crate::eval::host::{ArgumentCoercion, CallHost, HostOperand, OperandReader, ScalarOperand};
 use crate::eval::limits::{CapabilityId, EvalResult, WorkKind};
 use crate::eval::session::Session;
 use crate::eval::values::core_projection::semantic;
@@ -17,7 +15,7 @@ use crate::eval::values::{
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::Div0;
 use crate::model::CellValue::{Blank, Boolean, Error, Number, Text};
-use crate::model::{CellAddress, CellError, CellValue, KnownSourceException};
+use crate::model::{CellAddress, CellError, CellValue};
 use poirot_functions::statistics::{NumericReduction, NumericReductionState};
 use std::{collections::TryReserveError, ops::ControlFlow};
 
@@ -117,11 +115,8 @@ fn direct(
             || (!member.missing && member.origin == OperandOrigin::Direct && member.value == Blank)
             || (!member.missing
                 && !matches!(member.value, Blank | Error(_))
-                && semantic(
-                    ArgumentCoercion::new(host)
-                        .coerce_scalar_number(&member.value, NumericPolicy::PinnedPoi),
-                )?
-                .is_ok())
+                && semantic(ArgumentCoercion::new(host).coerce_scalar_number(&member.value))?
+                    .is_ok())
         {
             state.count += 1;
         }
@@ -151,10 +146,10 @@ fn direct(
     let number = if function == StatisticsFunction::Sum {
         match value {
             Number(number) => Ok(number),
-            _ => ArgumentCoercion::new(host).coerce_scalar_number(&value, NumericPolicy::PinnedPoi),
+            _ => ArgumentCoercion::new(host).coerce_scalar_number(&value),
         }
     } else {
-        ArgumentCoercion::new(host).coerce_scalar_number(&value, NumericPolicy::PinnedPoi)
+        ArgumentCoercion::new(host).coerce_scalar_number(&value)
     };
     match semantic(number)? {
         Ok(number) => {
@@ -164,7 +159,7 @@ fn direct(
                 state
                     .numbers
                     .try_reserve(1)
-                    .map_err(|_| host.allocation_failure())?;
+                    .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             }
             state.push(function, number);
         }
@@ -193,14 +188,14 @@ fn finish(function: StatisticsFunction, mut state: State) -> EvalResult<Value> {
         | StatisticsFunction::StdevP
         | StatisticsFunction::Var
         | StatisticsFunction::VarP => {
-            use poirot_functions::statistics::{Aggregate, SamplePolicy, aggregate_with_policy};
+            use poirot_functions::statistics::{Aggregate, aggregate};
             let operation = match function {
                 StatisticsFunction::Stdev => Aggregate::StdevSample,
                 StatisticsFunction::StdevP => Aggregate::StdevPopulation,
                 StatisticsFunction::Var => Aggregate::VarianceSample,
                 _ => Aggregate::VariancePopulation,
             };
-            aggregate_with_policy(operation, &state.numbers, SamplePolicy::ExcelDocumentation)
+            aggregate(operation, &state.numbers)
         }
         _ => return Ok(err(VALUE_ERROR)),
     };
@@ -230,14 +225,7 @@ impl StatisticsAggregate {
 }
 
 impl AggregatePolicy for StatisticsAggregate {
-    fn before(&mut self, host: &CallHost<'_, '_>, operand: &HostOperand) -> EvalResult<()> {
-        if self.function == StatisticsFunction::Sum
-            && matches!(operand.value(), Value::SignedRefs(areas) if areas.len() > 1)
-        {
-            return Err(
-                host.known_source_exception(KnownSourceException::AggregateReferenceListConversion)
-            );
-        }
+    fn before(&mut self, _host: &CallHost<'_, '_>, _operand: &HostOperand) -> EvalResult<()> {
         self.before_numbers = self.state.numbers.len();
         Ok(())
     }
@@ -286,7 +274,7 @@ impl AggregatePolicy for StatisticsAggregate {
         if self.state.special {
             return Err(host.capability_failure(
                 CapabilityId::FunctionAdapter,
-                "pinned special-number aggregate algorithm is not implemented for this handler",
+                crate::eval::limits::EvaluationReasonError::PinnedSpecialNumberAggregateAlgorithmIsNotImplementedForThisHandler,
             ));
         }
         Ok(None)
@@ -358,6 +346,48 @@ pub(super) fn execute(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sum_traverses_signed_reference_unions() {
+        use crate::eval::config::EvaluationInputs;
+        use crate::eval::values::AreaKind;
+        use crate::eval::values::signed_reference::SignedArea;
+        use crate::model::Workbook;
+
+        let mut workbook = Workbook::new();
+        workbook.add_sheet("Sheet1").unwrap();
+        workbook.sheet_mut(0).unwrap().set_value("A1", 2.).unwrap();
+        workbook.sheet_mut(0).unwrap().set_value("B1", 7.).unwrap();
+        let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+        let mut host = CallHost::new_inheriting(
+            &mut session,
+            0,
+            CellAddress { row: 2, col: 2 },
+            ArgumentsRef::Empty,
+        );
+        let operand = HostOperand::from_value(Value::SignedRefs(vec![
+            SignedArea::new(AreaKind::Area, 0, (0, 0), (0, 0)).unwrap(),
+            SignedArea::new(AreaKind::Area, 0, (0, 0), (1, 1)).unwrap(),
+        ]));
+        let mut aggregate = StatisticsAggregate::new(StatisticsFunction::Sum);
+        aggregate.before(&host, &operand).unwrap();
+        let aggregate = host
+            .fold_aggregate_operand(
+                operand,
+                aggregate,
+                |state, additional| state.reserve(additional),
+                |state, member| {
+                    let _ = state.consume(member, false);
+                    Ok(())
+                },
+            )
+            .unwrap();
+        // The internal signed representation obeys the same 2 + 7 union sum.
+        assert!(matches!(
+            aggregate.finish().unwrap(),
+            Value::Scalar(Number(9.))
+        ));
+    }
 
     #[test]
     fn numeric_buffer_reserves_locally_without_caller_admission() {

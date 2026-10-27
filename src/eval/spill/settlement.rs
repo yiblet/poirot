@@ -1,7 +1,7 @@
 //! Demand selection, retry, rollback and settlement through a constrained execution port.
 use super::execution::Execution;
 use crate::eval::coordinates::{CellSet, EvaluationTarget};
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::session;
 use crate::eval::values::{Area, AreaKind};
 use crate::model::CellAddress;
@@ -112,11 +112,11 @@ impl<'a, P: Execution<'a>> Settlement<'_, P> {
                     state
                         .settled
                         .try_reserve(count)
-                        .map_err(|_| EvaluationFailure::Resource {
+                        .map_err(|reservation_source| EvaluationError::Resource {
                             kind: crate::eval::limits::ResourceFailureKind::Allocation,
                             capability: CapabilityId::FunctionAdapter,
-                            source: consumer,
-                            detail: "settled spill membership allocation failed".into(),
+                            target: consumer,
+                            reason: (crate::eval::limits::EvaluationReasonError::SettledSpillMembershipAllocationFailed).with_reservation_source(reservation_source),
                         });
             }
             if let Err(failure) = &result {
@@ -207,7 +207,7 @@ impl<'a, P: Execution<'a>> Settlement<'_, P> {
                 .state()
                 .settlement
                 .active()
-                .ok_or(EvaluationFailure::StalePlan)?;
+                .ok_or(EvaluationError::StalePlan)?;
             if blocked == active.blocked {
                 break;
             }
@@ -218,7 +218,7 @@ impl<'a, P: Execution<'a>> Settlement<'_, P> {
                         row: area.r0,
                         col: area.c0,
                     },
-                    "spill settlement would replay an actually consumed opaque or volatile provider",
+                    crate::eval::limits::EvaluationReasonError::SpillSettlementWouldReplayAnActuallyConsumedOpaqueOrVolatileProvider,
                 ));
             }
             // Selection only grows, so its count identifies its exact set
@@ -235,17 +235,17 @@ impl<'a, P: Execution<'a>> Settlement<'_, P> {
                         row: area.r0,
                         col: area.c0,
                     },
-                    "spill ownership component does not settle",
+                    crate::eval::limits::EvaluationReasonError::SpillOwnershipComponentDoesNotSettle,
                 ));
             }
             self.execution
                 .reserve_history(blocked.len().saturating_add(1))?;
             seen.try_reserve(1)
-                .map_err(|_| EvaluationFailure::Resource {
+                .map_err(|reservation_source| EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: self.execution.consumer(),
-                    detail: "spill settlement history allocation failed".into(),
+                    target: self.execution.consumer(),
+                    reason: (crate::eval::limits::EvaluationReasonError::SpillSettlementHistoryAllocationFailed).with_reservation_source(reservation_source),
                 })?;
             // SAFETY: The successful reservation above provides one history slot.
             // Cloning blocked reproduces an already representable integer-key table.
@@ -265,11 +265,11 @@ impl<'a, P: Execution<'a>> Settlement<'_, P> {
         state
             .settled
             .try_reserve(count)
-            .map_err(|_| EvaluationFailure::Resource {
+            .map_err(|reservation_source| EvaluationError::Resource {
                 kind: crate::eval::limits::ResourceFailureKind::Allocation,
                 capability: CapabilityId::FunctionAdapter,
-                source: consumer,
-                detail: "settled spill membership allocation failed".into(),
+                target: consumer,
+                reason: (crate::eval::limits::EvaluationReasonError::SettledSpillMembershipAllocationFailed).with_reservation_source(reservation_source),
             })?;
         let notifications = self
             .execution
@@ -289,11 +289,11 @@ impl<'a, P: Execution<'a>> Settlement<'_, P> {
 pub(in crate::eval) fn unsupported(
     sheet: usize,
     address: CellAddress,
-    detail: &str,
-) -> EvaluationFailure {
-    EvaluationFailure::UnsupportedCapability {
+    reason: crate::eval::limits::EvaluationReasonError,
+) -> EvaluationError {
+    EvaluationError::UnsupportedCapability {
         capability: CapabilityId::FunctionAdapter,
-        source: Some(EvaluationTarget { sheet, address }),
-        detail: detail.into(),
+        target: Some(EvaluationTarget { sheet, address }),
+        reason,
     }
 }

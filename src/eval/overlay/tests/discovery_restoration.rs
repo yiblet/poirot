@@ -30,15 +30,18 @@ fn evaluated<W: Borrow<Workbook>>(
 fn first_changed_cycle_reuses_restored_source_discovery() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 1.0).unwrap();
+    sheet.set_value("A1", 1.0).unwrap();
     for row in 1..=512 {
         sheet
-            .set_formula(format!("B{row}").parse().unwrap(), "A1*2")
+            .set_formula(
+                format!("B{row}")
+                    .parse::<crate::model::CellAddress>()
+                    .unwrap(),
+                "A1*2",
+            )
             .unwrap();
     }
-    sheet
-        .set_formula("C512".parse().unwrap(), "B512+A512+1")
-        .unwrap();
+    sheet.set_formula("C512", "B512+A512+1").unwrap();
     let mut retained = Overlay::with_workbook(&book).build().unwrap();
     let output = retained.target("S!C512").unwrap();
     let input = retained.target("S!A1").unwrap();
@@ -89,7 +92,7 @@ fn first_changed_cycle_reuses_restored_source_discovery() {
 fn restored_lookup_prefixes_keep_first_match_and_invalidate_on_edits_and_clock_changes() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_formula("A1".parse().unwrap(), "TODAY()").unwrap();
+    sheet.set_formula("A1", "TODAY()").unwrap();
     for (cell, value) in [
         ("A2", 2.0),
         ("A3", 2.0),
@@ -98,13 +101,11 @@ fn restored_lookup_prefixes_keep_first_match_and_invalidate_on_edits_and_clock_c
         ("C1", 2.0),
         ("E1", 0.0),
     ] {
-        sheet.set_value(cell.parse().unwrap(), value).unwrap();
+        sheet.set_value(cell, value).unwrap();
     }
+    sheet.set_formula("A4", "UNSUPPORTED()").unwrap();
     sheet
-        .set_formula("A4".parse().unwrap(), "UNSUPPORTED()")
-        .unwrap();
-    sheet
-        .set_formula("D1".parse().unwrap(), "VLOOKUP(C1,A1:B4,2,FALSE)+E1")
+        .set_formula("D1", "VLOOKUP(C1,A1:B4,2,FALSE)+E1")
         .unwrap();
     let mut retained = Overlay::with_workbook(&book)
         .with_policy(EvaluationPolicy {
@@ -173,10 +174,8 @@ fn restored_lookup_prefixes_keep_first_match_and_invalidate_on_edits_and_clock_c
 fn restored_discovery_expires_when_spill_source_changes() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet
-        .set_formula("A1".parse().unwrap(), "SEQUENCE(2,1,1,10)")
-        .unwrap();
-    sheet.set_formula("D1".parse().unwrap(), "A2*2").unwrap();
+    sheet.set_formula("A1", "SEQUENCE(2,1,1,10)").unwrap();
+    sheet.set_formula("D1", "A2*2").unwrap();
     let mut retained = Overlay::with_workbook(&book).build().unwrap();
     let output = retained.target("S!D1").unwrap();
     let producer = retained.target("S!A1").unwrap();
@@ -247,7 +246,7 @@ fn source_only_preparation_does_not_invent_discovery_or_results() {
     let mut book = Workbook::new();
     book.add_sheet("S")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "1+2")
+        .set_formula("A1", "1+2")
         .unwrap();
     let overlay = Overlay::with_workbook(&book).build().unwrap();
     let (book, state) = overlay.snapshot().restore().unwrap();

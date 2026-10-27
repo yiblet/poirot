@@ -3,7 +3,7 @@ use crate::eval::compile;
 use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{
-    BudgetFailure, BudgetKind, BudgetMeter, EvaluationBudgets, EvaluationFailure,
+    BudgetError, BudgetKind, BudgetMeter, EvaluationBudgets, EvaluationError,
 };
 use crate::eval::session::Session;
 use crate::eval::vm::{ExecutableRef, ExpressionRunner};
@@ -70,7 +70,7 @@ fn failed_copy_keeps_the_successfully_evaluated_input() {
     input.context.session.state.runtime.budget.limits.text_bytes = 0;
     assert!(matches!(
         input.force(),
-        Err(EvaluationFailure::Budget(BudgetFailure {
+        Err(EvaluationError::Budget(BudgetError {
             kind: BudgetKind::TextBytes,
             ..
         }))
@@ -128,7 +128,7 @@ fn first_force_copy_failure_retains_the_successful_evaluation() {
     let mut input = context.input(&expression);
     assert!(matches!(
         input.force(),
-        Err(EvaluationFailure::Budget(BudgetFailure {
+        Err(EvaluationError::Budget(BudgetError {
             kind: BudgetKind::RunWork,
             ..
         }))
@@ -173,7 +173,7 @@ fn failed_evaluation_is_retried_on_the_same_input_handle() {
     let mut input = context.input(&expression);
     assert!(matches!(
         input.force(),
-        Err(EvaluationFailure::Budget(BudgetFailure {
+        Err(EvaluationError::Budget(BudgetError {
             kind: BudgetKind::TextBytes,
             ..
         }))

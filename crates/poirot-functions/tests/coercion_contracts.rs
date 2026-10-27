@@ -1,14 +1,14 @@
 use poirot_functions::coercion::{
-    ArrayMember, CellError, CellValue, Choice, CoercionContext, CoercionFailure, DecimalNumber,
-    Direct, ExactBoolean, ExactError, ExactNumber, ExactText, FirstOf, FormulaText, Identity,
-    Input, Limits, LogicalBoolean, Mismatch, Optional, Origin, Referenced, Resource, TextCount,
-    coerce, coerce_args,
+    ArrayMember, CellError, CellValue, Choice, CoercionContext, CoercionError,
+    CoercionMismatchError, DecimalNumber, Direct, ExactBoolean, ExactError, ExactNumber, ExactText,
+    ExpectedInput, FirstOf, FormulaText, Identity, Input, Limits, LogicalBoolean, Optional, Origin,
+    Referenced, Resource, TextCount, coerce, coerce_args,
 };
 use poirot_functions::scalar::ExcelText;
 use std::borrow::Cow;
 
-fn is_mismatch<T>(result: Result<T, CoercionFailure>) -> bool {
-    matches!(result, Err(CoercionFailure::Mismatch(_)))
+fn is_mismatch<T>(result: Result<T, CoercionError>) -> bool {
+    matches!(result, Err(CoercionError::Mismatch(_)))
 }
 
 #[test]
@@ -96,7 +96,7 @@ fn decimal_policy_has_an_explicit_finite_decimal_grammar() {
             Input::direct(&CellValue::Number(f64::INFINITY)),
             &mut context
         ),
-        Err(CoercionFailure::Worksheet(CellError::Num))
+        Err(CoercionError::Worksheet(CellError::Num))
     );
 }
 
@@ -199,9 +199,9 @@ fn rejected_tuple_identifies_the_argument_without_panicking_on_short_input() {
             &[Input::direct(&number), Input::direct(&text)],
             &mut CoercionContext::default()
         ),
-        Err(CoercionFailure::Mismatch(Mismatch::Input {
+        Err(CoercionError::Mismatch(CoercionMismatchError::Input {
             argument: Some(1),
-            expected: "existing number"
+            expected: ExpectedInput::ExistingNumber
         }))
     );
     assert_eq!(
@@ -209,7 +209,7 @@ fn rejected_tuple_identifies_the_argument_without_panicking_on_short_input() {
             &[Input::direct(&number)],
             &mut CoercionContext::default()
         ),
-        Err(CoercionFailure::Mismatch(Mismatch::Arity {
+        Err(CoercionError::Mismatch(CoercionMismatchError::Arity {
             expected: 2,
             actual: 1
         }))
@@ -222,7 +222,7 @@ fn worksheet_errors_do_not_fall_through_to_identity() {
     type Accepted = FirstOf<((DecimalNumber,), (Identity,))>;
     assert!(matches!(
         coerce_args::<Accepted>(&[Input::direct(&error)], &mut CoercionContext::default()),
-        Err(CoercionFailure::Worksheet(CellError::Div0))
+        Err(CoercionError::Worksheet(CellError::Div0))
     ));
     type ErrorAware = FirstOf<((ExactError,), (DecimalNumber,))>;
     assert_eq!(
@@ -245,7 +245,7 @@ fn argument_order_is_an_explicit_error_precedence_contract() {
             &[Input::direct(&error), Input::direct(&text)],
             &mut context
         ),
-        Err(CoercionFailure::Worksheet(CellError::Ref))
+        Err(CoercionError::Worksheet(CellError::Ref))
     );
 }
 
@@ -306,7 +306,7 @@ fn exact_text_preserves_isolated_surrogates_but_scalar_projection_is_terminal() 
     type Accepted = FirstOf<((FormulaText,), (ExactText,))>;
     assert!(matches!(
         coerce_args::<Accepted>(&[Input::direct(&text)], &mut context),
-        Err(CoercionFailure::UnsupportedText)
+        Err(CoercionError::UnsupportedText)
     ));
     assert_eq!(context.usage().text_bytes, 0);
 }
@@ -325,7 +325,7 @@ fn text_projection_borrows_utf8_and_admits_utf16_before_allocation() {
     let utf16 = CellValue::TextUtf16(ExcelText::from_units(vec![65, 66]));
     assert_eq!(
         coerce::<FormulaText>(Input::direct(&utf16), &mut context),
-        Err(CoercionFailure::Limit(Resource::TextBytes))
+        Err(CoercionError::Limit(Resource::TextBytes))
     );
 }
 
@@ -345,7 +345,7 @@ fn failed_candidates_retain_work_and_resource_failure_never_falls_back() {
     });
     assert!(matches!(
         coerce_args::<Accepted>(&[Input::direct(&text)], &mut limited),
-        Err(CoercionFailure::Limit(Resource::Work))
+        Err(CoercionError::Limit(Resource::Work))
     ));
     assert_eq!(limited.usage().work, 3);
 }
@@ -365,7 +365,7 @@ fn numeric_rendering_is_explicit_and_reserves_output_before_allocation() {
     type Accepted = FirstOf<((FormulaText,), (ExactNumber,))>;
     assert!(matches!(
         coerce_args::<Accepted>(&[Input::direct(&number)], &mut limited),
-        Err(CoercionFailure::Limit(Resource::TextBytes))
+        Err(CoercionError::Limit(Resource::TextBytes))
     ));
 }
 
@@ -417,7 +417,7 @@ fn text_count_checks_sign_and_truncated_integer_range() {
     for value in [-0.1, 2147483648.0] {
         assert_eq!(
             coerce::<TextCount>(Input::direct(&CellValue::Number(value)), &mut context),
-            Err(CoercionFailure::Worksheet(CellError::Value))
+            Err(CoercionError::Worksheet(CellError::Value))
         );
     }
 }

@@ -1,7 +1,7 @@
 //! Text kernels keep algorithms independent from typed evaluator execution.
 //!
 //! Depends on: host (CallHost), session (coercion and projection), vm (deferred
-//! arguments), config (text and formatting policies), functions (identities and
+//! arguments), functions (identities and
 //! failures), limits (budgets) and values (value channels); sibling elementwise (shared
 //! broadcast and collection kernels).
 

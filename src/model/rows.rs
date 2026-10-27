@@ -1,10 +1,10 @@
 //! Sparse row lifecycle, independent of parser, evaluator and file adapters.
-use crate::model::{Cell, CellAddress, MAX_COLUMNS, MAX_ROWS, ModelError, Worksheet};
-use poirot_io::RowVisibility;
+use crate::model::{Cell, CellAddress, MAX_COLUMNS, MAX_ROWS, Worksheet};
+use poirot_io::{ModelError, RowVisibility};
 
 fn validate(row: u32) -> Result<(), ModelError> {
     if row >= MAX_ROWS {
-        Err(ModelError("row exceeds Excel worksheet limits".into()))
+        Err(ModelError::InvalidRow { row })
     } else {
         Ok(())
     }
@@ -78,7 +78,7 @@ impl Worksheet {
             .map(|(a, _)| *a)
             .collect();
         for address in addresses {
-            self.remove(address);
+            self.remove(address)?;
         }
         Ok(true)
     }
@@ -96,7 +96,7 @@ impl<'a> Row<'a> {
     }
     /// Borrow a stored cell at the selected column.
     pub fn get(self, column: u32) -> Option<&'a Cell> {
-        self.sheet.get(CellAddress {
+        self.sheet.get_validated(CellAddress {
             row: self.index,
             col: column,
         })
@@ -130,14 +130,14 @@ impl RowMut<'_> {
     }
     /// Borrow an existing cell in this row.
     pub fn get(&self, column: u32) -> Option<&Cell> {
-        self.sheet.get(CellAddress {
+        self.sheet.get_validated(CellAddress {
             row: self.index,
             col: column,
         })
     }
     /// Mutably borrow an existing cell in this row.
     pub fn get_mut(&mut self, column: u32) -> Option<&mut Cell> {
-        self.sheet.get_mut(CellAddress {
+        self.sheet.get_mut_validated(CellAddress {
             row: self.index,
             col: column,
         })
@@ -148,7 +148,7 @@ impl RowMut<'_> {
     }
     /// Removal retains row presence, including when its last cell is removed.
     pub fn remove(&mut self, column: u32) -> Result<Option<Cell>, ModelError> {
-        Ok(self.sheet.remove(CellAddress::new(self.index, column)?))
+        self.sheet.remove(CellAddress::new(self.index, column)?)
     }
 }
 #[cfg(test)]

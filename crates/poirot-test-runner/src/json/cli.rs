@@ -1,3 +1,4 @@
+use super::json_error::JsonError;
 use crate::json::{Status, parse_suite, run_suite};
 use clap::{Parser, ValueEnum};
 use serde::Serialize;
@@ -29,7 +30,7 @@ pub struct Cli {
     pub format: OutputFormat,
 }
 
-fn files(path: &Path, out: &mut Vec<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
+fn files(path: &Path, out: &mut Vec<PathBuf>) -> Result<(), JsonError> {
     if path.is_file() {
         out.push(path.to_owned());
     } else {
@@ -63,7 +64,7 @@ struct Summary {
 
 impl Cli {
     /// Write text or JSONL results. Return false when the selected run fails.
-    pub fn run(&self, out: &mut impl Write) -> Result<bool, Box<dyn std::error::Error>> {
+    pub fn run(&self, out: &mut impl Write) -> Result<bool, JsonError> {
         let mut paths = Vec::new();
         files(&self.corpus, &mut paths)?;
         paths.sort();
@@ -108,8 +109,8 @@ impl Cli {
                 }
                 continue;
             }
-            let run = (|| -> Result<_, String> {
-                let text = std::str::from_utf8(&bytes).map_err(|e| e.to_string())?;
+            let run = (|| -> Result<_, JsonError> {
+                let text = std::str::from_utf8(&bytes).map_err(JsonError::from)?;
                 let suite = parse_suite(text)?;
                 run_suite(&suite, self.filter.as_deref())
             })();
@@ -125,7 +126,7 @@ impl Cli {
                         OutputFormat::Json => {
                             serde_json::to_writer(
                                 &mut *out,
-                                &serde_json::json!({"type":"harness_error", "suite":path, "error":error}),
+                                &serde_json::json!({"type":"harness_error", "suite":path, "error":error.to_string()}),
                             )?;
                             writeln!(out)?;
                         }

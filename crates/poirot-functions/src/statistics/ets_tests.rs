@@ -123,7 +123,7 @@ fn duplicate_enum_sorting_and_limits() {
             100,
             |_| Ok::<_, ()>(())
         ),
-        Err(Failure::Spreadsheet(CellError::Num))
+        Err(DistributionError::Spreadsheet(CellError::Num))
     ));
     assert!(matches!(
         prepare(
@@ -134,7 +134,7 @@ fn duplicate_enum_sorting_and_limits() {
             1,
             |_| Ok::<_, ()>(())
         ),
-        Err(Failure::ComputationalLimit)
+        Err(DistributionError::ComputationalLimit)
     ));
 }
 #[test]
@@ -162,7 +162,7 @@ fn optimizer_improves_noisy_objective_and_meter_aborts() {
     assert!(fitted.sse < initial.sse);
     assert!(matches!(
         fit(&s, Seasonality::None, |_| Err("stop")),
-        Err(Failure::Operational("stop"))
+        Err(DistributionError::Operational("stop"))
     ));
 }
 #[test]

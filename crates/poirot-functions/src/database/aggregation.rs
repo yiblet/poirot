@@ -1,15 +1,10 @@
 //! Streaming aggregation with repeated lazy matching for two-pass statistics.
 use super::criteria::CriteriaPlan;
 use super::selection::{coerce_database_number, selected};
-use super::{
-    CellError, CellValue, DatabaseError, DatabaseFunction, DatabasePlan, FinalizationPolicy,
-};
+use super::{CellError, CellValue, DatabaseError, DatabaseFunction, DatabasePlan};
 
 /// Aggregate the records selected by a validated database plan.
-pub(super) fn execute(
-    plan: &DatabasePlan<'_>,
-    policy: FinalizationPolicy,
-) -> Result<CellValue, DatabaseError> {
+pub(super) fn execute(plan: &DatabasePlan<'_>) -> Result<CellValue, DatabaseError> {
     let criteria = CriteriaPlan::new(plan.database, plan.criteria);
     aggregate(
         plan.function,
@@ -18,7 +13,6 @@ pub(super) fn execute(
             Ok(false) => None,
             Err(error) => Some(Err(error)),
         }),
-        policy,
     )
 }
 
@@ -26,15 +20,13 @@ pub(super) fn execute(
 pub fn aggregate_selected(
     function: DatabaseFunction,
     values: &[CellValue],
-    policy: FinalizationPolicy,
 ) -> Result<CellValue, DatabaseError> {
-    aggregate(function, values.iter().map(Ok), policy)
+    aggregate(function, values.iter().map(Ok))
 }
 
 fn aggregate<'a>(
     function: DatabaseFunction,
     values: impl Iterator<Item = Result<&'a CellValue, DatabaseError>> + Clone,
-    policy: FinalizationPolicy,
 ) -> Result<CellValue, DatabaseError> {
     let mut count = 0usize;
     let mut sum = 0.;
@@ -94,10 +86,7 @@ fn aggregate<'a>(
         Count | CountA => count as f64,
         Average => {
             if count == 0 {
-                if policy == FinalizationPolicy::ExcelDocumentation {
-                    return Ok(CellValue::Error(CellError::Div0));
-                }
-                0.
+                return Ok(CellValue::Error(CellError::Div0));
             } else {
                 sum / count as f64
             }

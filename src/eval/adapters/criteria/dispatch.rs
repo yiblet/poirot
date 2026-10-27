@@ -4,10 +4,10 @@ use crate::eval::adapters::elementwise::rows::{
 };
 use crate::eval::adapters::elementwise::{FixedScalar, NumericParameter, NumericSignature};
 use crate::eval::functions::registry::CriteriaFunction;
-use crate::eval::host::{ArgumentCoercion, CallHost, NumericPolicy};
+use crate::eval::host::{ArgumentCoercion, CallHost};
 use crate::eval::limits::{CapabilityId, EvalResult};
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::{Calc, GettingData, Num, Spill};
 use crate::model::CellValue::{Blank, Error, Number, Text};
@@ -26,8 +26,8 @@ pub(in crate::eval) fn execute(
     let mut host = CallHost::new(session, sheet, address, arguments);
     match evaluate(&mut host, address, function) {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(e)) => Ok(err(e)),
-        Err(FunctionFailure::Operational(e)) => Err(e),
+        Err(FunctionError::Spreadsheet(e)) => Ok(err(e)),
+        Err(FunctionError::Operational(e)) => Err(e),
     }
 }
 
@@ -46,7 +46,10 @@ pub(in crate::eval::adapters) fn preflight(
         .iter()
         .any(|v| matches!(v, Error(GettingData | Spill | Calc)))
     {
-        return Err(host.unsupported(CapabilityId::FunctionAdapter, "criteria domain error code"));
+        return Err(host.unsupported(
+            CapabilityId::FunctionAdapter,
+            crate::eval::limits::EvaluationReasonError::CriteriaDomainErrorCode,
+        ));
     }
     Ok(())
 }
@@ -101,11 +104,9 @@ pub(super) fn compile(host: &mut CallHost<'_, '_>, value: CellValue) -> Function
     ) {
         predicate.value = poirot_functions::coercion::criteria::coerce_criteria_ordered_threshold(
             predicate.value,
-            |text| match ArgumentCoercion::new(host)
-                .coerce_number_text(text, NumericPolicy::PinnedPoi)
-            {
+            |text| match ArgumentCoercion::new(host).coerce_number_text(text) {
                 Ok(number) => Ok(Some(number)),
-                Err(FunctionFailure::Spreadsheet(_)) => Ok(None),
+                Err(FunctionError::Spreadsheet(_)) => Ok(None),
                 Err(failure) => Err(failure),
             },
         )?;
@@ -189,7 +190,10 @@ pub(super) fn subtotal(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
     // SUBTOTAL selectors have an i32 domain; omitted selectors remain unsupported.
     let scalar = FixedScalar::at(0).read(host)?;
     if scalar.missing {
-        return Err(host.unsupported(CapabilityId::NumericConversion, "omitted SUBTOTAL selector"));
+        return Err(host.unsupported(
+            CapabilityId::NumericConversion,
+            crate::eval::limits::EvaluationReasonError::OmittedSubtotalSelector,
+        ));
     }
     let code = NumericSignature::new(&[NumericParameter::required()])
         .scalars(host, 0)?
@@ -207,7 +211,7 @@ pub(super) fn subtotal(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
         host.check_values(cells.len().saturating_add(1))?;
         cells
             .try_reserve(1)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: one additional slot was reserved immediately above.
         cells.push((
             cell(host, &value)?,

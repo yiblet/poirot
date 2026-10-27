@@ -21,7 +21,7 @@ fn address(s: &str) -> poirot::model::CellAddress {
     s.parse().unwrap()
 }
 fn cell<'a>(w: &'a Workbook, s: &str) -> &'a Cell {
-    w.sheet(0).unwrap().get(address(s)).unwrap()
+    w.sheet(0).unwrap().get(address(s)).unwrap().unwrap()
 }
 
 #[test]
@@ -36,7 +36,7 @@ fn real_poi_xls_and_xlsx_preserve_sparse_values_and_empty_sheets() {
         assert_eq!(w.sheets().len(), 3, "{file}");
         assert_eq!(cell(&w, "A1").value, CellValue::Number(1.));
         assert_eq!(cell(&w, "E5").value, CellValue::Number(15.));
-        assert!(w.sheet(0).unwrap().get(address("E1")).is_none());
+        assert!(w.sheet(0).unwrap().get(address("E1")).unwrap().is_none());
         assert!(w.sheet(1).unwrap().cells().is_empty());
     }
 }
@@ -89,8 +89,12 @@ fn typed_caches_literals_names_dates_and_raw_format_roundtrip() {
         .set_value(address("B3"), CellValue::Text(String::new()))
         .unwrap();
     sheet.set_value(address("C10"), 123.4).unwrap();
-    sheet.get_mut(address("C10")).unwrap().style.number_format =
-        Some("[Red]0.00;\"minus & <\"0.00".into());
+    sheet
+        .get_mut(address("C10"))
+        .unwrap()
+        .unwrap()
+        .style
+        .number_format = Some("[Red]0.00;\"minus & <\"0.00".into());
     w.add_sheet("Empty").unwrap();
     w.define_name("Rate", "0.1", None).unwrap();
     w.define_name("Rate", "0.2", Some(0)).unwrap();
@@ -119,6 +123,7 @@ fn typed_caches_literals_names_dates_and_raw_format_roundtrip() {
                 .sheet(0)
                 .unwrap()
                 .get(poirot::model::CellAddress::new(i as u32, 0).unwrap())
+                .unwrap()
                 .unwrap()
                 .value,
             *value,

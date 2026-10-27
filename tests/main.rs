@@ -61,6 +61,7 @@ mod eval_modern_regex;
 mod eval_modern_regression;
 mod eval_modern_samples;
 mod eval_modern_text;
+mod eval_numeric_boundaries;
 mod eval_numeric_text_projection;
 mod eval_odd_financial_functions;
 mod eval_offset_projection;
@@ -171,3 +172,6 @@ mod unicode_comparison;
 mod unlimited_defaults;
 mod visual_style_workflows;
 mod workbook_convenience;
+mod worksheet_coordinates;
+
+mod workflow_exports;

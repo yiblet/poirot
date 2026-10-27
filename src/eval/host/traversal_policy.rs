@@ -1,9 +1,9 @@
 //! Bulk traversal exists only for host contract regression tests.
 use super::call_host::CallHost;
 use super::scalar_operand::ScalarOperand;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::session::{ArgumentReader, ItemFolder};
-use crate::eval::values::{FunctionFailure, FunctionResult, OperandOrigin, VALUE_ERROR, Value};
+use crate::eval::values::{FunctionError, FunctionResult, OperandOrigin, VALUE_ERROR, Value};
 
 /// Bulk traversal modes retained for host contract regression tests.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -33,7 +33,7 @@ impl TraversalPolicy {
                 |values, additional| values.try_reserve(additional),
                 |values, member| {
                     if values.len() >= values.capacity() {
-                        return Err(EvaluationFailure::StalePlan);
+                        return Err(EvaluationError::StalePlan);
                     }
                     // SAFETY: Capacity was checked for this member before the push.
                     values.push(member);
@@ -72,7 +72,7 @@ impl TraversalPolicy {
         };
         let values = ArgumentReader::new(host.session)
             .matrix(operand.value)?
-            .map_err(FunctionFailure::Spreadsheet)?;
+            .map_err(FunctionError::Spreadsheet)?;
         host.check_values(values.iter().map(Vec::len).sum())?;
         Ok(values
             .into_iter()

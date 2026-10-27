@@ -4,7 +4,7 @@ use super::candidate_index::CandidateIndex;
 use super::producer_candidate::ProducerCandidate;
 use super::spill_preparation::SpillPreparation;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError};
 use crate::eval::values::Area;
 
 /// Queues potential spill owners and their earlier-priority competitors for settlement.
@@ -34,7 +34,7 @@ impl ProducerSelection<'_> {
         let budget = &mut self.budget;
         let consumer = self.consumer;
         let mut select = |index: &CandidateIndex| -> EvalResult<()> {
-            let discovery = index.get(&area.sheet).ok_or(EvaluationFailure::StalePlan)?;
+            let discovery = index.get(&area.sheet).ok_or(EvaluationError::StalePlan)?;
             for candidate in discovery
                 .possible_in(area, competitor.map(|c| c.anchor))
                 .iter()
@@ -52,11 +52,11 @@ impl ProducerSelection<'_> {
                 budget.allocation(1)?;
                 pending
                     .try_reserve(1)
-                    .map_err(|_| EvaluationFailure::Resource {
+                    .map_err(|reservation_source| EvaluationError::Resource {
                         kind: crate::eval::limits::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
-                        source: consumer,
-                        detail: "spill frontier allocation failed".into(),
+                        target: consumer,
+                        reason: (crate::eval::limits::EvaluationReasonError::SpillFrontierAllocationFailed).with_reservation_source(reservation_source),
                     })?;
                 if let Some(active) = active.as_mut() {
                     // SAFETY: Integer coordinate ordering cannot panic; each
@@ -71,7 +71,7 @@ impl ProducerSelection<'_> {
         if let Some(shared) = self.shared {
             let index = shared
                 .try_borrow()
-                .map_err(|_| EvaluationFailure::StalePlan)?;
+                .map_err(|_| EvaluationError::StalePlan)?;
             select(&index)
         } else {
             select(candidates)

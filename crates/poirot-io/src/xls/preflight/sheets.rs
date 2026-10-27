@@ -27,13 +27,15 @@ pub(super) fn sheets(
         let mut substream = Substream::new(rs, start);
         while let Some(r) = substream.next() {
             check(
-                "BIFF scan work",
+                crate::BiffResource::BiffScanWork,
                 visits.saturating_add(substream.visited()) as u64,
                 budget.max_records as u64,
             )?;
             if r.id == 0x0208 {
                 if r.data.len() != 16 {
-                    return Err(PreflightError::Malformed("ROW length"));
+                    return Err(PreflightError::Malformed(
+                        crate::BiffStructureError::RowLength,
+                    ));
                 }
                 // ROW flags (MS-XLS 2.4.221): fDyZero, bit 5 of the byte at offset 12, hides the row.
                 let hidden = r.data.get(12).is_some_and(|flags| flags & 0x20 != 0);
@@ -46,7 +48,9 @@ pub(super) fn sheets(
                 );
             }
             if r.id == 0xe5 && r.data.len() < 2 + u16at(r.data, 0)? as usize * 8 {
-                return Err(PreflightError::Malformed("merge count exceeds record"));
+                return Err(PreflightError::Malformed(
+                    crate::BiffStructureError::MergeCountExceedsRecord,
+                ));
             }
             if r.id == 0xfd {
                 let index = u32at(r.data, 6)? as usize;
@@ -56,16 +60,22 @@ pub(super) fn sheets(
                 let offset = if r.id == 0x207 { 0 } else { 6 };
                 cell_text = cell_text.saturating_add(u16at(r.data, offset)? as u64 * 4);
             }
-            check("cell text bytes", cell_text, budget.max_cell_text_bytes)?;
+            check(
+                crate::BiffResource::CellTextBytes,
+                cell_text,
+                budget.max_cell_text_bytes,
+            )?;
             // Decoding stores sparse cells and does not reserve from Dimensions.
             if r.id == 0x200 && !matches!(r.data.len(), 10 | 14) {
-                return Err(PreflightError::Malformed("Dimensions length"));
+                return Err(PreflightError::Malformed(
+                    crate::BiffStructureError::DimensionsLength,
+                ));
             }
             if r.id == 0x6 {
                 let n = u16at(r.data, 20)? as usize;
                 if r.data.len() < 22 + n {
                     return Err(PreflightError::Malformed(
-                        "formula token claim exceeds record",
+                        crate::BiffStructureError::FormulaTokenClaimExceedsRecord,
                     ));
                 }
             }
@@ -81,7 +91,9 @@ pub(super) fn sheets(
             };
             if minimum > 0 {
                 if r.data.len() < minimum {
-                    return Err(PreflightError::Malformed("truncated cell record"));
+                    return Err(PreflightError::Malformed(
+                        crate::BiffStructureError::TruncatedCellRecord,
+                    ));
                 }
                 let col = u16at(r.data, 2)? as u32;
                 if r.id == 0xbd {
@@ -90,7 +102,9 @@ pub(super) fn sheets(
                         || (last - col + 1) as usize != (r.data.len() - 6) / 6
                         || (r.data.len() - 6) % 6 != 0
                     {
-                        return Err(PreflightError::Malformed("MulRK coordinates/length"));
+                        return Err(PreflightError::Malformed(
+                            crate::BiffStructureError::MulrkCoordinatesLength,
+                        ));
                     }
                 }
                 // Each cell record decodes one cell; MulRK decodes one per RK pair.
@@ -101,11 +115,19 @@ pub(super) fn sheets(
                     1
                 };
                 cells = cells.saturating_add(decoded);
-                check("decoded cells", cells as u64, budget.max_cells as u64)?;
+                check(
+                    crate::BiffResource::DecodedCells,
+                    cells as u64,
+                    budget.max_cells as u64,
+                )?;
             }
         }
         visits = visits.saturating_add(substream.visited());
-        check("BIFF scan work", visits as u64, budget.max_records as u64)?;
+        check(
+            crate::BiffResource::BiffScanWork,
+            visits as u64,
+            budget.max_records as u64,
+        )?;
         plan.rows.push(rows);
     }
     Ok(plan)

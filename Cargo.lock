@@ -627,6 +627,8 @@ dependencies = [
  "rand_core",
  "serde",
  "serde_bytes",
+ "smallvec",
+ "thiserror",
  "zip",
 ]
 
@@ -644,6 +646,7 @@ dependencies = [
  "serde",
  "smallvec",
  "statrs",
+ "thiserror",
  "unicode-general-category",
 ]
 
@@ -659,6 +662,7 @@ dependencies = [
  "rust_xlsxwriter",
  "serde",
  "serde_bytes",
+ "thiserror",
  "zip",
 ]
 
@@ -670,6 +674,7 @@ dependencies = [
  "nom",
  "num-bigint",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -692,6 +697,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "thiserror",
 ]
 
 [[package]]

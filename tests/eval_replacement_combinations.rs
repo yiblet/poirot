@@ -1,16 +1,14 @@
 use poirot::eval::{
-    BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationOutcome, RunConfiguration,
-    run_formula_with_configuration,
+    EvaluationBudgets, EvaluationOutcome, RunConfiguration, run_formula_with_configuration,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 fn book() -> Workbook {
     let mut book = Workbook::new();
     book.add_sheet("S").unwrap();
     let s = book.sheet_mut(0).unwrap();
-    s.set_value("A1".parse().unwrap(), "4").unwrap();
-    s.set_value("A2".parse().unwrap(), true).unwrap();
-    s.set_value("A3".parse().unwrap(), CellValue::Error(CellError::NA))
-        .unwrap();
+    s.set_value("A1", "4").unwrap();
+    s.set_value("A2", true).unwrap();
+    s.set_value("A3", CellValue::Error(CellError::NA)).unwrap();
     book
 }
 fn run(
@@ -35,11 +33,8 @@ fn value(formula: &str, config: &RunConfiguration) -> CellValue {
 }
 #[test]
 fn combina_uses_one_documented_contract_and_preserves_scalar_admission() {
-    for policy in [
-        BuiltinSemanticsPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-    ] {
-        let c = RunConfiguration::default().with_builtin_policy(policy);
+    {
+        let c = RunConfiguration::default();
         for (formula, n) in [
             ("COMBINA(4.23,3)", 20.),
             ("COMBINA(10,3)", 220.),

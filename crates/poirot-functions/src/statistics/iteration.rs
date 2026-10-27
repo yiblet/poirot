@@ -1,36 +1,15 @@
 //! Keep convergence failures separate from spreadsheet errors and host work limits.
+use super::statistical_kernel_error::StatisticalKernelError;
 use crate::scalar::CellError;
 
-/// Why an iterative statistical calculation failed to converge.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SourceConvergenceFailure {
-    /// The source algorithm exhausted its allowed iterations.
-    IterationLimit,
-    /// Continued-fraction iteration diverged to infinity.
-    InfiniteContinuedFraction,
-    /// Continued-fraction iteration produced NaN.
-    NanContinuedFraction,
-}
-
-/// A statistical calculation failure that retains its cause for the caller.
-#[derive(Clone, Debug, PartialEq)]
-pub enum KernelFailure<O> {
-    /// Catchable spreadsheet error.
-    Spreadsheet(CellError),
-    /// Host budget or execution failure.
-    Operational(O),
-    /// Pinned source exception requiring explicit boundary handling.
-    SourceConvergence(SourceConvergenceFailure),
-}
-
 /// A statistical result or its spreadsheet, host, or convergence failure.
-pub type KernelResult<O> = Result<f64, KernelFailure<O>>;
+pub type KernelResult<O> = Result<f64, StatisticalKernelError<O>>;
 
 /// Charge one iteration to the caller's work counter.
 pub(crate) fn step<O, M: FnMut(u64) -> Result<(), O>>(
     meter: &mut M,
-) -> Result<(), KernelFailure<O>> {
-    meter(1).map_err(KernelFailure::Operational)
+) -> Result<(), StatisticalKernelError<O>> {
+    meter(1).map_err(StatisticalKernelError::Operational)
 }
 
 /// Convert an unmetered kernel result to a spreadsheet result.
@@ -42,8 +21,8 @@ pub(crate) fn unmetered(
 ) -> crate::statistics::Result {
     match result {
         Ok(value) => Ok(value),
-        Err(KernelFailure::Spreadsheet(error)) => Err(error),
-        Err(KernelFailure::SourceConvergence(_)) => Err(CellError::Num),
-        Err(KernelFailure::Operational(never)) => match never {},
+        Err(StatisticalKernelError::Spreadsheet(error)) => Err(error),
+        Err(StatisticalKernelError::SourceConvergence(_)) => Err(CellError::Num),
+        Err(StatisticalKernelError::Operational(never)) => match never {},
     }
 }

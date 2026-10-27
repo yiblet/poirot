@@ -29,21 +29,29 @@ impl AddIns {
         if !matches!(id, 0x1ae | 0x23) {
             return Ok(());
         }
-        let declarations = self
-            .declarations
-            .checked_add(1)
-            .ok_or(PreflightError::Representation("add-in count overflow"))?;
+        let declarations =
+            self.declarations
+                .checked_add(1)
+                .ok_or(PreflightError::Representation(
+                    crate::BiffRepresentationError::AddInCountOverflow,
+                ))?;
         let bytes = self
             .bytes
             .checked_add(data.len())
-            .ok_or(PreflightError::Representation("add-in bytes overflow"))?;
+            .ok_or(PreflightError::Representation(
+                crate::BiffRepresentationError::AddInBytesOverflow,
+            ))?;
         for (resource, requested, limit) in [
             (
-                "add-in declarations",
+                crate::BiffResource::AddInDeclarations,
                 declarations,
                 budget.max_metadata_entries,
             ),
-            ("add-in declaration bytes", bytes, budget.max_string_bytes),
+            (
+                crate::BiffResource::AddInDeclarationBytes,
+                bytes,
+                budget.max_string_bytes,
+            ),
         ] {
             if requested > limit {
                 return Err(PreflightError::Resource {
@@ -64,15 +72,17 @@ impl AddIns {
         } else if let Some(Book::AddIn(names)) = self.books.last_mut() {
             if take(&mut data, 6)? != [0; 6] {
                 return Err(PreflightError::Representation(
-                    "unsupported add-in EXTERNNAME flags",
+                    crate::BiffRepresentationError::UnsupportedAddInExternnameFlags,
                 ));
             }
             let n = *take(&mut data, 1)?
                 .first()
-                .ok_or(PreflightError::Malformed("missing byte"))? as usize;
+                .ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::MissingByte,
+                ))? as usize;
             if n > budget.max_string_chars {
                 return Err(PreflightError::Resource {
-                    resource: "add-in name characters",
+                    resource: crate::BiffResource::AddInNameCharacters,
                     requested: n as u64,
                     limit: budget.max_string_chars as u64,
                 });
@@ -81,10 +91,12 @@ impl AddIns {
             let projection = n
                 .checked_mul(5)
                 .and_then(|n| self.bytes.checked_add(n))
-                .ok_or(PreflightError::Representation("add-in projection overflow"))?;
+                .ok_or(PreflightError::Representation(
+                    crate::BiffRepresentationError::AddInProjectionOverflow,
+                ))?;
             if projection > budget.max_string_bytes {
                 return Err(PreflightError::Resource {
-                    resource: "add-in declaration bytes",
+                    resource: crate::BiffResource::AddInDeclarationBytes,
                     requested: projection as u64,
                     limit: budget.max_string_bytes as u64,
                 });
@@ -93,7 +105,7 @@ impl AddIns {
             let name = text(&mut data, n)?;
             if word(&mut data)? != 2 || data != [0x1c, 0x17] {
                 return Err(PreflightError::Representation(
-                    "unsupported add-in EXTERNNAME formula",
+                    crate::BiffRepresentationError::UnsupportedAddInExternnameFormula,
                 ));
             }
             names.push(name);
@@ -105,21 +117,23 @@ impl AddIns {
     pub(in crate::xls) fn resolve(&self, xti: (u16, u16, u16), slot: u32) -> Result<&str> {
         if xti.1 != 0xfffe || xti.2 != 0xfffe {
             return Err(PreflightError::Representation(
-                "external NameX scope unsupported",
+                crate::BiffRepresentationError::ExternalNamexScopeUnsupported,
             ));
         }
         let Some(Book::AddIn(names)) = self.books.get(xti.0 as usize) else {
             return Err(PreflightError::Representation(
-                "external workbook/UDF NameX unsupported",
+                crate::BiffRepresentationError::ExternalWorkbookUdfNamexUnsupported,
             ));
         };
         let name = slot
             .checked_sub(1)
             .and_then(|i| names.get(i as usize))
-            .ok_or(PreflightError::Malformed("NameX slot"))?;
+            .ok_or(PreflightError::Malformed(
+                crate::BiffStructureError::NamexSlot,
+            ))?;
         if arity(name).is_none() {
             return Err(PreflightError::Representation(
-                "unsupported add-in function identity",
+                crate::BiffRepresentationError::UnsupportedAddInFunctionIdentity,
             ));
         }
         Ok(name)

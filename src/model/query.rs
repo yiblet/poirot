@@ -6,8 +6,8 @@
 //!
 //! let mut book = Workbook::new();
 //! let sheet = book.add_sheet("Data")?;
-//! sheet.set_value("A1".parse()?, CellValue::Blank)?;
-//! sheet.set_formula("B1".parse()?, "1+1")?;
+//! sheet.set_value("A1", CellValue::Blank)?;
+//! sheet.set_formula("B1", "1+1")?;
 //! let area = RangeMembership::new(0, "A1".parse()?, "B2".parse()?)?;
 //! let plan = QueryPlan::new(vec![area])?;
 //! assert!(plan.dense_size(DenseBudget { max_cells: 3 }).is_err());
@@ -39,7 +39,7 @@ impl RangeMembership {
         first.validate()?;
         last.validate()?;
         if first.row > last.row || first.col > last.col {
-            return Err(ModelError("query range endpoints must be ordered".into()));
+            return Err(ModelError::UnorderedQueryRange { first, last });
         }
         Ok(Self { sheet, first, last })
     }
@@ -81,11 +81,15 @@ impl QueryPlan {
             .areas
             .iter()
             .try_fold(0u64, |total, area| total.checked_add(area.size()))
-            .ok_or_else(|| ModelError("dense query size overflow".into()))?;
+            .ok_or(ModelError::DenseQuerySizeOverflow)?;
         if size > budget.max_cells {
-            return Err(ModelError("dense query cell budget exceeded".into()));
+            return Err(ModelError::DenseQueryBudgetExceeded {
+                requested: size,
+                limit: budget.max_cells,
+            });
         }
-        usize::try_from(size).map_err(|_| ModelError("dense query exceeds address space".into()))
+        usize::try_from(size)
+            .map_err(|_| ModelError::DenseQueryAddressSpaceExceeded { requested: size })
     }
 }
 /// Maximum logical cell count allowed when expanding a sparse query to dense storage.
@@ -147,7 +151,7 @@ impl<'a, R: WorkbookRead + ?Sized> WorkbookView<'a, R> {
         let sheet = self
             .source
             .worksheet(area.sheet)
-            .ok_or_else(|| ModelError("query worksheet index out of bounds".into()))?;
+            .ok_or(ModelError::InvalidWorksheetIndex { index: area.sheet })?;
         Ok(StoredCells {
             sheet,
             area,
@@ -165,7 +169,7 @@ impl<'a, R: WorkbookRead + ?Sized> WorkbookView<'a, R> {
         let sheet = self
             .source
             .worksheet(area.sheet)
-            .ok_or_else(|| ModelError("query worksheet index out of bounds".into()))?;
+            .ok_or(ModelError::InvalidWorksheetIndex { index: area.sheet })?;
         Ok(StoredCellsReverse {
             sheet,
             area,
@@ -185,9 +189,9 @@ impl<'a, R: WorkbookRead + ?Sized> WorkbookView<'a, R> {
         let sheet = self
             .source
             .worksheet(sheet)
-            .ok_or_else(|| ModelError("query worksheet index out of bounds".into()))?;
+            .ok_or(ModelError::InvalidWorksheetIndex { index: sheet })?;
         counters.key_lookups += 1;
-        Ok(sheet.get(address))
+        Ok(sheet.get_validated(address))
     }
     /// Count absent and explicit blank members under the supplied dense budget.
     pub fn blank_counts(
@@ -351,7 +355,7 @@ mod tests {
             selected,
             vec![address(9, 3), address(5, 3), address(2, 3), address(0, 3)]
         );
-        book.sheet_mut(0).unwrap().remove(address(5, 3));
+        book.sheet_mut(0).unwrap().remove(address(5, 3)).unwrap();
         let selected: Vec<_> = WorkbookView::new(&book)
             .stored_reverse(bounds)
             .unwrap()
@@ -433,7 +437,12 @@ mod tests {
             10
         );
         book.sheet_mut(0).unwrap().set_value(absent, 3.0).unwrap();
-        book.sheet_mut(0).unwrap().get_mut(absent).unwrap().value = CellValue::Blank;
+        book.sheet_mut(0)
+            .unwrap()
+            .get_mut(absent)
+            .unwrap()
+            .unwrap()
+            .value = CellValue::Blank;
         let mut counters = QueryCounters::default();
         assert_eq!(
             WorkbookView::new(&book)
@@ -452,7 +461,7 @@ mod tests {
                 .stored_blank,
             1
         );
-        book.sheet_mut(0).unwrap().remove(absent);
+        book.sheet_mut(0).unwrap().remove(absent).unwrap();
         assert_eq!(
             WorkbookView::new(&book)
                 .blank_counts(bounds)

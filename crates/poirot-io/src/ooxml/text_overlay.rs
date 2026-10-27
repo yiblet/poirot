@@ -20,7 +20,7 @@ fn rich(reader: &mut Reader<&[u8]>, end: &str) -> Result<ExcelText, IoError> {
                 units.extend_from_slice(decode(&text(reader, e.name())?).units());
             }
             Event::End(e) if e.local_name().as_ref() == end => break,
-            Event::Eof => return Err(IoError::Xml("truncated SpreadsheetML text".into())),
+            Event::Eof => return Err(IoError::Xml(crate::XmlCodecError::TruncatedText)),
             _ => {}
         }
     }
@@ -82,7 +82,7 @@ pub(crate) fn apply_sheet_text(
                         .parse::<u32>()
                         .map_err(xml)?
                         .checked_sub(1)
-                        .ok_or_else(|| IoError::Read("zero row index".into()))?,
+                        .ok_or(IoError::Read(crate::WorkbookReadError::ZeroRowIndex))?,
                     None => next_row,
                 };
                 sheet.create_row(row)?;
@@ -110,9 +110,7 @@ pub(crate) fn apply_sheet_text(
                     .unwrap_or(0);
                 let kind = attr(&e, "t")?;
                 if kind.as_deref() == Some("d") {
-                    return Err(IoError::Unsupported(
-                        "ISO date has no exact typed model representation".into(),
-                    ));
+                    return Err(IoError::Unsupported(crate::WorkbookFeatureError::IsoDate));
                 }
                 let is_text = matches!(kind.as_deref(), Some("s" | "str" | "inlineStr"));
                 let mut value = None;
@@ -144,15 +142,19 @@ pub(crate) fn apply_sheet_text(
                             }
                             value = Some(if kind.as_deref() == Some("s") {
                                 let index = raw.parse::<usize>().map_err(xml)?;
-                                shared.get(index).cloned().ok_or_else(|| {
-                                    IoError::Read("shared string index out of range".into())
+                                shared.get(index).cloned().ok_or({
+                                    IoError::Read(
+                                        crate::WorkbookReadError::SharedStringIndexOutOfRange,
+                                    )
                                 })?
                             } else {
                                 decode(&raw)
                             });
                         }
                         Event::End(e) if e.local_name().as_ref() == "c" => break,
-                        Event::Eof => return Err(IoError::Xml("truncated text cell".into())),
+                        Event::Eof => {
+                            return Err(IoError::Xml(crate::XmlCodecError::TruncatedCell));
+                        }
                         _ => {}
                     }
                 }
@@ -172,16 +174,17 @@ pub(crate) fn apply_sheet_text(
                     cell.formula = formula;
                     sheet.set(address, cell)?;
                 } else {
-                    return Err(IoError::Read("backend omitted a stored cell value".into()));
+                    return Err(IoError::Read(
+                        crate::WorkbookReadError::BackendOmittedAStoredCellValue,
+                    ));
                 }
                 if let Some(cell) = sheet.get_mut(address) {
                     cell.style = if styles.is_empty() && style == 0 {
                         crate::CellStyle::default()
                     } else {
-                        styles
-                            .get(style)
-                            .cloned()
-                            .ok_or_else(|| IoError::Read("cell style index out of range".into()))?
+                        styles.get(style).cloned().ok_or({
+                            IoError::Read(crate::WorkbookReadError::CellStyleIndexOutOfRange)
+                        })?
                     };
                 }
             }
@@ -223,7 +226,9 @@ mod tests {
         for identity in plan.sheets.iter().filter(|s| s.supported) {
             let sheet = workbook
                 .sheet_by_name_mut(&identity.name)
-                .ok_or_else(|| IoError::Read("missing text worksheet".into()))?;
+                .ok_or(IoError::Read(
+                    crate::WorkbookReadError::MissingTextWorksheet,
+                ))?;
             apply_sheet_text(
                 part(package, &identity.part)?,
                 &shared,

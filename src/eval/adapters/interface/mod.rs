@@ -1,7 +1,7 @@
 //! Common registration, deferred inputs, and composition for evaluator adapters.
 //!
 //! Depends on: compile (bound arguments), session (call context), vm (deferred
-//! arguments, resolved calls and admission), config (builtin policy), functions
+//! arguments), functions
 //! (identities), coordinates (cell targets), limits (budgets), values (value channels),
 //! ports (dependency reads) and observe (consumed builtin invocations).
 

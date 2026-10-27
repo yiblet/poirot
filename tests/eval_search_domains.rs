@@ -1,6 +1,5 @@
 use poirot::eval::{
-    BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationOutcome, RunConfiguration,
-    TextSemanticsPolicy, TextSourceVersion, run_formula_with_configuration,
+    EvaluationBudgets, EvaluationOutcome, RunConfiguration, run_formula_with_configuration,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
@@ -32,13 +31,8 @@ fn search_validates_empty_pattern_and_text_domains() {
     // Microsoft's SEARCH/FIND remarks bound starts by text length; FIND explicitly
     // permits empty find_text at start_num. Calc confirms the nonempty-needle
     // fractional boundary, but disagrees with empty needles in nonempty text.
-    for source in [
-        TextSourceVersion::Poi7321209,
-        TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-    ] {
-        let config = RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
-            .with_text_policy(TextSemanticsPolicy { source });
+    {
+        let config = RunConfiguration::default();
         for function in ["SEARCH", "FIND"] {
             for args in [
                 r#""","""#,
@@ -54,7 +48,7 @@ fn search_validates_empty_pattern_and_text_domains() {
                 assert_eq!(
                     value(&formula, &config),
                     CellValue::Error(CellError::Value),
-                    "{source:?}: {formula}"
+                    "{formula}"
                 );
             }
             for (args, expected) in [
@@ -68,7 +62,7 @@ fn search_validates_empty_pattern_and_text_domains() {
                 assert_eq!(
                     value(&formula, &config),
                     CellValue::Number(expected),
-                    "{source:?}: {formula}"
+                    "{formula}"
                 );
             }
             assert_eq!(
@@ -110,15 +104,26 @@ fn search_validates_empty_pattern_and_text_domains() {
 #[test]
 fn search_source_matching_and_unicode_contracts_survive_domain_validation() {
     {
-        let poi = RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
-            .with_text_policy(TextSemanticsPolicy {
-                source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-            });
-        assert_eq!(value(r#"SEARCH("*","abc")"#, &poi), CellValue::Number(1.));
-        assert_eq!(value(r#"SEARCH("a~*","a*")"#, &poi), CellValue::Number(1.));
-        assert_eq!(value(r#"FIND("x","😀x")"#, &poi), CellValue::Number(3.));
-        assert_eq!(value(r#"SEARCH("x","😀x")"#, &poi), CellValue::Number(3.));
-        assert_eq!(value(r#"SEARCH("x","ßx")"#, &poi), CellValue::Number(2.));
+        let configuration = RunConfiguration::default();
+        assert_eq!(
+            value(r#"SEARCH("*","abc")"#, &configuration),
+            CellValue::Number(1.)
+        );
+        assert_eq!(
+            value(r#"SEARCH("a~*","a*")"#, &configuration),
+            CellValue::Number(1.)
+        );
+        assert_eq!(
+            value(r#"FIND("x","😀x")"#, &configuration),
+            CellValue::Number(2.)
+        );
+        assert_eq!(
+            value(r#"SEARCH("x","😀x")"#, &configuration),
+            CellValue::Number(2.)
+        );
+        assert_eq!(
+            value(r#"SEARCH("x","ßx")"#, &configuration),
+            CellValue::Number(2.)
+        );
     }
 }

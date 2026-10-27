@@ -1,8 +1,8 @@
 //! Compile number formats once, then render values with a date system and locale.
 use super::{
-    CellValue, Condition, DateSystem, Format, FormatError, FormatOptions, FormattedValue,
-    NumberPlan, RenderedText, Token, date, error, fidelity_error, fmt, number, parse_format,
-    render_text, resource_error,
+    CellValue, Condition, DateSystem, Format, FormatCompileError, FormatError, FormatOptions,
+    FormattedValue, NumberPlan, RenderedText, Token, date, error, fidelity_error, number,
+    parse_format, render_text, resource_error,
 };
 
 mod compile;
@@ -20,17 +20,8 @@ fn is_text_section(tokens: &[Token]) -> bool {
         })
 }
 
-pub use compile::{
-    compile_format, compile_format_with_source, compile_program, compile_program_with_source,
-};
+pub use compile::{compile_format, compile_program};
 
-/// Selects the formatter behavior used during compilation.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum FormatSourcePolicy {
-    /// Use the pinned POI DataFormatter source contract.
-    #[default]
-    Poi7321209DataFormatter,
-}
 pub use execute::render_value;
 
 #[cfg(test)]
@@ -122,44 +113,6 @@ impl From<FormatOptions> for FormatRenderContext {
         }
     }
 }
-/// An error compiling a number format, with its section and token when known.
-///
-/// Errors from parsing format text also retain the original UTF-8 byte offset.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FormatCompileError {
-    /// Zero-based failing section index, if known.
-    pub section: Option<usize>,
-    /// Zero-based failing token index within the section, if known.
-    pub token: Option<usize>,
-    /// Underlying syntax, fidelity, or resource diagnostic.
-    pub source: FormatError,
-}
-impl fmt::Display for FormatCompileError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(s) = self.section {
-            write!(f, "section {s}")?;
-            if let Some(t) = self.token {
-                write!(f, ", token {t}")?;
-            }
-            write!(f, ": ")?;
-        }
-        self.source.fmt(f)
-    }
-}
-impl std::error::Error for FormatCompileError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(&self.source)
-    }
-}
-impl From<FormatError> for FormatCompileError {
-    fn from(source: FormatError) -> Self {
-        Self {
-            section: None,
-            token: None,
-            source,
-        }
-    }
-}
 /// Compiled section rendering modes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SectionKind {
@@ -237,13 +190,8 @@ pub struct FormatPlan {
     sections: Vec<SectionPlan>,
     policy: FormatCompilePolicy,
     fingerprint: u64,
-    source: FormatSourcePolicy,
 }
 impl FormatPlan {
-    /// Return the compatibility policy used to compile this format.
-    pub fn source_policy(&self) -> FormatSourcePolicy {
-        self.source
-    }
     /// Borrow immutable compiled sections in source order.
     pub fn sections(&self) -> &[SectionPlan] {
         &self.sections

@@ -1,7 +1,7 @@
 //! Shared one-shot source traversal for aggregate admission policies.
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::host::{CallHost, HostOperand, ScalarOperand};
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure, ResourceFailureKind};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, ResourceFailureKind};
 use crate::eval::session::Session;
 use crate::eval::values::core_projection::semantic;
 use crate::eval::values::{Value, err};
@@ -47,11 +47,12 @@ pub(in crate::eval) fn execute<P: AggregatePolicy>(
         let selected = matches!(operand.value(), Value::SelectedScalar(_, _));
         if matches!(operand.value(), Value::SheetSpan(_)) {
             policy = host.fold_ordered_sheet_span(operand, policy, |policy, member| {
-                policy.reserve(1).map_err(|_| EvaluationFailure::Resource {
+                policy.reserve(1).map_err(|_| EvaluationError::Resource {
                     kind: ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: Some(EvaluationTarget { sheet, address }),
-                    detail: "aggregate member allocation failed".into(),
+                    target: Some(EvaluationTarget { sheet, address }),
+                    reason:
+                        crate::eval::limits::EvaluationReasonError::AggregateMemberAllocationFailed,
                 })?;
                 Ok(policy.consume(member, selected))
             })?;

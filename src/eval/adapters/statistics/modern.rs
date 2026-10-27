@@ -1,13 +1,13 @@
 //! Scalar parameter lifting for documented modern distributions.
 use crate::eval::adapters::{
     elementwise::{self, Broadcast, Kernel, MemberContext, NumericParameter, Variadic},
-    failure::operational_only,
+    operational_only::operational_only,
 };
 use crate::eval::functions::registry::{FunctionId, StatisticsFunction};
 use crate::eval::host::CallHost;
 use crate::eval::limits::{CapabilityId, EvalResult};
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::{NA, Num};
 use crate::model::CellValue::Number;
@@ -98,18 +98,18 @@ fn nonconvergence(function: StatisticsFunction) -> CellError {
     }
 }
 
-fn failure<E: Into<FunctionFailure>>(
+fn failure<E: Into<FunctionError>>(
     function: StatisticsFunction,
     host: &CallHost<'_, '_>,
-    failure: kernel::Failure<E>,
-) -> FunctionFailure {
+    failure: poirot_functions::statistics::DistributionError<E>,
+) -> FunctionError {
     match failure {
-        kernel::Failure::Spreadsheet(error) => error.into(),
-        kernel::Failure::Operational(error) => error.into(),
-        kernel::Failure::NonConvergence => nonconvergence(function).into(),
-        kernel::Failure::ComputationalLimit => host.unsupported(
+        poirot_functions::statistics::DistributionError::Spreadsheet(error) => error.into(),
+        poirot_functions::statistics::DistributionError::Operational(error) => error.into(),
+        poirot_functions::statistics::DistributionError::NonConvergence => nonconvergence(function).into(),
+        poirot_functions::statistics::DistributionError::ComputationalLimit => host.unsupported(
             CapabilityId::FunctionAdapter,
-            "distribution computation exceeds its bounded work envelope",
+            crate::eval::limits::EvaluationReasonError::DistributionComputationExceedsItsBoundedWorkEnvelope,
         ),
     }
 }
@@ -393,7 +393,7 @@ pub(super) fn execute(
     let result = elementwise::execute(&mut host, address, Distribution(function));
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
         Err(error) => Err(operational_only(error)),
     }
 }

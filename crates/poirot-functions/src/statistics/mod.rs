@@ -7,6 +7,18 @@
 //! The caller collects numeric inputs and selects the relevant sample policy.
 //! Iterative calculations report convergence failures separately from spreadsheet
 //! errors. Workbook traversal and argument evaluation belong to the caller.
+mod statistical_kernel_error;
+
+pub use statistical_kernel_error::StatisticalKernelError;
+
+mod source_convergence_error;
+
+pub use source_convergence_error::SourceConvergenceError;
+
+mod distribution_error;
+
+pub use distribution_error::DistributionError;
+
 use crate::scalar::CellError;
 
 mod aggregate;
@@ -28,19 +40,19 @@ mod poisson_mass;
 mod reduction;
 
 // Statistical reduction over already collected numeric operands.
-pub use aggregate::{aggregate, aggregate_with_policy};
+pub use aggregate::aggregate;
 pub use reduction::{NumericReduction, NumericReductionState};
 // Distribution probability/inverse kernels with optional host metering.
 pub use distribution::{
     legacy_t_dist, normal_dist, normal_dist_metered, normal_dist_source_metered, normal_inverse,
     normal_inverse_source, poisson, poisson_metered, standardize, student_t,
 };
-// Failure channels separating spreadsheet values, host aborts, and source convergence exceptions.
-pub use iteration::{KernelFailure, KernelResult, SourceConvergenceFailure};
+// DistributionError channels separating spreadsheet values, host aborts, and source convergence exceptions.
+pub use iteration::KernelResult;
 // Ordered sample selection, percentile interpolation, and ranking.
 pub use order::{order_statistic, percentile, rank};
 // Aligned-pair statistics and fitted-line prediction.
-pub use paired::{forecast, paired, paired_with_policy, regression};
+pub use paired::{forecast, paired, regression};
 /// Percentile rank with an explicit inclusive/exclusive endpoint contract.
 pub use percent_rank::percent_rank;
 // Origin-sensitive admission of scalar and paired statistical inputs.
@@ -66,15 +78,6 @@ fn finite(values: &[f64]) -> std::result::Result<(), CellError> {
     } else {
         Err(CellError::Num)
     }
-}
-
-/// Minimum-observation contract, selected independently of value admission.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SamplePolicy {
-    /// Preserve the pinned POI/StatsLib minimum sizes and errors.
-    PinnedPoi,
-    /// Use the documented sample or population denominator requirements.
-    ExcelDocumentation,
 }
 
 /// Minimum admitted sample size and the spreadsheet error to return when it is not met.

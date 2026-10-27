@@ -16,7 +16,9 @@ impl FormatPlan {
         context: FormatRenderContext,
     ) -> Result<usize, FormatError> {
         if context.width.is_some_and(|w| w > 32767) {
-            return Err(resource_error("width exceeds resource limit"));
+            return Err(resource_error(
+                crate::format::FormatReasonError::WidthExceedsResourceLimit,
+            ));
         }
         let text_bytes = value
             .text_ref()
@@ -33,23 +35,25 @@ impl FormatPlan {
             // most 20 bytes (elapsed seconds <=12, names <=9, fractions <=7).
             // 32 bytes per ordinary token covers those expansions, including
             // UTF-8 literals produced by a single character token.
-            bound = bound
-                .checked_add(512)
-                .ok_or_else(|| resource_error("render byte bound overflow"))?;
+            bound = bound.checked_add(512).ok_or_else(|| {
+                resource_error(crate::format::FormatReasonError::RenderByteBoundOverflow)
+            })?;
             for token in &section.text_adapter {
                 let bytes = match token {
                     Token::Literal(s) => s.len(),
                     Token::Text | Token::General => text_bytes.max(512),
                     _ => 32,
                 };
-                bound = bound
-                    .checked_add(bytes)
-                    .ok_or_else(|| resource_error("render byte bound overflow"))?;
+                bound = bound.checked_add(bytes).ok_or_else(|| {
+                    resource_error(crate::format::FormatReasonError::RenderByteBoundOverflow)
+                })?;
             }
         }
         bound
             .checked_add(context.width.unwrap_or(0) * 4)
-            .ok_or_else(|| resource_error("render byte bound overflow"))
+            .ok_or_else(|| {
+                resource_error(crate::format::FormatReasonError::RenderByteBoundOverflow)
+            })
     }
 }
 
@@ -62,7 +66,9 @@ fn select(plan: &FormatPlan, n: f64) -> Result<(&SectionPlan, bool), FormatError
                 return Ok((s, false));
             }
         }
-        return Err(error("no conditional format section matches"));
+        return Err(error(
+            crate::format::FormatReasonError::NoConditionalFormatSectionMatches,
+        ));
     }
     let i = if n < 0. && numeric.len() > 1 {
         1
@@ -74,7 +80,7 @@ fn select(plan: &FormatPlan, n: f64) -> Result<(&SectionPlan, bool), FormatError
     Ok((
         numeric
             .get(i)
-            .ok_or_else(|| error("format has no numeric sections"))?,
+            .ok_or_else(|| error(crate::format::FormatReasonError::FormatHasNoNumericSections))?,
         i == 1,
     ))
 }
@@ -89,12 +95,14 @@ pub fn render_value(
     context: FormatRenderContext,
 ) -> Result<FormattedValue, FormatError> {
     if context.width.is_some_and(|w| w > 32767) {
-        return Err(resource_error("width exceeds resource limit"));
+        return Err(resource_error(
+            crate::format::FormatReasonError::WidthExceedsResourceLimit,
+        ));
     }
     let (section, absolute) = match value {
         CellValue::Number(n) => {
             if !n.is_finite() {
-                return Err(error("non-finite number"));
+                return Err(error(crate::format::FormatReasonError::NonFiniteNumber));
             }
             let (s, a) = select(plan, *n)?;
             (Some(s), a)
@@ -129,13 +137,15 @@ pub fn render_value(
                         Token::Padding(_) | Token::Percent => 1,
                         _ => 0,
                     };
-                    output = output
-                        .checked_add(extra)
-                        .ok_or_else(|| resource_error("formatted text count overflow"))?;
+                    output = output.checked_add(extra).ok_or_else(|| {
+                        resource_error(crate::format::FormatReasonError::FormattedTextCountOverflow)
+                    })?;
                 }
             }
             if output > plan.policy.max_output_characters.min(32767) {
-                return Err(resource_error("formatted text exceeds cell limit"));
+                return Err(resource_error(
+                    crate::format::FormatReasonError::FormattedTextExceedsCellLimit,
+                ));
             }
             let source = source.to_utf8().map_err(|_| fidelity_error())?;
             match section {
@@ -146,7 +156,7 @@ pub fn render_value(
         CellValue::Number(n) => {
             let n = if absolute { n.abs() } else { *n };
             match &section
-                .ok_or_else(|| error("format has no numeric sections"))?
+                .ok_or_else(|| error(crate::format::FormatReasonError::FormatHasNoNumericSections))?
                 .program
             {
                 SectionProgram::Number(p) => p.render_output(n)?,

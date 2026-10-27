@@ -46,13 +46,13 @@ fn replacing_anchor_keeps_follower_source() {
     for remove in [false, true] {
         let mut book = workbook();
         let sheet = book.sheet_mut(0).unwrap();
-        let follower = sheet.get(at("B2")).unwrap().clone();
+        let follower = sheet.get(at("B2")).unwrap().unwrap().clone();
         if remove {
-            sheet.remove(at("B1"));
+            sheet.remove(at("B1")).unwrap();
         } else {
             sheet.set_formula(at("B1"), "99").unwrap();
         }
-        assert_eq!(sheet.get(at("B2")), Some(&follower));
+        assert_eq!(sheet.get(at("B2")).unwrap(), Some(&follower));
         assert_eq!(book.clone(), book);
         assert_eq!(Workbook::from_snapshot(book.snapshot()).unwrap(), book);
     }
@@ -63,7 +63,7 @@ fn formula_and_literal_edits_detach_only_target() {
     for literal in [false, true] {
         let mut book = workbook();
         let sheet = book.sheet_mut(0).unwrap();
-        let anchor = sheet.get(at("B1")).unwrap().clone();
+        let anchor = sheet.get(at("B1")).unwrap().unwrap().clone();
         if literal {
             sheet.set_value(at("B2"), 3.).unwrap();
         } else {
@@ -71,8 +71,8 @@ fn formula_and_literal_edits_detach_only_target() {
                 .set_formula_with_cached_value(at("B2"), "A2+1", 3.0.into())
                 .unwrap();
         }
-        assert_eq!(sheet.get(at("B2")).unwrap().shared_formula, None);
-        assert_eq!(sheet.get(at("B1")), Some(&anchor));
+        assert_eq!(sheet.get(at("B2")).unwrap().unwrap().shared_formula, None);
+        assert_eq!(sheet.get(at("B1")).unwrap(), Some(&anchor));
     }
 }
 
@@ -98,7 +98,12 @@ fn cache_and_style_edits_preserve_shared_provenance() {
     .unwrap();
     for addr in ["B1", "B2"] {
         assert_eq!(
-            book.sheet(0).unwrap().get(at(addr)).unwrap().shared_formula,
+            book.sheet(0)
+                .unwrap()
+                .get(at(addr))
+                .unwrap()
+                .unwrap()
+                .shared_formula,
             Some(shared())
         );
     }
@@ -135,6 +140,7 @@ fn shared_provenance_snapshot_roundtrip() {
         .unwrap()
         .get_mut(at("B2"))
         .unwrap()
+        .unwrap()
         .shared_formula = None;
     assert!(!book.snapshot().matches(&changed));
 }
@@ -145,9 +151,9 @@ fn malformed_shared_provenance_snapshot_rejected() {
         let mut book = workbook();
         let cell = book.sheet_mut(0).unwrap().get_mut(at("B2")).unwrap();
         if missing_formula {
-            cell.formula = None;
+            cell.unwrap().formula = None;
         } else {
-            cell.shared_formula.as_mut().unwrap().origin.row = MAX_ROWS;
+            cell.unwrap().shared_formula.as_mut().unwrap().origin.row = MAX_ROWS;
         }
         let bytes = postcard::to_allocvec(&book.snapshot()).unwrap();
         assert!(Workbook::from_snapshot(postcard::from_bytes(&bytes).unwrap()).is_err());

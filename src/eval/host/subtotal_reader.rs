@@ -4,7 +4,7 @@ use super::operand_reader::OperandReader;
 use super::scalar_operand::ScalarOperand;
 use crate::eval::compile::compiler::PreparedFormula;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{EvaluationFailure, WorkKind};
+use crate::eval::limits::{EvaluationError, WorkKind};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::ReadRecorder;
 use crate::eval::values::signed_reference::GridRead;
@@ -36,7 +36,7 @@ impl<'h, 'call, 'workbook> SubtotalReader<'h, 'call, 'workbook> {
             .host
             .argument_base
             .checked_add(index)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let runtime = &mut *self.host.session.state.runtime;
         let coordinate = match &runtime
             .vm

@@ -210,7 +210,7 @@ impl WorkbookSink for Workbook {
         self.sheets.push(Worksheet::new(name)?);
         self.sheets
             .last_mut()
-            .ok_or_else(|| ModelError("missing fixture sheet".into()))
+            .ok_or(ModelError::MissingFixtureSheet)
     }
     fn sheet_mut(&mut self, index: usize) -> Option<&mut Worksheet> {
         self.sheets.get_mut(index)
@@ -237,7 +237,7 @@ impl WorkbookSink for Workbook {
         for (sheet, at, value) in cells {
             let sheet = self
                 .sheet_mut(sheet)
-                .ok_or_else(|| ModelError("missing fixture sheet".into()))?;
+                .ok_or(ModelError::MissingFixtureSheet)?;
             match value {
                 Some(value) => {
                     sheet.cells.insert(at, value);

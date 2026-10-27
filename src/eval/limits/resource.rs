@@ -1,6 +1,6 @@
 //! Fallible storage admission separates representation overflow from allocator refusal.
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::budget::{CapabilityId, EvaluationFailure, ResourceFailureKind};
+use crate::eval::limits::budget::{CapabilityId, EvaluationError, ResourceFailureKind};
 
 /// Reserve a vector's additional slots after checking Rust's byte-capacity representation.
 pub(in crate::eval) fn reserve_exact<T>(
@@ -8,27 +8,27 @@ pub(in crate::eval) fn reserve_exact<T>(
     additional: usize,
     source: Option<EvaluationTarget>,
     capability: CapabilityId,
-    operation: &'static str,
-) -> Result<(), EvaluationFailure> {
+    operation: crate::eval::limits::budget::EvaluationReasonError,
+) -> Result<(), EvaluationError> {
     let representable = values
         .len()
         .checked_add(additional)
         .and_then(|len| len.checked_mul(std::mem::size_of::<T>()))
         .is_some_and(|bytes| bytes <= isize::MAX as usize);
     if !representable {
-        return Err(EvaluationFailure::Resource {
+        return Err(EvaluationError::Resource {
             kind: ResourceFailureKind::SizeOverflow,
             capability,
-            source,
-            detail: operation.into(),
+            target: source,
+            reason: operation,
         });
     }
     values
         .try_reserve_exact(additional)
-        .map_err(|_| EvaluationFailure::Resource {
+        .map_err(|reservation_source| EvaluationError::Resource {
             kind: ResourceFailureKind::Allocation,
             capability,
-            source,
-            detail: operation.into(),
+            target: source,
+            reason: operation.with_reservation_source(reservation_source),
         })
 }

@@ -331,14 +331,14 @@ fn synthetic(name: &str, limit: usize) -> Result<(Workbook, Vec<Scenario>)> {
     let mut requests = Vec::new();
     match name {
         "diamond" => {
-            sheet.set_value("A1".parse()?, 1.1)?;
-            sheet.set_value("A2".parse()?, 2.1)?;
-            sheet.set_formula("B1".parse()?, "ROUND(A1,0)")?;
-            sheet.set_formula("B2".parse()?, "ROUND(A2,0)")?;
+            sheet.set_value("A1", 1.1)?;
+            sheet.set_value("A2", 2.1)?;
+            sheet.set_formula("B1", "ROUND(A1,0)")?;
+            sheet.set_formula("B2", "ROUND(A2,0)")?;
             for row in 1..=500 {
-                sheet.set_value(format!("F{row}").parse()?, f64::from(row))?;
+                sheet.set_value(format!("F{row}"), f64::from(row))?;
                 sheet.set_formula(
-                    format!("D{row}").parse()?,
+                    format!("D{row}"),
                     format!("SUMPRODUCT(($F$1:$F$500+B1)*B2)+{row}"),
                 )?;
             }
@@ -349,10 +349,10 @@ fn synthetic(name: &str, limit: usize) -> Result<(Workbook, Vec<Scenario>)> {
             }
         }
         "branches" => {
-            sheet.set_value("A1".parse()?, 1.)?;
-            sheet.set_formula("B1".parse()?, "A1>0")?;
-            sheet.set_formula("B2".parse()?, "IF(A1>0,10,1/0)")?;
-            sheet.set_formula("C1".parse()?, "IF(B1,B2,20)")?;
+            sheet.set_value("A1", 1.)?;
+            sheet.set_formula("B1", "A1>0")?;
+            sheet.set_formula("B2", "IF(A1>0,10,1/0)")?;
+            sheet.set_formula("C1", "IF(B1,B2,20)")?;
             for index in 0..limit {
                 // SAFETY: literal nonzero divisor defines alternating branches.
                 let positive = index % 2 == 0;
@@ -360,11 +360,11 @@ fn synthetic(name: &str, limit: usize) -> Result<(Workbook, Vec<Scenario>)> {
             }
         }
         "spill" => {
-            sheet.set_value("F1".parse()?, 2.1)?;
-            sheet.set_value("F2".parse()?, 10.1)?;
-            sheet.set_formula("G1".parse()?, "ROUND(F1,0)")?;
-            sheet.set_formula("G2".parse()?, "ROUND(F2,0)")?;
-            sheet.set_formula("D1".parse()?, "A2*2")?;
+            sheet.set_value("F1", 2.1)?;
+            sheet.set_value("F2", 10.1)?;
+            sheet.set_formula("G1", "ROUND(F1,0)")?;
+            sheet.set_formula("G2", "ROUND(F2,0)")?;
+            sheet.set_formula("D1", "A2*2")?;
             for index in 0..limit {
                 // SAFETY: literal nonzero divisor defines three independent scenarios.
                 let phase = index % 3;
@@ -429,11 +429,9 @@ mod tests {
     fn omitted_inputs_restore_baseline_values_formulas_and_missing_cells() {
         let mut book = Workbook::new();
         let sheet = book.add_sheet("S").unwrap();
-        sheet.set_value("A1".parse().unwrap(), 3.).unwrap();
-        sheet.set_formula("A2".parse().unwrap(), "A1*2").unwrap();
-        sheet
-            .set_formula("D1".parse().unwrap(), "A1+A2+A3")
-            .unwrap();
+        sheet.set_value("A1", 3.).unwrap();
+        sheet.set_formula("A2", "A1*2").unwrap();
+        sheet.set_formula("D1", "A1+A2+A3").unwrap();
         let edited = json!({"inputs":{"a":{"cell":"S!A1","string":"5"},"b":{"cell":"S!A2","formula":"A1*3"},"c":{"cell":"S!A3","string":"7"}},"output_cells":{"out":"S!D1"},"clock_unix_seconds":0});
         let empty = json!({"inputs":{},"output_cells":{"out":"S!D1"},"clock_unix_seconds":0});
         let mut first = scenario(&book, &edited).unwrap();

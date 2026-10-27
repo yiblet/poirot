@@ -2,8 +2,8 @@
 use super::argument_role::ArgumentRole;
 use super::tuple_signature::Signature;
 use super::whole_collection::WholeCollection;
-use crate::eval::host::{ArgumentCoercion, CallHost, NumericPolicy, OperandKind, OperandReader};
-use crate::eval::values::{FunctionFailure, FunctionResult, OperandOrigin, VALUE_ERROR, Value};
+use crate::eval::host::{ArgumentCoercion, CallHost, OperandKind, OperandReader};
+use crate::eval::values::{FunctionError, FunctionResult, OperandOrigin, VALUE_ERROR, Value};
 use crate::model::CellError::{NA, Ref};
 use crate::model::CellValue::{Blank, Boolean, Error, Number};
 use crate::model::{CellAddress, CellError};
@@ -53,7 +53,7 @@ fn member(
         return match operand.value {
             Blank => Ok(None),
             value => ArgumentCoercion::new(host)
-                .coerce_scalar_number(&value, NumericPolicy::PinnedPoi)
+                .coerce_scalar_number(&value)
                 .map(Some),
         };
     }
@@ -88,12 +88,12 @@ pub(in crate::eval::adapters) fn positions(
     let mut result = Vec::new();
     result
         .try_reserve_exact(len)
-        .map_err(|_| host.allocation_failure())?;
-    let allocation_failure = host.allocation_failure();
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
+    let allocation_target = host.target();
     visit_members(host, index, len, admission, |value| {
         result
             .try_reserve(1)
-            .map_err(|_| allocation_failure.clone())?;
+            .map_err(|reservation_source| crate::eval::limits::EvaluationError::reservation(crate::eval::limits::CapabilityId::FunctionAdapter, Some(allocation_target), crate::eval::limits::EvaluationReasonError::AllocatingAFunctionResultOrScratchBuffer, reservation_source))?;
         // SAFETY: one additional slot was reserved immediately above.
         result.push(value);
         Ok(())
@@ -119,13 +119,13 @@ pub(in crate::eval::adapters) fn collect(
         host.charge_work((len as u64).saturating_mul(12))?;
         result
             .try_reserve(len)
-            .map_err(|_| host.allocation_failure())?;
-        let allocation_failure = host.allocation_failure();
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
+        let allocation_target = host.target();
         visit_members(host, index, len, admission, |value| {
             if let Some(value) = value {
                 result
                     .try_reserve(1)
-                    .map_err(|_| allocation_failure.clone())?;
+                    .map_err(|reservation_source| crate::eval::limits::EvaluationError::reservation(crate::eval::limits::CapabilityId::FunctionAdapter, Some(allocation_target), crate::eval::limits::EvaluationReasonError::AllocatingAFunctionResultOrScratchBuffer, reservation_source))?;
                 // SAFETY: one additional slot was reserved immediately above.
                 result.push(value);
             }
@@ -153,9 +153,9 @@ pub(in crate::eval::adapters) fn pairs(
     let (mut x, mut y) = (Vec::new(), Vec::new());
     let capacity = a.len().min(b.len());
     x.try_reserve_exact(capacity)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     y.try_reserve_exact(capacity)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     for (a, b) in a.into_iter().zip(b) {
         if let (Some(a), Some(b)) = (a, b) {
             // SAFETY: capacity slots were reserved; zip emits at most min(a.len(), b.len()) pairs.
@@ -187,7 +187,7 @@ pub(in crate::eval::adapters) fn points(
     let mut points = Vec::new();
     points
         .try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     for offset in 0..count {
         let value = values.read(host, offset)?;
         let time = timeline.read(host, offset)?;
@@ -323,7 +323,7 @@ pub(in crate::eval::adapters) fn statistics(
         host.charge_work((len as u64).saturating_mul(3))?;
         values
             .try_reserve(len)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         let kind = host.kind(role.argument())?;
         let area =
             policy == Collection::Mode && OperandReader::new(host).is_area(role.argument())?;
@@ -356,11 +356,9 @@ pub(in crate::eval::adapters) fn statistics(
                     Error(error) => StatisticalValue::Error(error),
                     value => {
                         let numeric = if parse {
-                            match ArgumentCoercion::new(host)
-                                .coerce_scalar_number(&value, NumericPolicy::PinnedPoi)
-                            {
+                            match ArgumentCoercion::new(host).coerce_scalar_number(&value) {
                                 Ok(number) => Some(number),
-                                Err(FunctionFailure::Spreadsheet(VALUE_ERROR)) => None,
+                                Err(FunctionError::Spreadsheet(VALUE_ERROR)) => None,
                                 Err(other) => return Err(other),
                             }
                         } else {
@@ -382,7 +380,7 @@ pub(in crate::eval::adapters) fn statistics(
             )?;
             values
                 .try_reserve(admitted.len())
-                .map_err(|_| host.allocation_failure())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             // SAFETY: admitted.len additional slots were reserved immediately above.
             values.extend(admitted);
         }

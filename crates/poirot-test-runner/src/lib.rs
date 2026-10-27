@@ -25,18 +25,13 @@ pub mod json;
 pub mod model;
 pub mod report;
 pub mod runner;
+mod runner_error;
 pub mod selection;
 pub mod skips;
 mod sources;
+pub use runner_error::RunnerError;
 
 pub use cli::Cli;
-
-/// Runner errors are operational failures, never spreadsheet error values.
-pub type Error = Box<dyn std::error::Error + Send + Sync>;
-
-pub(crate) fn invalid(message: impl Into<String>) -> Error {
-    std::io::Error::new(std::io::ErrorKind::InvalidData, message.into()).into()
-}
 
 /// Location of the checked-in combined corpus and baseline.
 pub fn package_root() -> std::path::PathBuf {

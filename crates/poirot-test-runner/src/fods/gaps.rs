@@ -38,8 +38,6 @@ pub enum GapKind {
     ResourceLimit,
     /// Runtime requires an unavailable evaluator capability.
     UnsupportedCapability,
-    /// Pinned source behavior raises an operational exception.
-    SourceException,
     /// Source assertion form is outside the runner's supported checks.
     UnsupportedCheck,
     /// Runner infrastructure failed independently of formula semantics.
@@ -47,6 +45,31 @@ pub enum GapKind {
 }
 
 impl GapKind {
+    /// Look up a native category within the unified runner's open category vocabulary.
+    pub(crate) fn from_label(label: &str) -> Option<Self> {
+        [
+            Self::MissingFunction,
+            Self::NameResolution,
+            Self::WrongErrorType,
+            Self::UnexpectedError,
+            Self::ExpectedError,
+            Self::NumericMismatch,
+            Self::TextMismatch,
+            Self::BooleanMismatch,
+            Self::ValueTypeMismatch,
+            Self::PredicateMismatch,
+            Self::UnsupportedFormulaSyntax,
+            Self::UnsupportedWorkbookContext,
+            Self::UnsupportedArrayContext,
+            Self::ResourceLimit,
+            Self::UnsupportedCapability,
+            Self::UnsupportedCheck,
+            Self::HarnessError,
+        ]
+        .into_iter()
+        .find(|kind| kind.label() == label)
+    }
+
     /// Return the stable human-readable category label.
     pub fn label(self) -> &'static str {
         match self {
@@ -65,7 +88,6 @@ impl GapKind {
             Self::UnsupportedArrayContext => "unsupported_array_context",
             Self::ResourceLimit => "resource_limit",
             Self::UnsupportedCapability => "unsupported_capability",
-            Self::SourceException => "source_exception",
             Self::UnsupportedCheck => "unsupported_check",
             Self::HarnessError => "harness_error",
         }
@@ -157,5 +179,19 @@ pub fn mismatch(actual: &CellValue, expected: Option<&CellValue>) -> GapKind {
         (a, Some(e)) if a.text_ref().is_some() && e.text_ref().is_some() => GapKind::TextMismatch,
         (a, Some(e)) if a != e => GapKind::ValueTypeMismatch,
         _ => GapKind::PredicateMismatch,
+    }
+}
+
+#[cfg(test)]
+mod category_tests {
+    use super::GapKind;
+
+    #[test]
+    fn unified_categories_outside_native_taxonomy_are_valid_absence() {
+        assert_eq!(
+            GapKind::from_label("resource_limit"),
+            Some(GapKind::ResourceLimit)
+        );
+        assert_eq!(GapKind::from_label("authored_known_gap"), None);
     }
 }

@@ -4,7 +4,7 @@ use crate::eval::functions::registry::EngineeringFunction;
 use crate::eval::host::{ArgumentCoercion, CallHost};
 use crate::eval::limits::EvalResult;
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::{NA, Num};
 use crate::model::CellValue::{Error, Number, Text};
@@ -43,7 +43,7 @@ pub(super) fn handles(function: EngineeringFunction) -> bool {
     )
 }
 
-fn domain(error: poirot_functions::engineering::EngineeringError) -> FunctionFailure {
+fn domain(error: poirot_functions::engineering::EngineeringError) -> FunctionError {
     match error {
         poirot_functions::engineering::EngineeringError::Num => Num.into(),
         poirot_functions::engineering::EngineeringError::Value => VALUE_ERROR.into(),
@@ -119,10 +119,7 @@ impl Kernel for Conversion {
                 if member.missing {
                     None
                 } else {
-                    Some(ArgumentCoercion::new(context.host).coerce_scalar_number(
-                        &member.value,
-                        crate::eval::host::NumericPolicy::PinnedPoi,
-                    )?)
+                    Some(ArgumentCoercion::new(context.host).coerce_scalar_number(&member.value)?)
                 }
             }
             None => None,
@@ -185,8 +182,8 @@ impl Kernel for Arithmetic {
             return units::convert(a, &from, &to)
                 .map(Number)
                 .map_err(|error| match error {
-                    units::ConversionError::NotAvailable => NA.into(),
-                    units::ConversionError::Number => Num.into(),
+                    poirot_functions::engineering::ConversionError::NotAvailable => NA.into(),
+                    poirot_functions::engineering::ConversionError::Number => Num.into(),
                 });
         }
         let b = second.number(context, None)?;

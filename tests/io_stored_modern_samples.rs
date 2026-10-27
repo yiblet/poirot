@@ -73,6 +73,7 @@ fn all_modern_sample_spellings_roundtrip() {
                     col: 0
                 })
                 .unwrap()
+                .unwrap()
                 .formula
                 .as_deref(),
             Some(expected.as_str())

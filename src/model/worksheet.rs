@@ -1,9 +1,9 @@
 //! Sparse worksheets, presentation, and saved spill ownership.
 use crate::model::cell::normalize_formula;
 use crate::model::{
-    Cell, CellAddress, CellStyle, CellValue, ModelError, RowVisibility, WorksheetCells, cell_pages,
+    Cell, CellAddress, CellStyle, CellValue, RowVisibility, WorksheetCells, cell_pages,
 };
-use poirot_io::SheetPresentation;
+use poirot_io::{ModelError, SheetPresentation};
 use std::collections::BTreeMap;
 
 /// Validate sheet-name spelling before storing it in the workbook.
@@ -16,14 +16,14 @@ pub(super) fn validate_sheet_name(name: &str) -> Result<(), ModelError> {
         || name.starts_with('\'')
         || name.ends_with('\'')
     {
-        Err(ModelError(format!("invalid worksheet name: {name}")))
+        Err(ModelError::InvalidWorksheetName { name: name.into() })
     } else {
         Ok(())
     }
 }
 /// A named worksheet with stored cells and explicit row records.
 ///
-/// Missing coordinates allocate no cell; [`Worksheet::get`] returns `None` for them.
+/// Valid missing coordinates allocate no cell; [`Worksheet::get`] returns `Ok(None)` for them.
 /// Setting a value clears its formula. Setting a formula starts with a blank saved
 /// result; use [`Worksheet::set_formula_with_cached_value`] to supply one explicitly.
 ///
@@ -31,15 +31,15 @@ pub(super) fn validate_sheet_name(name: &str) -> Result<(), ModelError> {
 /// use poirot::model::{CellValue, SheetPresentation, SheetVisibility, Worksheet};
 ///
 /// let mut sheet = Worksheet::new("Inputs")?;
-/// sheet.set_value("A1".parse()?, CellValue::Blank)?;
-/// sheet.set_formula("B1".parse()?, "A1+1")?;
+/// sheet.set_value("A1", CellValue::Blank)?;
+/// sheet.set_formula("B1", "A1+1")?;
 /// sheet.set_presentation(SheetPresentation {
 ///     visibility: SheetVisibility::Hidden,
 ///     tab_color: Some([30, 120, 200]),
 /// });
-/// assert!(sheet.get("A1".parse()?).is_some());
-/// assert!(sheet.get("A2".parse()?).is_none());
-/// assert_eq!(sheet.get("B1".parse()?).ok_or("missing formula")?.value, CellValue::Blank);
+/// assert!(sheet.get("A1")?.is_some());
+/// assert!(sheet.get("A2")?.is_none());
+/// assert_eq!(sheet.get("B1")?.ok_or("missing formula")?.value, CellValue::Blank);
 /// assert_eq!(sheet.presentation().visibility, SheetVisibility::Hidden);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
@@ -84,23 +84,52 @@ impl Worksheet {
     pub fn cells(&self) -> WorksheetCells<'_> {
         self.cells.cells()
     }
-    /// Read a stored cell, or return `None` if the position has no cell.
+    /// Read a stored cell, or return `Ok(None)` if the position has no cell.
     ///
-    /// An explicitly stored blank returns `Some`, just like any other cell.
-    pub fn get(&self, address: CellAddress) -> Option<&Cell> {
+    /// Accepts worksheet-local A1 text, a [`CellAddress`], or zero-based `(row, column)`
+    /// integers. Invalid notation, negative indices and coordinates outside worksheet
+    /// bounds return an error. Reads never allocate a missing cell.
+    ///
+    /// An explicitly stored blank returns `Ok(Some(_))`, just like any other cell.
+    pub fn get<A>(&self, address: A) -> Result<Option<&Cell>, ModelError>
+    where
+        A: TryInto<CellAddress>,
+        A::Error: Into<ModelError>,
+    {
+        let address = address.try_into().map_err(Into::into)?;
+        address.validate()?;
+        Ok(self.get_validated(address))
+    }
+    /// Borrow storage using a typed coordinate, without conversion or bounds validation.
+    pub(crate) fn get_validated(&self, address: CellAddress) -> Option<&Cell> {
         self.cells.get(&address)
     }
-    /// Mutably borrow a stored cell.
+    /// Mutably borrow a stored cell, rejecting invalid coordinates.
     ///
     /// Direct edits bypass formula normalization, shared-provenance detachment,
     /// and spill cleanup. Use [`Self::set_value`] or [`Self::set_formula`] when replacing cell contents.
-    pub fn get_mut(&mut self, address: CellAddress) -> Option<&mut Cell> {
+    pub fn get_mut<A>(&mut self, address: A) -> Result<Option<&mut Cell>, ModelError>
+    where
+        A: TryInto<CellAddress>,
+        A::Error: Into<ModelError>,
+    {
+        let address = address.try_into().map_err(Into::into)?;
+        address.validate()?;
+        Ok(self.get_mut_validated(address))
+    }
+    /// Mutably borrow storage using a typed coordinate, without conversion or bounds validation.
+    pub(crate) fn get_mut_validated(&mut self, address: CellAddress) -> Option<&mut Cell> {
         self.cells.get_mut(&address)
     }
     /// Replace a cell, returning the previous cell if one was stored.
     ///
     /// Validates the address and formula, then clears any conflicting spill results.
-    pub fn set(&mut self, address: CellAddress, cell: Cell) -> Result<Option<Cell>, ModelError> {
+    pub fn set<A>(&mut self, address: A, cell: Cell) -> Result<Option<Cell>, ModelError>
+    where
+        A: TryInto<CellAddress>,
+        A::Error: Into<ModelError>,
+    {
+        let address = address.try_into().map_err(Into::into)?;
         address.validate()?;
         let mut cell = cell;
         if let Some(f) = cell.formula.take() {
@@ -115,7 +144,12 @@ impl Worksheet {
         Ok(self.cells.insert(address, cell))
     }
     /// Change display style while preserving authored content and saved spill ownership.
-    pub fn set_style(&mut self, address: CellAddress, style: CellStyle) -> Result<(), ModelError> {
+    pub fn set_style<A>(&mut self, address: A, style: CellStyle) -> Result<(), ModelError>
+    where
+        A: TryInto<CellAddress>,
+        A::Error: Into<ModelError>,
+    {
+        let address = address.try_into().map_err(Into::into)?;
         address.validate()?;
         if let Some(child) = self.spill_cache.get_mut(&address) {
             child.source.get_or_insert_with(Cell::default).style = style.clone();
@@ -135,24 +169,29 @@ impl Worksheet {
         Ok(())
     }
     /// Store a literal value and clear any formula at this address, retaining its style.
-    pub fn set_value(
+    pub fn set_value<A>(
         &mut self,
-        address: CellAddress,
+        address: A,
         value: impl Into<CellValue>,
-    ) -> Result<(), ModelError> {
+    ) -> Result<(), ModelError>
+    where
+        A: TryInto<CellAddress>,
+        A::Error: Into<ModelError>,
+    {
+        let address = address.try_into().map_err(Into::into)?;
         address.validate()?;
         self.clear_spill_cache(address);
         if let Some(child) = self.spill_cache.remove(&address) {
             self.spill_extents.remove(&child.owner);
         }
         self.rows.insert(address.row);
-        if self.get(address).is_none() {
+        if self.get_validated(address).is_none() {
             self.cells.insert(address, Cell::default());
         }
         let cell = self
             .cells
             .get_mut(&address)
-            .ok_or_else(|| ModelError("cell insertion failed".into()))?;
+            .ok_or(ModelError::CellInsertionMissing { address })?;
         cell.value = value.into();
         cell.formula = None;
         cell.shared_formula = None;
@@ -160,21 +199,30 @@ impl Worksheet {
     }
     /// Store a formula and clear its saved result, preserving the cell's style.
     /// A leading `=` is optional. This does not evaluate the formula.
-    pub fn set_formula(
+    pub fn set_formula<A>(
         &mut self,
-        address: CellAddress,
+        address: A,
         formula: impl Into<String>,
-    ) -> Result<(), ModelError> {
+    ) -> Result<(), ModelError>
+    where
+        A: TryInto<CellAddress>,
+        A::Error: Into<ModelError>,
+    {
         self.set_formula_with_cached_value(address, formula, CellValue::Blank)
     }
     /// Store a formula with an explicitly supplied saved result, preserving its style.
     /// The saved result is not checked against the formula or used to skip evaluation.
-    pub fn set_formula_with_cached_value(
+    pub fn set_formula_with_cached_value<A>(
         &mut self,
-        address: CellAddress,
+        address: A,
         formula: impl Into<String>,
         cached: CellValue,
-    ) -> Result<(), ModelError> {
+    ) -> Result<(), ModelError>
+    where
+        A: TryInto<CellAddress>,
+        A::Error: Into<ModelError>,
+    {
+        let address = address.try_into().map_err(Into::into)?;
         address.validate()?;
         let formula = normalize_formula(formula.into())?;
         self.clear_spill_cache(address);
@@ -182,25 +230,31 @@ impl Worksheet {
             self.spill_extents.remove(&child.owner);
         }
         self.rows.insert(address.row);
-        if self.get(address).is_none() {
+        if self.get_validated(address).is_none() {
             self.cells.insert(address, Cell::default());
         }
         let cell = self
             .cells
             .get_mut(&address)
-            .ok_or_else(|| ModelError("cell insertion failed".into()))?;
+            .ok_or(ModelError::CellInsertionMissing { address })?;
         cell.formula = Some(formula);
         cell.shared_formula = None;
         cell.value = cached;
         Ok(())
     }
-    /// Remove a stored cell and its derived spill cache, returning the previous cell.
-    pub fn remove(&mut self, address: CellAddress) -> Option<Cell> {
+    /// Remove a stored cell and its derived spill cache, rejecting invalid coordinates.
+    pub fn remove<A>(&mut self, address: A) -> Result<Option<Cell>, ModelError>
+    where
+        A: TryInto<CellAddress>,
+        A::Error: Into<ModelError>,
+    {
+        let address = address.try_into().map_err(Into::into)?;
+        address.validate()?;
         self.clear_spill_cache(address);
         if let Some(child) = self.spill_cache.remove(&address) {
             self.spill_extents.remove(&child.owner);
         }
-        self.cells.remove(&address)
+        Ok(self.cells.remove(&address))
     }
 }
 /// Saved spill rectangle tied to the anchor's exact formula text.
@@ -225,7 +279,9 @@ impl Worksheet {
     /// Iterate valid saved anchor extents, including incomplete or one-cell footprints.
     pub fn spill_extents(&self) -> impl Iterator<Item = (CellAddress, CellAddress)> + '_ {
         self.spill_extents.iter().filter_map(|(anchor, extent)| {
-            (self.get(*anchor).and_then(|cell| cell.formula.as_deref())
+            (self
+                .get_validated(*anchor)
+                .and_then(|cell| cell.formula.as_deref())
                 == Some(extent.formula.as_str()))
             .then_some((*anchor, extent.last))
         })
@@ -233,7 +289,7 @@ impl Worksheet {
     /// Read declared saved geometry only while its exact anchor formula still matches.
     pub fn spill_extent(&self, anchor: CellAddress) -> Option<CellAddress> {
         let extent = self.spill_extents.get(&anchor)?;
-        (self.get(anchor)?.formula.as_deref()? == extent.formula).then_some(extent.last)
+        (self.get_validated(anchor)?.formula.as_deref()? == extent.formula).then_some(extent.last)
     }
     /// Save declared geometry without asserting that every cached child is present.
     pub fn set_spill_extent(
@@ -246,11 +302,12 @@ impl Worksheet {
         last.validate()?;
         if last.row < anchor.row
             || last.col < anchor.col
-            || self.get(anchor).and_then(|cell| cell.formula.as_deref()) != Some(expected_formula)
+            || self
+                .get_validated(anchor)
+                .and_then(|cell| cell.formula.as_deref())
+                != Some(expected_formula)
         {
-            return Err(ModelError(
-                "spill extent anchor source or geometry changed".into(),
-            ));
+            return Err(ModelError::InvalidSpillExtent { anchor, last });
         }
         self.spill_extents.insert(
             anchor,
@@ -279,7 +336,9 @@ impl Worksheet {
                 || at.row > last.row
                 || at.col < anchor.col
                 || at.col > last.col
-                || self.get(*at).is_none_or(|cell| cell.formula.is_some())
+                || self
+                    .get_validated(*at)
+                    .is_none_or(|cell| cell.formula.is_some())
             {
                 return None;
             }
@@ -289,9 +348,10 @@ impl Worksheet {
     }
     /// Borrow authored content, excluding a derived child's saved spill value.
     pub fn source_cell(&self, address: CellAddress) -> Option<&Cell> {
-        self.spill_cache
-            .get(&address)
-            .map_or_else(|| self.get(address), |spill| spill.source.as_ref())
+        self.spill_cache.get(&address).map_or_else(
+            || self.get_validated(address),
+            |spill| spill.source.as_ref(),
+        )
     }
     /// Iterate derived cached children and their source anchors without visiting authored cells.
     pub fn spill_children(&self) -> impl Iterator<Item = (CellAddress, CellAddress)> + '_ {
@@ -340,24 +400,21 @@ impl Worksheet {
         if address == owner
             || address.row < owner.row
             || address.col < owner.col
-            || self.get(owner).and_then(|c| c.formula.as_deref()) != Some(expected_formula)
+            || self.get_validated(owner).and_then(|c| c.formula.as_deref())
+                != Some(expected_formula)
         {
-            return Err(ModelError(
-                "spill cached-value anchor source changed".into(),
-            ));
+            return Err(ModelError::InvalidSpillCacheAnchor { address, owner });
         }
         let source = self.source_cell(address);
         if source.is_some_and(|cell| cell.formula.is_some() || cell.value != CellValue::Blank) {
-            return Err(ModelError(
-                "spill cache cannot overwrite an authored cell".into(),
-            ));
+            return Err(ModelError::SpillCacheAuthoredCell { address });
         }
         if self
             .spill_cache
             .get(&address)
             .is_some_and(|s| s.owner != owner)
         {
-            return Err(ModelError("spill cache ownership conflict".into()));
+            return Err(ModelError::SpillCacheOwnershipConflict { address });
         }
         let source = source.cloned();
         let style = source.as_ref().map(|c| c.style.clone()).unwrap_or_default();

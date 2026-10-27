@@ -1,7 +1,6 @@
 {
   "schema_version": 1,
   "array_result_policy": "ScalarIntersection",
-  "builtin_policy": "ExcelDocumentation",
   "workbook": {
     "sheets": [
       "EverythingTests",

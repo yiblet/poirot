@@ -2,7 +2,7 @@
 //! Numeric expectations below follow integer arithmetic, independent of cached results.
 use poirot::eval::EvaluationContext;
 use poirot::eval::overlay::{Evaluation, Overlay, OverlayError};
-use poirot::eval::{BudgetKind, EvaluationFailure, EvaluationLimits, EvaluationTarget};
+use poirot::eval::{BudgetKind, EvaluationError, EvaluationLimits, EvaluationTarget};
 use poirot::model::{CellValue, Workbook};
 use std::borrow::Borrow;
 use std::time::UNIX_EPOCH;
@@ -68,13 +68,13 @@ fn one_limits_field_preserves_absent_zero_and_explicit_maximum_quotas() {
             .build_calculation(context(limits))
             .unwrap();
         assert!(
-            matches!(calculation.cell(target("B1")), Err(EvaluationFailure::Budget(f)) if f.kind == kind)
+            matches!(calculation.cell(target("B1")), Err(EvaluationError::Budget(f)) if f.kind == kind)
         );
     }
     let invalid = Evaluation::with_workbook(&book)
         .build_calculation(context(EvaluationLimits::default().max_depth(129)));
     assert!(
-        matches!(invalid, Err(OverlayError::Evaluation(EvaluationFailure::Budget(f))) if f.kind == BudgetKind::Configuration)
+        matches!(invalid, Err(OverlayError::Evaluation(EvaluationError::Budget(f))) if f.kind == BudgetKind::Configuration)
     );
 }
 
@@ -89,7 +89,10 @@ fn refusal_is_sticky_until_an_explicit_direct_or_overlay_cycle() {
     direct.set_value(target("A1"), 4.).unwrap();
     let refused = direct.cell(target("B1")).unwrap_err();
     direct.clear_cache();
-    assert_eq!(direct.cell(target("B1")).unwrap_err(), refused);
+    assert_eq!(
+        (direct.cell(target("B1")).unwrap_err()).budget().unwrap(),
+        refused.budget().unwrap()
+    );
     direct.start_cycle(fresh.clone()).unwrap();
     assert_eq!(direct.cell(target("B1")).unwrap(), 8.0.into());
 
@@ -98,7 +101,10 @@ fn refusal_is_sticky_until_an_explicit_direct_or_overlay_cycle() {
     {
         let mut cycle = overlay.calculation(&limited).unwrap();
         let refused = cycle.cell(target("B1")).unwrap_err();
-        assert_eq!(cycle.cell(target("B1")).unwrap_err(), refused);
+        assert_eq!(
+            (cycle.cell(target("B1")).unwrap_err()).budget().unwrap(),
+            refused.budget().unwrap()
+        );
     }
     assert_eq!(
         overlay
@@ -151,6 +157,7 @@ fn consuming_recovery_moves_original_source_without_publishing_scenario_state() 
             .unwrap()
             .get(target("A1").address)
             .unwrap()
+            .unwrap()
             .value,
         3.0.into()
     );
@@ -160,6 +167,7 @@ fn consuming_recovery_moves_original_source_without_publishing_scenario_state() 
             .sheet(0)
             .unwrap()
             .get(target("B1").address)
+            .unwrap()
             .unwrap()
             .value,
         99.0.into()
@@ -184,6 +192,7 @@ fn consuming_recovery_moves_original_source_without_publishing_scenario_state() 
             .unwrap()
             .get(target("A1").address)
             .unwrap()
+            .unwrap()
             .value,
         CellValue::Number(3.)
     );
@@ -193,6 +202,7 @@ fn consuming_recovery_moves_original_source_without_publishing_scenario_state() 
             .sheet(0)
             .unwrap()
             .get(target("B1").address)
+            .unwrap()
             .unwrap()
             .value,
         CellValue::Number(99.)
@@ -211,6 +221,7 @@ fn owned_overlay_recovery_preserves_explicitly_flushed_edits_only() {
             .unwrap()
             .get(target("A1").address)
             .unwrap()
+            .unwrap()
             .value,
         4.0.into()
     );
@@ -218,6 +229,7 @@ fn owned_overlay_recovery_preserves_explicitly_flushed_edits_only() {
         book.sheet(0)
             .unwrap()
             .get(target("B1").address)
+            .unwrap()
             .unwrap()
             .value,
         99.0.into()

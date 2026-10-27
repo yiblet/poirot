@@ -35,13 +35,38 @@ results from Poirot's output alone. For performance changes, include a repeatabl
 workload and before/after measurements. Keep component boundaries intact so
 applications can use the parts they need.
 
+For compatibility changes, update the relevant feature or file-loss row in the
+[compatibility guide](docs/compatibility.md). Describe supported inputs, remaining
+restrictions and observable errors or warnings. Identify whether expectations come
+from Excel observations, Microsoft documentation or another implementation; record
+versions and settings where relevant. A known-gap baseline is historical evidence,
+not a compatibility exemption, and changing it does not fix the underlying gap.
+
 From the repository root, run:
 
 ```sh
 cargo test --workspace
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
+python3 tools/test_error_patterns.py --self-test
+python3 tools/test_error_patterns.py
 ```
+
+Operation errors use module-owned `<Purpose>Error` types with `thiserror`, typed
+categories and contextual payloads. Preserve typed dependency causes. Locally
+authored diagnostic strings, generic message variants and dynamic error erasure
+are prohibited. Spreadsheet error values remain ordinary values.
+
+The error checker screens production Rust sources; its fixtures also run in CI.
+It recognizes operation errors through derives, error trait implementations and
+explicit `Result` error arguments in the same file. It follows simple non-generic
+type alias chains in their declaring module and checks grouped or renamed
+`anyhow`/`eyre` imports. It does not resolve cross-module types, generic or
+associated aliases, aliases inside function bodies, or macro expansions. Review
+conversions, payload meaning and failure handling as well. Dependency APIs that supply only diagnostic text must have a
+specifically named variant with `message: String` and an immediately preceding
+`// ERROR-DEPENDENCY: dependency::api` comment recording the actual API. The
+comment records provenance for review; it does not exempt other error rules.
 
 Use a Conventional Commit title, such as `fix(eval): handle empty ranges`. Explain
 what changed, why, and how you tested it. Mention any known compatibility gaps.

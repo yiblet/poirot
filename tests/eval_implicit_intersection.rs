@@ -214,25 +214,19 @@ fn explicit_selection_records_only_the_selected_cell_dependency() {
 }
 
 #[test]
-fn single_and_operator_share_modern_source_projection_under_both_policy_labels() {
+fn single_and_operator_share_modern_source_projection_under_documented_rules() {
     use poirot::eval::{
-        BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationOutcome, RunConfiguration,
-        run_formula_with_configuration,
+        EvaluationBudgets, EvaluationOutcome, RunConfiguration, run_formula_with_configuration,
     };
     let mut workbook = workbook();
     let sheet = workbook.sheet_mut(0).unwrap();
     for (address, value) in [("A1", 11.), ("A2", 23.), ("B1", 47.)] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
-    sheet
-        .set_formula("A3".parse().unwrap(), "UNKNOWN_FUNCTION()")
-        .unwrap();
+    sheet.set_formula("A3", "UNKNOWN_FUNCTION()").unwrap();
     let at = "Z2".parse().unwrap();
-    for policy in [
-        BuiltinSemanticsPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-    ] {
-        let config = RunConfiguration::default().with_builtin_policy(policy);
+    {
+        let config = RunConfiguration::default();
         for (source, expected) in [
             ("42", CellValue::Number(42.)),
             ("\"0042\"", CellValue::from("0042")),
@@ -247,22 +241,18 @@ fn single_and_operator_share_modern_source_projection_under_both_policy_labels()
             ("SEQUENCE(3,2,7)", CellValue::Number(7.)),
             ("ROW(A4:A6)", CellValue::Number(4.)),
         ] {
-            // SEQUENCE is absent from the legacy policy's catalog; ROW still proves intact computed arrays there.
-            if source.starts_with("SEQUENCE") && policy == BuiltinSemanticsPolicy::PinnedPoi {
-                continue;
-            }
+            {}
             for formula in [
                 format!("@({source})"),
                 format!("SINGLE({source})"),
                 format!("_xlfn.SINGLE({source})"),
             ] {
                 assert!(
-                    matches!(run_formula_with_configuration(&workbook, 0, at, &formula, &config, EvaluationBudgets::default()), EvaluationOutcome::Complete { value, .. } if value == expected),
-                    "{policy:?}: {formula}"
+                    matches ! (run_formula_with_configuration (& workbook , 0 , at , & formula , & config , EvaluationBudgets :: default ()) , EvaluationOutcome :: Complete { value , .. } if value == expected),
+                    "{formula}"
                 );
             }
         }
-        // Invalid unary-call arity is rejected before an unused operational failure.
         for formula in ["SINGLE()", "SINGLE(A1,INDIRECT(\"[missing.xlsx]S!A1\"))"] {
             assert!(
                 matches!(
@@ -288,22 +278,17 @@ fn single_and_operator_share_modern_source_projection_under_both_policy_labels()
 #[test]
 fn single_preserves_operator_scalar_publication_and_operational_failure_contracts() {
     use poirot::eval::{
-        BuiltinSemanticsPolicy, EvaluationFailure, EvaluationOutcome, RunConfiguration,
-        run_formula_with_configuration,
+        EvaluationError, EvaluationOutcome, RunConfiguration, run_formula_with_configuration,
     };
     let mut workbook = workbook();
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), "12")
+        .set_value("A1", "12")
         .unwrap();
     let at = "Z2".parse().unwrap();
-    for policy in [
-        BuiltinSemanticsPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-    ] {
-        let config = RunConfiguration::default().with_builtin_policy(policy);
-        // Existing Poirot explicit-operator publication yields a direct scalar; SINGLE is its alias.
+    {
+        let config = RunConfiguration::default();
         for source in ["A1", "{\"12\"}", "\"12\""] {
             for formula in [
                 format!("SUM(@({source}))"),
@@ -343,7 +328,7 @@ fn single_preserves_operator_scalar_publication_and_operational_failure_contract
                         Default::default()
                     ),
                     EvaluationOutcome::Aborted {
-                        failure: EvaluationFailure::UnsupportedCapability { .. },
+                        failure: EvaluationError::UnsupportedCapability { .. },
                         ..
                     }
                 ),

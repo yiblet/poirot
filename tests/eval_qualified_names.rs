@@ -1,5 +1,5 @@
 use poirot::eval::{
-    CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    CapabilityId, EvaluationBudgets, EvaluationError, EvaluationInputs, EvaluationOutcome,
     compile::bound::{Expression, FormulaPlan},
     run_formula,
 };
@@ -187,7 +187,7 @@ fn qualified_identifiers_preserve_checked_comparison_failures() {
                     EvaluationBudgets::default()
                 ),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability {
+                    failure: EvaluationError::UnsupportedCapability {
                         capability: CapabilityId::IdentifierComparison,
                         ..
                     },
@@ -309,7 +309,7 @@ fn prepared_qualified_names_retain_typed_potential_and_consumed_scope_queries() 
             "IF(FALSE,MissingSheet!Rate,7)",
             CellValue::Number(7.),
             // The skipped name has no reads; IF still selects profile-dependent semantics.
-            vec![DependencyRead::BuiltinPolicy],
+            vec![],
         ),
     ] {
         let prepared = compiler.compile_formula(formula, &policy);

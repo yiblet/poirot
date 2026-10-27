@@ -1,9 +1,9 @@
 //! Validate parsed format tokens and select a renderer for each section.
 use super::fingerprint::program_fingerprint;
 use super::{
-    Format, FormatCompileError, FormatCompilePolicy, FormatError, FormatPlan, FormatSourcePolicy,
-    NumberPlan, SectionKind, SectionPlan, SectionProgram, Token, date, error, is_text_section,
-    number, parse_format,
+    Format, FormatCompileError, FormatCompilePolicy, FormatError, FormatPlan, NumberPlan,
+    SectionKind, SectionPlan, SectionProgram, Token, date, error, is_text_section, number,
+    parse_format,
 };
 
 fn diagnostic(section: usize, token: Option<usize>, source: FormatError) -> FormatCompileError {
@@ -19,55 +19,43 @@ pub fn compile_format(
     input: &str,
     policy: FormatCompilePolicy,
 ) -> Result<FormatPlan, FormatCompileError> {
-    compile_format_with_source(input, policy, FormatSourcePolicy::default())
-}
-/// Compile a number-format string with an explicit compatibility policy.
-pub fn compile_format_with_source(
-    input: &str,
-    policy: FormatCompilePolicy,
-    source: FormatSourcePolicy,
-) -> Result<FormatPlan, FormatCompileError> {
-    compile_program_with_source(&parse_format(input)?, policy, source)
+    compile_program(&parse_format(input)?, policy)
 }
 /// Compile an already parsed number format, including caller-constructed tokens.
 pub fn compile_program(
     format: &Format,
     policy: FormatCompilePolicy,
 ) -> Result<FormatPlan, FormatCompileError> {
-    compile_program_with_source(format, policy, FormatSourcePolicy::default())
-}
-/// Compile parsed number-format tokens with an explicit compatibility policy.
-pub fn compile_program_with_source(
-    format: &Format,
-    policy: FormatCompilePolicy,
-    source: FormatSourcePolicy,
-) -> Result<FormatPlan, FormatCompileError> {
     if format.sections.is_empty() {
-        return Err(error("format has no sections").into());
+        return Err(error(crate::format::FormatReasonError::FormatHasNoSections).into());
     }
     if format.sections.len() > 4 {
-        return Err(error("too many sections").into());
+        return Err(error(crate::format::FormatReasonError::TooManySections).into());
     }
     let mut sections = Vec::with_capacity(format.sections.len());
     for (index, section) in format.sections.iter().enumerate() {
         if section.tokens.len() > policy.max_tokens_per_section.min(32768) {
-            return Err(diagnostic(index, None, error("token limit exceeded")));
+            return Err(diagnostic(
+                index,
+                None,
+                error(crate::format::FormatReasonError::TokenLimitExceeded),
+            ));
         }
         for (i, token) in section.tokens.iter().enumerate() {
             let invalid = match token {
                 Token::Elapsed(c, w) if !matches!(c, 'h' | 'm' | 's') || !(1..=2).contains(w) => {
-                    Some("unsupported elapsed token")
+                    Some(crate::format::FormatReasonError::UnsupportedElapsedToken)
                 }
                 Token::Exponent { digits, .. } if !(1..=15).contains(digits) => {
-                    Some("unsupported exponent width")
+                    Some(crate::format::FormatReasonError::UnsupportedExponentWidth)
                 }
                 Token::Digit(c) if !matches!(c, '0' | '#' | '?') => {
-                    Some("unsupported digit placeholder")
+                    Some(crate::format::FormatReasonError::UnsupportedDigitPlaceholder)
                 }
                 Token::Literal(s)
                     if s.chars().count() > policy.max_literal_characters.min(32767) =>
                 {
-                    Some("literal exceeds cell limit")
+                    Some(crate::format::FormatReasonError::LiteralExceedsCellLimit)
                 }
                 _ => None,
             };
@@ -91,7 +79,7 @@ pub fn compile_program_with_source(
                 Err(e) => return Err(diagnostic(index, None, e)),
             }
         } else if fraction {
-            match number::FractionPlan::compile_with_source(&section.tokens, source) {
+            match number::FractionPlan::compile_compact(&section.tokens) {
                 Ok(p) => (SectionKind::Fraction, SectionProgram::Fraction(p)),
                 Err(e) => return Err(diagnostic(index, None, e)),
             }
@@ -134,8 +122,7 @@ pub fn compile_program_with_source(
     }
     // Java DecimalFormat uses the positive digit layout for both subpatterns;
     // the negative subpattern contributes affixes only. CellFormat routes differ.
-    if source == FormatSourcePolicy::Poi7321209DataFormatter
-        && sections.len() == 2
+    if sections.len() == 2
         && sections
             .iter()
             .all(|s| s.kind == SectionKind::Decimal && s.condition.is_none())
@@ -150,7 +137,6 @@ pub fn compile_program_with_source(
     Ok(FormatPlan {
         sections,
         policy,
-        source,
-        fingerprint: program_fingerprint(format, policy, source),
+        fingerprint: program_fingerprint(format, policy),
     })
 }

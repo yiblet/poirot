@@ -11,11 +11,11 @@ fn simple_folding_is_consistent_across_public_value_comparisons() {
     // https://www.unicode.org/Public/16.0.0/ucd/CaseFolding.txt
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Data").unwrap();
-    sheet.set_value("B2".parse().unwrap(), 9.).unwrap();
-    sheet.set_value("B3".parse().unwrap(), "Σ").unwrap();
-    sheet.set_value("C3".parse().unwrap(), "ẞ").unwrap();
-    sheet.set_value("C4".parse().unwrap(), 9.).unwrap();
-    sheet.set_value("E3".parse().unwrap(), "ς").unwrap();
+    sheet.set_value("B2", 9.).unwrap();
+    sheet.set_value("B3", "Σ").unwrap();
+    sheet.set_value("C3", "ẞ").unwrap();
+    sheet.set_value("C4", 9.).unwrap();
+    sheet.set_value("E3", "ς").unwrap();
     let context = EvaluationContext::default();
     let mut direct = Evaluation::with_workbook(&book)
         .build(context.clone())
@@ -138,11 +138,9 @@ fn comparisons_preserve_utf16_units_and_use_scalar_order_without_length_ties() {
 fn explicit_comparison_limits_remain_operational() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Data").unwrap();
-    sheet.set_value("A1".parse().unwrap(), "ΣΣΣ").unwrap();
-    sheet.set_value("B1".parse().unwrap(), "ςςς").unwrap();
-    sheet
-        .set_formula("C1".parse().unwrap(), "IFERROR(A1=B1,7)")
-        .unwrap();
+    sheet.set_value("A1", "ΣΣΣ").unwrap();
+    sheet.set_value("B1", "ςςς").unwrap();
+    sheet.set_formula("C1", "IFERROR(A1=B1,7)").unwrap();
     let context = EvaluationContext {
         limits: (poirot::eval::EvaluationBudgets {
             text_bytes: 2,
@@ -158,10 +156,10 @@ fn explicit_comparison_limits_remain_operational() {
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     assert!(matches!(
         direct.cell(target),
-        Err(poirot::eval::EvaluationFailure::Budget(_))
+        Err(poirot::eval::EvaluationError::Budget(_))
     ));
     assert!(matches!(
         overlay.evaluation(&context).unwrap().cell(target),
-        Err(poirot::eval::EvaluationFailure::Budget(_))
+        Err(poirot::eval::EvaluationError::Budget(_))
     ));
 }

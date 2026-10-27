@@ -45,10 +45,10 @@ impl<'a> StyleExport<'a> {
         }
         self.styles
             .try_reserve(1)
-            .map_err(|_| IoError::Allocation("export style identities"))?;
+            .map_err(|source| IoError::Allocation(crate::AllocationError::ExportStyles(source)))?;
         self.ids
             .try_reserve(1)
-            .map_err(|_| IoError::Allocation("export style identities"))?;
+            .map_err(|source| IoError::Allocation(crate::AllocationError::ExportStyles(source)))?;
         self.ids.insert(style, self.styles.len());
         self.styles.push(style);
         Ok(())
@@ -58,10 +58,9 @@ impl<'a> StyleExport<'a> {
         if style == &CellStyle::default() {
             return Ok(0);
         }
-        self.ids
-            .get(style)
-            .copied()
-            .ok_or_else(|| IoError::Read("unregistered export style".into()))
+        self.ids.get(style).copied().ok_or(IoError::Read(
+            crate::WorkbookReadError::UnregisteredExportStyle,
+        ))
     }
     /// Serialize a canonical stylesheet to either the sizing or output sink.
     pub(crate) fn execute<W: Write>(
@@ -227,18 +226,20 @@ impl<'a> StyleExport<'a> {
 /// Add a component offset within OOXML's unsigned 32-bit index domain.
 fn offset(index: usize, extra: u32) -> Result<String, IoError> {
     u32::try_from(index)
-        .ok()
-        .and_then(|n| n.checked_add(extra))
+        .map_err(|_| IoError::Limit(crate::ExportLimitError::StyleIndexOverflow))?
+        .checked_add(extra)
         .map(|n| n.to_string())
-        .ok_or_else(|| IoError::Limit("style index overflow".into()))
+        .ok_or(IoError::Limit(crate::ExportLimitError::StyleIndexOverflow))
 }
 /// Generate checked custom number-format IDs outside the built-in range.
 fn format_id(i: usize) -> Result<String, IoError> {
     u32::try_from(i)
-        .ok()
-        .and_then(|i| i.checked_add(164))
+        .map_err(|_| IoError::Limit(crate::ExportLimitError::NumberFormatIdOverflow))?
+        .checked_add(164)
         .map(|i| i.to_string())
-        .ok_or_else(|| IoError::Limit("number-format ID overflow".into()))
+        .ok_or(IoError::Limit(
+            crate::ExportLimitError::NumberFormatIdOverflow,
+        ))
 }
 /// Write a style tag with escaped and checked attribute values.
 fn tag<W: Write>(
@@ -464,9 +465,9 @@ pub(crate) fn install_theme(
             ],
         ),
     ] {
-        let source = package
-            .get(&path)
-            .ok_or_else(|| IoError::Xml(format!("missing generated part {path}")))?;
+        let source = package.get(&path).ok_or_else(|| {
+            IoError::Xml(crate::XmlCodecError::MissingGeneratedPart { path: path.clone() })
+        })?;
         let size = declaration(source, root, tag, &attrs, SizeCounter::default())?.0;
         *total = next_total(size, source.len() as u64, *total, options)?;
         let output = declaration(source, root, tag, &attrs, Vec::new())?;

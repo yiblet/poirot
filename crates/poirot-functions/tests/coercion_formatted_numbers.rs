@@ -120,7 +120,7 @@ fn empty_or_overlapping_tokens_cannot_create_nonadvancing_parsers() {
         (".", Some(","), Some("$"), "%", ""),
         ("e", Some(","), Some("$"), "%", ":"),
     ] {
-        assert!(NumberLocale::new(decimal, group, currency, percent, time).is_none());
+        assert!(NumberLocale::new(decimal, group, currency, percent, time).is_err());
     }
 }
 #[test]

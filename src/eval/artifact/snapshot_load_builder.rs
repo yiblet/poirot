@@ -18,11 +18,12 @@ use std::path::Path;
 /// assert_eq!(recovered.workbook(), &source);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Debug, Default)]
+#[derive(Default)]
 #[must_use]
 pub struct SnapshotLoadBuilder {
     pub(super) limits: SnapshotLimits,
     pub(super) policy: PreparedPolicy,
+    extensions: Option<std::sync::Arc<crate::eval::functions::extensions::ExtensionRegistry>>,
 }
 
 impl SnapshotLoadBuilder {
@@ -38,13 +39,38 @@ impl SnapshotLoadBuilder {
         self
     }
 
+    /// Reattach shared providers when restoring custom-function preparation.
+    pub fn shared_extensions(
+        mut self,
+        registry: std::sync::Arc<crate::eval::functions::extensions::ExtensionRegistry>,
+    ) -> Self {
+        self.extensions = Some(registry);
+        self
+    }
+
     /// Decode a bounded native snapshot buffer.
     pub fn from_bytes(self, bytes: &[u8]) -> Result<RestoredArtifact, SnapshotError> {
-        decode(bytes, self.limits, self.policy)
+        decode(bytes, self.limits, self.policy).map(|mut artifact| {
+            artifact.extensions = self.extensions;
+            artifact
+        })
     }
 
     /// Read and decode a bounded native snapshot file.
     pub fn open(self, path: impl AsRef<Path>) -> Result<RestoredArtifact, SnapshotError> {
-        read_file(path, self.limits, self.policy)
+        read_file(path, self.limits, self.policy).map(|mut artifact| {
+            artifact.extensions = self.extensions;
+            artifact
+        })
+    }
+}
+
+impl std::fmt::Debug for SnapshotLoadBuilder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SnapshotLoadBuilder")
+            .field("limits", &self.limits)
+            .field("policy", &self.policy)
+            .field("has_extensions", &self.extensions.is_some())
+            .finish()
     }
 }

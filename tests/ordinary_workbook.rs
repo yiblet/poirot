@@ -3,7 +3,7 @@ use poirot::calculation::{CalculationError, EvaluationContext};
 use poirot::eval;
 use poirot::files::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
 use poirot::styles::CellStyle;
-use poirot::{Cell, CellAddress, CellError, CellValue, ModelError, Workbook, Worksheet};
+use poirot::{Cell, CellAddress, CellError, CellValue, Workbook, Worksheet};
 use std::error::Error;
 
 fn at(address: &str) -> CellAddress {
@@ -14,13 +14,14 @@ fn value(book: &Workbook, sheet: usize, address: &str) -> CellValue {
         .unwrap()
         .get(at(address))
         .unwrap()
+        .unwrap()
         .value
         .clone()
 }
 fn inputs() -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Inputs").unwrap();
-    sheet.set_value(at("A1"), 21.).unwrap();
+    sheet.set_value("A1", 21).unwrap();
     sheet
         .set_formula_with_cached_value(at("B1"), "A1*2", CellValue::Number(-1.))
         .unwrap();
@@ -44,6 +45,7 @@ fn recalculate_replaces_saved_values_after_each_input_change() {
             .unwrap()
             .get(at("B1"))
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("A1*2")
@@ -53,16 +55,27 @@ fn recalculate_replaces_saved_values_after_each_input_change() {
 #[test]
 fn calculated_results_survive_xlsx_buffers() {
     let mut book = inputs();
+    let sheet = book.sheet_mut(0).unwrap();
+    for (row, values) in [[42, -3], [5, 2]].iter().enumerate() {
+        for (col, value) in values.iter().enumerate() {
+            sheet.set_value((row, col + 3), *value).unwrap();
+        }
+    }
+    sheet.set_formula("D3", "SUM(D1:E2)").unwrap();
     book.recalculate().unwrap();
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let loaded = Workbook::from_bytes(&bytes).unwrap();
     assert_eq!(value(&loaded, 0, "B1"), CellValue::Number(42.));
     assert_eq!(value(&loaded, 0, "C1"), CellValue::Number(43.));
+    // The imported table contains 42 - 3 + 5 + 2, whose calculated sum is 46.
+    assert_eq!(value(&loaded, 0, "D1"), CellValue::Number(42.));
+    assert_eq!(value(&loaded, 0, "D3"), CellValue::Number(46.));
     assert_eq!(
         loaded
             .sheet(0)
             .unwrap()
             .get(at("B1"))
+            .unwrap()
             .unwrap()
             .formula
             .as_deref(),
@@ -80,19 +93,21 @@ fn recalculation_preserves_metadata_and_cell_styles() {
             detail: "external link omitted".into(),
         }],
     };
-    book.model_mut().file_metadata = Some(metadata.clone());
+    book.file_metadata = Some(metadata.clone());
     book.sheet_mut(0)
         .unwrap()
         .get_mut(at("B1"))
         .unwrap()
+        .unwrap()
         .style
         .number_format = Some("0.00".into());
     book.recalculate().unwrap();
-    assert_eq!(book.model().file_metadata, Some(metadata));
+    assert_eq!(book.file_metadata, Some(metadata));
     assert_eq!(
         book.sheet(0)
             .unwrap()
             .get(at("B1"))
+            .unwrap()
             .unwrap()
             .style
             .number_format
@@ -199,11 +214,12 @@ fn recalculate_publishes_spills_and_clears_stale_children() {
         .unwrap()
         .get_mut(at("A1"))
         .unwrap()
+        .unwrap()
         .formula = Some("9".into());
     book.recalculate().unwrap();
     assert_eq!(value(&book, 0, "A1"), CellValue::Number(9.));
     for address in ["B1", "A2", "B2"] {
-        assert!(book.sheet(0).unwrap().get(at(address)).is_none());
+        assert!(book.sheet(0).unwrap().get(at(address)).unwrap().is_none());
     }
 }
 
@@ -219,11 +235,11 @@ fn ordinary_formula_setter_clears_cache_and_preserves_style() {
     sheet.set(at("A1"), cell).unwrap();
     sheet.set_formula(at("A1"), " = 1+2 ").unwrap();
     let cell = sheet.get(at("A1")).unwrap();
-    assert_eq!(cell.formula.as_deref(), Some("1+2"));
-    assert_eq!(cell.value, CellValue::Blank);
-    assert_eq!(cell.style, style);
+    assert_eq!(cell.unwrap().formula.as_deref(), Some("1+2"));
+    assert_eq!(cell.unwrap().value, CellValue::Blank);
+    assert_eq!(cell.unwrap().style, style);
     let before = sheet.clone();
-    let error: ModelError = sheet.set_formula(at("A1"), " = ").unwrap_err();
+    let error: poirot_io::ModelError = sheet.set_formula(at("A1"), " = ").unwrap_err();
     assert!(!error.to_string().is_empty());
     assert_eq!(sheet, before);
     assert!(
@@ -241,8 +257,11 @@ fn ordinary_formula_setter_clears_cache_and_preserves_style() {
     sheet
         .set_formula_with_cached_value(at("A1"), "4+5", CellValue::Number(999.))
         .unwrap();
-    assert_eq!(sheet.get(at("A1")).unwrap().value, CellValue::Number(999.));
-    assert_eq!(sheet.get(at("A1")).unwrap().style, style);
+    assert_eq!(
+        sheet.get(at("A1")).unwrap().unwrap().value,
+        CellValue::Number(999.)
+    );
+    assert_eq!(sheet.get(at("A1")).unwrap().unwrap().style, style);
 }
 
 #[test]
@@ -256,9 +275,7 @@ fn rename_updates_quoted_references_and_defined_names() {
         .unwrap()
         .set_formula(at("A1"), "'Old data'!A1*2")
         .unwrap();
-    book.model_mut()
-        .define_name("Input", "'Old data'!A1", None)
-        .unwrap();
+    book.define_name("Input", "'Old data'!A1", None).unwrap();
     book.sheet_mut(1)
         .unwrap()
         .set_formula(at("B1"), "Input+1")
@@ -271,12 +288,13 @@ fn rename_updates_quoted_references_and_defined_names() {
             .unwrap()
             .get(at("A1"))
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("'New''s data'!A1*2")
     );
     assert_eq!(
-        book.model().defined_name("Input", 1).unwrap().formula,
+        book.defined_name("Input", 1).unwrap().formula,
         "'New''s data'!A1"
     );
     book.recalculate().unwrap();
@@ -312,24 +330,30 @@ fn named_cell_read_distinguishes_missing_cells_and_stored_blanks() {
     assert_eq!(
         book.stored_cell("Customer's quote", at("A1"))
             .unwrap()
+            .unwrap()
             .value,
         CellValue::Blank
     );
     assert_eq!(
         book.stored_cell("CUSTOMER'S QUOTE", at("B1"))
             .unwrap()
+            .unwrap()
             .value,
         CellValue::Number(25.)
     );
-    assert!(book.stored_cell("Customer's quote", at("C1")).is_none());
-    assert!(book.stored_cell("Missing", at("A1")).is_none());
+    assert!(
+        book.stored_cell("Customer's quote", at("C1"))
+            .unwrap()
+            .is_none()
+    );
+    assert!(book.stored_cell("Missing", at("A1")).unwrap().is_none());
 }
 
 #[test]
 fn named_cell_read_returns_stored_formula_results_until_recalculation() {
     let mut book = inputs();
     assert_eq!(
-        book.stored_cell("Inputs", at("B1")).unwrap().value,
+        book.stored_cell("Inputs", at("B1")).unwrap().unwrap().value,
         CellValue::Number(-1.)
     );
     book.recalculate().unwrap();
@@ -339,12 +363,39 @@ fn named_cell_read_returns_stored_formula_results_until_recalculation() {
         .unwrap();
     // Reading does not evaluate: the previous 21 * 2 result remains until calculation.
     assert_eq!(
-        book.stored_cell("Inputs", at("B1")).unwrap().value,
+        book.stored_cell("Inputs", at("B1")).unwrap().unwrap().value,
         CellValue::Number(42.)
     );
     book.recalculate().unwrap();
     assert_eq!(
-        book.stored_cell("Inputs", at("B1")).unwrap().value,
+        book.stored_cell("Inputs", at("B1")).unwrap().unwrap().value,
         CellValue::Number(48.)
+    );
+}
+
+#[test]
+fn root_and_model_workbooks_share_storage_and_raw_rename_is_explicit() {
+    let mut book: poirot::model::Workbook = inputs();
+    let root: &Workbook = &book;
+    assert!(std::ptr::eq(root, &book));
+    let sheets = book.sheets().as_ptr();
+    book.define_name("Rate", "Inputs!A1", None).unwrap();
+    assert_eq!(book.sheets().as_ptr(), sheets);
+    book.apply([poirot::model::WorkbookChange::RenameSheetMetadata {
+        sheet: 0,
+        name: "Raw".into(),
+    }])
+    .unwrap();
+    assert_eq!(book.sheet(0).unwrap().name(), "Raw");
+    assert_eq!(book.defined_name("Rate", 0).unwrap().formula, "Inputs!A1");
+    assert_eq!(
+        book.sheet(0)
+            .unwrap()
+            .get(at("B1"))
+            .unwrap()
+            .unwrap()
+            .formula
+            .as_deref(),
+        Some("A1*2")
     );
 }

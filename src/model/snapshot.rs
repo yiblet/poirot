@@ -6,19 +6,20 @@
 //!
 //! let mut book = Workbook::new();
 //! book.add_sheet("Data")?.set_formula_with_cached_value(
-//!     "A1".parse()?, "2+3", CellValue::Number(5.),
+//!     "A1", "2+3", CellValue::Number(5.),
 //! )?;
 //! // Owning the capture releases the borrow and freezes source plus saved results.
 //! let captured = Snapshot::capture(&book).into_owned();
-//! book.sheet_mut(0).ok_or("missing sheet")?.set_value("A1".parse()?, 99.)?;
+//! book.sheet_mut(0).ok_or("missing sheet")?.set_value("A1", 99.)?;
 //! assert!(!captured.matches(&book));
 //! let restored = captured.restore()?;
 //! let cell = restored.sheet(0).ok_or("missing sheet")?
-//!     .get("A1".parse()?).ok_or("missing cell")?;
+//!     .get("A1")?.ok_or("missing cell")?;
 //! assert_eq!(cell.formula.as_deref(), Some("2+3"));
 //! assert_eq!(cell.value, CellValue::Number(5.));
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
+use crate::model::snapshot_collection::SnapshotCollection;
 use crate::model::{
     Cell, CellAddress, CellStyle, CellValue, DateSystem, ExcelText, FileMetadata, MAX_ROWS,
     ModelError, NamedRange, RowVisibility, SavedSpillExtent, SharedFormula, SheetPresentation,
@@ -255,21 +256,45 @@ impl<'a> Snapshot<'a> {
     }
     /// Validate and construct an owned workbook from serialized source records.
     pub fn restore(self) -> Result<Workbook, ModelError> {
-        if self.sheets.len() > 1024 || self.names.len() > 1_000_000 {
-            return Err(ModelError("snapshot model count limit".into()));
+        for (kind, count, limit) in [
+            (SnapshotCollection::Worksheets, self.sheets.len(), 1024),
+            (
+                SnapshotCollection::DefinedNames,
+                self.names.len(),
+                1_000_000,
+            ),
+        ] {
+            if count > limit {
+                return Err(ModelError::SnapshotLimitExceeded { kind, count, limit });
+            }
         }
         let mut workbook = Workbook::new();
         workbook.date_system = self.date_system;
         workbook.file_metadata = self.file_metadata;
         workbook.style_context = self.style_context;
         for s in self.sheets {
-            if s.cells.len() > 10_000_000
-                || s.spill_extents.len() > 10_000_000
-                || s.spill_cache.len() > 10_000_000
-                || s.rows.len() > MAX_ROWS as usize
-                || s.visibility.len() > MAX_ROWS as usize
-            {
-                return Err(ModelError("snapshot sheet count limit".into()));
+            for (kind, count, limit) in [
+                (SnapshotCollection::Cells, s.cells.len(), 10_000_000),
+                (
+                    SnapshotCollection::SpillExtents,
+                    s.spill_extents.len(),
+                    10_000_000,
+                ),
+                (
+                    SnapshotCollection::SpillCache,
+                    s.spill_cache.len(),
+                    10_000_000,
+                ),
+                (SnapshotCollection::Rows, s.rows.len(), MAX_ROWS as usize),
+                (
+                    SnapshotCollection::RowVisibility,
+                    s.visibility.len(),
+                    MAX_ROWS as usize,
+                ),
+            ] {
+                if count > limit {
+                    return Err(ModelError::SnapshotLimitExceeded { kind, count, limit });
+                }
             }
             let sheet = workbook.import_sheet(s.name.into_owned())?;
             sheet.set_presentation(s.presentation);
@@ -283,7 +308,7 @@ impl<'a> Snapshot<'a> {
                 let style = self
                     .styles
                     .get(style_id)
-                    .ok_or_else(|| ModelError("invalid snapshot style reference".into()))?
+                    .ok_or(ModelError::InvalidSnapshotStyle { index: style_id })?
                     .as_ref()
                     .clone();
                 let value = match v {
@@ -306,7 +331,7 @@ impl<'a> Snapshot<'a> {
                     )?
                     .is_some()
                 {
-                    return Err(ModelError("snapshot duplicate cell".into()));
+                    return Err(ModelError::DuplicateSnapshotCell { address: a });
                 }
             }
             let mut extent_anchors = std::collections::BTreeSet::new();
@@ -314,14 +339,19 @@ impl<'a> Snapshot<'a> {
                 anchor.validate()?;
                 extent.last.validate()?;
                 if extent.last.row < anchor.row || extent.last.col < anchor.col {
-                    return Err(ModelError("invalid snapshot spill extent geometry".into()));
+                    return Err(ModelError::InvalidSnapshotSpillExtent {
+                        anchor,
+                        last: extent.last,
+                    });
                 }
                 if !extent_anchors.insert(anchor) {
-                    return Err(ModelError("duplicate snapshot spill extent".into()));
+                    return Err(ModelError::DuplicateSnapshotSpillExtent { anchor });
                 }
                 // A raw source edit may leave stale saved geometry. Preserve source and
                 // decline the stale extent rather than promoting it to live authority.
-                if sheet.get(anchor).and_then(|cell| cell.formula.as_deref())
+                if sheet
+                    .get_validated(anchor)
+                    .and_then(|cell| cell.formula.as_deref())
                     == Some(extent.formula.as_str())
                 {
                     sheet.set_spill_extent(anchor, extent.last, &extent.formula)?;
@@ -333,15 +363,17 @@ impl<'a> Snapshot<'a> {
                 if at == owner
                     || at.row < owner.row
                     || at.col < owner.col
-                    || sheet.get(owner).is_none_or(|c| c.formula.is_none())
-                    || sheet.get(at).is_none_or(|c| c.formula.is_some())
+                    || sheet
+                        .get_validated(owner)
+                        .is_none_or(|c| c.formula.is_none())
+                    || sheet.get_validated(at).is_none_or(|c| c.formula.is_some())
                     || source.as_ref().is_some_and(|c| {
                         c.formula.is_some()
                             || c.shared_formula.is_some()
                             || c.value != CellValue::Blank
                     })
                 {
-                    return Err(ModelError("invalid snapshot spill cache".into()));
+                    return Err(ModelError::InvalidSnapshotSpillCache { address: at, owner });
                 }
                 if sheet
                     .spill_cache
@@ -354,16 +386,17 @@ impl<'a> Snapshot<'a> {
                     )
                     .is_some()
                 {
-                    return Err(ModelError("duplicate snapshot spill cache".into()));
+                    return Err(ModelError::DuplicateSnapshotSpillCache { address: at });
                 }
             }
         }
-        if self
+        if let Some(index) = self
             .names
             .iter()
-            .any(|n| n.sheet_scope.is_some_and(|s| s >= workbook.sheets().len()))
+            .filter_map(|n| n.sheet_scope)
+            .find(|index| *index >= workbook.sheets().len())
         {
-            return Err(ModelError("snapshot name scope".into()));
+            return Err(ModelError::InvalidWorksheetIndex { index });
         }
         workbook.named_ranges = self.names.into_owned();
         Ok(workbook)
@@ -374,6 +407,96 @@ impl<'a> Snapshot<'a> {
 mod tests {
     use super::*;
     use crate::model::{FileFormat, ImportDiagnostic, ImportDiagnosticKind};
+    #[test]
+    fn restore_rejects_invalid_style_and_duplicate_cells_with_coordinates() {
+        let mut book = Workbook::new();
+        book.add_sheet("Data").unwrap().set_value("A1", 1.).unwrap();
+        let address = "A1".parse::<CellAddress>().unwrap();
+        let mut invalid = book.snapshot().into_owned();
+        invalid.sheets[0].cells[0].3 = 7;
+        assert!(matches!(
+            invalid.restore(),
+            Err(ModelError::InvalidSnapshotStyle { index: 7 })
+        ));
+        let mut duplicate = book.snapshot().into_owned();
+        duplicate.sheets[0]
+            .cells
+            .push((address, Value::Blank, None, 0, None));
+        assert!(
+            matches!(duplicate.restore(), Err(ModelError::DuplicateSnapshotCell { address: target }) if target == address)
+        );
+    }
+
+    #[test]
+    fn restore_rejects_invalid_scope_and_record_limits() {
+        let mut book = Workbook::new();
+        book.named_ranges.push(NamedRange {
+            name: "Rate".into(),
+            formula: "1".into(),
+            sheet_scope: Some(8),
+        });
+        assert!(matches!(
+            book.snapshot().restore(),
+            Err(ModelError::InvalidWorksheetIndex { index: 8 })
+        ));
+        let mut snapshot = Workbook::new().snapshot().into_owned();
+        snapshot.sheets = (0..1025)
+            .map(|index| Sheet {
+                name: Cow::Owned(format!("S{index}")),
+                presentation: SheetPresentation::default(),
+                rows: vec![],
+                visibility: vec![],
+                cells: vec![],
+                spill_cache: vec![],
+                spill_extents: vec![],
+            })
+            .collect();
+        assert!(matches!(
+            snapshot.restore(),
+            Err(ModelError::SnapshotLimitExceeded {
+                kind: SnapshotCollection::Worksheets,
+                count: 1025,
+                limit: 1024
+            })
+        ));
+    }
+
+    #[test]
+    fn restore_rejects_spill_geometry_and_duplicate_ownership() {
+        let mut book = Workbook::new();
+        let sheet = book.add_sheet("Data").unwrap();
+        sheet.set_formula("A1", "1").unwrap();
+        let anchor = "A1".parse::<CellAddress>().unwrap();
+        let child = "B1".parse::<CellAddress>().unwrap();
+        sheet.set_spill_extent(anchor, child, "1").unwrap();
+        sheet
+            .set_spill_cached_value(child, anchor, "1", CellValue::Blank)
+            .unwrap();
+        let mut invalid = book.snapshot().into_owned();
+        invalid.sheets[0].spill_extents[0].1.last = anchor;
+        invalid.sheets[0].spill_extents[0].0 = child;
+        assert!(
+            matches!(invalid.restore(), Err(ModelError::InvalidSnapshotSpillExtent { anchor: a, last }) if a == child && last == anchor)
+        );
+        let mut duplicate = book.snapshot().into_owned();
+        let extent = duplicate.sheets[0].spill_extents[0].clone();
+        duplicate.sheets[0].spill_extents.push(extent);
+        assert!(
+            matches!(duplicate.restore(), Err(ModelError::DuplicateSnapshotSpillExtent { anchor: a }) if a == anchor)
+        );
+        let mut invalid = book.snapshot().into_owned();
+        invalid.sheets[0].spill_cache[0].1 = child;
+        assert!(
+            matches!(invalid.restore(), Err(ModelError::InvalidSnapshotSpillCache { address, owner }) if address == child && owner == child)
+        );
+        let mut duplicate = book.snapshot().into_owned();
+        let cache = duplicate.sheets[0].spill_cache[0].clone();
+        duplicate.sheets[0].spill_cache.push(cache);
+        assert!(
+            matches!(duplicate.restore(), Err(ModelError::DuplicateSnapshotSpillCache { address }) if address == child)
+        );
+    }
+
     #[test]
     fn capture_borrows_text_units_formulas_styles_and_names() {
         let mut w = Workbook::new();
@@ -416,13 +539,13 @@ mod tests {
             .unwrap()
             .get(CellAddress { row: 0, col: 0 })
             .unwrap();
-        let CellValue::Text(original_text) = &original.value else {
+        let CellValue::Text(original_text) = &original.unwrap().value else {
             panic!()
         };
         assert_eq!(text.as_ptr(), original_text.as_ptr());
         assert_eq!(
             formula.as_ptr(),
-            original.formula.as_ref().unwrap().as_ptr()
+            original.unwrap().formula.as_ref().unwrap().as_ptr()
         );
         assert_eq!(
             dto.styles[*style_id]
@@ -430,7 +553,13 @@ mod tests {
                 .as_ref()
                 .unwrap()
                 .as_ptr(),
-            original.style.number_format.as_ref().unwrap().as_ptr()
+            original
+                .unwrap()
+                .style
+                .number_format
+                .as_ref()
+                .unwrap()
+                .as_ptr()
         );
         assert!(matches!(
             dto.sheets[0].cells[1].1,
@@ -518,16 +647,20 @@ mod tests {
                     col: col as u32,
                 })
                 .unwrap()
+                .unwrap()
                 .value
             else {
                 panic!()
             };
             assert_eq!(n.to_bits(), *bits);
         }
-        assert!(r.get(CellAddress { row: 2, col: 0 }).is_some());
+        assert!(r.get(CellAddress { row: 2, col: 0 }).unwrap().is_some());
         assert_eq!(
-            r.get(CellAddress { row: 3, col: 0 }),
-            w.sheet(0).unwrap().get(CellAddress { row: 3, col: 0 })
+            r.get(CellAddress { row: 3, col: 0 }).unwrap(),
+            w.sheet(0)
+                .unwrap()
+                .get(CellAddress { row: 3, col: 0 })
+                .unwrap()
         );
     }
 }
@@ -572,6 +705,7 @@ mod spill_extent_validation_tests {
                 .unwrap()
                 .get(at("A1"))
                 .unwrap()
+                .unwrap()
                 .formula
                 .as_deref(),
             Some("{1}")
@@ -588,7 +722,7 @@ mod style_reference_tests {
         let mut book = Workbook::new();
         book.add_sheet("S")
             .unwrap()
-            .set_style("A1".parse().unwrap(), CellStyle::default())
+            .set_style("A1", CellStyle::default())
             .unwrap();
         let mut snapshot = Snapshot::capture(&book).into_owned();
         snapshot.sheets[0].cells[0].3 = snapshot.styles.len();

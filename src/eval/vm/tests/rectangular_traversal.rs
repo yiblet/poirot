@@ -2,7 +2,7 @@ use super::super::rectangular_traversal::RectangularTraversal;
 use super::super::shape::Shape;
 use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{BudgetMeter, CapabilityId, EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, CapabilityId, EvaluationBudgets, EvaluationError};
 use crate::eval::session::Session;
 use crate::model::{CellValue, Workbook};
 
@@ -40,10 +40,10 @@ fn rectangular_capacity_overflow_is_an_attributed_resource_failure() {
             })
             .err()
             .unwrap();
-        assert!(matches!(failure, EvaluationFailure::Resource {
+        assert!(matches!(failure, EvaluationError::Resource {
             kind: crate::eval::limits::ResourceFailureKind::SizeOverflow,
             capability: CapabilityId::FunctionAdapter,
-            source: Some(source), ..
+            target: Some(source), ..
         } if source == target));
         assert_eq!(
             session.state.runtime.budget.usage.materialized_values,

@@ -19,7 +19,7 @@ fn overlay_edits_evaluate_and_apply_without_mutating_the_borrowed_source() {
         .unwrap();
     let context = EvaluationContext::default();
     let changes = {
-        let mut overlay = Overlay::with_workbook(model.model()).build().unwrap();
+        let mut overlay = Overlay::with_workbook(&model).build().unwrap();
         for (input, expected) in [(21., 42.), (24., 48.), (21., 42.)] {
             overlay.set_value(at("A1"), input).unwrap();
             assert_eq!(
@@ -32,27 +32,31 @@ fn overlay_edits_evaluate_and_apply_without_mutating_the_borrowed_source() {
             );
         }
         assert_eq!(
-            model.sheet(0).unwrap().get(at("B1").address).unwrap().value,
+            model
+                .sheet(0)
+                .unwrap()
+                .get(at("B1").address)
+                .unwrap()
+                .unwrap()
+                .value,
             CellValue::Number(-1.)
         );
         overlay.changes()
     };
-    model.model_mut().apply(changes).unwrap();
+    model.apply(changes).unwrap();
     let book = model;
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let reopened = Workbook::from_bytes(&bytes).unwrap();
     let cell = reopened.sheet(0).unwrap().get(at("B1").address).unwrap();
-    assert_eq!(cell.value, CellValue::Number(42.));
-    assert_eq!(cell.formula.as_deref(), Some("A1*2"));
+    assert_eq!(cell.unwrap().value, CellValue::Number(42.));
+    assert_eq!(cell.unwrap().formula.as_deref(), Some("A1*2"));
 }
 #[test]
 fn default_file_and_byte_imports_retain_the_same_model_and_warnings() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("crates/poirot-io/tests/fixtures/stale-cache.xlsx");
-    let file = Workbook::open(&path).unwrap().into_model();
-    let bytes = Workbook::from_bytes(&std::fs::read(path).unwrap())
-        .unwrap()
-        .into_model();
+    let file = Workbook::open(&path).unwrap();
+    let bytes = Workbook::from_bytes(&std::fs::read(path).unwrap()).unwrap();
     assert_eq!(file, bytes);
     assert_eq!(file.file_metadata, bytes.file_metadata);
     assert!(Workbook::from_bytes(b"not a workbook").is_err());
@@ -72,7 +76,7 @@ fn evaluated_formats_preserve_precision_text_and_overlay_edits_through_xlsx() {
         .unwrap();
     let context = EvaluationContext::default();
     let changes = {
-        let mut overlay = Overlay::with_workbook(model.model()).build().unwrap();
+        let mut overlay = Overlay::with_workbook(&model).build().unwrap();
         for cell in ["A1", "B1", "C1"] {
             overlay
                 .set_style(
@@ -117,14 +121,17 @@ fn evaluated_formats_preserve_precision_text_and_overlay_edits_through_xlsx() {
         );
         overlay.changes()
     };
-    model.model_mut().apply(changes).unwrap();
+    model.apply(changes).unwrap();
     let book = model;
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let reopened = Workbook::from_bytes(&bytes).unwrap();
     for cell in ["A1", "B1"] {
         let stored = reopened.sheet(0).unwrap().get(at(cell).address).unwrap();
-        assert_eq!(stored.value, CellValue::Number(number));
-        assert_eq!(stored.style.number_format.as_deref(), Some("$#,##0.00"));
+        assert_eq!(stored.unwrap().value, CellValue::Number(number));
+        assert_eq!(
+            stored.unwrap().style.number_format.as_deref(),
+            Some("$#,##0.00")
+        );
     }
 }
 
@@ -143,8 +150,8 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
     }
     let context = EvaluationContext::default();
     let changes = {
-        let mut overlay = Overlay::with_workbook(model.model()).build().unwrap();
-        for input in [None, Some(0.), Some(0.02), None] {
+        let mut overlay = Overlay::with_workbook(&model).build().unwrap();
+        for input in [None, Some(0.0f64), Some(0.02), None] {
             overlay.reset();
             if let Some(value) = input {
                 overlay.set_value(at("A2"), value).unwrap();
@@ -170,7 +177,7 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
         }
         overlay.changes()
     };
-    model.model_mut().apply(changes).unwrap();
+    model.apply(changes).unwrap();
     let bytes = model.save_xlsx().to_buffer().unwrap();
     let reopened = Workbook::from_bytes(&bytes).unwrap();
     for (cell, expected) in [
@@ -184,6 +191,7 @@ fn lookup_blank_consumers_survive_overlay_reset_materialization_and_xlsx() {
                 .sheet(0)
                 .unwrap()
                 .get(at(cell).address)
+                .unwrap()
                 .unwrap()
                 .value,
             expected,
@@ -200,9 +208,8 @@ fn flushed_sources_export_materialized_formula_and_spill_caches_to_xlsx() {
         .unwrap()
         .set_value(at("A1").address, 2.)
         .unwrap();
-    let mut overlay = Overlay::with_workbook(model.into_model())
+    let mut overlay = Overlay::with_workbook(model)
         .with_policy(poirot::eval::EvaluationPolicy {
-            builtin: eval::BuiltinSemanticsPolicy::ExcelDocumentation,
             arrays: eval::ArrayResultPolicy::DynamicSpill,
             ..Default::default()
         })
@@ -215,19 +222,24 @@ fn flushed_sources_export_materialized_formula_and_spill_caches_to_xlsx() {
     assert_eq!(overlay.flush().unwrap(), 2);
     let mut saved = overlay.workbook().clone();
     saved.apply(overlay.changes()).unwrap();
-    let bytes = Workbook::from_model(saved).save_xlsx().to_buffer().unwrap();
+    let bytes = saved.save_xlsx().to_buffer().unwrap();
     let reopened = Workbook::from_bytes(&bytes).unwrap();
     let sheet = reopened.sheet(0).unwrap();
     assert_eq!(
-        sheet.get(at("B1").address).unwrap().formula.as_deref(),
+        sheet
+            .get(at("B1").address)
+            .unwrap()
+            .unwrap()
+            .formula
+            .as_deref(),
         Some("A1*3")
     );
     assert_eq!(
-        sheet.get(at("B1").address).unwrap().value,
+        sheet.get(at("B1").address).unwrap().unwrap().value,
         CellValue::Number(6.)
     );
     assert_eq!(
-        sheet.get(at("E2").address).unwrap().value,
+        sheet.get(at("E2").address).unwrap().unwrap().value,
         CellValue::Number(7.)
     );
     // File-format spill ownership fidelity is separate from the workspace snapshot;
@@ -249,7 +261,7 @@ fn text_placeholder_styles_preserve_values_through_xlsx() {
         .set_formula(at("C1").address, "TEXT(A1,\"@\")")
         .unwrap();
     for (cell, pattern) in [("A1", "@"), ("B1", "\"Item: \"@")] {
-        sheet.get_mut(at(cell).address).unwrap().style = CellStyle {
+        sheet.get_mut(at(cell).address).unwrap().unwrap().style = CellStyle {
             number_format: Some(pattern.into()),
             ..Default::default()
         };
@@ -260,7 +272,7 @@ fn text_placeholder_styles_preserve_values_through_xlsx() {
         Workbook::from_bytes(&model.save_xlsx().to_buffer().unwrap()).unwrap(),
     ] {
         let context = EvaluationContext::default();
-        let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+        let mut overlay = Overlay::with_workbook(&book).build().unwrap();
         let outputs = overlay
             .evaluation(&context)
             .unwrap()
@@ -287,11 +299,21 @@ fn text_placeholder_styles_preserve_values_through_xlsx() {
         assert_eq!(outputs[1].value, CellValue::Text("hello".into()));
         assert_eq!(outputs[2].value, CellValue::Text("123".into()));
         assert_eq!(
-            book.sheet(0).unwrap().get(at("A1").address).unwrap().value,
+            book.sheet(0)
+                .unwrap()
+                .get(at("A1").address)
+                .unwrap()
+                .unwrap()
+                .value,
             CellValue::Number(123.)
         );
         assert_eq!(
-            book.sheet(0).unwrap().get(at("B1").address).unwrap().value,
+            book.sheet(0)
+                .unwrap()
+                .get(at("B1").address)
+                .unwrap()
+                .unwrap()
+                .value,
             CellValue::Text("hello".into())
         );
     }
@@ -314,7 +336,7 @@ fn integer_mask_text_and_styles_preserve_numbers_through_xlsx() {
     ];
     for (input, result, value, pattern, _) in rows {
         sheet.set_value(at(input).address, value).unwrap();
-        sheet.get_mut(at(input).address).unwrap().style = CellStyle {
+        sheet.get_mut(at(input).address).unwrap().unwrap().style = CellStyle {
             number_format: Some(pattern.into()),
             ..Default::default()
         };
@@ -328,7 +350,7 @@ fn integer_mask_text_and_styles_preserve_numbers_through_xlsx() {
         Workbook::from_bytes(&model.save_xlsx().to_buffer().unwrap()).unwrap(),
     ] {
         let context = EvaluationContext::default();
-        let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+        let mut overlay = Overlay::with_workbook(&book).build().unwrap();
         for (input, result, value, pattern, expected) in rows {
             let outputs = overlay
                 .evaluation(&context)
@@ -353,7 +375,12 @@ fn integer_mask_text_and_styles_preserve_numbers_through_xlsx() {
                 expected
             );
             assert_eq!(
-                book.sheet(0).unwrap().get(at(input).address).unwrap().value,
+                book.sheet(0)
+                    .unwrap()
+                    .get(at(input).address)
+                    .unwrap()
+                    .unwrap()
+                    .value,
                 CellValue::Number(value)
             );
         }

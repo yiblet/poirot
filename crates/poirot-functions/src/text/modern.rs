@@ -4,33 +4,18 @@
 //! <https://support.microsoft.com/en-us/excel/functions/textafter-function>
 //! <https://support.microsoft.com/en-us/excel/functions/arraytotext-function>
 //! <https://support.microsoft.com/en-us/excel/functions/valuetotext-function>
+use super::modern_text_error::ModernTextError;
 use std::ops::Range;
 
-/// Formula-domain failures and checked allocation/geometry refusal.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Error {
-    /// Invalid argument domain.
-    Value,
-    /// No selected delimiter occurrence.
-    NotFound,
-    /// All fields were excluded.
-    Empty,
-    /// Checked text or collection geometry exceeds representable storage.
-    SizeOverflow,
-    /// A fallible reservation was refused by the allocator.
-    AllocationFailure,
-    /// Supplied expected geometry does not match the independently scanned fields.
-    InvalidGeometry,
-}
 /// Check Rust vector byte-capacity representation before a fallible reservation.
-fn capacity<T>(count: usize) -> Result<(), Error> {
+fn capacity<T>(count: usize) -> Result<(), ModernTextError> {
     if count
         .checked_mul(std::mem::size_of::<T>())
         .is_some_and(|bytes| bytes <= isize::MAX as usize)
     {
         Ok(())
     } else {
-        Err(Error::SizeOverflow)
+        Err(ModernTextError::SizeOverflow)
     }
 }
 /// Whether a literal delimiter comparison distinguishes letter case.
@@ -80,15 +65,15 @@ pub fn extract(
     case: Case,
     match_end: bool,
     side: Side,
-) -> Result<Range<usize>, Error> {
+) -> Result<Range<usize>, ModernTextError> {
     if occurrence == 0 {
-        return Err(Error::Value);
+        return Err(ModernTextError::Value);
     }
     if text.is_empty() {
         return Ok(0..0);
     }
     if occurrence.unsigned_abs() > text.len() as u64 {
-        return Err(Error::Value);
+        return Err(ModernTextError::Value);
     }
     let negative = occurrence < 0;
     if delimiter.is_empty() {
@@ -104,14 +89,14 @@ pub fn extract(
         let mut end = text.len();
         while let Some(start) = end.checked_sub(delimiter.len()) {
             if at(text, start, delimiter, case) {
-                remaining = remaining.checked_sub(1).ok_or(Error::Value)?;
+                remaining = remaining.checked_sub(1).ok_or(ModernTextError::Value)?;
                 if remaining == 0 {
                     found = Some(start..end);
                     break;
                 }
                 end = start;
             } else if end > 0 {
-                end = end.checked_sub(1).ok_or(Error::Value)?;
+                end = end.checked_sub(1).ok_or(ModernTextError::Value)?;
             } else {
                 break;
             }
@@ -120,21 +105,21 @@ pub fn extract(
         let mut start = 0;
         while start <= text.len().saturating_sub(delimiter.len()) && delimiter.len() <= text.len() {
             if at(text, start, delimiter, case) {
-                remaining = remaining.checked_sub(1).ok_or(Error::Value)?;
+                remaining = remaining.checked_sub(1).ok_or(ModernTextError::Value)?;
                 if remaining == 0 {
                     found = Some(
                         start
                             ..start
                                 .checked_add(delimiter.len())
-                                .ok_or(Error::SizeOverflow)?,
+                                .ok_or(ModernTextError::SizeOverflow)?,
                     );
                     break;
                 }
                 start = start
                     .checked_add(delimiter.len())
-                    .ok_or(Error::SizeOverflow)?;
+                    .ok_or(ModernTextError::SizeOverflow)?;
             } else {
-                start = start.checked_add(1).ok_or(Error::SizeOverflow)?;
+                start = start.checked_add(1).ok_or(ModernTextError::SizeOverflow)?;
             }
         }
     }
@@ -142,7 +127,7 @@ pub fn extract(
         let boundary = if negative { 0 } else { text.len() };
         found = Some(boundary..boundary);
     }
-    let found = found.ok_or(Error::NotFound)?;
+    let found = found.ok_or(ModernTextError::NotFound)?;
     Ok(match side {
         Side::Before => 0..found.start,
         Side::After => found.end..text.len(),
@@ -186,10 +171,10 @@ impl Split<'_> {
     fn scan(
         &self,
         text: &[u16],
-        mut visit: impl FnMut(Field) -> Result<(), Error>,
-    ) -> Result<Shape, Error> {
+        mut visit: impl FnMut(Field) -> Result<(), ModernTextError>,
+    ) -> Result<Shape, ModernTextError> {
         if self.columns.iter().chain(self.rows).all(Vec::is_empty) {
-            return Err(Error::Value);
+            return Err(ModernTextError::Value);
         }
         let mut shape = Shape {
             rows: 0,
@@ -219,11 +204,17 @@ impl Split<'_> {
                         column,
                         span: start..offset,
                     })?;
-                    column = column.checked_add(1).ok_or(Error::SizeOverflow)?;
-                    shape.fields = shape.fields.checked_add(1).ok_or(Error::SizeOverflow)?;
+                    column = column.checked_add(1).ok_or(ModernTextError::SizeOverflow)?;
+                    shape.fields = shape
+                        .fields
+                        .checked_add(1)
+                        .ok_or(ModernTextError::SizeOverflow)?;
                 }
                 if (end || row_separator.is_some()) && column > 0 {
-                    shape.rows = shape.rows.checked_add(1).ok_or(Error::SizeOverflow)?;
+                    shape.rows = shape
+                        .rows
+                        .checked_add(1)
+                        .ok_or(ModernTextError::SizeOverflow)?;
                     shape.columns = shape.columns.max(column);
                     column = 0;
                 }
@@ -231,72 +222,77 @@ impl Split<'_> {
                     break;
                 }
                 let width = row_separator.or(col_separator).map_or(0, Vec::len);
-                offset = offset.checked_add(width).ok_or(Error::SizeOverflow)?;
+                offset = offset
+                    .checked_add(width)
+                    .ok_or(ModernTextError::SizeOverflow)?;
                 start = offset;
             } else {
-                offset = offset.checked_add(1).ok_or(Error::SizeOverflow)?;
+                offset = offset.checked_add(1).ok_or(ModernTextError::SizeOverflow)?;
             }
         }
         if shape.fields == 0 {
-            Err(Error::Empty)
+            Err(ModernTextError::Empty)
         } else {
             Ok(shape)
         }
     }
     /// Inspect output geometry without allocating spans or text.
-    pub fn shape(&self, text: &[u16]) -> Result<Shape, Error> {
+    pub fn shape(&self, text: &[u16]) -> Result<Shape, ModernTextError> {
         self.scan(text, |_| Ok(()))
     }
     /// Materialize admitted spans; the caller checks rectangular output bounds first.
-    pub fn fields(&self, text: &[u16], expected: Shape) -> Result<Vec<Field>, Error> {
+    pub fn fields(&self, text: &[u16], expected: Shape) -> Result<Vec<Field>, ModernTextError> {
         capacity::<Field>(expected.fields)?;
         let mut fields = Vec::new();
         fields
             .try_reserve_exact(expected.fields)
-            .map_err(|_| Error::AllocationFailure)?;
+            .map_err(|_| ModernTextError::AllocationFailure)?;
         let actual = self.scan(text, |field| {
             if fields.len() >= expected.fields {
-                return Err(Error::InvalidGeometry);
+                return Err(ModernTextError::InvalidGeometry);
             }
             // SAFETY: The local bound check limits pushes to the successfully reserved expected.fields slots.
             fields.push(field);
             Ok(())
         })?;
         if actual != expected {
-            return Err(Error::InvalidGeometry);
+            return Err(ModernTextError::InvalidGeometry);
         }
         Ok(fields)
     }
     /// Bound comparisons in each scan before the caller admits work.
-    pub fn work(&self, length: usize) -> Result<usize, Error> {
+    pub fn work(&self, length: usize) -> Result<usize, ModernTextError> {
         let widths = self
             .columns
             .iter()
             .chain(self.rows)
             .try_fold(0usize, |sum, d| {
-                sum.checked_add(d.len().max(1)).ok_or(Error::SizeOverflow)
+                sum.checked_add(d.len().max(1))
+                    .ok_or(ModernTextError::SizeOverflow)
             })?;
         length
             .checked_add(1)
             .and_then(|n| n.checked_mul(widths.max(1)))
-            .ok_or(Error::SizeOverflow)
+            .ok_or(ModernTextError::SizeOverflow)
     }
 }
 /// Calculate storage needed to escape one already-rendered scalar.
-pub fn escaped_len(text: &[u16], quoted: bool) -> Result<usize, Error> {
+pub fn escaped_len(text: &[u16], quoted: bool) -> Result<usize, ModernTextError> {
     let extra = if quoted {
         text.iter()
             .filter(|u| **u == 34)
             .count()
             .checked_add(2)
-            .ok_or(Error::SizeOverflow)?
+            .ok_or(ModernTextError::SizeOverflow)?
     } else {
         0
     };
-    text.len().checked_add(extra).ok_or(Error::SizeOverflow)
+    text.len()
+        .checked_add(extra)
+        .ok_or(ModernTextError::SizeOverflow)
 }
 /// Escape one admitted scalar, doubling internal quotation marks in strict text.
-pub fn escape(text: &[u16], quoted: bool) -> Result<Vec<u16>, Error> {
+pub fn escape(text: &[u16], quoted: bool) -> Result<Vec<u16>, ModernTextError> {
     let quotes = if quoted {
         text.iter().filter(|unit| **unit == 34).count()
     } else {
@@ -306,11 +302,11 @@ pub fn escape(text: &[u16], quoted: bool) -> Result<Vec<u16>, Error> {
         .len()
         .checked_add(quotes)
         .and_then(|n| n.checked_add(if quoted { 2 } else { 0 }))
-        .ok_or(Error::SizeOverflow)?;
+        .ok_or(ModernTextError::SizeOverflow)?;
     capacity::<u16>(length)?;
     let mut out = Vec::new();
     out.try_reserve_exact(length)
-        .map_err(|_| Error::AllocationFailure)?;
+        .map_err(|_| ModernTextError::AllocationFailure)?;
     // SAFETY: The checked local length and reservation include both enclosing quotes and every doubled input quote.
     if quoted {
         out.push(34);
@@ -362,15 +358,15 @@ mod tests {
         );
         assert_eq!(
             extract(&text, &delimiter, 3, Case::Sensitive, false, Side::After),
-            Err(Error::NotFound)
+            Err(ModernTextError::NotFound)
         );
         assert_eq!(
             extract(&text, &delimiter, 0, Case::Sensitive, false, Side::Before),
-            Err(Error::Value)
+            Err(ModernTextError::Value)
         );
         assert_eq!(
             extract(&text, &delimiter, 14, Case::Sensitive, false, Side::Before),
-            Err(Error::Value)
+            Err(ModernTextError::Value)
         );
         assert_eq!(
             extract(&text, &[], 1, Case::Sensitive, false, Side::After),
@@ -458,7 +454,7 @@ mod tests {
                 fields: 4
             }
         );
-        assert_eq!(plan.shape(&units(",;|")), Err(Error::Empty));
+        assert_eq!(plan.shape(&units(",;|")), Err(ModernTextError::Empty));
     }
     #[test]
     fn split_case_and_original_intervals_do_not_normalize_input() {
@@ -484,7 +480,7 @@ mod tests {
         assert_eq!(fields[1].span, 2..3);
         assert_eq!(
             plan.fields(&text, Shape { fields: 1, ..shape }),
-            Err(Error::InvalidGeometry)
+            Err(ModernTextError::InvalidGeometry)
         );
         assert_eq!(
             plan.fields(
@@ -494,7 +490,7 @@ mod tests {
                     ..shape
                 }
             ),
-            Err(Error::SizeOverflow)
+            Err(ModernTextError::SizeOverflow)
         );
     }
     #[test]

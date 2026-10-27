@@ -208,7 +208,7 @@ fn growing_members_enforce_conceptual_collection_limit_at_first_new_overflow() {
             }
             assert!(matches!(
                 direct.cell(at("Z2")),
-                Err(EvaluationFailure::Budget(BudgetFailure {
+                Err(EvaluationError::Budget(BudgetError {
                     kind: BudgetKind::Materialization,
                     requested: 9,
                     ..
@@ -300,8 +300,8 @@ fn visiting_spill_producer_preserves_sparse_aggregation() {
     let mut incremental = overlay.evaluation(&context).unwrap();
     for result in [direct.cell(at("A1")), incremental.cell(at("A1"))] {
         assert!(
-            matches!(result, Err(EvaluationFailure::UnsupportedCapability { detail, .. })
-            if detail.contains("own unpublished sparse footprint"))
+            matches!(result, Err(EvaluationError::UnsupportedCapability { reason, .. })
+            if matches!(reason, poirot::eval::EvaluationReasonError::ArrayResultReadsItsOwnUnpublishedSparseFootprint))
         );
     }
     assert!(direct.changes().is_empty());
@@ -439,7 +439,7 @@ fn ignored_reference_text_and_later_text_limits_preserve_errors() {
             .unwrap();
         assert_eq!(direct.cell(at("Z1")).unwrap(), 1.0.into());
         assert!(
-            matches!(direct.cell(at("Z2")), Err(EvaluationFailure::Budget(BudgetFailure {
+            matches!(direct.cell(at("Z2")), Err(EvaluationError::Budget(BudgetError {
             kind: BudgetKind::TextBytes, target: Some(target), ..
         })) if target == at("A3"))
         );
@@ -467,7 +467,7 @@ fn operational_member_failure_wins_over_earlier_spreadsheet_error() {
     assert_eq!(direct.cell(at("Z1")).unwrap(), 1.0.into());
     assert!(matches!(
         direct.cell(at("Z2")),
-        Err(EvaluationFailure::UnsupportedCapability { .. })
+        Err(EvaluationError::UnsupportedCapability { .. })
     ));
     assert!(direct.values().all(|(target, _)| target != at("Z2")));
 }
@@ -487,7 +487,7 @@ fn failed_overlay_retention_never_publishes_a_partial_batch() {
         assert_eq!(run.cell(at("Z1")).unwrap(), 3.0.into());
         assert!(matches!(
             run.cell(at("Z2")),
-            Err(EvaluationFailure::MemoRetentionLimit { .. })
+            Err(EvaluationError::MemoRetentionLimit { .. })
         ));
     }
     assert!(overlay.cached_value(at("Z1")).is_some());
@@ -499,7 +499,7 @@ fn failed_overlay_retention_never_publishes_a_partial_batch() {
 #[derive(Default)]
 struct Completions(Vec<(EvaluationTarget, CellValue)>);
 impl CellObserver for Completions {
-    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationError> {
         self.0
             .push((event.target, event.result.cloned().map_err(Clone::clone)?));
         Ok(())
@@ -553,7 +553,7 @@ impl CachedCellReader for ChangingReader {
     fn cached_cell(
         &mut self,
         target: EvaluationTarget,
-    ) -> Result<Option<std::sync::Arc<CellValue>>, EvaluationFailure> {
+    ) -> Result<Option<std::sync::Arc<CellValue>>, EvaluationError> {
         if target.address.col == 0 {
             self.reads += 1;
             Ok(Some(std::sync::Arc::new(CellValue::Number(

@@ -16,6 +16,8 @@
 //! assert!(checked_matches("Σ", "σ").is_err());
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
+pub use crate::identifier_error::IdentifierError;
+
 /// Checked identifier comparison that retains unsupported Unicode mappings.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IdentifierComparison {
@@ -26,25 +28,6 @@ pub enum IdentifierComparison {
     /// Comparison needs case mappings the identifier policy cannot justify.
     UnsupportedMapping,
 }
-
-/// An unresolved case mapping between two preserved identities.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct IdentifierError {
-    /// Existing identifier involved in the unsupported comparison.
-    pub stored: String,
-    /// Requested identifier involved in the unsupported comparison.
-    pub requested: String,
-}
-impl std::fmt::Display for IdentifierError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "unsupported identifier comparison: {:?} versus {:?}",
-            self.stored, self.requested
-        )
-    }
-}
-impl std::error::Error for IdentifierError {}
 
 /// Compare identifiers, refusing unsupported mapping instead of guessing a match.
 pub fn checked_matches(stored: &str, requested: &str) -> Result<bool, IdentifierError> {

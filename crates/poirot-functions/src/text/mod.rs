@@ -7,6 +7,24 @@
 //! [`java_case`](crate::text::java_case) implements Unicode casing. Case-insensitive comparison uses
 //! [text_units](https://docs.rs/poirot-functions/latest/poirot_functions/text_units), which also defines text counting and
 //! slicing rules.
+mod case_asset_error;
+
+mod java_case_error;
+
+pub use java_case_error::JavaCaseError;
+
+mod text_plan_error;
+
+pub use text_plan_error::TextPlanError;
+
+mod modern_text_error;
+
+pub use modern_text_error::ModernTextError;
+
+mod regex_error;
+
+pub use regex_error::RegexError;
+
 /// Unicode15 full-case mapping with contextual final sigma.
 pub mod java_case;
 /// Modern delimiter selection, splitting, and text serialization.
@@ -18,7 +36,7 @@ pub mod regex;
 /// Allocation-free UTF-16 selection and output-reservation plans.
 pub mod units;
 
-pub use crate::coercion::numeric_text::{Error, HostFault};
+pub use crate::coercion::{NumericTextError, NumericTextSourceError};
 /// Java processes UTF-16 `char`s. Supplementary letters retain their spelling
 /// and reset the next BMP character's word state instead of being case-mapped.
 pub fn proper_with<P: UnicodePolicy>(text: &str, policy: &P) -> String {

@@ -1,4 +1,4 @@
-use crate::lookup::{BudgetRequest, Failure, Reference, Scalar, Value};
+use crate::lookup::{BudgetRequest, LookupError, Reference, Scalar, Value};
 /// Zero-based caller sheet, row, and column for reference resolution and scalar selection.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Context {
@@ -28,14 +28,14 @@ pub struct DynamicReference {
 /// Missing workbook/metadata must return an error, never a fabricated index or value.
 pub trait Workbook {
     /// Required preflight boundary. Operational failures must never be converted to cell errors.
-    fn preflight(&mut self, request: BudgetRequest) -> Result<(), Failure>;
+    fn preflight(&mut self, request: BudgetRequest) -> Result<(), LookupError>;
     /// Resolve one deferred operand only when requested; spreadsheet errors are returned as scalar data.
-    fn argument(&mut self, index: usize, context: Context) -> Result<Value, Failure>;
+    fn argument(&mut self, index: usize, context: Context) -> Result<Value, LookupError>;
 
     /// Shared POI numeric text coercion, including its date/time fallback.
-    fn coerce_numeric_text(&mut self, text: &str) -> Result<f64, Failure>;
+    fn coerce_numeric_text(&mut self, text: &str) -> Result<f64, LookupError>;
     /// Excel/POI NumberToTextConverter rendering; never a locale formatter.
-    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, Failure>;
+    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, LookupError>;
     /// Read a source coordinate while recording its consumed dependency.
     fn cell(
         &mut self,
@@ -43,7 +43,7 @@ pub trait Workbook {
         sheet: u32,
         row: u32,
         col: u32,
-    ) -> Result<Scalar, Failure>;
+    ) -> Result<Scalar, LookupError>;
     /// Signed logical OFFSET areas require an adapter that preserves blank grid padding.
     /// Existing unsigned ports continue unchanged; unsupported adapters must not fabricate reads.
     fn signed_cell(
@@ -52,10 +52,10 @@ pub trait Workbook {
         sheet: u32,
         row: i32,
         col: i32,
-    ) -> Result<Scalar, Failure> {
+    ) -> Result<Scalar, LookupError> {
         let _ = (reference, sheet, row, col);
-        Err(Failure::Unsupported(
-            crate::lookup::Unsupported::WorkbookMetadata,
+        Err(LookupError::Unsupported(
+            crate::lookup::LookupUnsupportedError::WorkbookMetadata,
         ))
     }
     /// Resolve a computed reference while retaining namespace dependencies.
@@ -63,7 +63,7 @@ pub trait Workbook {
         &mut self,
         query: &DynamicReference,
         context: Context,
-    ) -> Result<Value, Failure>;
+    ) -> Result<Value, LookupError>;
     /// Resolve a table-style reference when the host supports it.
-    fn structured_reference(&mut self, text: &str, context: Context) -> Result<Value, Failure>;
+    fn structured_reference(&mut self, text: &str, context: Context) -> Result<Value, LookupError>;
 }

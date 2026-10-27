@@ -81,8 +81,8 @@ fn source_snapshot_preserves_styles_blanks_context_and_sharing() {
     book.style_context =
         StyleContext::new(Some(b"theme metadata".to_vec()), vec![[255, 1, 2, 3]]).unwrap();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_style("A1".parse().unwrap(), rich()).unwrap();
-    sheet.set_style("B1".parse().unwrap(), rich()).unwrap();
+    sheet.set_style("A1", rich()).unwrap();
+    sheet.set_style("B1", rich()).unwrap();
     let wire = postcard::to_allocvec(&snapshot::Snapshot::capture(&book)).unwrap();
     let restored = postcard::from_bytes::<snapshot::Snapshot<'_>>(&wire)
         .unwrap()
@@ -90,12 +90,12 @@ fn source_snapshot_preserves_styles_blanks_context_and_sharing() {
         .unwrap();
     assert_eq!(restored, book);
     let sheet = restored.sheet(0).unwrap();
-    let a = sheet.get("A1".parse().unwrap()).unwrap();
-    let b = sheet.get("B1".parse().unwrap()).unwrap();
-    assert_eq!(a.value, CellValue::Blank);
+    let a = sheet.get("A1").unwrap();
+    let b = sheet.get("B1").unwrap();
+    assert_eq!(a.unwrap().value, CellValue::Blank);
     assert!(Arc::ptr_eq(
-        a.style.visual.as_ref().unwrap(),
-        b.style.visual.as_ref().unwrap()
+        a.unwrap().style.visual.as_ref().unwrap(),
+        b.unwrap().style.visual.as_ref().unwrap()
     ));
     assert_eq!(
         clone_footprint::CloneFootprint::measure(&book)

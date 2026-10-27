@@ -54,24 +54,36 @@ impl RenderedText {
         let count = self.text.chars().count();
         if self.fills.is_empty() {
             if count > maximum {
-                return Err(resource_error("formatted text exceeds cell limit"));
+                return Err(resource_error(
+                    crate::format::FormatReasonError::FormattedTextExceedsCellLimit,
+                ));
             }
             return Ok(self.text);
         }
-        let width = width.ok_or_else(|| error("fill requires explicit character width"))?;
+        let width = width.ok_or_else(|| {
+            error(crate::format::FormatReasonError::FillRequiresExplicitCharacterWidth)
+        })?;
         if self.fills.len() > 1 {
-            return Err(error("multiple fill directives unsupported"));
+            return Err(error(
+                crate::format::FormatReasonError::MultipleFillDirectivesUnsupported,
+            ));
         }
         if width > 32767 {
-            return Err(resource_error("width exceeds resource limit"));
+            return Err(resource_error(
+                crate::format::FormatReasonError::WidthExceedsResourceLimit,
+            ));
         }
         if count.max(width) > maximum {
-            return Err(resource_error("formatted text exceeds cell limit"));
+            return Err(resource_error(
+                crate::format::FormatReasonError::FormattedTextExceedsCellLimit,
+            ));
         }
         // SAFETY: The empty-fill branch returned above, so at least one fill remains.
         let (position, c) = self.fills[0];
         if !self.text.is_char_boundary(position) {
-            return Err(error("invalid tracked fill position"));
+            return Err(error(
+                crate::format::FormatReasonError::InvalidTrackedFillPosition,
+            ));
         }
         let repeat = width.saturating_sub(count);
         // SAFETY: width is at most 32767 and repeat <= width; a char uses at most four UTF-8 bytes.
@@ -86,7 +98,8 @@ impl RenderedText {
 mod tests {
     use super::*;
     use crate::format::{
-        CellValue, FormatCompilePolicy, FormatRenderContext, compile_format, render_value,
+        CellValue, FormatCompilePolicy, FormatReasonError, FormatRenderContext, compile_format,
+        render_value,
     };
     #[test]
     fn tracked_positions_preserve_arbitrary_unicode_and_use_character_width() {
@@ -109,52 +122,44 @@ mod tests {
         let mut output = RenderedText::plain("a");
         output.push_literal(&Token::Fill('x'));
         output.push_literal(&Token::Fill('y'));
-        assert!(
-            output
-                .clone()
-                .finish(None, 32767)
-                .unwrap_err()
-                .message
-                .contains("explicit character width")
+        assert_eq!(
+            output.clone().finish(None, 32767).unwrap_err().reason,
+            FormatReasonError::FillRequiresExplicitCharacterWidth
         );
-        assert!(
-            output
-                .finish(Some(10), 32767)
-                .unwrap_err()
-                .message
-                .contains("multiple fill")
+        assert_eq!(
+            output.finish(Some(10), 32767).unwrap_err().reason,
+            FormatReasonError::MultipleFillDirectivesUnsupported
         );
         let mut output = RenderedText::plain("😀");
         output.push_literal(&Token::Fill('x'));
-        assert!(
+        assert_eq!(
             output
                 .clone()
                 .finish(Some(usize::MAX), 32767)
                 .unwrap_err()
-                .message
-                .contains("width exceeds")
+                .reason,
+            FormatReasonError::WidthExceedsResourceLimit
         );
-        assert!(
-            output
-                .clone()
-                .finish(Some(11), 10)
-                .unwrap_err()
-                .message
-                .contains("cell limit")
+        assert_eq!(
+            output.clone().finish(Some(11), 10).unwrap_err().reason,
+            FormatReasonError::FormattedTextExceedsCellLimit
         );
         assert_eq!(output.finish(Some(0), 10).unwrap(), "😀");
-        assert!(RenderedText::plain("abc").finish(None, 2).is_err());
+        assert_eq!(
+            RenderedText::plain("abc")
+                .finish(None, 2)
+                .unwrap_err()
+                .reason,
+            FormatReasonError::FormattedTextExceedsCellLimit
+        );
     }
     #[test]
     fn public_number_render_rejects_real_fill_without_reserving_any_character() {
         let program = compile_format("0*x", FormatCompilePolicy::default()).unwrap();
         let number = program.sections()[0].number_plan().unwrap();
-        assert!(
-            number
-                .render(1.)
-                .unwrap_err()
-                .message
-                .contains("explicit character width")
+        assert_eq!(
+            number.render(1.).unwrap_err().reason,
+            FormatReasonError::FillRequiresExplicitCharacterWidth
         );
         let program = compile_format("\"\u{10ffff}\"0", FormatCompilePolicy::default()).unwrap();
         assert_eq!(
@@ -165,12 +170,14 @@ mod tests {
                 .unwrap(),
             "\u{10ffff}1"
         );
-        assert!(
+        assert_eq!(
             program.sections()[0]
                 .number_plan()
                 .unwrap()
                 .render(f64::INFINITY)
-                .is_err()
+                .unwrap_err()
+                .reason,
+            FormatReasonError::NonFiniteNumber
         );
         let context = FormatRenderContext {
             width: Some(4),

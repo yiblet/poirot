@@ -170,11 +170,11 @@ fn reset_preserves_other_sheet_and_literal_style_cached_value_classifications() 
         .build(limited.clone())
         .unwrap();
     assert!(
-        matches!(cold_direct.cell(at(1, "B65")), Err(crate::eval::limits::EvaluationFailure::Budget(failure)) if failure.kind == crate::eval::limits::BudgetKind::RunWork)
+        matches!(cold_direct.cell(at(1, "B65")), Err(crate::eval::limits::EvaluationError::Budget(failure)) if failure.kind == crate::eval::limits::BudgetKind::RunWork)
     );
     let mut cold_overlay = Overlay::with_workbook(&book).build().unwrap();
     assert!(
-        matches!(cold_overlay.evaluation(&limited).unwrap().cell(at(1, "B65")), Err(crate::eval::limits::EvaluationFailure::Budget(failure)) if failure.kind == crate::eval::limits::BudgetKind::RunWork)
+        matches!(cold_overlay.evaluation(&limited).unwrap().cell(at(1, "B65")), Err(crate::eval::limits::EvaluationError::Budget(failure)) if failure.kind == crate::eval::limits::BudgetKind::RunWork)
     );
     for incremental in [false, true] {
         let mut eval = Workspace::new(&book, incremental);

@@ -1,19 +1,27 @@
 # Finding your way around Poirot
 
-Start with `A1 = 3` and `B1 = A1*2`. Reading `B1` evaluates its dependencies and
-returns `6`. Calculation leaves the source workbook unchanged until the caller
-explicitly applies or exports results.
+Start with `A1 = 3` and `B1 = A1*2`. Calling `Evaluation::cell` for `B1`
+evaluates its dependencies and returns `6`; `Workbook::stored_cell` only reads
+the saved source record. Scenario calculation leaves the source workbook
+unchanged. `Workbook::recalculate` explicitly publishes calculated values into
+stored cells; scenario export captures edits and valid results in a separate copy.
 
 ## Components
 
 | Component | Responsibility |
 | --- | --- |
-| `poirot`: `src/lib.rs`, `src/workflow/` | Public workbook, evaluation, overlay and file workflows |
+| `poirot`: `src/lib.rs` and its domain modules | Public calculation, files, editing, snapshots, cells and styles APIs |
 | `poirot`: `src/model/` | Sparse worksheets, stored results and atomic changes |
 | `poirot`: `src/eval/` | Compilation, execution, dependency tracking and caching |
 | `poirot-parsing` | Formula syntax independent of workbook state |
 | `poirot-functions` | Pure function algorithms, scalar values, argument coercion and display formatting |
 | `poirot-io` | File records, XLS/XLSX decoding and XLSX encoding |
+
+`poirot::Workbook` and `poirot::model::Workbook` name the same sparse source type.
+Its definition and inherent methods live in `src/model/workbook.rs`. Public domains
+map directly to `src/calculation.rs`, `src/files.rs`, `src/editing.rs`,
+`src/snapshots.rs`, `src/cells.rs` and `src/styles.rs`. Application-facing builders
+and adapters are defined in the domain that exports them.
 
 Evaluator adapters resolve references and collect dependencies before calling pure
 function modules. `tools/test_function_architecture.py` checks package dependencies
@@ -77,10 +85,10 @@ before it, except inside the recursion group.
 | 1 | `coordinates/` | Cell identity (`EvaluationTarget`) and run-local hash tables and memo keyed by sheet index and address | — |
 | 1 | `inputs/` | Sparse scenario edits and the effective workbook reads that merge them with a baseline | — |
 | 2 | `limits/` | Work budgets, usage records and run counters, memo retention limits, operational failures and outcomes, fallible allocation | coordinates |
-| 2 | `materialization/` | Explicit cache publication policy and receipts | coordinates |
+| 2 | `materialization/` | Atomic cache publication receipts | coordinates |
 | 3 | `values/` | Value channels, reference areas, arrays, coercion, comparison, numeric results, budget-admitted copies, function failures, `CellEvaluation` | coordinates, limits |
-| 4 | `config/` | Immutable inputs: policies, clock, random streams, calendar, locale, context fields, `EvaluationContext`, `EvaluationPolicy` | limits, values, materialization |
-| 5 | `functions/` | Builtin identities and spellings, extension registrations, external function names, ATP names | config, coordinates, limits, values |
+| 4 | `config/` | Immutable inputs: policies, clock, random streams, calendar, locale, context fields, `EvaluationContext`, `EvaluationPolicy` | limits |
+| 5 | `functions/` | Builtin identities and spellings, extension registrations, external function names, ATP names | coordinates, limits, values |
 | 6 | `compile/` | Formula text to bound expression to bytecode, plus possible-result typing | functions, coordinates, limits |
 | 6 | `observe/` | Execution events, bounded retention and consumed builtin calls | functions, coordinates, limits, values |
 | 6 | `ports/` | Caller-implemented run ports: completed cells, consumed reads, cached results | functions, coordinates, limits |
@@ -93,7 +101,7 @@ before it, except inside the recursion group.
 | 9 | `run/` | `EvaluationRun`: one execution lifetime over a prepared workbook view | layers 1–8 |
 | 10 | `entry/` | Public `run_*` entry points (including extension runs) and atomic recalculation | layers 1–9 |
 | 10 | `overlay/` | `Overlay` and `Evaluation`: retained edits and incremental reuse across scenarios | layers 1–9 |
-| 11 | `artifact/` | Versioned native snapshots that save and restore overlays | config, overlay |
+| 11 | `artifact/` | Versioned native snapshots that save and restore overlays | config, functions, overlay |
 
 Layer 8 is the evaluator's one recursion group: cells run formulas (`session` →
 `vm`), formulas call adapters through the host (`vm` → `host` → `adapters`), and

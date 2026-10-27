@@ -22,7 +22,7 @@ pub(super) fn globals(
     // the SST, so refuse it before any payload is parsed.
     if rs.iter().take_while(|r| r.id != 0xa).any(|r| r.id == 0x2f) {
         return Err(PreflightError::Representation(
-            "encrypted XLS workbooks are not supported",
+            crate::BiffRepresentationError::EncryptedXls,
         ));
     }
     let mut positions = Vec::new();
@@ -48,14 +48,18 @@ pub(super) fn globals(
             _ => 0,
         };
         if r.data.len() < minimum {
-            return Err(PreflightError::Malformed("truncated metadata record"));
+            return Err(PreflightError::Malformed(
+                crate::BiffStructureError::TruncatedMetadataRecord,
+            ));
         }
         if r.id == 0x18 {
             // SAFETY: Record cursors are bounded by rs.len(); minimum-length checks admit r.data[3], and cce <= data.len() is checked before taking its suffix.
             let cch = r.data[3] as usize;
             let cce = u16at(r.data, 4)? as usize;
             if cce > r.data.len() || r.data.len() < 14 + cch + usize::from(biff8) {
-                return Err(PreflightError::Malformed("name token/string length"));
+                return Err(PreflightError::Malformed(
+                    crate::BiffStructureError::NameTokenStringLength,
+                ));
             }
             // SAFETY: Record cursors are bounded by rs.len(); minimum-length checks admit r.data[3], and cce <= data.len() is checked before taking its suffix.
             let token = &r.data[r.data.len() - cce..];
@@ -86,7 +90,7 @@ pub(super) fn globals(
                 };
                 if token.len() < need {
                     return Err(PreflightError::Malformed(
-                        "truncated defined-name reference token",
+                        crate::BiffStructureError::TruncatedDefinedNameReferenceToken,
                     ));
                 }
             }
@@ -96,7 +100,7 @@ pub(super) fn globals(
             let pos = u32at(r.data, 0)? as usize;
             if rs.binary_search_by_key(&pos, |r| r.at).is_err() {
                 return Err(PreflightError::Malformed(
-                    "sheet offset is not a record boundary",
+                    crate::BiffStructureError::SheetOffsetIsNotARecordBoundary,
                 ));
             }
             positions.push(pos);

@@ -27,72 +27,59 @@ fn fixture() -> Workbook {
 fn random_array_and_trim_current_plans_roundtrip_without_reparsing() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet
-        .set_formula("A1".parse().unwrap(), "RANDARRAY(2,3)")
-        .unwrap();
-    sheet
-        .set_formula("G1".parse().unwrap(), "TRIMRANGE(A1:D5)")
+    sheet.set_formula("A1", "RANDARRAY(2,3)").unwrap();
+    sheet.set_formula("G1", "TRIMRANGE(A1:D5)").unwrap();
+    book.sheet_mut(0)
+        .unwrap()
+        .set_formula("K1", "MUNIT(2)")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("K1".parse().unwrap(), "MUNIT(2)")
+        .set_formula("P1", "NETWORKDAYS.INTL(45292,45298,1,A1:A10)")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            "P1".parse().unwrap(),
-            "NETWORKDAYS.INTL(45292,45298,1,A1:A10)",
-        )
+        .set_formula("T1", "IMSUM(IMCONJUGATE({\"i\";\"2i\"}))")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("T1".parse().unwrap(), "IMSUM(IMCONJUGATE({\"i\";\"2i\"}))")
+        .set_formula("W1", "BIN2HEX({1;10})")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("W1".parse().unwrap(), "BIN2HEX({1;10})")
+        .set_formula("Y1", "CONVERT({1;2},\"byte\",\"bit\")")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("Y1".parse().unwrap(), "CONVERT({1;2},\"byte\",\"bit\")")
+        .set_formula("AA1", "BESSELI({0;1},0)")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("AA1".parse().unwrap(), "BESSELI({0;1},0)")
+        .set_formula("AD1", "ERFC.PRECISE({0;1})")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("AD1".parse().unwrap(), "ERFC.PRECISE({0;1})")
+        .set_formula("AG1", "XIRR({-100;110},{1000;1365},{0.05;0.2})")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            "AG1".parse().unwrap(),
-            "XIRR({-100;110},{1000;1365},{0.05;0.2})",
-        )
+        .set_formula("AJ1", "FVSCHEDULE(100,{0.1;0.2})")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("AJ1".parse().unwrap(), "FVSCHEDULE(100,{0.1;0.2})")
+        .set_formula("AM1", "COUPDAYS({45000;45001},46000,2,1)")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("AM1".parse().unwrap(), "COUPDAYS({45000;45001},46000,2,1)")
+        .set_formula("AN1", "AMORLINC({1000;2000},45000,45090,100,0,0.2)")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            "AN1".parse().unwrap(),
-            "AMORLINC({1000;2000},45000,45090,100,0,0.2)",
-        )
+        .set_formula("AO1", "BETA.DIST({0.25;0.5},2,2,TRUE)")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("AO1".parse().unwrap(), "BETA.DIST({0.25;0.5},2,2,TRUE)")
-        .unwrap();
-    book.sheet_mut(0)
-        .unwrap()
-        .set_formula("AP1".parse().unwrap(), "BETA.INV({0.25;0.5},2,1)")
+        .set_formula("AP1", "BETA.INV({0.25;0.5},2,1)")
         .unwrap();
     for (cell, formula) in [
         ("AQ1", "MODE.MULT({7;2;7;2})"),
@@ -133,7 +120,7 @@ fn random_array_and_trim_current_plans_roundtrip_without_reparsing() {
     ] {
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(cell.parse().unwrap(), formula)
+            .set_formula(cell, formula)
             .unwrap();
     }
     let plan = FormulaCompiler::new().compile_workbook(&book, &PreparationPolicy::default());
@@ -151,10 +138,10 @@ fn random_array_and_trim_current_plans_roundtrip_without_reparsing() {
     }
     let mut old = PlanSnapshot::capture(&plan).unwrap();
     old.version = VERSION - 1;
-    assert_eq!(
+    assert!(matches!(
         old.restore().unwrap_err(),
-        "unsupported compiled snapshot version"
-    );
+        super::super::plan_snapshot_error::PlanSnapshotError::UnsupportedCompiledSnapshotVersion
+    ));
 }
 
 #[test]
@@ -162,21 +149,15 @@ fn contextual_aggregation_metadata_roundtrips_and_rejects_malformed_plans() {
     let mut book = Workbook::new();
     book.add_sheet("S")
         .unwrap()
-        .set_formula(
-            "A1".parse().unwrap(),
-            "GROUPBY({1;1},{2;8},HSTACK(SUM,AVERAGE),0,0)",
-        )
+        .set_formula("A1", "GROUPBY({1;1},{2;8},HSTACK(SUM,AVERAGE),0,0)")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula(
-            "AG1".parse().unwrap(),
-            "XIRR({-100;110},{1000;1365},{0.05;0.2})",
-        )
+        .set_formula("AG1", "XIRR({-100;110},{1000;1365},{0.05;0.2})")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("AJ1".parse().unwrap(), "FVSCHEDULE(100,{0.1;0.2})")
+        .set_formula("AJ1", "FVSCHEDULE(100,{0.1;0.2})")
         .unwrap();
     let plan = FormulaCompiler::new().compile_workbook(&book, &PreparationPolicy::default());
     let dto = PlanSnapshot::capture(&plan).unwrap().into_owned();
@@ -202,7 +183,7 @@ fn snapshot_restores_source_and_program_sharing_without_lazy_trees() {
     let plan = FormulaCompiler::new().compile_workbook(&w, &PreparationPolicy::default());
     let dto = PlanSnapshot::capture(&plan).unwrap();
     assert_eq!(dto.counts(), (1, 2, 3));
-    assert!(matches!(dto.identity, Cow::Borrowed(_)));
+
     assert!(matches!(dto.sources[0].source, Cow::Borrowed(_)));
     assert!(matches!(dto.sources[0].references, Cow::Borrowed(_)));
     assert!(matches!(
@@ -250,10 +231,10 @@ fn snapshot_rejects_identity_and_bytecode_corruption() {
     let plan = FormulaCompiler::new().compile_workbook(&w, &PreparationPolicy::default());
     let mut old = PlanSnapshot::capture(&plan).unwrap();
     old.version = VERSION - 1;
-    assert_eq!(
+    assert!(matches!(
         old.restore().unwrap_err(),
-        "unsupported compiled snapshot version"
-    );
+        super::super::plan_snapshot_error::PlanSnapshotError::UnsupportedCompiledSnapshotVersion
+    ));
     let mut dto = PlanSnapshot::capture(&plan).unwrap();
     dto.sources[0].program = usize::MAX;
     assert!(dto.restore().is_err());
@@ -286,7 +267,10 @@ fn snapshot_rejects_inconsistent_scalar_geometry() {
     // serialization boundary instead of adding an unchecked mutation API.
     *dto.programs[0].typing.to_mut() =
         postcard::from_bytes(&postcard::to_allocvec(&entries).unwrap()).unwrap();
-    assert_eq!(dto.restore().unwrap_err(), "snapshot typing boundaries");
+    assert!(matches!(
+        dto.restore().unwrap_err(),
+        super::super::plan_snapshot_error::PlanSnapshotError::SnapshotTypingBoundaries
+    ));
 }
 
 #[test]
@@ -295,13 +279,16 @@ fn snapshot_rejects_invalid_labels_and_conditional_bindings() {
     workbook
         .add_sheet("S")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "IF(TRUE,1,2)")
+        .set_formula("A1", "IF(TRUE,1,2)")
         .unwrap();
     let plan = FormulaCompiler::new().compile_workbook(&workbook, &PreparationPolicy::default());
 
     let mut dto = PlanSnapshot::capture(&plan).unwrap();
     dto.programs[0].template.to_mut().labels[0] = InstructionIndex(u32::MAX);
-    assert_eq!(dto.restore().unwrap_err(), "snapshot label table");
+    assert!(matches!(
+        dto.restore().unwrap_err(),
+        super::super::plan_snapshot_error::PlanSnapshotError::SnapshotLabelTable
+    ));
 
     let mut dto = PlanSnapshot::capture(&plan).unwrap();
     let template = dto.programs[0].template.to_mut();
@@ -312,15 +299,24 @@ fn snapshot_rejects_invalid_labels_and_conditional_bindings() {
         .find(|i| i.opcode == Opcode::Conditional)
         .unwrap()
         .c = invalid;
-    assert_eq!(dto.restore().unwrap_err(), "snapshot jump label");
+    assert!(matches!(
+        dto.restore().unwrap_err(),
+        super::super::plan_snapshot_error::PlanSnapshotError::SnapshotJumpLabel
+    ));
 
     let mut dto = PlanSnapshot::capture(&plan).unwrap();
     dto.programs[0].template.to_mut().labels[0] = InstructionIndex(0);
-    assert_eq!(dto.restore().unwrap_err(), "snapshot backwards invocation");
+    assert!(matches!(
+        dto.restore().unwrap_err(),
+        super::super::plan_snapshot_error::PlanSnapshotError::SnapshotBackwardsInvocation
+    ));
 
     let mut dto = PlanSnapshot::capture(&plan).unwrap();
     dto.programs[0].calls[0].builtin = Some(Cow::Borrowed("SUM"));
-    assert_eq!(dto.restore().unwrap_err(), "snapshot conditional binding");
+    assert!(matches!(
+        dto.restore().unwrap_err(),
+        super::super::plan_snapshot_error::PlanSnapshotError::SnapshotConditionalBinding
+    ));
 }
 
 #[test]

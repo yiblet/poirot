@@ -41,14 +41,20 @@ impl Segments<'_> {
 
     fn byte(&mut self) -> Result<u8, PreflightError> {
         if self.remaining() == 0 && !self.advance() {
-            return Err(PreflightError::Malformed("truncated shared string"));
+            return Err(PreflightError::Malformed(
+                crate::BiffStructureError::TruncatedSharedString,
+            ));
         }
         let b = *self
             .parts
             .get(self.part)
-            .ok_or(PreflightError::Malformed("missing string continuation"))?
+            .ok_or(PreflightError::Malformed(
+                crate::BiffStructureError::MissingStringContinuation,
+            ))?
             .get(self.at)
-            .ok_or(PreflightError::Malformed("empty string continuation"))?;
+            .ok_or(PreflightError::Malformed(
+                crate::BiffStructureError::EmptyStringContinuation,
+            ))?;
         self.at += 1;
         Ok(b)
     }
@@ -64,7 +70,9 @@ impl Segments<'_> {
     fn skip(&mut self, mut n: usize) -> Result<(), PreflightError> {
         while n > 0 {
             if self.remaining() == 0 && !self.advance() {
-                return Err(PreflightError::Malformed("truncated string extension"));
+                return Err(PreflightError::Malformed(
+                    crate::BiffStructureError::TruncatedStringExtension,
+                ));
             }
             let k = n.min(self.remaining());
             self.at += k;
@@ -88,24 +96,24 @@ pub(super) fn sst(
     sizes.clear();
     let first = rs
         .first()
-        .ok_or(PreflightError::Malformed("missing SST record"))?
+        .ok_or(PreflightError::Malformed(
+            crate::BiffStructureError::MissingSstRecord,
+        ))?
         .data;
     let unique = u32at(first, 4)? as usize;
     check(
-        "SST unique string claim",
+        crate::BiffResource::SstUniqueStringClaim,
         unique as u64,
         budget.max_strings as u64,
     )?;
     check(
-        "SST continuation records",
+        crate::BiffResource::SstContinuationRecords,
         rs.len().saturating_sub(1) as u64,
         budget.max_continuations as u64,
     )?;
-    let mut parts = vec![
-        first
-            .get(8..)
-            .ok_or(PreflightError::Malformed("truncated SST counts"))?,
-    ];
+    let mut parts = vec![first.get(8..).ok_or(PreflightError::Malformed(
+        crate::BiffStructureError::TruncatedSstCounts,
+    ))?];
     parts.extend(rs.iter().skip(1).map(|r| r.data));
     let mut cursor = Segments {
         parts,
@@ -124,7 +132,7 @@ pub(super) fn sst(
         let chars = cursor.integer(2)? as usize;
         let flags = cursor.byte()?;
         check(
-            "shared string characters",
+            crate::BiffResource::SharedStringCharacters,
             chars as u64,
             budget.max_string_chars as u64,
         )?;
@@ -139,7 +147,7 @@ pub(super) fn sst(
             0
         };
         check(
-            "string extension bytes",
+            crate::BiffResource::StringExtensionBytes,
             ext as u64,
             budget.max_string_bytes as u64,
         )?;
@@ -148,14 +156,18 @@ pub(super) fn sst(
         while left > 0 {
             if cursor.remaining() == 0 {
                 if !cursor.advance() {
-                    return Err(PreflightError::Malformed("truncated string characters"));
+                    return Err(PreflightError::Malformed(
+                        crate::BiffStructureError::TruncatedStringCharacters,
+                    ));
                 }
                 wide = cursor.byte()? & 1 != 0;
             }
             let width = if wide { 2 } else { 1 };
             let take = left.min(cursor.remaining() / width);
             if take == 0 {
-                return Err(PreflightError::Malformed("split UTF16 code unit"));
+                return Err(PreflightError::Malformed(
+                    crate::BiffStructureError::SplitUtf16CodeUnit,
+                ));
             }
             cursor.skip(take * width)?;
             left -= take;
@@ -163,7 +175,7 @@ pub(super) fn sst(
         cursor.skip(runs * 4)?;
         cursor.skip(ext)?;
         check(
-            "decoded strings",
+            crate::BiffResource::DecodedStrings,
             (plan.strings + 1) as u64,
             budget.max_strings as u64,
         )?;
@@ -173,15 +185,15 @@ pub(super) fn sst(
             plan.string_bytes
                 .checked_add(chars * 4)
                 .ok_or(PreflightError::Representation(
-                    "decoded string bytes overflow",
+                    crate::BiffRepresentationError::DecodedStringBytesOverflow,
                 ))?;
         check(
-            "decoded strings",
+            crate::BiffResource::DecodedStrings,
             plan.strings as u64,
             budget.max_strings as u64,
         )?;
         check(
-            "decoded string bytes",
+            crate::BiffResource::DecodedStringBytes,
             plan.string_bytes as u64,
             budget.max_string_bytes as u64,
         )?;

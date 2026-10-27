@@ -7,7 +7,7 @@ use super::super::sheet_candidates::SheetCandidates;
 use super::super::spill_access::SpillAccess;
 use super::super::spill_demand::SpillDemand;
 use super::super::spill_query::SpillQuery;
-use crate::eval::limits::{BudgetMeter, EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, EvaluationBudgets, EvaluationError};
 use crate::eval::session::Session;
 use crate::eval::values::{Area, AreaKind};
 use crate::model::{CellAddress, Workbook};
@@ -48,7 +48,7 @@ fn completed_range_proofs_are_sheet_specific_and_disabled_after_later_failure() 
     book.add_sheet("S").unwrap();
     book.add_sheet("T")
         .unwrap()
-        .set_formula("Z1".parse().unwrap(), "SEQUENCE(100)")
+        .set_formula("Z1", "SEQUENCE(100)")
         .unwrap();
     let mut session = Session::with_context(&book, Default::default());
     let area = Area {
@@ -97,11 +97,9 @@ fn completed_range_proofs_are_sheet_specific_and_disabled_after_later_failure() 
 fn private_nested_ranges_never_publish_completed_area_proofs() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet
-        .set_formula("A1".parse().unwrap(), "SEQUENCE(SUM(C1:C2))")
-        .unwrap();
-    sheet.set_value("C1".parse().unwrap(), 1.).unwrap();
-    sheet.set_value("C2".parse().unwrap(), 1.).unwrap();
+    sheet.set_formula("A1", "SEQUENCE(SUM(C1:C2))").unwrap();
+    sheet.set_value("C1", 1.).unwrap();
+    sheet.set_value("C2", 1.).unwrap();
     let mut session = Session::with_context(&book, Default::default());
     let area = Area {
         kind: AreaKind::Cell,
@@ -121,7 +119,7 @@ fn private_nested_ranges_never_publish_completed_area_proofs() {
         .unwrap();
     assert!(session.state.runtime.preparation.ready.is_some());
     assert!(SpillQuery::new(&session).ready(area));
-    session.state.runtime.preparation.failure = Some(EvaluationFailure::StalePlan);
+    session.state.runtime.preparation.failure = Some(EvaluationError::StalePlan);
     assert!(!SpillQuery::new(&session).ready(area));
     assert!(SpillDemand::new(&mut session).resolve(area).is_err());
 }

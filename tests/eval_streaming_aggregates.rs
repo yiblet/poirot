@@ -31,7 +31,7 @@ fn numeric_and_logical_reductions_preserve_origins_and_empty_contracts() {
         ("A3", CellValue::Boolean(true)),
         ("A4", CellValue::Text("8".into())),
     ] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     for (formula, expected) in [
         ("SUM(A1:A5)", CellValue::Number(6.)),
@@ -76,14 +76,12 @@ fn eager_arguments_finish_bodies_but_sheet_spans_and_later_arguments_remain_orde
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     sheet
-        .set_value("A1".parse().unwrap(), CellValue::Error(CellError::Div0))
+        .set_value("A1", CellValue::Error(CellError::Div0))
         .unwrap();
-    sheet
-        .set_formula("A2".parse().unwrap(), "SUM(U:T!B1)")
-        .unwrap();
+    sheet.set_formula("A2", "SUM(U:T!B1)").unwrap();
     book.add_sheet("T")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "SUM(U:T!B1)")
+        .set_formula("A1", "SUM(U:T!B1)")
         .unwrap();
     book.add_sheet("U").unwrap();
     for function in [
@@ -93,7 +91,7 @@ fn eager_arguments_finish_bodies_but_sheet_spans_and_later_arguments_remain_orde
             matches!(
                 result(&book, &format!("{function}(A1:A2)"), Default::default()),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability { .. },
+                    failure: EvaluationError::UnsupportedCapability { .. },
                     ..
                 }
             ),
@@ -151,7 +149,7 @@ fn fixed_scratch_does_not_accumulate_scalar_materialization() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(BudgetFailure {
+            failure: EvaluationError::Budget(BudgetError {
                 kind: BudgetKind::Materialization,
                 requested: 2,
                 ..
@@ -163,9 +161,9 @@ fn fixed_scratch_does_not_accumulate_scalar_materialization() {
 
 /// Capture complete values at the shared cell boundary before reduction.
 #[derive(Default)]
-struct Observed(Vec<(EvaluationTarget, Result<CellValue, EvaluationFailure>)>);
+struct Observed(Vec<(EvaluationTarget, Result<CellValue, EvaluationError>)>);
 impl CellObserver for Observed {
-    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationError> {
         self.0
             .push((event.target, event.result.cloned().map_err(Clone::clone)));
         Ok(())
@@ -183,12 +181,10 @@ fn ignored_text_keeps_full_observations_and_cold_text_failures() {
         ] {
             let mut book = Workbook::new();
             let sheet = book.add_sheet("S").unwrap();
+            sheet.set_value("A1", text.clone()).unwrap();
+            sheet.set_value("A2", 1.).unwrap();
             sheet
-                .set_value("A1".parse().unwrap(), text.clone())
-                .unwrap();
-            sheet.set_value("A2".parse().unwrap(), 1.).unwrap();
-            sheet
-                .set_formula("Z1".parse().unwrap(), format!("{function}(A1:A2)"))
+                .set_formula("Z1", format!("{function}(A1:A2)"))
                 .unwrap();
             let policy = PreparationPolicy::default();
             let plan = FormulaCompiler::new().compile_workbook(&book, &policy);
@@ -211,21 +207,24 @@ fn ignored_text_keeps_full_observations_and_cold_text_failures() {
                 drop(run);
                 if text_bytes == 16 {
                     assert!(
-                        matches!(result, Err(EvaluationFailure::Budget(BudgetFailure { kind: BudgetKind::TextBytes, target: Some(EvaluationTarget { address, .. }), .. })) if address == "A1".parse().unwrap()),
+                        matches!(result, Err(EvaluationError::Budget(BudgetError { kind: BudgetKind::TextBytes, target: Some(EvaluationTarget { address, .. }), .. })) if address == "A1".parse().unwrap()),
                         "{function}"
                     );
                     assert_eq!(observed.0.len(), 2);
                 } else {
                     assert_eq!(
-                        result,
-                        Ok(if function == "AND" || function == "OR" {
+                        (result).unwrap(),
+                        if function == "AND" || function == "OR" {
                             CellValue::Boolean(true)
                         } else {
                             CellValue::Number(1.)
-                        })
+                        }
                     );
                     assert_eq!(observed.0.len(), 3);
-                    assert_eq!(observed.0.first().unwrap().1, Ok(text.clone()));
+                    assert_eq!(
+                        (observed.0.first().unwrap().1).as_ref().unwrap(),
+                        &text.clone()
+                    );
                     assert_eq!(
                         observed
                             .0
@@ -247,11 +246,9 @@ fn eager_multi_area_reductions_finish_later_areas_before_reporting_errors() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     sheet
-        .set_value("A1".parse().unwrap(), CellValue::Error(CellError::Div0))
+        .set_value("A1", CellValue::Error(CellError::Div0))
         .unwrap();
-    sheet
-        .set_formula("B1".parse().unwrap(), "SUM(U:T!A1)")
-        .unwrap();
+    sheet.set_formula("B1", "SUM(U:T!A1)").unwrap();
     book.add_sheet("T").unwrap();
     book.add_sheet("U").unwrap();
     for function in ["SUMSQ", "AVERAGE", "MIN", "MAX", "PRODUCT"] {
@@ -259,7 +256,7 @@ fn eager_multi_area_reductions_finish_later_areas_before_reporting_errors() {
             matches!(
                 result(&book, &format!("{function}((A1,B1))"), Default::default()),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability { .. },
+                    failure: EvaluationError::UnsupportedCapability { .. },
                     ..
                 }
             ),
@@ -281,7 +278,7 @@ fn eager_numeric_reductions_preserve_special_number_and_error_order() {
         ("A2", CellValue::Error(CellError::Div0)),
         ("B2", CellValue::Number(f64::INFINITY)),
     ] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     for function in ["SUMSQ", "AVERAGE", "MIN", "MAX", "PRODUCT"] {
         for operand in ["A1:B1", "CHOOSE({1,2},A1,B1)"] {
@@ -289,7 +286,7 @@ fn eager_numeric_reductions_preserve_special_number_and_error_order() {
                 matches!(
                     result(&book, &format!("{function}({operand})"), Default::default()),
                     EvaluationOutcome::Aborted {
-                        failure: EvaluationFailure::UnsupportedCapability { .. },
+                        failure: EvaluationError::UnsupportedCapability { .. },
                         ..
                     }
                 ),

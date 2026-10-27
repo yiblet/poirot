@@ -10,7 +10,7 @@ fn target(address: &str) -> EvaluationTarget {
     }
 }
 fn excel() -> RunConfiguration {
-    RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
+    RunConfiguration::default()
 }
 fn value(book: &Workbook, formula: &str, policy: &RunConfiguration) -> CellValue {
     match run_formula_with_configuration(
@@ -78,24 +78,13 @@ fn text_admits_contextual_numeric_text_before_applying_the_requested_format() {
         ),
         "3:43:09 PM".into()
     );
-    assert_eq!(
-        value(
-            &book,
-            r#"TEXT("15:43:09","H:MM:ss AM/PM")"#,
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
-        ),
-        "15:43:09".into()
-    );
 }
 
 #[test]
 fn rejected_text_and_other_value_classes_keep_their_existing_text_contract() {
     let mut book = Workbook::new();
     book.add_sheet("S").unwrap();
-    for config in [
-        excel(),
-        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-    ] {
+    for config in [excel(), RunConfiguration::default()] {
         for input in ["word", "1..25", "", "  ", "25:61:00", "NaN", "TRUE"] {
             for stored in [
                 CellValue::Text(input.into()),
@@ -147,7 +136,6 @@ fn contextual_text_admission_tracks_locale_calendar_profiles_edits_and_snapshots
     }
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::PinnedPoi,
             ..Default::default()
         })
         .build()
@@ -159,11 +147,10 @@ fn contextual_text_admission_tracks_locale_calendar_profiles_edits_and_snapshots
             .unwrap()
             .cell(target("B3"))
             .unwrap(),
-        "15:43:09".into()
+        "3:43:09 PM".into()
     );
     overlay
         .set_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .unwrap();
@@ -223,7 +210,6 @@ fn contextual_text_admission_tracks_locale_calendar_profiles_edits_and_snapshots
     );
     overlay
         .set_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::PinnedPoi,
             ..Default::default()
         })
         .unwrap();
@@ -233,11 +219,10 @@ fn contextual_text_admission_tracks_locale_calendar_profiles_edits_and_snapshots
             .unwrap()
             .cell(target("B3"))
             .unwrap(),
-        "00:00:00".into()
+        "12:00:00 AM".into()
     );
     overlay
         .set_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .unwrap();

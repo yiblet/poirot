@@ -61,9 +61,7 @@ impl CalendarPolicy {
     /// Reject serial values outside supported calendar/display bounds.
     pub fn validate(self, serial: f64) -> Result<(), FormatError> {
         if !serial.is_finite() || serial < 0. || serial >= (self.maximum_day() + 1) as f64 {
-            Err(error(
-                "date serial outside supported nonnegative calendar range",
-            ))
+            Err(error(crate::format::FormatReasonError::DateSerialOutsideSupportedNonnegativeCalendarRange))
         } else {
             Ok(())
         }
@@ -132,7 +130,9 @@ impl DatePlan {
             if let Token::SystemDateTime(selector) = token
                 && system_selector.replace(*selector).is_some()
             {
-                return Err(error("multiple system date/time selectors"));
+                return Err(error(
+                    crate::format::FormatReasonError::MultipleSystemDateTimeSelectors,
+                ));
             }
         }
         if system_selector.is_some()
@@ -149,7 +149,9 @@ impl DatePlan {
                     )
                 }))
         {
-            return Err(error("unsupported system date/time fallback layout"));
+            return Err(error(
+                crate::format::FormatReasonError::UnsupportedSystemDateTimeFallbackLayout,
+            ));
         }
         // SAFETY: The window width is the nonzero literal 2.
         let fractional_digits = tokens
@@ -167,7 +169,9 @@ impl DatePlan {
             .max()
             .unwrap_or(0);
         if fractional_digits > 6 {
-            return Err(error("more than six fractional-second digits unsupported"));
+            return Err(error(
+                crate::format::FormatReasonError::MoreThanSixFractionalSecondDigitsUnsupported,
+            ));
         }
         Ok(Self {
             tokens: tokens.to_vec(),
@@ -188,15 +192,14 @@ impl DatePlan {
                 return Err(FormatError {
                     kind: FormatErrorKind::UnsupportedFidelity,
                     position: 0,
-                    message: "unsupported system date/time locale".into(),
+                    reason: crate::format::FormatReasonError::UnsupportedSystemDateTimeLocale,
                 });
             }
             // Policy resolution is value-independent, but occurs at rendering.
             // Retain the original fallback tokens in the immutable plan.
-            let tokens = self
-                .system_tokens
-                .as_deref()
-                .ok_or_else(|| error("missing compiled system pattern"))?;
+            let tokens = self.system_tokens.as_deref().ok_or_else(|| {
+                error(crate::format::FormatReasonError::MissingCompiledSystemPattern)
+            })?;
             // Date-only display must not carry into tomorrow when seconds round.
             let selected_serial = match selector {
                 SystemDateTime::LongDate => serial.floor(),
@@ -214,7 +217,9 @@ fn render_plan(
     fractional_digits: usize,
 ) -> Result<RenderedText, FormatError> {
     if fractional_digits > 6 {
-        return Err(error("more than six fractional-second digits unsupported"));
+        return Err(error(
+            crate::format::FormatReasonError::MoreThanSixFractionalSecondDigitsUnsupported,
+        ));
     }
     let policy = CalendarPolicy::display(system);
     policy.validate(serial)?;
@@ -227,7 +232,9 @@ fn render_plan(
     let day_ticks = 86400 * factor;
     day += (ticks / day_ticks) as i64;
     if day > policy.maximum_day() {
-        return Err(error("rounded date exceeds supported calendar range"));
+        return Err(error(
+            crate::format::FormatReasonError::RoundedDateExceedsSupportedCalendarRange,
+        ));
     }
     let fraction = ticks % factor;
     let time = ticks % day_ticks / factor;
@@ -262,11 +269,11 @@ fn render_plan(
                         3 => DAYS
                             .get(weekday)
                             .and_then(|day| day.get(..3))
-                            .ok_or_else(|| error("invalid weekday"))?
+                            .ok_or_else(|| error(crate::format::FormatReasonError::InvalidWeekday))?
                             .into(),
                         _ => DAYS
                             .get(weekday)
-                            .ok_or_else(|| error("invalid weekday"))?
+                            .ok_or_else(|| error(crate::format::FormatReasonError::InvalidWeekday))?
                             .to_string(),
                     }),
                     'm' => {
@@ -298,16 +305,22 @@ fn render_plan(
                                 3 => MONTHS
                                     .get((month as usize).wrapping_sub(1))
                                     .and_then(|month| month.get(..3))
-                                    .ok_or_else(|| error("invalid month"))?
+                                    .ok_or_else(|| {
+                                        error(crate::format::FormatReasonError::InvalidMonth)
+                                    })?
                                     .into(),
                                 4 => MONTHS
                                     .get((month as usize).wrapping_sub(1))
-                                    .ok_or_else(|| error("invalid month"))?
+                                    .ok_or_else(|| {
+                                        error(crate::format::FormatReasonError::InvalidMonth)
+                                    })?
                                     .to_string(),
                                 _ => MONTHS
                                     .get((month as usize).wrapping_sub(1))
                                     .and_then(|month| month.get(..1))
-                                    .ok_or_else(|| error("invalid month"))?
+                                    .ok_or_else(|| {
+                                        error(crate::format::FormatReasonError::InvalidMonth)
+                                    })?
                                     .into(),
                             })
                         }
@@ -343,7 +356,7 @@ fn render_plan(
                             i += fractional_digits + 1
                         }
                     }
-                    _ => return Err(error("unknown date token")),
+                    _ => return Err(error(crate::format::FormatReasonError::UnknownDateToken)),
                 }
             }
             Token::Elapsed(c, width) => out.push_str(&format!(
@@ -361,7 +374,11 @@ fn render_plan(
             } else {
                 "P"
             }),
-            Token::Digit(_) => return Err(error("numeric placeholders mixed with date format")),
+            Token::Digit(_) => {
+                return Err(error(
+                    crate::format::FormatReasonError::NumericPlaceholdersMixedWithDateFormat,
+                ));
+            }
             token => out.push_literal(token),
         }
         i += 1

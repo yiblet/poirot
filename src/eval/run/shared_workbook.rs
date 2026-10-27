@@ -2,10 +2,10 @@
 use crate::eval::compile::compiler::CompiledWorkbook;
 use crate::eval::config::RunConfiguration;
 use crate::eval::inputs::{EffectiveWorkbook, RunInputs};
-use crate::eval::limits::{EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{EvaluationBudgets, EvaluationError};
 use crate::eval::run::evaluation_run::EvaluationRun;
 use crate::eval::run::retained_run::RetainedRun;
-use crate::eval::run::shared_run_failure::SharedRunFailure;
+use crate::eval::run::shared_run_error::SharedRunError;
 use crate::eval::run::workbook_view::WorkbookView;
 use crate::model::Workbook;
 use std::sync::Arc;
@@ -29,8 +29,8 @@ struct SharedSource {
 /// use std::sync::Arc;
 /// let mut workbook = Workbook::new();
 /// let sheet = workbook.add_sheet("Inputs")?;
-/// sheet.set_value("A1".parse()?, 2.0)?;
-/// sheet.set_formula("B1".parse()?, "A1*2")?;
+/// sheet.set_value("A1", 2.0)?;
+/// sheet.set_formula("B1", "A1*2")?;
 /// let plan = FormulaCompiler::new().compile_workbook(&workbook, &PreparationPolicy::default());
 /// let shared = SharedWorkbook::new(workbook, Arc::new(plan))?;
 /// let (_, inputs) = shared.prepare_inputs(|_source| {
@@ -54,7 +54,7 @@ pub struct SharedWorkbook {
 
 impl SharedWorkbook {
     /// Validate and take ownership of an immutable workbook and matching plan.
-    pub fn new(workbook: Workbook, plan: Arc<CompiledWorkbook>) -> Result<Self, EvaluationFailure> {
+    pub fn new(workbook: Workbook, plan: Arc<CompiledWorkbook>) -> Result<Self, EvaluationError> {
         WorkbookView::new(&workbook, &plan, plan.policy())?;
         Ok(Self {
             source: Arc::new(SharedSource {
@@ -67,7 +67,7 @@ impl SharedWorkbook {
 
     /// Type/admit against the immutable source before building its bound overlay.
     /// Caller ingress and model admission failures share the caller-selected error type.
-    pub fn prepare_inputs<T, E: From<crate::model::ModelError>>(
+    pub fn prepare_inputs<T, E>(
         &self,
         prepare: impl FnOnce(
             &Workbook,
@@ -79,18 +79,20 @@ impl SharedWorkbook {
             ),
             E,
         >,
-    ) -> Result<(T, RunInputs), E> {
+    ) -> Result<(T, RunInputs), super::input_preparation_error::InputPreparationError<E>> {
         let source = &self.source;
-        prepare(&source.workbook).and_then(|(value, assignments, maximum)| {
-            RunInputs::new(
-                &source.workbook,
-                assignments,
-                maximum,
-                source.identity.clone(),
-            )
-            .map(|inputs| (value, inputs))
-            .map_err(E::from)
-        })
+        prepare(&source.workbook)
+            .map_err(super::input_preparation_error::InputPreparationError::Preparation)
+            .and_then(|(value, assignments, maximum)| {
+                RunInputs::new(
+                    &source.workbook,
+                    assignments,
+                    maximum,
+                    source.identity.clone(),
+                )
+                .map(|inputs| (value, inputs))
+                .map_err(super::input_preparation_error::InputPreparationError::Admission)
+            })
     }
 
     /// Evaluate against the immutable source with independent per-run state.
@@ -103,8 +105,8 @@ impl SharedWorkbook {
         evaluate: impl FnOnce(
             &mut EvaluationRun<'_>,
             EffectiveWorkbook<'_>,
-        ) -> Result<T, EvaluationFailure>,
-    ) -> Result<RetainedRun<T>, SharedRunFailure> {
+        ) -> Result<T, EvaluationError>,
+    ) -> Result<RetainedRun<T>, SharedRunError> {
         self.run_workbook_with_optional_memo_limits(
             configuration,
             budgets,
@@ -125,8 +127,8 @@ impl SharedWorkbook {
         evaluate: impl FnOnce(
             &mut EvaluationRun<'_>,
             EffectiveWorkbook<'_>,
-        ) -> Result<T, EvaluationFailure>,
-    ) -> Result<RetainedRun<T>, SharedRunFailure> {
+        ) -> Result<T, EvaluationError>,
+    ) -> Result<RetainedRun<T>, SharedRunError> {
         self.run_workbook_with_optional_memo_limits(
             configuration,
             budgets,
@@ -148,8 +150,8 @@ impl SharedWorkbook {
         evaluate: impl FnOnce(
             &mut EvaluationRun<'_>,
             EffectiveWorkbook<'_>,
-        ) -> Result<T, EvaluationFailure>,
-    ) -> Result<RetainedRun<T>, SharedRunFailure> {
+        ) -> Result<T, EvaluationError>,
+    ) -> Result<RetainedRun<T>, SharedRunError> {
         self.run_workbook_with_optional_memo_limits(
             configuration,
             budgets,
@@ -170,11 +172,11 @@ impl SharedWorkbook {
         evaluate: impl FnOnce(
             &mut EvaluationRun<'_>,
             EffectiveWorkbook<'_>,
-        ) -> Result<T, EvaluationFailure>,
-    ) -> Result<RetainedRun<T>, SharedRunFailure> {
+        ) -> Result<T, EvaluationError>,
+    ) -> Result<RetainedRun<T>, SharedRunError> {
         let source = &self.source;
         if !Arc::ptr_eq(&source.identity, &inputs.source) {
-            return Err(SharedRunFailure::ForeignInputs);
+            return Err(SharedRunError::ForeignInputs);
         }
         // Construction checked this exact pair once. Source fields are private,
         // all access is read-only, and neither handle can be replaced after that

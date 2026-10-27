@@ -3,7 +3,7 @@ use crate::eval::limits::EvaluationOutcome;
 
 /// Calculation outcome together with the exact registry identity and executed extension calls.
 /// An aborted outcome can retain a partial invocation trace.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct ExtensionEvaluation<T> {
     /// Completed result or operational abort with usage.
     pub outcome: EvaluationOutcome<T>,

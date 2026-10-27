@@ -55,8 +55,8 @@ fn numeric_sheet_references_translate_evaluate_and_round_trip() {
             .zip(formulas)
         {
             let cell = candidate.stored_cell("Results", at(address)).unwrap();
-            assert_eq!(cell.value, CellValue::Number(expected));
-            assert_eq!(cell.formula.as_deref(), Some(formula));
+            assert_eq!(cell.unwrap().value, CellValue::Number(expected));
+            assert_eq!(cell.unwrap().formula.as_deref(), Some(formula));
         }
     }
     reopened
@@ -67,7 +67,11 @@ fn numeric_sheet_references_translate_evaluate_and_round_trip() {
     reopened.recalculate().unwrap();
     for (address, expected) in [("B1", 13.), ("B2", 9.), ("C1", 1048.)] {
         assert_eq!(
-            reopened.stored_cell("Results", at(address)).unwrap().value,
+            reopened
+                .stored_cell("Results", at(address))
+                .unwrap()
+                .unwrap()
+                .value,
             CellValue::Number(expected)
         );
     }

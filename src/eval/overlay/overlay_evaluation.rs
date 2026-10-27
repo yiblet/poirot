@@ -5,7 +5,7 @@ use super::output;
 use super::overlay_error::OverlayError;
 use crate::eval::config::EvaluationContext;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::reuse::{Cache, Cached, Key, Reads};
 use crate::eval::session::CellEvaluator;
 use crate::model::{CellValue, Workbook, WorkbookChange};
@@ -21,9 +21,8 @@ pub struct OverlayEvaluation<'a> {
     pub(super) cache: &'a RefCell<Cache>,
     pub(super) completed: crate::eval::coordinates::CellSet,
     spill_resets: std::collections::BTreeSet<Key>,
-    failure: Option<EvaluationFailure>,
+    failure: Option<EvaluationError>,
     pub(super) retention: crate::eval::limits::MemoRetentionLimits,
-    materialization: crate::eval::materialization::FormulaCacheMaterializationPolicy,
 }
 
 impl<'a> OverlayEvaluation<'a> {
@@ -47,14 +46,14 @@ impl<'a> OverlayEvaluation<'a> {
         if retained.len() > context.retention.cells
             || retained.retained_bytes > context.retention.bytes
         {
-            return Err(EvaluationFailure::MemoRetentionLimit {
+            return Err(EvaluationError::MemoRetentionLimit {
                 limits: context.retention,
                 consumed: crate::eval::limits::MemoRetentionUsage {
                     cells: retained.len(),
                     bytes: retained.retained_bytes,
                 },
                 requested: Default::default(),
-                source: None,
+                target: None,
             }
             .into());
         }
@@ -69,12 +68,11 @@ impl<'a> OverlayEvaluation<'a> {
             spill_resets: Default::default(),
             failure: None,
             retention: context.retention,
-            materialization: overlay.source.policy.materialization,
         })
     }
 
     /// Evaluate one output and atomically retain its successful dependency batch.
-    pub fn cell(&mut self, target: EvaluationTarget) -> Result<CellValue, EvaluationFailure> {
+    pub fn cell(&mut self, target: EvaluationTarget) -> Result<CellValue, EvaluationError> {
         self.perform(|session| CellEvaluator::new(session).cell(target.sheet, target.address))
     }
 
@@ -83,13 +81,13 @@ impl<'a> OverlayEvaluation<'a> {
     pub fn outputs(
         &mut self,
         targets: &[EvaluationTarget],
-    ) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationFailure> {
+    ) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationError> {
         self.perform(|session| output::outputs(session, targets))
     }
 
     /// Evaluate all effective stored cells, plus any materialized spill children.
     /// Implicit blanks outside the sparse workbook are never expanded.
-    pub fn all(&mut self) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationFailure> {
+    pub fn all(&mut self) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationError> {
         self.perform(output::all)
     }
 
@@ -111,11 +109,11 @@ impl<'a> OverlayEvaluation<'a> {
     }
 
     /// Export completed results and spill cleanup as owned workbook cache changes.
-    pub fn result_changes(&self) -> Result<Vec<WorkbookChange>, EvaluationFailure> {
+    pub fn result_changes(&self) -> Result<Vec<WorkbookChange>, EvaluationError> {
         let cache = self
             .cache
             .try_borrow()
-            .map_err(|_| EvaluationFailure::StalePlan)?;
+            .map_err(|_| EvaluationError::StalePlan)?;
         let mut completed = self.completed.iter().copied().collect::<Vec<_>>();
         completed.sort_unstable();
         Ok(self
@@ -132,14 +130,13 @@ impl<'a> OverlayEvaluation<'a> {
                     key,
                     &entry.value,
                     entry.dependencies.spill,
-                    self.materialization,
                 )
             }))
             .collect())
     }
 
     /// Consume this evaluation and export its completed cache changes.
-    pub fn into_result_changes(self) -> Result<Vec<WorkbookChange>, EvaluationFailure> {
+    pub fn into_result_changes(self) -> Result<Vec<WorkbookChange>, EvaluationError> {
         self.result_changes()
     }
 
@@ -159,8 +156,8 @@ impl<'a> OverlayEvaluation<'a> {
 
     fn perform<T>(
         &mut self,
-        evaluate: impl FnOnce(&mut crate::eval::session::Session<'a>) -> Result<T, EvaluationFailure>,
-    ) -> Result<T, EvaluationFailure> {
+        evaluate: impl FnOnce(&mut crate::eval::session::Session<'a>) -> Result<T, EvaluationError>,
+    ) -> Result<T, EvaluationError> {
         if let Some(failure) = &self.failure {
             return Err(failure.clone());
         }
@@ -170,7 +167,7 @@ impl<'a> OverlayEvaluation<'a> {
             &mut self
                 .cache
                 .try_borrow_mut()
-                .map_err(|_| EvaluationFailure::StalePlan)?
+                .map_err(|_| EvaluationError::StalePlan)?
                 .lookup_prefixes,
         );
         let limit = self.session.state.runtime.budget.limits.materialized_values;
@@ -179,7 +176,7 @@ impl<'a> OverlayEvaluation<'a> {
             self.publish()?;
             self.cache
                 .try_borrow_mut()
-                .map_err(|_| EvaluationFailure::StalePlan)?
+                .map_err(|_| EvaluationError::StalePlan)?
                 .lookup_prefixes = std::mem::take(&mut self.session.state.runtime.lookup_prefixes);
             Ok(value)
         });
@@ -189,14 +186,14 @@ impl<'a> OverlayEvaluation<'a> {
         result
     }
 
-    fn publish(&mut self) -> Result<(), EvaluationFailure> {
+    fn publish(&mut self) -> Result<(), EvaluationError> {
         let publication = self.session.state.runtime.preparation.publication()?;
         let reads = self
             .session
             .reuse
             .overlay_reads
             .as_mut()
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         reads.flush();
         let mut fresh_results = std::mem::take(&mut reads.fresh_results);
         let mut completed = std::mem::take(&mut reads.completed);
@@ -234,9 +231,9 @@ impl<'a> OverlayEvaluation<'a> {
             let mut dependencies = if reads.validated.remove(&key) {
                 self.cache
                     .try_borrow()
-                    .map_err(|_| EvaluationFailure::StalePlan)?
+                    .map_err(|_| EvaluationError::StalePlan)?
                     .retained(key)
-                    .ok_or(EvaluationFailure::StalePlan)?
+                    .ok_or(EvaluationError::StalePlan)?
                     .dependencies
                     .clone()
             } else {
@@ -289,7 +286,7 @@ impl<'a> OverlayEvaluation<'a> {
         completed.extend(staged.iter().map(|(key, _)| *key));
         self.cache
             .try_borrow_mut()
-            .map_err(|_| EvaluationFailure::StalePlan)?
+            .map_err(|_| EvaluationError::StalePlan)?
             .commit(
                 staged,
                 self.retention,
@@ -318,7 +315,6 @@ pub(super) fn evaluated_change(
     key: Key,
     value: &CellValue,
     spill: crate::eval::reuse::SpillRole,
-    policy: crate::eval::materialization::FormulaCacheMaterializationPolicy,
 ) -> Option<WorkbookChange> {
     if let crate::eval::reuse::SpillRole::Child { anchor } = spill {
         let formula = effective.cell(key.0, anchor)?.formula.as_ref()?.clone();
@@ -327,8 +323,8 @@ pub(super) fn evaluated_change(
             address: key.1,
             anchor,
             expected_formula: formula,
-            // TODO(coercion-non-argument): [MEDIUM] Cache publication can replace a computed number with an error; storing the converted value as a live result would change subsequent evaluation.
-            value: policy.convert_stored_value(value.clone()),
+
+            value: value.clone(),
         });
     }
     if let crate::eval::reuse::SpillRole::Anchor { last } = spill {
@@ -337,8 +333,8 @@ pub(super) fn evaluated_change(
             anchor: key.1,
             last,
             expected_formula: effective.cell(key.0, key.1)?.formula.as_ref()?.clone(),
-            value: policy.convert_stored_value(value.clone()),
+            value: value.clone(),
         });
     }
-    result_change(effective.cell(key.0, key.1), key, value, policy)
+    result_change(effective.cell(key.0, key.1), key, value)
 }

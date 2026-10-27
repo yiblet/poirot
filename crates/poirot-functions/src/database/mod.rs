@@ -15,6 +15,8 @@
 #[cfg(test)]
 use crate::coercion::compatibility::coerce_java_number_text;
 use crate::scalar::{CellError, CellValue};
+mod database_error;
+pub use database_error::DatabaseError;
 mod aggregation;
 /// Finalization for records already selected by a host.
 pub use aggregation::aggregate_selected;
@@ -65,16 +67,6 @@ impl DatabaseFunction {
     }
 }
 
-/// Finalization contract, independent of record selection and numeric admission.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum FinalizationPolicy {
-    /// Preserve POI's zero-valued empty DAVERAGE result.
-    #[default]
-    PinnedPoi,
-    /// Return division by zero when DAVERAGE has no admitted numeric values.
-    ExcelDocumentation,
-}
-
 /// A rectangular, row-major area, including its header row. The adapter must
 /// reject scalar arguments before constructing this value.
 #[derive(Debug, Clone, Copy)]
@@ -105,22 +97,6 @@ impl<'a> Grid<'a> {
             .unwrap_or(&CellValue::Error(CellError::Value))
     }
 }
-/// Separate spreadsheet failures from unsupported criteria/projection behavior.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DatabaseError {
-    /// Catchable spreadsheet error produced by selection or aggregation.
-    Cell(CellError),
-    /// Formula-based criteria require an unsupported evaluation port.
-    FormulaCriteria,
-    /// Host cannot provide the required text interpretation.
-    UnsupportedTextProjection,
-}
-impl From<CellError> for DatabaseError {
-    fn from(value: CellError) -> Self {
-        Self::Cell(value)
-    }
-}
-
 /// Borrowed database selection retaining row/column short circuit and errors
 /// that occur only in visited criteria. Host adapters meter their own reads.
 #[derive(Debug, Clone, Copy)]
@@ -148,14 +124,7 @@ impl<'a> DatabasePlan<'a> {
     }
     /// Apply the prepared criteria and aggregate selected records.
     pub fn execute(&self) -> Result<CellValue, DatabaseError> {
-        self.execute_with_policy(FinalizationPolicy::PinnedPoi)
-    }
-    /// Aggregate with an explicit finalization contract; selection and admission stay unchanged.
-    pub fn execute_with_policy(
-        &self,
-        policy: FinalizationPolicy,
-    ) -> Result<CellValue, DatabaseError> {
-        aggregation::execute(self, policy)
+        aggregation::execute(self)
     }
 }
 

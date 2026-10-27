@@ -16,7 +16,7 @@ pub(in crate::xls) fn admit(
     budget: ResourceBudget,
 ) -> Result<(Vec<Record<'_>>, BiffPlan), PreflightError> {
     check(
-        "Workbook stream bytes",
+        crate::BiffResource::WorkbookStreamBytes,
         bytes.len() as u64,
         budget.max_stream_bytes as u64,
     )?;
@@ -220,7 +220,7 @@ mod tests {
         assert!(matches!(
             inspect_biff(&b, budget),
             Err(PreflightError::Resource {
-                resource: "SST continuation records",
+                resource: crate::BiffResource::SstContinuationRecords,
                 ..
             })
         ));
@@ -293,7 +293,9 @@ mod tests {
         b[512 + 9 * 4..516 + 9 * 4].copy_from_slice(&2u32.to_le_bytes());
         assert!(matches!(
             inspect_xls(&b, ResourceBudget::default()),
-            Err(PreflightError::Malformed("cyclic sector chain"))
+            Err(PreflightError::Malformed(
+                crate::BiffStructureError::CyclicSectorChain
+            ))
         ));
     }
 
@@ -303,7 +305,9 @@ mod tests {
         b.truncate(b.len() - 1);
         assert!(matches!(
             inspect_xls(&b, ResourceBudget::default()),
-            Err(PreflightError::Malformed("sector beyond input"))
+            Err(PreflightError::Malformed(
+                crate::BiffStructureError::SectorBeyondInput
+            ))
         ));
     }
 
@@ -318,7 +322,7 @@ mod tests {
                 ResourceBudget::default().max_stream_bytes(32 * 1024 * 1024)
             ),
             Err(PreflightError::Resource {
-                resource: "CFB stream bytes",
+                resource: crate::BiffResource::CfbStreamBytes,
                 ..
             })
         ));
@@ -388,7 +392,7 @@ mod tests {
         assert_eq!(
             inspect_biff(&stream, budget).unwrap_err(),
             PreflightError::Resource {
-                resource: "cell text bytes",
+                resource: crate::BiffResource::CellTextBytes,
                 requested: 24,
                 limit: 23,
             }

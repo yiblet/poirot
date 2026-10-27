@@ -32,7 +32,7 @@ impl<'s, 'a> ArrayOperators<'s, 'a> {
             crate::eval::spill::unsupported(
                 sheet,
                 at,
-                "array operator requires one bounded rectangular operand",
+                crate::eval::limits::EvaluationReasonError::ArrayOperatorRequiresOneBoundedRectangularOperand,
             )
         })?;
         RectangularTraversal::new(self.session).values(at, shape, |session, row, column| {
@@ -56,7 +56,7 @@ impl<'s, 'a> ArrayOperators<'s, 'a> {
             crate::eval::spill::unsupported(
                 sheet,
                 at,
-                "array operator requires single-sheet rectangular operands",
+                crate::eval::limits::EvaluationReasonError::ArrayOperatorRequiresSingleSheetRectangularOperands,
             )
         };
         let left_shape = Shape::inspect(&left).ok_or_else(unsupported)?;

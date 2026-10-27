@@ -223,8 +223,8 @@ fn native_exhaustion_and_unsupported_unicode_cannot_be_caught_by_iferror() {
                     Default::default()
                 ),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability { .. }
-                        | EvaluationFailure::Resource {
+                    failure: EvaluationError::UnsupportedCapability { .. }
+                        | EvaluationError::Resource {
                             kind: ResourceFailureKind::BackendGuard,
                             ..
                         },
@@ -252,7 +252,7 @@ fn native_exhaustion_and_unsupported_unicode_cannot_be_caught_by_iferror() {
             Default::default()
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability { .. },
+            failure: EvaluationError::UnsupportedCapability { .. },
             ..
         }
     ));
@@ -293,7 +293,7 @@ fn explicit_evaluation_budgets_remain_operational() {
                     budgets
                 ),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::Budget(_),
+                    failure: EvaluationError::Budget(_),
                     ..
                 }
             ),
@@ -301,34 +301,10 @@ fn explicit_evaluation_budgets_remain_operational() {
         );
     }
 }
-#[test]
-fn pinned_poi_profile_does_not_claim_modern_regex_support() {
-    for f in [
-        r#"REGEXTEST("x","x")"#,
-        r#"REGEXEXTRACT("x","x")"#,
-        r#"REGEXREPLACE("x","x","y")"#,
-    ] {
-        let mut b = book();
-        b.sheet_mut(0)
-            .unwrap()
-            .set_formula(at("A1").address, f)
-            .unwrap();
-        let mut direct = Evaluation::with_workbook(&b)
-            .with_policy(EvaluationPolicy {
-                builtin: BuiltinSemanticsPolicy::PinnedPoi,
-                ..Default::default()
-            })
-            .build(Default::default())
-            .unwrap();
-        assert_eq!(
-            direct.cell(at("A1")).unwrap(),
-            CellValue::Error(CellError::Name)
-        );
-    }
-}
+
 #[test]
 fn catalog_preserves_typed_results_and_possible_numeric_coercion_effects() {
-    use poirot::eval::functions::registry::{DependencyPolicy, ResultRule, descriptors_for_policy};
+    use poirot::eval::functions::registry::{DependencyPolicy, FUNCTION_DESCRIPTORS, ResultRule};
     use poirot::model::{FormulaType, ScalarKinds};
     let scalar = FormulaType::scalar(ScalarKinds::TEXT);
     for (name, rule) in [
@@ -336,7 +312,8 @@ fn catalog_preserves_typed_results_and_possible_numeric_coercion_effects() {
         ("REGEXREPLACE", ResultRule::ElementwiseText),
         ("REGEXEXTRACT", ResultRule::RegexExtract),
     ] {
-        let descriptor = descriptors_for_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
+        let descriptor = FUNCTION_DESCRIPTORS
+            .iter()
             .find(|d| d.name == name)
             .unwrap();
         assert_eq!(descriptor.result, rule);

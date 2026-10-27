@@ -6,9 +6,9 @@ use poirot::Workbook;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Energy")?;
-    sheet.set_value("A1".parse()?, 12.)?;
-    sheet.set_value("B1".parse()?, 25.)?;
-    sheet.set_formula("C1".parse()?, "A1*B1")?;
+    sheet.set_value("A1", 12)?;
+    sheet.set_value("B1", 25)?;
+    sheet.set_formula("C1", "A1*B1")?;
 
     let mut evaluation = book.evaluation().build()?;
     let hours = evaluation.target("Energy!A1")?;

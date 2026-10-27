@@ -1,15 +1,16 @@
 use crate::lookup::{
-    BudgetRequest, Context, Error, Failure, OperationalFailure, Scalar, Unsupported, Value, Work,
-    Workbook,
+    BudgetRequest, Context, LookupError, LookupOperationalError, LookupUnsupportedError,
+    LookupValueError, Scalar, Value, Work, Workbook,
 };
 /// Ask the host to admit categorized work before performing it.
-pub(super) fn charge(w: &mut impl Workbook, work: Work, units: usize) -> Result<(), Failure> {
+pub(super) fn charge(w: &mut impl Workbook, work: Work, units: usize) -> Result<(), LookupError> {
     w.preflight(BudgetRequest { work, units })
 }
 /// Multiply resource dimensions without allowing size overflow.
-pub(super) fn checked_product(a: usize, b: usize) -> Result<usize, Failure> {
-    a.checked_mul(b)
-        .ok_or(Failure::Operational(OperationalFailure::ResourceOverflow))
+pub(super) fn checked_product(a: usize, b: usize) -> Result<usize, LookupError> {
+    a.checked_mul(b).ok_or(LookupError::Operational(
+        LookupOperationalError::ResourceOverflow,
+    ))
 }
 /// Argument access shared by eager library calls and deferred host-backed calls.
 /// The validated slot count allows lookup algorithms to request only operands they consume.
@@ -34,18 +35,18 @@ impl Arguments<'_> {
         index: usize,
         c: Context,
         w: &mut impl Workbook,
-    ) -> Result<Value, Failure> {
+    ) -> Result<Value, LookupError> {
         if index >= self.count {
-            return Err(Error::Value.into());
+            return Err(LookupValueError::Value.into());
         }
         charge(w, Work::InputMaterialization, 1)?;
         if let Some(values) = self.ready {
-            let value = values.get(index).ok_or(Error::Value)?;
+            let value = values.get(index).ok_or(LookupValueError::Value)?;
             preflight_value(value, w, Work::InputMaterialization)?;
             Ok(value.clone())
         } else {
             match w.argument(index, c) {
-                Err(Failure::Spreadsheet(e)) => Ok(Value::Scalar(Scalar::Error(e))),
+                Err(LookupError::Spreadsheet(e)) => Ok(Value::Scalar(Scalar::Error(e))),
                 other => other,
             }
         }
@@ -56,7 +57,7 @@ pub(super) fn preflight_value(
     value: &Value,
     w: &mut impl Workbook,
     work: Work,
-) -> Result<(), Failure> {
+) -> Result<(), LookupError> {
     match value {
         Value::Scalar(Scalar::Text(s)) | Value::SelectedScalar(Scalar::Text(s), _) => {
             charge(w, work, s.len())?
@@ -104,7 +105,7 @@ pub(super) fn scalar(
     value: &Value,
     context: Context,
     workbook: &mut impl Workbook,
-) -> Result<Scalar, Failure> {
+) -> Result<Scalar, LookupError> {
     preflight_value(value, workbook, Work::InputMaterialization)?;
     let result = match value {
         Value::Scalar(v) | Value::SelectedScalar(v, _) => v.clone(),
@@ -114,13 +115,17 @@ pub(super) fn scalar(
         }
         Value::SignedReference(r) => {
             if !r.valid() {
-                return Err(Error::Ref.into());
+                return Err(LookupValueError::Ref.into());
             }
             let (row, col) = r.scalar_coordinates(context)?;
             r.read(row, col, workbook)?
         }
-        Value::Array(_) => return Err(Failure::Unsupported(Unsupported::ScalarArrayIntersection)),
-        Value::Union(_) | Value::SignedUnion(_) => return Err(Error::Value.into()),
+        Value::Array(_) => {
+            return Err(LookupError::Unsupported(
+                LookupUnsupportedError::ScalarArrayIntersection,
+            ));
+        }
+        Value::Union(_) | Value::SignedUnion(_) => return Err(LookupValueError::Value.into()),
     };
     match result {
         Scalar::Error(e) => Err(e.into()),
@@ -128,7 +133,7 @@ pub(super) fn scalar(
     }
 }
 /// Coerce an admitted operand to a lookup numeric value.
-pub(super) fn coerce_lookup_number(v: Scalar, w: &mut impl Workbook) -> Result<f64, Failure> {
+pub(super) fn coerce_lookup_number(v: Scalar, w: &mut impl Workbook) -> Result<f64, LookupError> {
     crate::coercion::lookup::coerce_lookup_number(v, |text| w.coerce_numeric_text(text))
 }
 /// Apply the family's integer conversion and range checks.
@@ -136,12 +141,12 @@ pub(super) fn coerce_lookup_integer(
     v: Scalar,
     floor: bool,
     w: &mut impl Workbook,
-) -> Result<i32, Failure> {
+) -> Result<i32, LookupError> {
     let number = coerce_lookup_number(v, w)?;
     crate::coercion::lookup::coerce_lookup_integer(number, floor).map_err(Into::into)
 }
 /// Convert an admitted operand to lookup text.
-pub(super) fn coerce_lookup_text(v: &Scalar, w: &mut impl Workbook) -> Result<String, Failure> {
+pub(super) fn coerce_lookup_text(v: &Scalar, w: &mut impl Workbook) -> Result<String, LookupError> {
     if let Scalar::Text(text) = v {
         charge(w, Work::SearchText, text.len())?;
     }
@@ -151,7 +156,7 @@ pub(super) fn coerce_lookup_text(v: &Scalar, w: &mut impl Workbook) -> Result<St
     })
 }
 /// Coerce an admitted operand into a logical option.
-pub(super) fn coerce_lookup_boolean(v: Scalar) -> Result<bool, Failure> {
+pub(super) fn coerce_lookup_boolean(v: Scalar) -> Result<bool, LookupError> {
     crate::coercion::lookup::coerce_lookup_boolean(v).map_err(Into::into)
 }
 /// Test the omitted-argument channel without collapsing it to blank.

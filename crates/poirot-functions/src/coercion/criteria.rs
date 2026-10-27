@@ -1,22 +1,6 @@
 //! Criteria and SUBTOTAL value admission.
-/// Spreadsheet error vocabulary used by criteria matching and aggregation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Error {
-    /// Empty reference intersection (`#NULL!`).
-    Null,
-    /// Zero denominator (`#DIV/0!`).
-    DivZero,
-    /// Invalid criterion or operand (`#VALUE!`).
-    Value,
-    /// Invalid reference (`#REF!`).
-    Ref,
-    /// Unresolved name (`#NAME?`).
-    Name,
-    /// Invalid numeric result (`#NUM!`).
-    Num,
-    /// Unavailable value (`#N/A`).
-    Na,
-}
+pub use crate::coercion::CriteriaError;
+
 /// Borrowed cell projection used to match criteria without workbook ownership.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Cell {
@@ -29,7 +13,7 @@ pub enum Cell {
     /// Boolean criterion candidate.
     Bool(bool),
     /// Spreadsheet error retained for family-specific handling.
-    Error(Error),
+    Error(CriteriaError),
 }
 
 /// Admit a supplied Excel criterion after scalar selection and omission handling.
@@ -84,12 +68,13 @@ pub fn coerce_subtotal_member(
     value: &Cell,
     referenced: bool,
     kind: i32,
-) -> Result<Option<f64>, Error> {
+) -> Result<Option<f64>, CriteriaError> {
     Ok(match value {
         Cell::Number(n) => Some(*n),
         Cell::Bool(b) if !referenced && kind != 2 && kind != 3 => Some(if *b { 1.0 } else { 0.0 }),
         Cell::Text(s) if !referenced && kind != 2 && kind != 3 => Some(
-            crate::coercion::compatibility::coerce_criteria_number_text(s).ok_or(Error::Value)?,
+            crate::coercion::compatibility::coerce_criteria_number_text(s)
+                .ok_or(CriteriaError::Value)?,
         ),
         Cell::Error(e) if kind != 2 && kind != 3 => return Err(*e),
         _ => None,

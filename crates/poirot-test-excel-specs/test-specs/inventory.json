@@ -3,10 +3,10 @@
   "scope": {
     "title": "Coverage-first Excel workbook/runtime obligation inventory",
     "created_on": "2026-10-13",
-    "registry_path": "crates/poirot-eval/src/registry/catalog.rs",
+    "registry_path": "src/eval/functions/registry/catalog.rs",
     "registry_names_are_not_excel_oracles": true,
     "source_policy": "Catalogs establish provisional scope. Applicable laws use reviewed individual docs; potential unreviewed per-function dimensions are requires_research, not researched contracts.",
-    "execution_policy": "Implementation scope records opt-in engine policies separately from the default registry. Authoring regeneration does not execute the evaluator; live runtime results are reported separately.",
+    "execution_policy": "registered_functions records current builtin availability independently of the researched feature obligations. Authoring regeneration does not execute the evaluator; live results are reported separately.",
     "evidence_policy": "Case linkages distinguish documented_example, documented_derivation, excel_observation, unresolved; inventory contains no observed Excel or poirot passing claims.",
     "coverage_status": "Linked assertions and missing obligations are reported in coverage.json. Historical summary_at_creation is preserved; current scoped capabilities are metadata, not a runtime verification claim.",
     "summary_at_creation": {
@@ -572,9 +572,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Fourth operand selects A1 or absolute/relative R1C1 axes.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -1134,9 +1131,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Every nonzero mode rounds negative values away from zero.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -2695,9 +2689,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Shared documented RANK.EQ order, ties, absent-number and validated array/reference sample handling.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -3105,9 +3096,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Positional numeric-pair filtering and #DIV/0 for fewer than two valid pairs.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -3815,9 +3803,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Cumulative selector chooses the shared CDF or PDF kernel, including negative variates.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -4375,9 +4360,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Omitted or explicitly missing form defaults to classic zero; boolean TRUE selects classic and FALSE simplified style.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -4685,9 +4667,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Four-to-six-argument signature with future value, timing and zero-rate interest handling.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -4745,9 +4724,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Four-to-six-argument signature with future value, timing and zero-rate principal handling.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -5255,9 +5231,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Strict binary digit validation in the documented input domain.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -5465,9 +5438,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Omitted second operand defaults to numeric zero.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -5575,9 +5545,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Numeric complex imaginary coefficient result.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -5635,9 +5602,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Numeric complex real coefficient result.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -5897,9 +5861,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Typed numbers, exact text/UTF-16, booleans and cell errors retain shape; reference blanks become zero.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.",
@@ -6508,9 +6469,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Reference aggregation excludes nested parsed SUBTOTAL formulas; explicit sparse filtered-row flags apply to all codes and manually hidden flags to codes 101..111, with formula/visibility dependency guards.",
         "limitations": [
           "Current file adapters do not retain row visibility; callers must declare relevant visibility through Worksheet::set_row_visibility. Default pinned reference refusal is unchanged."
@@ -7168,9 +7126,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Documented negative-year #NUM and 1900 fictitious leap-slot normalization.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -7377,9 +7332,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Numeric argument subtraction retains fractional serial differences.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -8087,9 +8039,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "ISO return-type 21 handles previous and next week-year boundaries.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -8148,9 +8097,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Signed fractional day counts truncate toward zero.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -12958,9 +12904,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Numeric first-character result in the admitted text policies.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -13171,9 +13114,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "Default evaluation"
-        ],
         "supported": "Explicit @ parses as a dedicated implicit-intersection operator: scalar identity, array top-left, and unique horizontal/vertical reference intersection. Pinned SINGLE remains distinct.",
         "limitations": [
           "BIFF8 output cannot encode @ and explicitly rejects it. General array broadcasting and dynamic # reference syntax are not provided by this operator."
@@ -13459,9 +13399,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "Poi7321209OpenJdk21Unicode15"
-        ],
         "supported": "Lossless UTF-16 indexing and storage, including LEN/MID/LEFT/RIGHT/REPLACE results containing isolated surrogates.",
         "limitations": [
           "The Version 1 fixture profile uses the explicit POI UTF-16 proxy, not an observed Excel identity. Unicode scalar consumers may refuse isolated surrogates; casing remains source specific."
@@ -13500,9 +13437,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelCompatibilityV2Documented"
-        ],
         "supported": "Lossless LEN/MID/LEFT/RIGHT/REPLACE count each adjacent valid surrogate pair once; isolated surrogates, combining marks and selectors remain separate units.",
         "limitations": [
           "FIND/SEARCH retain pinned UTF-16 indexing. Case conversion uses the admitted OpenJDK 21 Unicode 15 ROOT table and contextual limits; no general Excel casing parity. The older unverified refusal policy remains unchanged."
@@ -13726,10 +13660,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "DynamicSpill",
-          "ExcelDocumentation for typed TRANSPOSE"
-        ],
         "supported": "Typed static rectangular arrays publish anchor and owned neighboring cells in the read-only source-cell runtime; full footprint assertions read the actual retained memo.",
         "limitations": [
           "Default final results retain scalar intersection. General broadcasting/CSE, unbounded producers, incremental execution, mutable cache materialization and spill ownership export are unsupported."
@@ -13772,10 +13702,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "DynamicSpill",
-          "ExcelDocumentation for typed TRANSPOSE"
-        ],
         "supported": "Read-only source-cell runtime publication of typed rectangular static producers: array constants, TRANSPOSE, MMULT, MINVERSE, FREQUENCY and bounded IF/IFERROR/CHOOSE branches; ownership, blocking, child discovery and fresh-run edit invalidation.",
         "limitations": [
           "General broadcasting, CSE and # spill-reference syntax are absent. Names, extension arrays, TREND and computed-reference producers without bounded static geometry refuse. Incremental execution, mutable model cache recalculation and spill ownership export are unsupported; ad hoc array probes and external scalar cache readers refuse."
@@ -13987,7 +13913,7 @@
       "obligations": [
         {
           "id": "function.PERCENTILE.INC.valid",
-          "behavior": "Establish documented valid PERCENTILE.INC semantics under the explicit ExcelDocumentation execution policy.",
+          "behavior": "Establish documented valid PERCENTILE.INC semantics under the documented execution contract.",
           "applicability": "applicable",
           "reason": "Individual Microsoft function documentation and linked authored fixtures establish the bounded valid contract. Profile-only engine support is separate from default registration and runtime verification."
         },
@@ -13999,9 +13925,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Inclusive percentile endpoints and interpolation through the existing budgeted typed percentile kernel.",
         "limitations": [
           "Profile-conditioned unresolved alias resolution retains the existing percentile kernel/coercion limits; no exhaustive Excel parity claim.",
@@ -14024,7 +13947,7 @@
       "obligations": [
         {
           "id": "function.QUARTILE.INC.valid",
-          "behavior": "Establish documented valid QUARTILE.INC semantics under the explicit ExcelDocumentation execution policy.",
+          "behavior": "Establish documented valid QUARTILE.INC semantics under the documented execution contract.",
           "applicability": "applicable",
           "reason": "Individual Microsoft function documentation and linked authored fixtures establish the bounded valid contract. Profile-only engine support is separate from default registration and runtime verification."
         },
@@ -14036,9 +13959,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Typed quartile selector truncation into 0..4 and inclusive percentile calculation through the shared budgeted host.",
         "limitations": [
           "Only the documented inclusive form is added; general array broadcasting and exhaustive coercion parity are outside scope.",
@@ -14061,15 +13981,12 @@
       "obligations": [
         {
           "id": "function.RANK.EQ.valid",
-          "behavior": "Establish documented valid RANK.EQ semantics under the explicit ExcelDocumentation execution policy.",
+          "behavior": "Establish documented valid RANK.EQ semantics under the documented execution contract.",
           "applicability": "applicable",
           "reason": "Individual Microsoft function documentation and linked authored fixtures establish the bounded valid contract. Profile-only engine support is separate from default registration and runtime verification."
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Typed reference or validated rectangular array sample ranking, shared tie ranks, any nonzero ascending order, and #N/A for absent numeric members.",
         "limitations": [
           "Scalar or missing list operands are invalid; no general function broadcasting or exhaustive coercion parity.",
@@ -14144,13 +14061,9 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "PinnedPoi",
-          "ExcelDocumentation"
-        ],
         "supported": "Unsigned radix 2..36 conversion with documented BASE number/padding bounds and DECIMAL text length/finite-result limits; scalar origins retained until consumer admission.",
         "limitations": [
-          "Newly supported functions use one documented contract under both policies. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
+          "Newly supported functions use one documented contract during evaluation. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
         ]
       }
     },
@@ -14203,13 +14116,9 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "PinnedPoi",
-          "ExcelDocumentation"
-        ],
         "supported": "Unsigned radix 2..36 conversion with documented BASE number/padding bounds and DECIMAL text length/finite-result limits; scalar origins retained until consumer admission.",
         "limitations": [
-          "Newly supported functions use one documented contract under both policies. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
+          "Newly supported functions use one documented contract during evaluation. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
         ]
       }
     },
@@ -14262,10 +14171,6 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "PinnedPoi",
-          "ExcelDocumentation"
-        ],
         "supported": "Bounded case-insensitive Roman text decoding, empty text, ASCII outer spaces and leading minus.",
         "limitations": [
           "Undocumented noncanonical spellings use adjacent-pair arithmetic; native Excel parity is unverified. Calc rejects documented signs, spaces and values above 3999."
@@ -14321,13 +14226,9 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "PinnedPoi",
-          "ExcelDocumentation"
-        ],
         "supported": "Nonnegative operands truncated to n>=k; combinations with replacement use bounded exact integer binomial arithmetic before binary64 rounding.",
         "limitations": [
-          "One documented contract under both policies. Zero-zero, blank, omission and scalar coercion are independently observed in Calc; native Excel unavailable. Calc uses VALUE for domain errors where Microsoft documents NUM."
+          "One documented contract during evaluation. Zero-zero, blank, omission and scalar coercion are independently observed in Calc; native Excel unavailable. Calc uses VALUE for domain errors where Microsoft documents NUM."
         ]
       }
     },
@@ -14380,15 +14281,490 @@
         }
       ],
       "implementation_scope": {
-        "policies": [
-          "PinnedPoi",
-          "ExcelDocumentation"
-        ],
         "supported": "One explicit direct term-wise power-series contract; contextual scalar numeric text and exact numeric-or-blank collection coefficients, retaining row-major exponent positions.",
         "limitations": [
           "Native Excel boundary behavior is unverified. Calc differs for zero bases, logical and text coefficients, and error mapping. See [the SERIESSUM contract](../../poirot-functions-math/docs/seriessum.md)."
         ]
       }
     }
+  ],
+  "registered_functions": [
+    "ABS",
+    "ACCRINT",
+    "ACCRINTM",
+    "ACOS",
+    "ACOSH",
+    "ACOT",
+    "ACOTH",
+    "ADDRESS",
+    "AMORDEGRC",
+    "AMORLINC",
+    "ANCHORARRAY",
+    "AND",
+    "ARABIC",
+    "AREAS",
+    "ARRAYTOTEXT",
+    "ASIN",
+    "ASINH",
+    "ATAN",
+    "ATAN2",
+    "ATANH",
+    "AVEDEV",
+    "AVERAGE",
+    "AVERAGEA",
+    "AVERAGEIF",
+    "AVERAGEIFS",
+    "BASE",
+    "BESSELI",
+    "BESSELJ",
+    "BESSELK",
+    "BESSELY",
+    "BETA.DIST",
+    "BETA.INV",
+    "BETADIST",
+    "BETAINV",
+    "BIN2DEC",
+    "BIN2HEX",
+    "BIN2OCT",
+    "BINOM.DIST",
+    "BINOM.DIST.RANGE",
+    "BINOM.INV",
+    "BINOMDIST",
+    "BITAND",
+    "BITLSHIFT",
+    "BITOR",
+    "BITRSHIFT",
+    "BITXOR",
+    "CEILING",
+    "CEILING.MATH",
+    "CEILING.PRECISE",
+    "CHAR",
+    "CHIDIST",
+    "CHIINV",
+    "CHISQ.DIST",
+    "CHISQ.DIST.RT",
+    "CHISQ.INV",
+    "CHISQ.INV.RT",
+    "CHISQ.TEST",
+    "CHITEST",
+    "CHOOSE",
+    "CHOOSECOLS",
+    "CHOOSEROWS",
+    "CLEAN",
+    "CODE",
+    "COLUMN",
+    "COLUMNS",
+    "COMBIN",
+    "COMBINA",
+    "COMPLEX",
+    "CONCAT",
+    "CONCATENATE",
+    "CONFIDENCE",
+    "CONFIDENCE.NORM",
+    "CONFIDENCE.T",
+    "CONVERT",
+    "CORREL",
+    "COS",
+    "COSH",
+    "COT",
+    "COTH",
+    "COUNT",
+    "COUNTA",
+    "COUNTBLANK",
+    "COUNTIF",
+    "COUNTIFS",
+    "COUPDAYBS",
+    "COUPDAYS",
+    "COUPDAYSNC",
+    "COUPNCD",
+    "COUPNUM",
+    "COUPPCD",
+    "COVAR",
+    "COVARIANCE.P",
+    "COVARIANCE.S",
+    "CRITBINOM",
+    "CSC",
+    "CSCH",
+    "CUMIPMT",
+    "CUMPRINC",
+    "DATE",
+    "DATEDIF",
+    "DATEVALUE",
+    "DAVERAGE",
+    "DAY",
+    "DAYS",
+    "DAYS360",
+    "DB",
+    "DCOUNT",
+    "DCOUNTA",
+    "DDB",
+    "DEC2BIN",
+    "DEC2HEX",
+    "DEC2OCT",
+    "DECIMAL",
+    "DEGREES",
+    "DELTA",
+    "DEVSQ",
+    "DGET",
+    "DISC",
+    "DMAX",
+    "DMIN",
+    "DOLLAR",
+    "DOLLARDE",
+    "DOLLARFR",
+    "DPRODUCT",
+    "DROP",
+    "DSTDEV",
+    "DSTDEVP",
+    "DSUM",
+    "DURATION",
+    "DVAR",
+    "DVARP",
+    "EDATE",
+    "EFFECT",
+    "EOMONTH",
+    "ERF",
+    "ERF.PRECISE",
+    "ERFC",
+    "ERFC.PRECISE",
+    "ERROR.TYPE",
+    "EUROCONVERT",
+    "EVEN",
+    "EXACT",
+    "EXP",
+    "EXPAND",
+    "EXPON.DIST",
+    "EXPONDIST",
+    "F.DIST",
+    "F.DIST.RT",
+    "F.INV",
+    "F.INV.RT",
+    "F.TEST",
+    "FACT",
+    "FACTDOUBLE",
+    "FALSE",
+    "FDIST",
+    "FILTER",
+    "FIND",
+    "FINV",
+    "FISHER",
+    "FISHERINV",
+    "FIXED",
+    "FLOOR",
+    "FLOOR.MATH",
+    "FLOOR.PRECISE",
+    "FORECAST",
+    "FORECAST.ETS",
+    "FORECAST.ETS.CONFINT",
+    "FORECAST.ETS.SEASONALITY",
+    "FORECAST.ETS.STAT",
+    "FORECAST.LINEAR",
+    "FREQUENCY",
+    "FTEST",
+    "FV",
+    "FVSCHEDULE",
+    "GAMMA",
+    "GAMMA.DIST",
+    "GAMMA.INV",
+    "GAMMADIST",
+    "GAMMAINV",
+    "GAMMALN",
+    "GAMMALN.PRECISE",
+    "GAUSS",
+    "GCD",
+    "GEOMEAN",
+    "GESTEP",
+    "GROUPBY",
+    "GROWTH",
+    "HARMEAN",
+    "HEX2BIN",
+    "HEX2DEC",
+    "HEX2OCT",
+    "HLOOKUP",
+    "HOUR",
+    "HSTACK",
+    "HYPERLINK",
+    "HYPGEOM.DIST",
+    "HYPGEOMDIST",
+    "IF",
+    "IFERROR",
+    "IFNA",
+    "IFS",
+    "IMABS",
+    "IMAGINARY",
+    "IMARGUMENT",
+    "IMCONJUGATE",
+    "IMCOS",
+    "IMCOSH",
+    "IMCOT",
+    "IMCSC",
+    "IMCSCH",
+    "IMDIV",
+    "IMEXP",
+    "IMLN",
+    "IMLOG10",
+    "IMLOG2",
+    "IMPOWER",
+    "IMPRODUCT",
+    "IMREAL",
+    "IMSEC",
+    "IMSECH",
+    "IMSIN",
+    "IMSINH",
+    "IMSQRT",
+    "IMSUB",
+    "IMSUM",
+    "IMTAN",
+    "INDEX",
+    "INDIRECT",
+    "INT",
+    "INTERCEPT",
+    "INTRATE",
+    "IPMT",
+    "IRR",
+    "ISBLANK",
+    "ISERR",
+    "ISERROR",
+    "ISEVEN",
+    "ISLOGICAL",
+    "ISNA",
+    "ISNONTEXT",
+    "ISNUMBER",
+    "ISO.CEILING",
+    "ISODD",
+    "ISOWEEKNUM",
+    "ISPMT",
+    "ISREF",
+    "ISTEXT",
+    "KURT",
+    "LARGE",
+    "LCM",
+    "LEFT",
+    "LEN",
+    "LINEST",
+    "LN",
+    "LOG",
+    "LOG10",
+    "LOGEST",
+    "LOGINV",
+    "LOGNORM.DIST",
+    "LOGNORM.INV",
+    "LOGNORMDIST",
+    "LOOKUP",
+    "LOWER",
+    "MATCH",
+    "MAX",
+    "MAXA",
+    "MAXIFS",
+    "MDETERM",
+    "MDURATION",
+    "MEDIAN",
+    "MID",
+    "MIN",
+    "MINA",
+    "MINIFS",
+    "MINUTE",
+    "MINVERSE",
+    "MIRR",
+    "MMULT",
+    "MOD",
+    "MODE",
+    "MODE.MULT",
+    "MODE.SNGL",
+    "MONTH",
+    "MROUND",
+    "MULTINOMIAL",
+    "MUNIT",
+    "N",
+    "NA",
+    "NEGBINOM.DIST",
+    "NEGBINOMDIST",
+    "NETWORKDAYS",
+    "NETWORKDAYS.INTL",
+    "NOMINAL",
+    "NORM.DIST",
+    "NORM.INV",
+    "NORM.S.DIST",
+    "NORM.S.INV",
+    "NORMDIST",
+    "NORMINV",
+    "NORMSDIST",
+    "NORMSINV",
+    "NOT",
+    "NOW",
+    "NPER",
+    "NPV",
+    "NUMBERVALUE",
+    "OCT2BIN",
+    "OCT2DEC",
+    "OCT2HEX",
+    "ODD",
+    "ODDFPRICE",
+    "ODDFYIELD",
+    "ODDLPRICE",
+    "ODDLYIELD",
+    "OFFSET",
+    "OR",
+    "PDURATION",
+    "PEARSON",
+    "PERCENTILE",
+    "PERCENTILE.EXC",
+    "PERCENTILE.INC",
+    "PERCENTOF",
+    "PERCENTRANK",
+    "PERCENTRANK.EXC",
+    "PERCENTRANK.INC",
+    "PERMUT",
+    "PERMUTATIONA",
+    "PHI",
+    "PI",
+    "PMT",
+    "POISSON",
+    "POISSON.DIST",
+    "POWER",
+    "PPMT",
+    "PRICE",
+    "PRICEDISC",
+    "PRICEMAT",
+    "PROB",
+    "PRODUCT",
+    "PROPER",
+    "PV",
+    "QUARTILE",
+    "QUARTILE.EXC",
+    "QUARTILE.INC",
+    "QUOTIENT",
+    "RADIANS",
+    "RAND",
+    "RANDARRAY",
+    "RANDBETWEEN",
+    "RANK",
+    "RANK.AVG",
+    "RANK.EQ",
+    "RATE",
+    "RECEIVED",
+    "REGEXEXTRACT",
+    "REGEXREPLACE",
+    "REGEXTEST",
+    "REPLACE",
+    "REPT",
+    "RIGHT",
+    "ROMAN",
+    "ROUND",
+    "ROUNDDOWN",
+    "ROUNDUP",
+    "ROW",
+    "ROWS",
+    "RRI",
+    "RSQ",
+    "SEARCH",
+    "SEC",
+    "SECH",
+    "SECOND",
+    "SEQUENCE",
+    "SERIESSUM",
+    "SHEET",
+    "SIGN",
+    "SIN",
+    "SINGLE",
+    "SINH",
+    "SKEW",
+    "SKEW.P",
+    "SLN",
+    "SLOPE",
+    "SMALL",
+    "SORT",
+    "SORTBY",
+    "SQRT",
+    "SQRTPI",
+    "STANDARDIZE",
+    "STDEV",
+    "STDEV.P",
+    "STDEV.S",
+    "STDEVA",
+    "STDEVP",
+    "STDEVPA",
+    "STEYX",
+    "SUBSTITUTE",
+    "SUBTOTAL",
+    "SUM",
+    "SUMIF",
+    "SUMIFS",
+    "SUMPRODUCT",
+    "SUMSQ",
+    "SUMX2MY2",
+    "SUMX2PY2",
+    "SUMXMY2",
+    "SWITCH",
+    "SYD",
+    "T",
+    "T.DIST",
+    "T.DIST.2T",
+    "T.DIST.RT",
+    "T.INV",
+    "T.INV.2T",
+    "T.TEST",
+    "TAKE",
+    "TAN",
+    "TANH",
+    "TBILLEQ",
+    "TBILLPRICE",
+    "TBILLYIELD",
+    "TDIST",
+    "TEXT",
+    "TEXTAFTER",
+    "TEXTBEFORE",
+    "TEXTJOIN",
+    "TEXTSPLIT",
+    "TIME",
+    "TIMEVALUE",
+    "TINV",
+    "TOCOL",
+    "TODAY",
+    "TOROW",
+    "TRANSPOSE",
+    "TREND",
+    "TRIM",
+    "TRIMMEAN",
+    "TRIMRANGE",
+    "TRUE",
+    "TRUNC",
+    "TTEST",
+    "TYPE",
+    "UNICHAR",
+    "UNICODE",
+    "UNIQUE",
+    "UPPER",
+    "VALUE",
+    "VALUETOTEXT",
+    "VAR",
+    "VAR.P",
+    "VAR.S",
+    "VARA",
+    "VARP",
+    "VARPA",
+    "VDB",
+    "VLOOKUP",
+    "VSTACK",
+    "WEEKDAY",
+    "WEEKNUM",
+    "WEIBULL",
+    "WEIBULL.DIST",
+    "WORKDAY",
+    "WORKDAY.INTL",
+    "WRAPCOLS",
+    "WRAPROWS",
+    "XIRR",
+    "XLOOKUP",
+    "XMATCH",
+    "XNPV",
+    "XOR",
+    "YEAR",
+    "YEARFRAC",
+    "YIELD",
+    "YIELDDISC",
+    "YIELDMAT",
+    "Z.TEST",
+    "ZTEST"
   ]
 }

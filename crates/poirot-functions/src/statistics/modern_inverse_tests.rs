@@ -92,13 +92,13 @@ fn numerical_domains_and_operational_channels() {
     assert_eq!(student_t(1., 1., true, meter), Ok(0.));
     assert_eq!(
         confidence(0.5, 1., 1., ConfidenceKind::Student, meter),
-        Err(Failure::Spreadsheet(CellError::Div0))
+        Err(DistributionError::Spreadsheet(CellError::Div0))
     );
     assert_eq!(gamma(0., 1., 2., Tail::Lower, meter), Ok(0.));
     assert_eq!(gamma(1., 1., 2., Tail::Lower, meter), Err(num()));
     assert_eq!(
         beta(0.5, 1e13, 1., 0., 1., meter),
-        Err(Failure::ComputationalLimit)
+        Err(DistributionError::ComputationalLimit)
     );
     for allowed in [0, 3, 30] {
         let mut used = 0;
@@ -110,7 +110,7 @@ fn numerical_domains_and_operational_channels() {
                 Ok(())
             }
         });
-        assert_eq!(result, Err(Failure::Operational("budget")));
+        assert_eq!(result, Err(DistributionError::Operational("budget")));
     }
 }
 #[test]
@@ -149,7 +149,7 @@ fn retained_logs_recover_subnormal_factors_before_scaling() {
     assert!((c / expected - 1.).abs() < 5e-13, "{c:e} != {expected:e}");
     assert!(matches!(
         beta_point_bounded(0.3, 2., 3., 0, meter),
-        Err(Failure::NonConvergence)
+        Err(DistributionError::NonConvergence)
     ));
     assert_eq!(gamma(f64::NAN, 1., 1., Tail::Lower, meter), Err(num()));
 }

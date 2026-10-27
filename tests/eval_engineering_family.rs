@@ -214,8 +214,7 @@ fn modern_formula(
         sheet,
         at,
         source,
-        &poirot::eval::RunConfiguration::from(context)
-            .with_builtin_policy(poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation),
+        &poirot::eval::RunConfiguration::from(context),
         budgets,
     )
 }

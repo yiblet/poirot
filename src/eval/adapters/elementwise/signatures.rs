@@ -6,7 +6,7 @@ use super::member_context::MemberContext;
 use super::tuple_signature::{PreparedSignature, Signature};
 use super::whole_collection::WholeCollection;
 use crate::eval::host::{ArgumentCoercion, CallHost, ScalarOperand};
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR};
 use crate::model::CellError::Num;
 use crate::model::CellValue;
 use crate::model::CellValue::{Blank, Error, Number, Text};
@@ -424,10 +424,7 @@ impl<'a> NumericSignature<'a> {
                         return Err(VALUE_ERROR.into());
                     }
                     NumericCoercion::Number | NumericCoercion::NonTextNumber => {
-                        ArgumentCoercion::new(host).coerce_scalar_number(
-                            &operand.value,
-                            crate::eval::host::NumericPolicy::PinnedPoi,
-                        )?
+                        ArgumentCoercion::new(host).coerce_scalar_number(&operand.value)?
                     }
                     NumericCoercion::DecimalNumber => match operand.value {
                         Number(value) if value.is_finite() => value,
@@ -450,8 +447,8 @@ impl<'a> NumericSignature<'a> {
                         ArgumentCoercion::new(host)
                             .coerce_calendar_date(&operand.value)
                             .map_err(|error| match error {
-                                FunctionFailure::Spreadsheet(_) => {
-                                    FunctionFailure::Spreadsheet(VALUE_ERROR)
+                                FunctionError::Spreadsheet(_) => {
+                                    FunctionError::Spreadsheet(VALUE_ERROR)
                                 }
                                 other => other,
                             })?
@@ -503,15 +500,15 @@ impl Variadic<Broadcast> {
         let mut values = Vec::new();
         values
             .try_reserve_exact(self.len())
-            .map_err(|_| context.host.allocation_failure())?;
+            .map_err(|reservation_source| context.host.reservation_failure(reservation_source))?;
         for role in self.iter() {
             let operand = role.read(context)?;
             if let Error(error) = operand.value {
                 return Err(error.into());
             }
-            values
-                .try_reserve(1)
-                .map_err(|_| context.host.allocation_failure())?;
+            values.try_reserve(1).map_err(|reservation_source| {
+                context.host.reservation_failure(reservation_source)
+            })?;
             // SAFETY: one additional slot was reserved immediately above.
             values.push(operand.value);
         }
@@ -632,7 +629,7 @@ mod tests {
         );
         assert!(matches!(
             numbers(&["TRUE"], &[NumericParameter::decimal()]),
-            Err(FunctionFailure::Spreadsheet(VALUE_ERROR))
+            Err(FunctionError::Spreadsheet(VALUE_ERROR))
         ));
         assert!(matches!(
             numbers(
@@ -642,7 +639,7 @@ mod tests {
                     NumericParameter::required()
                 ]
             ),
-            Err(FunctionFailure::Spreadsheet(Num))
+            Err(FunctionError::Spreadsheet(Num))
         ));
     }
 
@@ -672,7 +669,7 @@ mod tests {
         assert!(numbers(&["1", "2"], &[NumericParameter::required()]).is_err());
         assert!(matches!(
             numbers(&["1/0", "#N/A"], &[NumericParameter::required(); 2]),
-            Err(FunctionFailure::Spreadsheet(Div0))
+            Err(FunctionError::Spreadsheet(Div0))
         ));
     }
 

@@ -257,27 +257,13 @@ fn tiny_tail_large_shape_and_scale_controls() {
     );
 }
 #[test]
-fn laziness_pinned_availability_and_uncatchable_work_failures() {
+fn laziness_and_uncatchable_work_failures() {
     let b = book();
     near(
         call(&b, "IF(FALSE,BETA.INV(0.3,2000000000,1000000000),7)"),
         7.,
     );
-    let config = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    assert!(matches!(
-        run_formula_with_configuration(
-            &b,
-            0,
-            target("Z100").address,
-            "T.INV(0.75,2)",
-            &config,
-            Default::default()
-        ),
-        EvaluationOutcome::Complete {
-            value: CellValue::Error(CellError::Name),
-            ..
-        }
-    ));
+
     for formula in [
         "IFERROR(BETA.INV(0.3,2000000000,1000000000),99)",
         "IFERROR(CHISQ.INV(0.3,10000000000),99)",

@@ -1,5 +1,5 @@
 use crate::lookup::operands::{charge, checked_product};
-use crate::lookup::{Error, Failure, Scalar, Value, Work, Workbook};
+use crate::lookup::{LookupError, LookupValueError, Scalar, Value, Work, Workbook};
 /// Borrowed array or reference backing for a logical lookup table.
 enum Source<'a> {
     Signed(&'a crate::lookup::SignedReference),
@@ -16,13 +16,13 @@ pub(super) struct Table<'a> {
 }
 impl<'a> Table<'a> {
     /// Validate an operand's geometry before exposing table access.
-    pub(super) fn new(value: &'a Value) -> Result<Self, Failure> {
+    pub(super) fn new(value: &'a Value) -> Result<Self, LookupError> {
         let (source, rows, cols) = match value {
             Value::Reference(r) => (Source::Reference(r), r.height(), r.width()),
             Value::SignedReference(r) if r.valid() => {
                 if r.source_height() <= 0 || r.source_width() <= 0 {
-                    return Err(Failure::Unsupported(
-                        crate::lookup::Unsupported::SourceDimension,
+                    return Err(LookupError::Unsupported(
+                        crate::lookup::LookupUnsupportedError::SourceDimension,
                     ));
                 }
                 (Source::Signed(r), r.height(), r.width())
@@ -31,7 +31,7 @@ impl<'a> Table<'a> {
             Value::Scalar(Scalar::Error(e)) | Value::SelectedScalar(Scalar::Error(e), _) => {
                 return Err((*e).into());
             }
-            _ => return Err(Error::Value.into()),
+            _ => return Err(LookupValueError::Value.into()),
         };
         Ok(Self { source, rows, cols })
     }
@@ -51,11 +51,11 @@ impl<'a> Table<'a> {
         row: usize,
         col: usize,
         w: &mut impl Workbook,
-    ) -> Result<Scalar, Failure> {
+    ) -> Result<Scalar, LookupError> {
         match &self.source {
             Source::Signed(r) => {
                 if row >= self.rows || col >= self.cols {
-                    return Err(Error::Ref.into());
+                    return Err(LookupValueError::Ref.into());
                 }
                 r.read(
                     r.first_row.wrapping_add(row as i32),
@@ -72,13 +72,17 @@ impl<'a> Table<'a> {
             }
             Source::Reference(r) => {
                 if row >= self.rows || col >= self.cols {
-                    return Err(Error::Ref.into());
+                    return Err(LookupValueError::Ref.into());
                 }
                 w.cell(
                     r,
                     r.first_sheet(),
-                    r.first_row().checked_add(row as u32).ok_or(Error::Ref)?,
-                    r.first_col().checked_add(col as u32).ok_or(Error::Ref)?,
+                    r.first_row()
+                        .checked_add(row as u32)
+                        .ok_or(LookupValueError::Ref)?,
+                    r.first_col()
+                        .checked_add(col as u32)
+                        .ok_or(LookupValueError::Ref)?,
                 )
             }
         }
@@ -89,7 +93,7 @@ impl<'a> Table<'a> {
         column: bool,
         index: usize,
         w: &mut impl Workbook,
-    ) -> Result<Vec<Scalar>, Failure> {
+    ) -> Result<Vec<Scalar>, LookupError> {
         let count = if column { self.rows } else { self.cols };
         charge(
             w,

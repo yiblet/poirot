@@ -368,7 +368,7 @@ fn sparse_trim_observes_previously_absent_edges_and_spill_sources() {
     );
 }
 #[test]
-fn modern_profiles_stored_names_and_snapshot_roundtrip() {
+fn stored_names_and_snapshot_roundtrip() {
     let mut b = trim_book();
     b.sheet_mut(0)
         .unwrap()
@@ -404,17 +404,6 @@ fn modern_profiles_stored_names_and_snapshot_roundtrip() {
             .unwrap(),
         random
     );
-    for call in ["RANDARRAY()", "TRIMRANGE({1,2})"] {
-        let pinned = run_formula_with_configuration(
-            &b,
-            0,
-            at("Z100").address,
-            call,
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-            Default::default(),
-        );
-        assert_eq!(value(pinned), CellValue::Error(CellError::Name));
-    }
 }
 
 /// External values at absent source coordinates invalidate sparse absence proofs.
@@ -423,7 +412,7 @@ impl CachedCellReader for AbsentValueReader {
     fn cached_cell(
         &mut self,
         target: EvaluationTarget,
-    ) -> Result<Option<std::sync::Arc<CellValue>>, EvaluationFailure> {
+    ) -> Result<Option<std::sync::Arc<CellValue>>, EvaluationError> {
         Ok((target == at("A4")).then(|| std::sync::Arc::new(7.0.into())))
     }
 }

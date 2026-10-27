@@ -5,7 +5,7 @@ use super::super::sparse_reader::SparseReader;
 use crate::eval::config::{ArrayResultPolicy, EvaluationInputs, RunConfiguration};
 use crate::eval::entry::{run_formula, run_formula_with_configuration};
 use crate::eval::limits::{
-    BudgetFailure, BudgetKind, BudgetMeter, EvaluationBudgets, EvaluationFailure, EvaluationOutcome,
+    BudgetError, BudgetKind, BudgetMeter, EvaluationBudgets, EvaluationError, EvaluationOutcome,
 };
 use crate::eval::session;
 use crate::eval::session::cells::CellEvaluator;
@@ -231,7 +231,7 @@ fn empty_query_charges_terminal_seek_and_honors_limit() {
     let mut limited = session_for_empty(&book);
     assert!(matches!(
         SparseReader::new(&mut limited).sparse_addresses(area(0, 9, 0, 0)),
-        Err(EvaluationFailure::Budget(BudgetFailure {
+        Err(EvaluationError::Budget(BudgetError {
             kind: BudgetKind::RunWork,
             limit: 0,
             consumed: 0,
@@ -290,7 +290,7 @@ fn row_major_order_overlaps_and_allocation_limit_are_preserved() {
     );
     assert!(matches!(
         SparseReader::new(&mut limited).sparse_addresses(area(0, 2, 0, 2)),
-        Err(EvaluationFailure::Budget(BudgetFailure {
+        Err(EvaluationError::Budget(BudgetError {
             kind: BudgetKind::Materialization,
             ..
         }))
@@ -308,7 +308,7 @@ fn absent_range_membership_reads_fresh_inserted_and_removed_cells() {
             ..
         }
     ));
-    let address = "A5".parse().unwrap();
+    let address = "A5".parse::<crate::model::CellAddress>().unwrap();
     book.sheet_mut(0).unwrap().set_value(address, 4.0).unwrap();
     assert!(matches!(
         evaluate(&book, query),
@@ -317,7 +317,7 @@ fn absent_range_membership_reads_fresh_inserted_and_removed_cells() {
             ..
         }
     ));
-    book.sheet_mut(0).unwrap().remove(address);
+    book.sheet_mut(0).unwrap().remove(address).unwrap();
     assert!(matches!(
         evaluate(&book, query),
         EvaluationOutcome::Complete {
@@ -331,13 +331,11 @@ fn absent_range_membership_reads_fresh_inserted_and_removed_cells() {
 fn whole_column_blank_coercion_and_error_order_are_preserved() {
     let mut book = book();
     let sheet = book.sheet_mut(0).unwrap();
-    sheet.set_value("A1".parse().unwrap(), true).unwrap();
-    sheet.set_value("A2".parse().unwrap(), "2").unwrap();
-    sheet.set_value("A3".parse().unwrap(), 3.0).unwrap();
-    sheet
-        .set("A4".parse().unwrap(), crate::model::Cell::default())
-        .unwrap();
-    sheet.set_formula("A5".parse().unwrap(), "\"\"").unwrap();
+    sheet.set_value("A1", true).unwrap();
+    sheet.set_value("A2", "2").unwrap();
+    sheet.set_value("A3", 3.0).unwrap();
+    sheet.set("A4", crate::model::Cell::default()).unwrap();
+    sheet.set_formula("A5", "\"\"").unwrap();
     for (formula, expected) in [
         ("SUM(A:A)", Number(3.0)),
         ("COUNTBLANK(A:A)", Number(f64::from(MAX_ROWS - 3))),
@@ -351,11 +349,11 @@ fn whole_column_blank_coercion_and_error_order_are_preserved() {
     }
     book.sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), Error(NA))
+        .set_value("A1", Error(NA))
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_value("A2".parse().unwrap(), Error(Div0))
+        .set_value("A2", Error(Div0))
         .unwrap();
     assert!(matches!(
         evaluate(&book, "SUM(A:A)"),

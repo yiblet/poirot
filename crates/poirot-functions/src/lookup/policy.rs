@@ -1,5 +1,5 @@
 use crate::lookup::operands::Arguments;
-use crate::lookup::{Context, Error, Failure, Value, Workbook, evaluate_arguments};
+use crate::lookup::{Context, LookupError, LookupValueError, Value, Workbook, evaluate_arguments};
 /// Search-family function selected by the evaluator's registry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Search {
@@ -70,7 +70,7 @@ pub struct CallPlan {
 }
 impl CallPlan {
     /// Validate a typed call's arity and capture its execution policy.
-    pub fn prepare(function: Function, count: usize) -> Result<Self, Failure> {
+    pub fn prepare(function: Function, count: usize) -> Result<Self, LookupError> {
         use ReferenceFunction::Indirect;
         let valid = match function {
             Function::Reference(Indirect) => count >= 1,
@@ -81,7 +81,7 @@ impl CallPlan {
         if valid {
             Ok(Self { function, count })
         } else {
-            Err(Error::Value.into())
+            Err(LookupValueError::Value.into())
         }
     }
     /// Inspect the prepared call's host requirements.
@@ -93,7 +93,7 @@ impl CallPlan {
         &self,
         context: Context,
         workbook: &mut impl Workbook,
-    ) -> Result<Value, Failure> {
+    ) -> Result<Value, LookupError> {
         evaluate_arguments(
             self.function,
             &Arguments {

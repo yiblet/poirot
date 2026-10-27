@@ -1,9 +1,9 @@
 //! Budgeted draws from the current cell's reproducible random stream.
 use super::call_host::CallHost;
-use crate::eval::limits::{CapabilityId, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvaluationError};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::ReadRecorder;
-use crate::eval::values::FunctionFailure;
+use crate::eval::values::FunctionError;
 
 /// Draws from the calling cell's random stream, charging its budget and recording the access.
 pub(in crate::eval) struct RandomDraws<'h, 'call, 'workbook> {
@@ -21,7 +21,7 @@ impl<'h, 'call, 'workbook> RandomDraws<'h, 'call, 'workbook> {
     pub(in crate::eval) fn draw(
         &mut self,
         interval: Option<crate::eval::config::random::Interval>,
-    ) -> Result<f64, FunctionFailure> {
+    ) -> Result<f64, FunctionError> {
         let work = if interval.is_some() {
             crate::eval::config::random::INTEGER_WORK
         } else {
@@ -114,7 +114,7 @@ impl<'h, 'call, 'workbook> RandomDraws<'h, 'call, 'workbook> {
         if profiling {
             let access = accesses
                 .get_mut(*usage_slot)
-                .ok_or(EvaluationFailure::StalePlan)?;
+                .ok_or(EvaluationError::StalePlan)?;
             access.draws = access.draws.saturating_add(1);
             access.words = access.words.saturating_add(words);
         }
@@ -130,9 +130,9 @@ impl<'h, 'call, 'workbook> RandomDraws<'h, 'call, 'workbook> {
             },
         ));
         value.ok_or_else(|| {
-            FunctionFailure::Operational(self.host.capability_failure(
+            FunctionError::Operational(self.host.capability_failure(
                 CapabilityId::FunctionAdapter,
-                "bounded integer entropy rejection exhausted",
+                crate::eval::limits::EvaluationReasonError::BoundedIntegerEntropyRejectionExhausted,
             ))
         })
     }

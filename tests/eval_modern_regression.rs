@@ -200,26 +200,10 @@ fn direct_overlay_edit_and_current_snapshot_preserve_spills() {
     );
 }
 #[test]
-fn lazy_branches_pinned_profile_and_operational_budget_are_distinct() {
+fn lazy_branches_and_operational_budget_are_distinct() {
     let b = book();
     near(call(&b, "IF(FALSE,GROWTH({0;1}),7)"), 7.);
-    let pinned = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    for f in ["LINEST({1;2})", "LOGEST({1;2})", "GROWTH({1;2})"] {
-        assert!(matches!(
-            run_formula_with_configuration(
-                &b,
-                0,
-                target("Z100").address,
-                f,
-                &pinned,
-                Default::default()
-            ),
-            EvaluationOutcome::Complete {
-                value: CellValue::Error(CellError::Name),
-                ..
-            }
-        ));
-    }
+
     assert!(matches!(
         run_formula(
             &b,

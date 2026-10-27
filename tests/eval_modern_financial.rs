@@ -230,7 +230,7 @@ fn schedule_reads_continue_after_zero_and_dependency_changes_recompute() {
     );
 }
 #[test]
-fn limits_are_operational_laziness_and_pinned_availability_are_preserved() {
+fn limits_are_operational_and_lazy_branches_are_preserved() {
     let b = book();
     {
         let f = "IFERROR(VDB(1000,0,200000,0,100001),99)";
@@ -275,21 +275,6 @@ fn limits_are_operational_laziness_and_pinned_availability_are_preserved() {
         EvaluationOutcome::Aborted { .. }
     ));
     near(call(&b, "IF(FALSE,VDB(1000,0,200000,0,100001),42)"), 42.0);
-    let config = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    assert!(matches!(
-        run_formula_with_configuration(
-            &b,
-            0,
-            at("Z100").address,
-            "RRI(2,100,121)",
-            &config,
-            Default::default()
-        ),
-        EvaluationOutcome::Complete {
-            value: CellValue::Error(CellError::Name),
-            ..
-        }
-    ));
 }
 
 #[test]

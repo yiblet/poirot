@@ -1,6 +1,6 @@
 //! Rust adaptation of Commons Math3.6.1 LUDecomposition (Apache-2.0).
 //! <https://github.com/apache/commons-math/blob/MATH_3_6_1/src/main/java/org/apache/commons/math3/linear/LUDecomposition.java>
-use super::{Budget, Error, Matrix, Result, finite, num, value};
+use super::{Budget, Matrix, MatrixError, Result, finite, num, value};
 
 /// Swap rows and columns after admitting output size and work.
 pub(super) fn transpose<T: Clone>(m: &Matrix<T>, budget: Budget) -> Result<Matrix<T>> {
@@ -22,7 +22,7 @@ pub(super) fn multiply(a: &Matrix<f64>, b: &Matrix<f64>, budget: Budget) -> Resu
     budget.check(cells, cells.and_then(|n| n.checked_mul(a.cols)))?;
     finite(&a.values)?;
     finite(&b.values)?;
-    let mut values = vec![0.0; cells.ok_or(Error::SizeOverflow)?];
+    let mut values = vec![0.0; cells.ok_or(MatrixError::SizeOverflow)?];
     for i in 0..a.rows {
         for j in 0..b.cols {
             let mut sum = 0.0;
@@ -124,7 +124,7 @@ pub(super) fn inverse(m: &Matrix<f64>, budget: Budget) -> Result<Matrix<f64>> {
     if singular {
         return num();
     }
-    let cells = n.checked_mul(n).ok_or(Error::SizeOverflow)?;
+    let cells = n.checked_mul(n).ok_or(MatrixError::SizeOverflow)?;
     if a.len() != cells || pivots.len() != n || pivots.iter().any(|&pivot| pivot >= n) {
         return value();
     }
@@ -170,7 +170,7 @@ pub(super) fn frequency(data: &[f64], bins: &[f64], budget: Budget) -> Result<Ma
     )?;
     finite(data)?;
     finite(bins)?;
-    let mut out = vec![0.0; cells.ok_or(Error::SizeOverflow)?];
+    let mut out = vec![0.0; cells.ok_or(MatrixError::SizeOverflow)?];
     for &x in data {
         let mut lo = 0;
         let mut hi = bins.len();

@@ -66,20 +66,31 @@ pub fn parse_criterion(input: &str) -> CriterionText<'_> {
 /// Classic spreadsheet error spellings recognized in criteria operands.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ErrorLiteral {
+    /// The exact `#NULL!` error spelling.
     Null,
+    /// The exact `#DIV/0!` error spelling.
     DivZero,
+    /// The exact `#VALUE!` error spelling.
     Value,
+    /// The exact `#REF!` error spelling.
     Ref,
+    /// The exact `#NAME?` error spelling.
     Name,
+    /// The exact `#NUM!` error spelling.
     Num,
+    /// The exact `#N/A` error spelling.
     Na,
 }
 /// Borrowed syntax value; candidate matching and argument conversion are separate.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Operand<'a> {
+    /// Numeric operand accepted by the classic criteria-number grammar.
     Number(f64),
+    /// Case-insensitive `true` or `false` operand.
     Boolean(bool),
+    /// One exact classic spreadsheet error spelling.
     Error(ErrorLiteral),
+    /// Uninterpreted original text, including wildcard syntax and empty text.
     Text(&'a str),
 }
 impl<'a> CriterionText<'a> {

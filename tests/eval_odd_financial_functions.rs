@@ -194,21 +194,7 @@ fn epoch_context_arrays_lazy_branches_and_collisions_remain_host_owned() {
         ),
         7.,
     );
-    let config = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    assert!(matches!(
-        run_formula_with_configuration(
-            &b,
-            0,
-            at("Z100").address,
-            "AMORLINC(1000,45000,45090,100,1,0.2)",
-            &config,
-            Default::default()
-        ),
-        EvaluationOutcome::Complete {
-            value: CellValue::Error(CellError::Name),
-            ..
-        }
-    ));
+
     let s = b.sheet_mut(0).unwrap();
     s.set_value(at("D2").address, 9.).unwrap();
     s.set_formula(

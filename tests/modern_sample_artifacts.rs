@@ -69,10 +69,8 @@ fn all_modern_sample_names_execute_after_actual_xlsx_roundtrip() {
 fn incompatible_modern_sample_preparation_preserves_formulas_and_overlay_edits() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 2.0).unwrap();
-    sheet
-        .set_formula("D1".parse().unwrap(), "RANK.AVG(A1,{2;2;7})")
-        .unwrap();
+    sheet.set_value("A1", 2.0).unwrap();
+    sheet.set_formula("D1", "RANK.AVG(A1,{2;2;7})").unwrap();
     let mut overlay = Overlay::with_workbook(book).build().unwrap();
     let input = overlay.target("S!A1").unwrap();
     let output = overlay.target("S!D1").unwrap();
@@ -107,7 +105,13 @@ fn incompatible_modern_sample_preparation_preserves_formulas_and_overlay_edits()
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedIncompatible);
     assert_eq!(
-        workbook.sheet(0).unwrap().get(input.address).unwrap().value,
+        workbook
+            .sheet(0)
+            .unwrap()
+            .get(input.address)
+            .unwrap()
+            .unwrap()
+            .value,
         7.00.into()
     );
     let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
@@ -126,7 +130,13 @@ fn incompatible_modern_sample_preparation_preserves_formulas_and_overlay_edits()
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedByRequest);
     assert_eq!(
-        workbook.sheet(0).unwrap().get(input.address).unwrap().value,
+        workbook
+            .sheet(0)
+            .unwrap()
+            .get(input.address)
+            .unwrap()
+            .unwrap()
+            .value,
         7.00.into()
     );
 }

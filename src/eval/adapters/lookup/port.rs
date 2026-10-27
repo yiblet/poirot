@@ -1,10 +1,8 @@
 use super::dispatch::r1c1;
-use crate::eval::host::{
-    ArgumentCoercion, CallHost, DynamicReferences, NumericPolicy, SelectionAccess,
-};
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::host::{ArgumentCoercion, CallHost, DynamicReferences, SelectionAccess};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::values::{
-    Area, AreaKind, FunctionFailure, FunctionResult, Value, convert_legacy_missing_blank,
+    Area, AreaKind, FunctionError, FunctionResult, Value, convert_legacy_missing_blank,
     signed_reference,
 };
 use crate::model::CellValue::{Blank, Boolean, Error, Number, Text};
@@ -16,47 +14,47 @@ use poirot_parsing::formula::BinaryOp;
 /// It translates reference results and retains evaluator failures that the lookup error type cannot carry.
 pub(super) struct Port<'a, 'w> {
     pub(super) host: CallHost<'a, 'w>,
-    pub(super) failure: Option<EvaluationFailure>,
+    pub(super) failure: Option<EvaluationError>,
 }
 
-pub(super) fn error(error: CellError) -> Result<helper::Error, helper::Failure> {
+pub(super) fn error(error: CellError) -> Result<helper::LookupValueError, helper::LookupError> {
     Ok(match error {
-        CellError::Value => helper::Error::Value,
-        CellError::Ref => helper::Error::Ref,
-        CellError::NA => helper::Error::Na,
-        CellError::Num => helper::Error::Num,
-        CellError::Div0 => helper::Error::Div0,
-        CellError::Name => helper::Error::Name,
-        CellError::Null => helper::Error::Null,
+        CellError::Value => helper::LookupValueError::Value,
+        CellError::Ref => helper::LookupValueError::Ref,
+        CellError::NA => helper::LookupValueError::Na,
+        CellError::Num => helper::LookupValueError::Num,
+        CellError::Div0 => helper::LookupValueError::Div0,
+        CellError::Name => helper::LookupValueError::Name,
+        CellError::Null => helper::LookupValueError::Null,
         _ => {
-            return Err(helper::Failure::Unsupported(
-                helper::Unsupported::DeferredArguments,
+            return Err(helper::LookupError::Unsupported(
+                helper::LookupUnsupportedError::DeferredArguments,
             ));
         }
     })
 }
 
-pub(super) fn cell_error(error: helper::Error) -> CellError {
+pub(super) fn cell_error(error: helper::LookupValueError) -> CellError {
     match error {
-        helper::Error::Value => CellError::Value,
-        helper::Error::Ref => CellError::Ref,
-        helper::Error::Na => CellError::NA,
-        helper::Error::Num => CellError::Num,
-        helper::Error::Div0 => CellError::Div0,
-        helper::Error::Name => CellError::Name,
-        helper::Error::Null => CellError::Null,
+        helper::LookupValueError::Value => CellError::Value,
+        helper::LookupValueError::Ref => CellError::Ref,
+        helper::LookupValueError::Na => CellError::NA,
+        helper::LookupValueError::Num => CellError::Num,
+        helper::LookupValueError::Div0 => CellError::Div0,
+        helper::LookupValueError::Name => CellError::Name,
+        helper::LookupValueError::Null => CellError::Null,
     }
 }
 
 impl Port<'_, '_> {
     /// Resolve local sheet text while recording namespace dependencies for INDIRECT.
-    pub(super) fn sheet_index(&mut self, name: &str) -> Result<Option<u32>, helper::Failure> {
+    pub(super) fn sheet_index(&mut self, name: &str) -> Result<Option<u32>, helper::LookupError> {
         let result = self.host.check_text(name.len());
         self.operational(result)?;
         let mut owned = String::new();
         let result = owned
             .try_reserve_exact(name.len())
-            .map_err(|_| self.host.allocation_failure());
+            .map_err(|reservation_source| self.host.reservation_failure(reservation_source));
         self.operational(result)?;
         // SAFETY: name.len() bytes were reserved immediately above for this empty string.
         owned.push_str(name);
@@ -64,22 +62,31 @@ impl Port<'_, '_> {
         self.operational(result).map(|v| v.map(|s| s as u32))
     }
 
-    pub(super) fn operational<T>(&mut self, result: EvalResult<T>) -> Result<T, helper::Failure> {
+    pub(super) fn operational<T>(
+        &mut self,
+        result: EvalResult<T>,
+    ) -> Result<T, helper::LookupError> {
         result.map_err(|failure| {
             self.failure = Some(failure);
-            helper::Failure::Operational(helper::OperationalFailure::HostUnavailable)
+            helper::LookupError::Operational(helper::LookupOperationalError::HostUnavailable)
         })
     }
 
-    pub(super) fn function<T>(&mut self, result: FunctionResult<T>) -> Result<T, helper::Failure> {
+    pub(super) fn function<T>(
+        &mut self,
+        result: FunctionResult<T>,
+    ) -> Result<T, helper::LookupError> {
         match result {
             Ok(value) => Ok(value),
-            Err(FunctionFailure::Spreadsheet(e)) => Err(helper::Failure::Spreadsheet(error(e)?)),
-            Err(FunctionFailure::Operational(e)) => self.operational(Err(e)),
+            Err(FunctionError::Spreadsheet(e)) => Err(helper::LookupError::Spreadsheet(error(e)?)),
+            Err(FunctionError::Operational(e)) => self.operational(Err(e)),
         }
     }
 
-    pub(super) fn scalar(&mut self, value: CellValue) -> Result<helper::Scalar, helper::Failure> {
+    pub(super) fn scalar(
+        &mut self,
+        value: CellValue,
+    ) -> Result<helper::Scalar, helper::LookupError> {
         Ok(match value {
             Number(n) => helper::Scalar::Number(n),
             Text(s) => helper::Scalar::Text(s),
@@ -94,12 +101,14 @@ impl Port<'_, '_> {
         })
     }
 
-    pub(super) fn convert(&mut self, value: Value) -> Result<helper::Value, helper::Failure> {
+    pub(super) fn convert(&mut self, value: Value) -> Result<helper::Value, helper::LookupError> {
         Ok(match value {
             Value::SignedRefs(areas) => {
                 self.host.check_values(areas.len()).map_err(|failure| {
                     self.failure = Some(failure);
-                    helper::Failure::Operational(helper::OperationalFailure::HostUnavailable)
+                    helper::LookupError::Operational(
+                        helper::LookupOperationalError::HostUnavailable,
+                    )
                 })?;
                 let mut refs = Vec::with_capacity(areas.len());
                 for area in areas {
@@ -141,9 +150,9 @@ impl Port<'_, '_> {
                 },
             ),
             Value::SheetSpan(areas) => {
-                let first = areas
-                    .first()
-                    .ok_or(helper::Failure::Spreadsheet(helper::Error::Ref))?;
+                let first = areas.first().ok_or(helper::LookupError::Spreadsheet(
+                    helper::LookupValueError::Ref,
+                ))?;
                 // SAFETY: The single-reference branches check refs.len() == 1; the area branch requires first() to succeed before reading last(), and neither vector is shortened before access.
                 let last = areas.last().unwrap();
                 helper::Value::Reference(helper::Reference::new(
@@ -185,7 +194,9 @@ impl Port<'_, '_> {
             Value::Array(rows) => {
                 let columns = rows.first().map_or(0, Vec::len);
                 if rows.iter().any(|r| r.len() != columns) {
-                    return Err(helper::Failure::Spreadsheet(helper::Error::Value));
+                    return Err(helper::LookupError::Spreadsheet(
+                        helper::LookupValueError::Value,
+                    ));
                 }
                 let result = self.host.check_values(rows.len().saturating_mul(columns));
                 self.operational(result)?;
@@ -257,7 +268,7 @@ impl Port<'_, '_> {
             .any(|r| !r.valid() || r.workbook.is_some() || r.first_sheet != r.last_sheet)
         {
             return Err(
-                self.unsupported("signed OFFSET requires a valid local single-sheet identity")
+                self.unsupported(crate::eval::limits::EvaluationReasonError::SignedOffsetRequiresAValidLocalSingleSheetIdentity)
             );
         }
         Ok(Value::SignedRefs(
@@ -281,7 +292,7 @@ impl Port<'_, '_> {
             .any(|r| r.workbook().is_some() || r.first_sheet() != r.last_sheet())
         {
             return Err(self
-                .unsupported("lookup reference output requires unavailable external/3D identity"));
+                .unsupported(crate::eval::limits::EvaluationReasonError::LookupReferenceOutputRequiresUnavailableExternal3DIdentity));
         }
         Ok(Value::Refs(
             refs.into_iter()
@@ -300,14 +311,17 @@ impl Port<'_, '_> {
         ))
     }
 
-    pub(super) fn unsupported(&self, detail: impl Into<String>) -> EvaluationFailure {
+    pub(super) fn unsupported(
+        &self,
+        reason: crate::eval::limits::EvaluationReasonError,
+    ) -> EvaluationError {
         self.host
-            .capability_failure(CapabilityId::FunctionAdapter, detail)
+            .capability_failure(CapabilityId::FunctionAdapter, reason)
     }
 }
 
 impl helper::Workbook for Port<'_, '_> {
-    fn preflight(&mut self, request: helper::BudgetRequest) -> Result<(), helper::Failure> {
+    fn preflight(&mut self, request: helper::BudgetRequest) -> Result<(), helper::LookupError> {
         let result = match request.work {
             helper::Work::SearchText => self.host.check_text(request.units),
             helper::Work::SearchSteps => self.host.charge_work(request.units as u64),
@@ -320,9 +334,11 @@ impl helper::Workbook for Port<'_, '_> {
         &mut self,
         index: usize,
         _: helper::Context,
-    ) -> Result<helper::Value, helper::Failure> {
+    ) -> Result<helper::Value, helper::LookupError> {
         if index >= self.host.len() {
-            return Err(helper::Failure::Spreadsheet(helper::Error::Value));
+            return Err(helper::LookupError::Spreadsheet(
+                helper::LookupValueError::Value,
+            ));
         }
         if SelectionAccess::new(&mut self.host).is_missing(index) {
             return Ok(helper::Value::Scalar(helper::Scalar::Missing));
@@ -338,7 +354,7 @@ impl helper::Workbook for Port<'_, '_> {
                         let value = array
                             .values_mut()
                             .get_mut(index)
-                            .ok_or(EvaluationFailure::StalePlan)?;
+                            .ok_or(EvaluationError::StalePlan)?;
                         *value = helper::Scalar::Missing;
                     }
                     Ok(())
@@ -348,15 +364,13 @@ impl helper::Workbook for Port<'_, '_> {
         Ok(value)
     }
 
-    fn coerce_numeric_text(&mut self, text: &str) -> Result<f64, helper::Failure> {
-        let result = ArgumentCoercion::new(&mut self.host)
-            .coerce_number_text(text, NumericPolicy::PinnedPoi);
+    fn coerce_numeric_text(&mut self, text: &str) -> Result<f64, helper::LookupError> {
+        let result = ArgumentCoercion::new(&mut self.host).coerce_number_text(text);
         self.function(result)
     }
 
-    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, helper::Failure> {
-        let result = ArgumentCoercion::new(&mut self.host)
-            .coerce_number_to_text(number, NumericPolicy::PinnedPoi);
+    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, helper::LookupError> {
+        let result = ArgumentCoercion::new(&mut self.host).coerce_number_to_text(number);
         self.function(result)
     }
 
@@ -366,10 +380,10 @@ impl helper::Workbook for Port<'_, '_> {
         sheet: u32,
         row: u32,
         col: u32,
-    ) -> Result<helper::Scalar, helper::Failure> {
+    ) -> Result<helper::Scalar, helper::LookupError> {
         if reference.workbook().is_some() {
-            return Err(helper::Failure::Unsupported(
-                helper::Unsupported::DynamicReference,
+            return Err(helper::LookupError::Unsupported(
+                helper::LookupUnsupportedError::DynamicReference,
             ));
         }
         let result = DynamicReferences::new(&mut self.host)
@@ -384,10 +398,10 @@ impl helper::Workbook for Port<'_, '_> {
         sheet: u32,
         row: i32,
         col: i32,
-    ) -> Result<helper::Scalar, helper::Failure> {
+    ) -> Result<helper::Scalar, helper::LookupError> {
         if reference.workbook.is_some() {
-            return Err(helper::Failure::Unsupported(
-                helper::Unsupported::DynamicReference,
+            return Err(helper::LookupError::Unsupported(
+                helper::LookupUnsupportedError::DynamicReference,
             ));
         }
         if !(0..1_048_576).contains(&row) || !(0..16_384).contains(&col) {
@@ -408,16 +422,18 @@ impl helper::Workbook for Port<'_, '_> {
         &mut self,
         query: &helper::DynamicReference,
         context: helper::Context,
-    ) -> Result<helper::Value, helper::Failure> {
+    ) -> Result<helper::Value, helper::LookupError> {
         if query.workbook.is_some() {
-            return Err(helper::Failure::Unsupported(
-                helper::Unsupported::DynamicReference,
+            return Err(helper::LookupError::Unsupported(
+                helper::LookupUnsupportedError::DynamicReference,
             ));
         }
         let sheet = match &query.sheet {
             Some(name) => self
                 .sheet_index(name)?
-                .ok_or(helper::Failure::Spreadsheet(helper::Error::Ref))?,
+                .ok_or(helper::LookupError::Spreadsheet(
+                    helper::LookupValueError::Ref,
+                ))?,
             None => context.sheet,
         };
         let bytes = query
@@ -426,63 +442,77 @@ impl helper::Workbook for Port<'_, '_> {
             .checked_add(query.last.as_ref().map_or(0, String::len))
             .and_then(|n| n.checked_mul(4))
             .and_then(|n| n.checked_add(64))
-            .ok_or(helper::Failure::Operational(
-                helper::OperationalFailure::ResourceOverflow,
+            .ok_or(helper::LookupError::Operational(
+                helper::LookupOperationalError::ResourceOverflow,
             ))?;
         let result = self.host.check_text(bytes);
         self.operational(result)?;
         let parse_policy = DynamicReferences::new(&mut self.host).parse_policy();
-        let mut endpoint = |text: &str| -> Result<poirot_parsing::formula::Expr, helper::Failure> {
-            let text = if query.a1 {
-                text.to_owned()
-            } else {
-                r1c1(text, context)?
-            };
-            DynamicReferences::new(&mut self.host).record_dynamic_parse();
-            let syntax = if text.contains(':') {
-                match poirot_parsing::formula::parse_formula_with_policy(&text, parse_policy)
+        let mut endpoint =
+            |text: &str| -> Result<poirot_parsing::formula::Expr, helper::LookupError> {
+                let text = if query.a1 {
+                    text.to_owned()
+                } else {
+                    r1c1(text, context)?
+                };
+                DynamicReferences::new(&mut self.host).record_dynamic_parse();
+                let syntax = if text.contains(':') {
+                    match poirot_parsing::formula::parse_formula_with_policy(&text, parse_policy)
+                        .map(poirot_parsing::formula::ParsedFormula::into_expression)
+                        .map_err(|_| {
+                            helper::LookupError::Spreadsheet(helper::LookupValueError::Ref)
+                        })? {
+                        poirot_parsing::formula::Expr::Binary {
+                            op: BinaryOp::Range,
+                            left,
+                            ..
+                        } => *left,
+                        _ => {
+                            return Err(helper::LookupError::Spreadsheet(
+                                helper::LookupValueError::Ref,
+                            ));
+                        }
+                    }
+                } else if query.a1 && query.last.is_some() {
+                    match poirot_parsing::formula::parse_formula_with_policy(
+                        &format!("{text}:{text}"),
+                        parse_policy,
+                    )
                     .map(poirot_parsing::formula::ParsedFormula::into_expression)
-                    .map_err(|_| helper::Failure::Spreadsheet(helper::Error::Ref))?
-                {
-                    poirot_parsing::formula::Expr::Binary {
-                        op: BinaryOp::Range,
-                        left,
-                        ..
-                    } => *left,
-                    _ => return Err(helper::Failure::Spreadsheet(helper::Error::Ref)),
+                    .map_err(|_| helper::LookupError::Spreadsheet(helper::LookupValueError::Ref))?
+                    {
+                        poirot_parsing::formula::Expr::Binary {
+                            op: BinaryOp::Range,
+                            left,
+                            ..
+                        } => *left,
+                        _ => {
+                            return Err(helper::LookupError::Spreadsheet(
+                                helper::LookupValueError::Ref,
+                            ));
+                        }
+                    }
+                } else {
+                    poirot_parsing::formula::parse_formula_with_policy(&text, parse_policy)
+                        .map(poirot_parsing::formula::ParsedFormula::into_expression)
+                        .map_err(|_| {
+                            helper::LookupError::Spreadsheet(helper::LookupValueError::Ref)
+                        })?
+                };
+                if !matches!(
+                    syntax,
+                    poirot_parsing::formula::Expr::Cell(_)
+                        | poirot_parsing::formula::Expr::Column { .. }
+                        | poirot_parsing::formula::Expr::Row { .. }
+                        | poirot_parsing::formula::Expr::Name(_)
+                        | poirot_parsing::formula::Expr::QualifiedName { .. }
+                ) {
+                    return Err(helper::LookupError::Spreadsheet(
+                        helper::LookupValueError::Ref,
+                    ));
                 }
-            } else if query.a1 && query.last.is_some() {
-                match poirot_parsing::formula::parse_formula_with_policy(
-                    &format!("{text}:{text}"),
-                    parse_policy,
-                )
-                .map(poirot_parsing::formula::ParsedFormula::into_expression)
-                .map_err(|_| helper::Failure::Spreadsheet(helper::Error::Ref))?
-                {
-                    poirot_parsing::formula::Expr::Binary {
-                        op: BinaryOp::Range,
-                        left,
-                        ..
-                    } => *left,
-                    _ => return Err(helper::Failure::Spreadsheet(helper::Error::Ref)),
-                }
-            } else {
-                poirot_parsing::formula::parse_formula_with_policy(&text, parse_policy)
-                    .map(poirot_parsing::formula::ParsedFormula::into_expression)
-                    .map_err(|_| helper::Failure::Spreadsheet(helper::Error::Ref))?
+                Ok(syntax)
             };
-            if !matches!(
-                syntax,
-                poirot_parsing::formula::Expr::Cell(_)
-                    | poirot_parsing::formula::Expr::Column { .. }
-                    | poirot_parsing::formula::Expr::Row { .. }
-                    | poirot_parsing::formula::Expr::Name(_)
-                    | poirot_parsing::formula::Expr::QualifiedName { .. }
-            ) {
-                return Err(helper::Failure::Spreadsheet(helper::Error::Ref));
-            }
-            Ok(syntax)
-        };
         let first = endpoint(&query.first)?;
         let syntax = if let Some(last) = &query.last {
             poirot_parsing::formula::Expr::Binary {
@@ -498,7 +528,9 @@ impl helper::Workbook for Port<'_, '_> {
         let value = self.function(result)?;
         match value {
             Value::Refs(_) | Value::SheetSpan(_) | Value::SignedRefs(_) => self.convert(value),
-            _ => Err(helper::Failure::Spreadsheet(helper::Error::Ref)),
+            _ => Err(helper::LookupError::Spreadsheet(
+                helper::LookupValueError::Ref,
+            )),
         }
     }
 
@@ -506,9 +538,9 @@ impl helper::Workbook for Port<'_, '_> {
         &mut self,
         _: &str,
         _: helper::Context,
-    ) -> Result<helper::Value, helper::Failure> {
-        Err(helper::Failure::Unsupported(
-            helper::Unsupported::DynamicReference,
+    ) -> Result<helper::Value, helper::LookupError> {
+        Err(helper::LookupError::Unsupported(
+            helper::LookupUnsupportedError::DynamicReference,
         ))
     }
 }

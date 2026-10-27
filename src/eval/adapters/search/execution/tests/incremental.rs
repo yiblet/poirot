@@ -9,11 +9,7 @@ fn matching_insertions_removals_and_unrelated_edits_validate_consumed_guards() {
     let mut w = Workbook::new();
     w.add_sheet("Sheet1")
         .unwrap()
-        .set_formula_with_cached_value(
-            "Z1".parse().unwrap(),
-            "IFERROR(VLOOKUP(7,A:B,2,FALSE),99)",
-            Number(-999.),
-        )
+        .set_formula_with_cached_value("Z1", "IFERROR(VLOOKUP(7,A:B,2,FALSE),99)", Number(-999.))
         .unwrap();
     let mut overlay = Overlay::with_workbook(&w).build().unwrap();
     let target = overlay.target("Sheet1!Z1").unwrap();

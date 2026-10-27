@@ -18,6 +18,8 @@ enum_glob_use = "deny"
 wildcard_imports = "deny"
 
 [workspace.dependencies]
+# MIT OR Apache-2.0, used under MIT: derive typed error implementations.
+thiserror = "2.0.21"
 allocation-counter = "0.8.1"
 smallvec = "1.16.3"
 num-bigint = "0.4.8"
@@ -54,6 +56,9 @@ readme = "README.md"
 include = ["/src/**", "/examples/**", "/README.md", "/CONTRIBUTING.md", "/docs/compatibility.md", "/docs/resources.md", "/docs/evaluation.md", "/docs/architecture.md", "/LICENSES/**"]
 
 [dependencies]
+# MIT, used to retain the typed allocation diagnostics of function ParamVec storage.
+smallvec = { workspace = true }
+thiserror = { workspace = true }
 poirot-parsing = { version = "0.1.0", path = "crates/poirot-parsing" }
 poirot-io = { version = "0.1.0", path = "crates/poirot-io" }
 foldhash = "0.2.0"

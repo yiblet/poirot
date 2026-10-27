@@ -26,7 +26,7 @@ impl<T, const H: u32, const W: u32> CellRead<T> for CellStore<T, H, W> {
 }
 impl CellRead<Cell> for Worksheet {
     fn get_cell(&self, address: CellAddress) -> Option<&Cell> {
-        self.get(address)
+        self.get_validated(address)
     }
     fn stored_cells<'a>(&'a self) -> impl DoubleEndedIterator<Item = (&'a CellAddress, &'a Cell)>
     where

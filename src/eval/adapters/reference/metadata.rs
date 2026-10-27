@@ -7,7 +7,7 @@ use crate::eval::adapters::elementwise::{
 use crate::eval::functions::registry::ReferenceFunction;
 use crate::eval::host::{ArgumentCoercion, CallHost};
 use crate::eval::limits::CapabilityId;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value};
 use crate::model::CellValue::{Number, Text};
 use crate::model::{CellValue, MAX_COLUMNS, MAX_ROWS};
 
@@ -87,16 +87,36 @@ impl Kernel for Address {
             sheet.as_deref(),
         )
         .map_err(|error| match error {
-            poirot_functions::lookup::Failure::Spreadsheet(_) => {
-                FunctionFailure::Spreadsheet(VALUE_ERROR)
+            poirot_functions::lookup::LookupError::Spreadsheet(_) => {
+                FunctionError::Spreadsheet(VALUE_ERROR)
             }
-            poirot_functions::lookup::Failure::Operational(_) => {
-                context.host.allocation_failure().into()
+            error @ poirot_functions::lookup::LookupError::Operational(source) => {
+                let kind = match source {
+                    poirot_functions::lookup::LookupOperationalError::ResourceOverflow => {
+                        crate::eval::limits::ResourceFailureKind::SizeOverflow
+                    }
+                    poirot_functions::lookup::LookupOperationalError::BudgetExceeded
+                    | poirot_functions::lookup::LookupOperationalError::Cancelled
+                    | poirot_functions::lookup::LookupOperationalError::HostUnavailable => {
+                        crate::eval::limits::ResourceFailureKind::BackendGuard
+                    }
+                };
+                context
+                    .host
+                    .resource_failure(
+                        kind,
+                        crate::eval::limits::EvaluationReasonError::Lookup(std::sync::Arc::new(
+                            error,
+                        )),
+                    )
+                    .into()
             }
-            poirot_functions::lookup::Failure::Unsupported(_) => context.host.unsupported(
-                CapabilityId::FunctionAdapter,
-                "ADDRESS sheet-name control character",
-            ),
+            error @ poirot_functions::lookup::LookupError::Unsupported(_) => {
+                context.host.unsupported(
+                    CapabilityId::FunctionAdapter,
+                    crate::eval::limits::EvaluationReasonError::Lookup(std::sync::Arc::new(error)),
+                )
+            }
         })?;
         Ok(Text(result))
     }

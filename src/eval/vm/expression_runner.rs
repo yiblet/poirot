@@ -1,10 +1,6 @@
 //! Expression admission, context observation, and lazy typed dispatch.
 
-#[cfg(test)]
-use super::admission_order::AdmissionOrder;
 use super::bytecode_vm::Vm;
-#[cfg(test)]
-use super::call_admission::CallAdmission;
 use super::executable_ref::ExecutableRef;
 #[cfg(test)]
 use super::operators::Operators;
@@ -13,11 +9,7 @@ use super::reference_atoms::ReferenceAtoms;
 #[cfg(test)]
 use super::reference_ref::ReferenceRef;
 #[cfg(test)]
-use super::resolved_call::ResolvedCall;
-#[cfg(test)]
 use crate::eval::compile::bound::Expression;
-#[cfg(test)]
-use crate::eval::config::BuiltinSemanticsPolicy;
 #[cfg(test)]
 use crate::eval::coordinates::EvaluationTarget;
 #[cfg(test)]
@@ -112,19 +104,17 @@ impl<'s, 'a> ExpressionRunner<'s, 'a> {
         result
     }
 
-    /// Inspect the builtin selected by a bound expression and active profile policy.
+    /// Inspect the builtin selected by a bound expression.
     #[cfg(test)]
     pub(in crate::eval) fn builtin_invocation<'expr>(
         &self,
         expression: &'expr Expression,
     ) -> Option<(FunctionId, &'expr compile::bound::Arguments)> {
         observe::builtin_call(expression).or_else(|| {
-            if self.session.policies.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
-                && let Expression::UnresolvedFunction(arguments) = expression
-            {
-                functions::registry::resolve_excel_function(
-                    &poirot_parsing::formula::FunctionName::from(arguments.resolved_spelling()),
-                )
+            if let Expression::UnresolvedFunction(arguments) = expression {
+                functions::registry::resolve_handler(&poirot_parsing::formula::FunctionName::from(
+                    arguments.resolved_spelling(),
+                ))
                 .map(|handler| (handler, arguments))
             } else {
                 None
@@ -141,9 +131,10 @@ impl<'s, 'a> ExpressionRunner<'s, 'a> {
         expression: &Expression,
     ) -> EvalResult<Value> {
         let invocation = self.builtin_invocation(expression);
-        CallAdmission::new(self.session).admit(
-            ResolvedCall {
-                invocation: invocation.map(|(handler, arguments)| ConsumedBuiltinInvocation {
+        self.session
+            .ports
+            .observe_resolved_call(invocation.map(|(handler, arguments)| {
+                ConsumedBuiltinInvocation {
                     target: EvaluationTarget {
                         sheet: s,
                         address: at,
@@ -152,11 +143,8 @@ impl<'s, 'a> ExpressionRunner<'s, 'a> {
                     parsed_spelling: arguments.source_name.as_str(),
                     resolved_spelling: arguments.resolved_spelling(),
                     argument_count: arguments.expressions.len(),
-                }),
-                read_builtin_policy: matches!(expression, Expression::UnresolvedFunction(_)),
-            },
-            AdmissionOrder::ObserverBeforePolicy,
-        )?;
+                }
+            }))?;
         if let Some((function, arguments)) = invocation {
             return adapters::execute(
                 self.session,

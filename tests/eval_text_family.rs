@@ -61,11 +61,7 @@ fn modern_text_coercion_and_error_order() {
                 0,
                 AT,
                 formula,
-                &poirot::eval::RunConfiguration::default()
-                    .with_builtin_policy(poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation)
-                    .with_text_policy(poirot::eval::TextSemanticsPolicy {
-                        source: poirot::eval::TextSourceVersion::ExcelCompatibilityV2Documented
-                    }),
+                &poirot::eval::RunConfiguration::default(),
                 Default::default()
             ) {
                 poirot::eval::EvaluationOutcome::Complete { value, .. } => value,
@@ -186,10 +182,9 @@ fn unknown_name_remains_a_catchable_spreadsheet_error() {
 
 #[test]
 fn numbervalue_validates_explicit_separator_and_result_domains() {
-    use poirot::eval::{BuiltinSemanticsPolicy, RunConfiguration, run_formula_with_configuration};
+    use poirot::eval::{RunConfiguration, run_formula_with_configuration};
     let w = workbook();
-    let excel =
-        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
+    let excel = RunConfiguration::default();
     let value = |source: &str, config: &RunConfiguration| match run_formula_with_configuration(
         &w,
         0,

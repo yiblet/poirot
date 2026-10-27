@@ -38,16 +38,16 @@ impl WorkspaceState {
     /// Encode a baseline workbook in the form [`Self::check_baseline`] compares against.
     pub(super) fn encode_baseline(workbook: &Workbook) -> Result<Vec<u8>, OverlayError> {
         postcard::to_allocvec(&workbook.snapshot())
-            .map_err(|error| OverlayError::Snapshot(error.to_string()))
+            .map_err(|error| OverlayError::Snapshot(error.into()))
     }
 
     /// Require `workbook` to match the baseline this state was restored against.
     fn check_baseline(&self, workbook: &Workbook) -> Result<(), OverlayError> {
         let baseline = postcard::from_bytes::<crate::model::snapshot::Snapshot<'_>>(&self.baseline)
-            .map_err(|error| OverlayError::Snapshot(error.to_string()))?;
+            .map_err(|error| OverlayError::Snapshot(error.into()))?;
         if !baseline.matches(workbook) {
             return Err(OverlayError::Snapshot(
-                "baseline differs from detached state".into(),
+                crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::BaselineDiffersFromDetachedState,
             ));
         }
         Ok(())
@@ -85,8 +85,18 @@ impl WorkspaceState {
     pub(in crate::eval) fn attach_restored<'a, W: Borrow<Workbook>>(
         self,
         workbook: W,
+        extensions: Option<Arc<crate::eval::functions::extensions::ExtensionRegistry>>,
     ) -> Result<Overlay<'a, W>, OverlayError> {
-        self.rebuild(workbook, None)
+        self.rebuild(workbook, extensions.map(RegistryHandle::Shared))
+    }
+
+    /// Apply persisted authored edits to their validated restored baseline without copying it.
+    pub(in crate::eval) fn into_restored_workbook(
+        self,
+        mut workbook: Workbook,
+    ) -> Result<Workbook, OverlayError> {
+        workbook.apply(self.inputs.workbook_changes())?;
+        Ok(workbook)
     }
 
     /// Direct evaluation on the workbook restored beside this state; see [`Self::attach_restored`].
@@ -94,8 +104,9 @@ impl WorkspaceState {
         self,
         workbook: W,
         context: EvaluationContext,
+        extensions: Option<Arc<crate::eval::functions::extensions::ExtensionRegistry>>,
     ) -> Result<Evaluation<'a, W>, OverlayError> {
-        Evaluation::from_source(self.attach_restored(workbook)?.source, context)
+        Evaluation::from_source(self.attach_restored(workbook, extensions)?.source, context)
     }
 
     /// Check the baseline, then attach with the given extension registry.

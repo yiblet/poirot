@@ -183,29 +183,10 @@ fn origin_error_precedence_and_collection_policies_remain_explicit() {
     assert!(p > 0.5 && p < 1.);
 }
 #[test]
-fn lazy_pinned_and_operational_failures() {
+fn lazy_branches_and_operational_failures() {
     let b = book();
     near(call(&b, "IF(FALSE,FINV(0.3,2,10000000000),7)"), 7.);
-    let config = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    for (f, _) in cases() {
-        assert!(
-            matches!(
-                run_formula_with_configuration(
-                    &b,
-                    0,
-                    target("Z100").address,
-                    f,
-                    &config,
-                    Default::default()
-                ),
-                EvaluationOutcome::Complete {
-                    value: CellValue::Error(CellError::Name),
-                    ..
-                }
-            ),
-            "{f}"
-        );
-    }
+
     for f in [
         "IFERROR(BETAINV(0.3,2000000000,1000000000),99)",
         "IFERROR(CHIINV(0.3,10000000000),99)",

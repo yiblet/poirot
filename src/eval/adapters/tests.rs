@@ -9,7 +9,7 @@ use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
 use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::registry::FUNCTION_DESCRIPTORS;
-use crate::eval::limits::{CapabilityId, EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvaluationBudgets, EvaluationError};
 use crate::eval::run::{EvaluationRun, WorkbookView};
 use crate::eval::session::Session;
 use crate::model::{CellAddress, CellError, CellValue, Workbook};
@@ -75,16 +75,13 @@ fn composed_names_preserve_every_catalog_entry_and_alias() {
         adapters.resolve(&"IFNA".into())
     );
     assert!(adapters.resolve(&"_XLFN.IFNA".into()).is_none());
-    assert!(adapters.resolve(&"_xlfn.SUM".into()).is_none());
+    assert!(adapters.resolve(&"_xlfn.SUM".into()).is_some());
 }
 
 #[test]
 fn catalog_name_resolution_matches_the_composed_builtin_registry() {
     let registry = super::builtin_adapters::builtin_registry();
-    for descriptor in FUNCTION_DESCRIPTORS
-        .iter()
-        .chain(crate::eval::functions::registry::EXCEL_DESCRIPTORS)
-    {
+    for descriptor in FUNCTION_DESCRIPTORS.iter() {
         let name = descriptor.name;
         for spelling in [
             name.to_string(),
@@ -103,10 +100,8 @@ fn catalog_name_resolution_matches_the_composed_builtin_registry() {
                 "{spelling:?}"
             );
             assert_eq!(
-                crate::eval::functions::registry::resolve_excel_function(&spelling),
-                registry
-                    .resolve_profile(&spelling)
-                    .map(|entry| entry.handler),
+                crate::eval::functions::registry::resolve_handler(&spelling),
+                registry.resolve(&spelling).map(|entry| entry.handler),
                 "{spelling:?}"
             );
         }
@@ -221,7 +216,7 @@ fn direct_call_keeps_operational_failures_separate_and_restores_lifecycle() {
             &"DOLLAR".into(),
             [expression("1")].into_iter().collect()
         ),
-        Err(EvaluationFailure::UnsupportedCapability {
+        Err(EvaluationError::UnsupportedCapability {
             capability: CapabilityId::Formatting,
             ..
         })

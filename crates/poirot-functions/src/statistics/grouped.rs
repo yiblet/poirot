@@ -1,6 +1,6 @@
 //! Shared aggregation identities and kernels for independently selected subsets.
 use crate::scalar::CellError;
-use crate::statistics::{Aggregate, NumericReduction, NumericReductionState, Result, SamplePolicy};
+use crate::statistics::{Aggregate, NumericReduction, NumericReductionState, Result};
 
 /// Built-in reductions admitted as contextual grouping handles, without callable values.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -180,11 +180,7 @@ impl BuiltinAggregator {
             Self::Mode => Aggregate::Mode,
             _ => return Err(CellError::Value),
         };
-        crate::statistics::aggregate_with_policy(
-            operation,
-            values,
-            SamplePolicy::ExcelDocumentation,
-        )
+        crate::statistics::aggregate(operation, values)
     }
 }
 /// Select the median after host admission, sharing the ordinary aggregate kernel.

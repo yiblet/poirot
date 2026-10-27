@@ -196,15 +196,15 @@ fn owned_changes_outlive_overlay_and_preserve_formula_source() {
     book.apply(changes).unwrap();
     let s = book.sheet(0).unwrap();
     assert_eq!(
-        s.get(at("A1").address).unwrap().value,
+        s.get(at("A1").address).unwrap().unwrap().value,
         CellValue::Number(9.)
     );
     assert_eq!(
-        s.get(at("C1").address).unwrap().value,
+        s.get(at("C1").address).unwrap().unwrap().value,
         CellValue::Number(19.)
     );
     assert_eq!(
-        s.get(at("C1").address).unwrap().formula.as_deref(),
+        s.get(at("C1").address).unwrap().unwrap().formula.as_deref(),
         Some("B1+1")
     );
 }
@@ -237,11 +237,11 @@ fn evaluation_changes_are_separate_from_overlay_source_edits() {
     book.apply(changes).unwrap();
     let sheet = book.sheet(0).unwrap();
     assert_eq!(
-        sheet.get(at("A1").address).unwrap().value,
+        sheet.get(at("A1").address).unwrap().unwrap().value,
         CellValue::Number(9.)
     );
     assert_eq!(
-        sheet.get(at("C1").address).unwrap().value,
+        sheet.get(at("C1").address).unwrap().unwrap().value,
         CellValue::Number(19.)
     );
 }
@@ -299,7 +299,6 @@ fn compiler_and_cache_stay_empty_before_use() {
 
 pub(super) fn dynamic() -> EvaluationPolicy {
     EvaluationPolicy {
-        builtin: crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation,
         arrays: crate::eval::config::ArrayResultPolicy::DynamicSpill,
         ..Default::default()
     }
@@ -425,12 +424,23 @@ fn cached_spill_ownership_survives_evaluations_snapshots_and_workbook_writeback(
     let changes = overlay.changes();
     drop(overlay);
     book.apply(changes).unwrap();
-    assert!(book.sheet(0).unwrap().get(at("H2").address).is_none());
+    assert!(
+        book.sheet(0)
+            .unwrap()
+            .get(at("H2").address)
+            .unwrap()
+            .is_none()
+    );
     let bytes = postcard::to_allocvec(&book.snapshot()).unwrap();
     let snapshot = postcard::from_bytes(&bytes).unwrap();
     let book = Workbook::from_snapshot(snapshot).unwrap();
     assert_eq!(
-        book.sheet(0).unwrap().get(at("G1").address).unwrap().value,
+        book.sheet(0)
+            .unwrap()
+            .get(at("G1").address)
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Number(9.)
     );
 }
@@ -486,9 +496,8 @@ fn publication_policy_reuses_finite_results_and_keeps_cached_identity() {
         .unwrap();
     assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(0.));
     let original = overlay.cached_value(at("E1")).unwrap();
-    let mut policy = overlay.policy().clone();
-    policy.materialization =
-        crate::eval::materialization::FormulaCacheMaterializationPolicy::PinnedPoiCellSetter;
+    let policy = overlay.policy().clone();
+
     overlay.set_policy(policy).unwrap();
     let mut evaluation = overlay.evaluation(&context).unwrap();
     assert_eq!(evaluation.cell(at("E1")).unwrap(), CellValue::Number(0.));
@@ -533,7 +542,12 @@ fn explicit_input_storage_representation_is_preserved_even_when_units_match() {
     drop(overlay);
     book.apply(changes).unwrap();
     assert!(matches!(
-        book.sheet(0).unwrap().get(at("A2").address).unwrap().value,
+        book.sheet(0)
+            .unwrap()
+            .get(at("A2").address)
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Text(_)
     ));
 }
@@ -1109,15 +1123,15 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in 8..80 {
+    for previous in 8..81 {
         let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
         // Payload's first field is its small postcard varint version.
         let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 80);
+        assert_eq!(*version, 81);
         *version = previous;
         let snapshot = postcard::from_bytes(&bytes).unwrap();
         assert!(
-            matches!(Overlay::from_snapshot(snapshot), Err(OverlayError::Snapshot(detail)) if detail == "unsupported snapshot version")
+            matches!(Overlay::from_snapshot(snapshot), Err(OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::UnsupportedSnapshotVersion)))
         );
     }
 }
@@ -1142,8 +1156,7 @@ fn source_baselines_need_an_unedited_checkpoint_source() {
     let stripped = without_stored_baseline(&overlay);
     assert!(matches!(
         Overlay::from_snapshot(postcard::from_bytes(&stripped).unwrap()),
-        Err(OverlayError::Snapshot(detail))
-            if detail == "snapshot baseline belongs to a checkpoint source section"
+        Err(OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::SnapshotBaselineBelongsToACheckpointSourceSection))
     ));
     let snapshot: snapshot::Snapshot<'_> = postcard::from_bytes(&stripped).unwrap();
     let (baseline, state) = snapshot
@@ -1166,7 +1179,7 @@ fn source_baselines_need_an_unedited_checkpoint_source() {
         .unwrap();
     assert!(matches!(
         snapshot.restore_with_source(effective, &encoded),
-        Err(OverlayError::Snapshot(detail)) if detail == "edited checkpoint lacks its baseline"
+        Err(OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::EditedCheckpointLacksItsBaseline))
     ));
 }
 
@@ -1180,7 +1193,7 @@ fn stored_baselines_must_reproduce_the_checkpoint_source() {
     let snapshot: snapshot::Snapshot<'_> = postcard::from_bytes(&bytes).unwrap();
     assert!(matches!(
         snapshot.restore_with_source(workbook.clone(), &encoded),
-        Err(OverlayError::Snapshot(detail)) if detail == "source and prepared state disagree"
+        Err(OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::SourceAndPreparedStateDisagree))
     ));
     let effective = workbook
         .with_changes([WorkbookChange::SetValue {
@@ -1210,7 +1223,6 @@ fn numbervalue_locale_defaults_invalidate_only_consumers_after_snapshot_restore(
     }
     let mut overlay = Overlay::with_workbook(&workbook)
         .with_policy(EvaluationPolicy {
-            builtin: crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .build()
@@ -1261,46 +1273,6 @@ fn numbervalue_locale_defaults_invalidate_only_consumers_after_snapshot_restore(
 }
 
 #[test]
-fn approximate_match_policy_switch_and_snapshot_restore_recompute_typed_candidates() {
-    let mut workbook = book();
-    for (cell, formula) in [
-        ("E1", "MATCH(5,{TRUE},-1)"),
-        ("F1", "MATCH(12,{5;15;18;18;11;1;15;17})"),
-    ] {
-        workbook
-            .sheet_mut(0)
-            .unwrap()
-            .set_formula(at(cell).address, formula)
-            .unwrap();
-    }
-    let context = EvaluationContext::default();
-    let mut overlay = Overlay::with_workbook(&workbook)
-        .with_policy(EvaluationPolicy {
-            builtin: crate::eval::config::BuiltinSemanticsPolicy::PinnedPoi,
-            ..Default::default()
-        })
-        .build()
-        .unwrap();
-    assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(1.));
-    assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(6.));
-    let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
-    let (workbook, state) = Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
-    let mut overlay = state.attach(&workbook).unwrap();
-    let mut policy = overlay.policy().clone();
-    policy.builtin = crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation;
-    overlay.set_policy(policy.clone()).unwrap();
-    assert_eq!(
-        value(&mut overlay, "E1", &context),
-        CellValue::Error(crate::model::CellError::NA)
-    );
-    assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(1.));
-    policy.builtin = crate::eval::config::BuiltinSemanticsPolicy::PinnedPoi;
-    overlay.set_policy(policy).unwrap();
-    assert_eq!(value(&mut overlay, "E1", &context), CellValue::Number(1.));
-    assert_eq!(value(&mut overlay, "F1", &context), CellValue::Number(6.));
-}
-
-#[test]
 fn roman_locale_and_arabic_reference_edits_invalidate_after_snapshot_restore() {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
@@ -1347,67 +1319,6 @@ fn roman_locale_and_arabic_reference_edits_invalidate_after_snapshot_restore() {
         &unrelated,
         &overlay.cached_value(at("C1")).unwrap()
     ));
-}
-
-#[test]
-// Both starts exceed their text domain under the documented Excel rules;
-// policy-label changes must still invalidate and safely restore cached errors.
-fn search_start_policy_switch_invalidates_restored_values_for_both_text_routes() {
-    for source in [
-        poirot_functions::text_units::SourceVersion::Poi7321209,
-        poirot_functions::text_units::SourceVersion::Poi7321209OpenJdk21Unicode15,
-    ] {
-        let mut workbook = book();
-        for (cell, formula) in [("E1", r#"SEARCH("","")"#), ("F1", r#"FIND("","abc",4)"#)] {
-            workbook
-                .sheet_mut(0)
-                .unwrap()
-                .set_formula(at(cell).address, formula)
-                .unwrap();
-        }
-        let context = EvaluationContext::default();
-        let mut overlay = Overlay::with_workbook(&workbook)
-            .with_policy(EvaluationPolicy {
-                text: poirot_functions::text_units::TextSemanticsPolicy { source },
-                builtin: crate::eval::config::BuiltinSemanticsPolicy::PinnedPoi,
-                ..Default::default()
-            })
-            .build()
-            .unwrap();
-        assert_eq!(
-            value(&mut overlay, "E1", &context),
-            CellValue::Error(crate::model::CellError::Value)
-        );
-        assert_eq!(
-            value(&mut overlay, "F1", &context),
-            CellValue::Error(crate::model::CellError::Value)
-        );
-        let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
-        let (workbook, state) =
-            Overlay::from_snapshot(postcard::from_bytes(&bytes).unwrap()).unwrap();
-        let mut overlay = state.attach(&workbook).unwrap();
-        let mut policy = overlay.policy().clone();
-        policy.builtin = crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation;
-        overlay.set_policy(policy.clone()).unwrap();
-        assert!(overlay.cached_value(at("E1")).is_none());
-        for cell in ["E1", "F1"] {
-            assert_eq!(
-                value(&mut overlay, cell, &context),
-                CellValue::Error(crate::model::CellError::Value)
-            );
-        }
-        policy.builtin = crate::eval::config::BuiltinSemanticsPolicy::PinnedPoi;
-        overlay.set_policy(policy).unwrap();
-        assert!(overlay.cached_value(at("F1")).is_none());
-        assert_eq!(
-            value(&mut overlay, "E1", &context),
-            CellValue::Error(crate::model::CellError::Value)
-        );
-        assert_eq!(
-            value(&mut overlay, "F1", &context),
-            CellValue::Error(crate::model::CellError::Value)
-        );
-    }
 }
 
 #[test]
@@ -1488,6 +1399,7 @@ fn shared_provenance_survives_cache_style_and_detaches_on_same_formula_edit() {
         .unwrap()
         .get_mut(at("B1").address)
         .unwrap()
+        .unwrap()
         .shared_formula = Some(shared);
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     overlay
@@ -1512,6 +1424,7 @@ fn shared_provenance_survives_cache_style_and_detaches_on_same_formula_edit() {
             .unwrap()
             .get(at("B1").address)
             .unwrap()
+            .unwrap()
             .shared_formula,
         Some(shared)
     );
@@ -1522,6 +1435,7 @@ fn shared_provenance_survives_cache_style_and_detaches_on_same_formula_edit() {
             .sheet(0)
             .unwrap()
             .get(at("B1").address)
+            .unwrap()
             .unwrap()
             .shared_formula,
         None

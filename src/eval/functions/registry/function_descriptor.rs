@@ -1,5 +1,4 @@
 use super::arity::Arity;
-use super::catalog::{EXCEL_DESCRIPTORS, FUNCTION_DESCRIPTORS};
 use super::dependency_policy::DependencyPolicy;
 use super::evaluation_strategy::EvaluationStrategy;
 use super::function_id::FunctionId;
@@ -21,16 +20,4 @@ pub struct FunctionDescriptor {
     pub dependencies: DependencyPolicy,
     /// Possible result form and element-kind transformation.
     pub result: ResultRule,
-}
-
-/// Builtins available under the selected semantics policy, including aliases.
-/// External/ATP registrations are not advertised by this builtin-only catalog.
-pub fn descriptors_for_policy(
-    policy: crate::eval::config::BuiltinSemanticsPolicy,
-) -> impl Iterator<Item = &'static FunctionDescriptor> {
-    FUNCTION_DESCRIPTORS.iter().chain(
-        EXCEL_DESCRIPTORS.iter().filter(move |_| {
-            policy == crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation
-        }),
-    )
 }

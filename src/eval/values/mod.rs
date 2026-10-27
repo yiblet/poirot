@@ -25,7 +25,7 @@ mod cell_evaluation;
 pub(in crate::eval) mod core_projection;
 
 /// Separation of spreadsheet results from operational aborts.
-mod function_failure;
+mod function_error;
 
 /// Result of a helper operation with semantic and operational failures preserved.
 mod function_result;
@@ -56,7 +56,7 @@ pub(in crate::eval) use area_kind::AreaKind;
 pub(in crate::eval) use array_view::ArrayView;
 pub(in crate::eval) use budgeted_value::{copy_cell, copy_value};
 pub use cell_evaluation::CellEvaluation;
-pub(in crate::eval) use function_failure::{FunctionFailure, function_value, identifier_failure};
+pub(in crate::eval) use function_error::{FunctionError, function_value, identifier_failure};
 pub(in crate::eval) use function_result::FunctionResult;
 pub(in crate::eval) use operand_origin::OperandOrigin;
 pub(in crate::eval) use reference_areas::ReferenceAreas;

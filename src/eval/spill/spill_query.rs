@@ -1,7 +1,7 @@
 //! Read-only questions about a session's spill discovery and settlement state.
 use super::settled_area::SettledArea;
 use super::sheet_candidates::SheetCandidates;
-use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::limits::{EvalResult, EvaluationError};
 use crate::eval::session::Session;
 use crate::eval::values::Area;
 use crate::model::CellAddress;
@@ -29,11 +29,11 @@ impl<'s, 'a> SpillQuery<'s, 'a> {
         if let Some(shared) = self.session.reuse.spill_candidates {
             let index = shared
                 .try_borrow()
-                .map_err(|_| EvaluationFailure::StalePlan)?;
+                .map_err(|_| EvaluationError::StalePlan)?;
             return index
                 .get(&sheet)
                 .map(inspect)
-                .ok_or(EvaluationFailure::StalePlan);
+                .ok_or(EvaluationError::StalePlan);
         }
         self.session
             .state
@@ -42,7 +42,7 @@ impl<'s, 'a> SpillQuery<'s, 'a> {
             .candidates
             .get(&sheet)
             .map(inspect)
-            .ok_or(EvaluationFailure::StalePlan)
+            .ok_or(EvaluationError::StalePlan)
     }
 
     /// Whether all possible owners of this physical area have settled.

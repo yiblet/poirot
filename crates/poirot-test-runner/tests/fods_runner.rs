@@ -198,13 +198,13 @@ fn every_completed_case_is_observed_once_and_output_errors_propagate() {
     expected.sort();
     assert_eq!(observed, expected);
     let broken = execute::execute_with_observer(&plan, &|_| {
-        Err(poirot_test_runner::fods::Error::Output(
+        Err(poirot_test_runner::fods::FodsError::Output(
             std::io::Error::from(std::io::ErrorKind::BrokenPipe),
         ))
     });
     assert!(matches!(
         broken,
-        Err(poirot_test_runner::fods::Error::Output(_))
+        Err(poirot_test_runner::fods::FodsError::Output(_))
     ));
 }
 

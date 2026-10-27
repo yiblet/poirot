@@ -1,5 +1,5 @@
 use poirot::eval::{
-    self as eval, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    self as eval, EvaluationBudgets, EvaluationError, EvaluationInputs, EvaluationOutcome,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
@@ -121,7 +121,7 @@ fn operational_limits_cannot_be_caught_by_iferror() {
             matches!(
                 eval::run_plan(&book, 0, AT, &plan, EvaluationInputs::default(), budgets),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::Budget(_),
+                    failure: EvaluationError::Budget(_),
                     ..
                 }
             ),

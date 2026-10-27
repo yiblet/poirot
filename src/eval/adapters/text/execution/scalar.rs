@@ -1,10 +1,10 @@
-use super::formatting::{coerce_text_render, text_format};
+use super::formatting::text_format;
 use super::operator_units;
 use crate::eval::adapters::elementwise::{self};
 use crate::eval::functions::registry::{FunctionId, TextFunction};
-use crate::eval::host::{ArgumentCoercion, CallHost, PolicyReads};
-use crate::eval::limits::{CapabilityId, EvaluationFailure, WorkKind};
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR};
+use crate::eval::host::{ArgumentCoercion, CallHost};
+use crate::eval::limits::{CapabilityId, EvaluationError};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR};
 use crate::model::CellValue;
 use crate::model::CellValue::{Blank, Boolean, Error, Number, Text};
 
@@ -34,7 +34,7 @@ pub(super) fn text_scalar(
             host.charge_work(text.len() as u64)?;
             result
                 .try_reserve(text.len())
-                .map_err(|_| host.allocation_failure())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             // SAFETY: text.len() additional slots were reserved immediately above.
             result.extend_from_slice(&text);
         }
@@ -53,10 +53,7 @@ pub(super) fn text_scalar(
     }
     if name == TextFunction::Roman {
         let number = ArgumentCoercion::new(host)
-            .coerce_scalar_number(
-                a.first().ok_or(VALUE_ERROR)?,
-                crate::eval::host::NumericPolicy::PinnedPoi,
-            )?
+            .coerce_scalar_number(a.first().ok_or(VALUE_ERROR)?)?
             .floor();
         if !(0.0..=3999.0).contains(&number) {
             return Err(VALUE_ERROR.into());
@@ -71,7 +68,7 @@ pub(super) fn text_scalar(
                 }
             }
             Some(value) => ArgumentCoercion::new(host)
-                .coerce_scalar_number(value, crate::eval::host::NumericPolicy::PinnedPoi)?
+                .coerce_scalar_number(value)?
                 .floor() as i32,
         };
         if !(0..=4).contains(&form) {
@@ -107,7 +104,7 @@ pub(super) fn text_scalar(
                 match ArgumentCoercion::new(host).formatted_number_text(&text)? {
                     poirot_functions::coercion::compatibility::NumericTextDecision::Number(
                         result,
-                    ) => result.map_err(FunctionFailure::from),
+                    ) => result.map_err(FunctionError::from),
                     poirot_functions::coercion::compatibility::NumericTextDecision::DateTime => {
                         ArgumentCoercion::new(host).legacy_numeric_date_time(&text)
                     }
@@ -130,7 +127,7 @@ pub(super) fn text_scalar(
             let mut result = String::new();
             result
                 .try_reserve_exact(t.len())
-                .map_err(|_| host.allocation_failure())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             for part in t.split(' ').filter(|s| !s.is_empty()) {
                 if !result.is_empty() {
                     // SAFETY: Collapsing spaces and omitting edge spaces cannot exceed t.len().
@@ -145,7 +142,7 @@ pub(super) fn text_scalar(
             let mut result = String::new();
             result
                 .try_reserve_exact(t.len())
-                .map_err(|_| host.allocation_failure())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             for c in t.chars().filter(|c| (*c as u32) >= 32) {
                 // SAFETY: Removing characters cannot exceed the locally reserved input byte length.
                 result.push(c);
@@ -186,7 +183,9 @@ pub(super) fn text_scalar(
                     let mut result = String::new();
                     result
                         .try_reserve_exact(bytes)
-                        .map_err(|_| host.allocation_failure())?;
+                        .map_err(|reservation_source| {
+                            host.reservation_failure(reservation_source)
+                        })?;
                     let mut occurrence = 0;
                     for part in t.split_inclusive(&old) {
                         if let Some(prefix) = part.strip_suffix(&old) {
@@ -237,12 +236,14 @@ pub(super) fn text_scalar(
 }
 
 pub(super) fn text_unsupported(
-    reason: poirot_functions::text_units::Unsupported,
-) -> FunctionFailure {
-    EvaluationFailure::UnsupportedCapability {
+    reason: poirot_functions::text_units::TextSemanticsError,
+) -> FunctionError {
+    EvaluationError::UnsupportedCapability {
         capability: CapabilityId::FunctionAdapter,
-        source: None,
-        detail: format!("text semantics: {reason:?}"),
+        target: None,
+        reason: crate::eval::limits::EvaluationReasonError::TextSemantics(std::sync::Arc::new(
+            reason,
+        )),
     }
     .into()
 }
@@ -259,33 +260,6 @@ pub(in crate::eval) fn concat_operator(
     if let Error(error) = right {
         return Ok(Error(error));
     }
-    PolicyReads::new(host).text_policy();
-    let policy = PolicyReads::new(host)
-        .text_policy_snapshot()
-        .operation(poirot_functions::text_units::Operation::ConcatOperator)
-        .map_err(text_unsupported)?;
-    if policy.units == poirot_functions::text_units::Units::Utf16CodeUnits {
-        return operator_units::text_unit_operator(host, &left, &right);
-    }
-    let left = coerce_text_render(host, &left)?;
-    let right = coerce_text_render(host, &right)?;
-    let bytes = poirot_functions::text_units::checked_total(left.len(), right.len())
-        .map_err(text_unsupported)?;
-    host.charge_kind(WorkKind::TextByte, bytes as u64)?;
-    let measured =
-        poirot_functions::text_units::measure_concat([left.as_str(), right.as_str()], policy)
-            .map_err(text_unsupported)?;
-    if !measured.within_limit {
-        return Err(VALUE_ERROR.into());
-    }
-    host.check_text(measured.bytes)?;
-    let mut output = String::new();
-    output
-        .try_reserve_exact(bytes)
-        .map_err(|_| host.allocation_failure())?;
-    // SAFETY: bytes is the checked sum of the two appended strings.
-    output.push_str(&left);
-    // SAFETY: bytes reserves the checked sum of the two appended strings.
-    output.push_str(&right);
-    Ok(Text(output))
+
+    operator_units::text_unit_operator(host, &left, &right)
 }

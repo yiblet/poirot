@@ -8,9 +8,9 @@ fn failed_batches_and_invalid_policies_preserve_previous_successful_outputs() {
     let mut source = book();
     set_formula(&mut source, 0, 0, "1+1");
     set_formula(&mut source, 0, 1, "IFERROR(A1,42)");
-    let before = source.model().clone();
-    let mut overlay = Overlay::with_workbook(source.model())
-        .with_policy(policy(M::PinnedPoiCellSetter))
+    let before = source.clone();
+    let mut overlay = Overlay::with_workbook(&source)
+        .with_policy(policy())
         .build()
         .unwrap();
     let context = EvaluationContext::default();
@@ -26,7 +26,7 @@ fn failed_batches_and_invalid_policies_preserve_previous_successful_outputs() {
     limited.limits = limited.limits.max_work(0);
     assert!(matches!(
         overlay.evaluation(&limited).unwrap().outputs(&targets),
-        Err(eval::EvaluationFailure::Budget(_))
+        Err(eval::EvaluationError::Budget(_))
     ));
     assert_eq!(overlay.changes(), committed);
     assert!(Arc::ptr_eq(
@@ -38,11 +38,11 @@ fn failed_batches_and_invalid_policies_preserve_previous_successful_outputs() {
     assert!(matches!(
         overlay.evaluation(&limited),
         Err(poirot::calculation::OverlayError::Evaluation(
-            eval::EvaluationFailure::MemoRetentionLimit { .. }
+            eval::EvaluationError::MemoRetentionLimit { .. }
         ))
     ));
     assert_eq!(overlay.changes(), committed);
-    assert_eq!(source.model(), &before);
+    assert_eq!(&source, &before);
     let result = output(&mut overlay, &source);
     assert_eq!(get(&result, 0, 0), CellValue::Number(2.));
 }

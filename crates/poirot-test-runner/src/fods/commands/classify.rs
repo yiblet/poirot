@@ -1,6 +1,6 @@
 //! Add categories to known gaps while keeping baseline verdicts unchanged.
 use crate::fods::{
-    Error,
+    FodsError,
     cli::ClassifyArgs,
     corpus::{Baseline, BaselineStatus},
     execute,
@@ -8,12 +8,12 @@ use crate::fods::{
 };
 
 /// Classify existing corpus gaps and persist their diagnostic categories.
-pub fn run(args: &ClassifyArgs) -> Result<bool, Error> {
+pub fn run(args: &ClassifyArgs) -> Result<bool, FodsError> {
     let path = args.corpus.join("classifications.json");
     if !path.is_file() {
-        return Err(Error::InvalidPlan("native classify requires a standalone classifications.json; use baseline update for the combined checked-in corpus".into()));
+        return Err(FodsError::MissingStandaloneBaseline);
     }
-    let original = std::fs::read(&path).map_err(|source| Error::Io {
+    let original = std::fs::read(&path).map_err(|source| FodsError::Io {
         path: path.clone(),
         source,
     })?;
@@ -24,12 +24,10 @@ pub fn run(args: &ClassifyArgs) -> Result<bool, Error> {
     })?;
     let report = execute::execute(&plan)?;
     if report.summary.harness_errors != 0 {
-        return Err(Error::InvalidPlan(
-            "harness errors prevent gap classification".into(),
-        ));
+        return Err(FodsError::ClassificationHarnessErrors);
     }
     let mut baseline: Baseline =
-        serde_json::from_slice(&original).map_err(|source| Error::Metadata {
+        serde_json::from_slice(&original).map_err(|source| FodsError::Metadata {
             path: path.clone(),
             source,
         })?;
@@ -38,24 +36,25 @@ pub fn run(args: &ClassifyArgs) -> Result<bool, Error> {
     let mut labeled = 0;
     for case in &mut baseline.cases {
         if case.classification == BaselineStatus::Gap {
-            let result = results.get(&case.id).ok_or_else(|| {
-                Error::InvalidPlan(format!("no classification result for {}", case.id))
-            })?;
+            let result =
+                results
+                    .get(&case.id)
+                    .ok_or_else(|| FodsError::ClassificationCaseMissing {
+                        case: case.id.clone(),
+                    })?;
             case.gap_type = result.failure.as_ref().map(|failure| failure.gap_type);
             labeled += usize::from(case.gap_type.is_some());
         }
     }
     // Refuse to overwrite metadata edited while classification was running.
-    if std::fs::read(&path).map_err(|source| Error::Io {
+    if std::fs::read(&path).map_err(|source| FodsError::Io {
         path: path.clone(),
         source,
     })? != original
     {
-        return Err(Error::InvalidPlan(
-            "classification baseline changed during the run".into(),
-        ));
+        return Err(FodsError::ClassificationBaselineChanged);
     }
-    let bytes = serde_json::to_vec(&baseline).map_err(|source| Error::Metadata {
+    let bytes = serde_json::to_vec(&baseline).map_err(|source| FodsError::Metadata {
         path: path.clone(),
         source,
     })?;
@@ -63,17 +62,20 @@ pub fn run(args: &ClassifyArgs) -> Result<bool, Error> {
         .corpus
         .join(format!(".classifications-{}.json", std::process::id()));
     let result = (|| {
-        std::fs::write(&temporary, bytes).map_err(|source| Error::Io {
+        std::fs::write(&temporary, bytes).map_err(|source| FodsError::Io {
             path: temporary.clone(),
             source,
         })?;
-        std::fs::rename(&temporary, &path).map_err(|source| Error::Io {
+        std::fs::rename(&temporary, &path).map_err(|source| FodsError::Io {
             path: path.clone(),
             source,
         })
     })();
     if temporary.exists() {
-        let _ = std::fs::remove_file(&temporary);
+        std::fs::remove_file(&temporary).map_err(|source| FodsError::Io {
+            path: temporary.clone(),
+            source,
+        })?;
     }
     result?;
     println!(

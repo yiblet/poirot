@@ -1,7 +1,5 @@
 //! Unit tests for cached results, range indexes, recorded reads and lookup prefix snapshots.
 
-/// Range index lookups, consumption and transitive invalidation.
-mod cache_range_index;
 /// Replacement with unchanged dependencies keeps indexes and updates versions.
 mod cache_replacement;
 /// Intrinsic cache size overflow under unlimited retention.

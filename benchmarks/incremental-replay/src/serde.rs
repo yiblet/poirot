@@ -202,7 +202,7 @@ pub(super) fn run(args: &[String]) -> Result<()> {
         || Ok(Workbook::restore_snapshot().from_bytes(&source)?),
     )?);
     // Public model-snapshot stages, without the file envelope or bounded decoder.
-    let model = book.model();
+    let model = &book;
     let wire = postcard::to_allocvec(&Snapshot::capture(model))?;
     rows.push(measure("stage.source.capture", repetitions, None, || {
         Ok(Snapshot::capture(model))

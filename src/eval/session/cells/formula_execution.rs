@@ -4,7 +4,7 @@ use crate::eval::compile;
 use crate::eval::compile::compiler::PreparedFormula;
 use crate::eval::config::ArrayResultPolicy;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::session::composition::Session;
 use crate::eval::session::projection::ResultProjection;
 use crate::eval::values::{VALUE_ERROR, Value, err};
@@ -38,7 +38,7 @@ impl<'s, 'a> FormulaExecution<'s, 'a> {
             .plan
             .is_some_and(|plan| plan.policy() != prepared.policy())
         {
-            return Err(EvaluationFailure::StalePlan);
+            return Err(EvaluationError::StalePlan);
         }
         if self.session.policies.array_result_policy == ArrayResultPolicy::DynamicSpill
             && prepared.spill_shape().is_some()
@@ -62,22 +62,32 @@ impl<'s, 'a> FormulaExecution<'s, 'a> {
             PreparedFormula::CompilationFailure { error, .. } => {
                 let source = Some(EvaluationTarget { sheet, address: at });
                 let capability = CapabilityId::FormulaCompilation;
-                let detail = error.to_string();
+                let reason = match error {
+                    crate::eval::compile::bytecode::CompileError::ResourceLimit => {
+                        crate::eval::limits::EvaluationReasonError::CompilationResourceLimit
+                    }
+                    crate::eval::compile::bytecode::CompileError::InvalidArray => {
+                        crate::eval::limits::EvaluationReasonError::CompilationInvalidArray
+                    }
+                    crate::eval::compile::bytecode::CompileError::InvalidReference => {
+                        crate::eval::limits::EvaluationReasonError::CompilationInvalidReference
+                    }
+                };
                 Err(
                     if matches!(
                         error,
                         crate::eval::compile::bytecode::CompileError::ResourceLimit
                     ) {
-                        EvaluationFailure::ResourceLimit {
+                        EvaluationError::ResourceLimit {
                             capability,
-                            source,
-                            detail,
+                            target: source,
+                            reason,
                         }
                     } else {
-                        EvaluationFailure::UnsupportedCapability {
+                        EvaluationError::UnsupportedCapability {
                             capability,
-                            source,
-                            detail,
+                            target: source,
+                            reason,
                         }
                     },
                 )
@@ -85,26 +95,28 @@ impl<'s, 'a> FormulaExecution<'s, 'a> {
             PreparedFormula::ParseFailure { error, .. } => {
                 let source = Some(EvaluationTarget { sheet, address: at });
                 let capability = CapabilityId::FormulaParsing;
-                let detail = error.to_string();
-                match error.kind {
+                let reason = crate::eval::limits::EvaluationReasonError::Parse(
+                    std::sync::Arc::new(error.clone()),
+                );
+                match error.kind() {
                     poirot_parsing::formula::ParseErrorKind::Syntax => Ok(err(VALUE_ERROR)),
                     poirot_parsing::formula::ParseErrorKind::ResourceLimit => {
-                        Err(EvaluationFailure::ResourceLimit {
+                        Err(EvaluationError::ResourceLimit {
                             capability,
-                            source,
-                            detail,
+                            target: source,
+                            reason,
                         })
                     }
                     poirot_parsing::formula::ParseErrorKind::InvalidPolicy => {
-                        Err(EvaluationFailure::UnsupportedCapability {
+                        Err(EvaluationError::UnsupportedCapability {
                             capability,
-                            source,
-                            detail,
+                            target: source,
+                            reason,
                         })
                     }
                 }
             }
-            PreparedFormula::RegistryMismatch { .. } => Err(EvaluationFailure::StalePlan),
+            PreparedFormula::RegistryMismatch { .. } => Err(EvaluationError::StalePlan),
         }
     }
 
@@ -165,7 +177,7 @@ impl<'s, 'a> FormulaExecution<'s, 'a> {
                 .extensions
                 .is_none_or(|registry| identity != &registry.identity())
         }) {
-            return Err(EvaluationFailure::StalePlan);
+            return Err(EvaluationError::StalePlan);
         }
         if self.session.sources.workbook.sheet(target.sheet).is_none()
             || target.address.validate().is_err()

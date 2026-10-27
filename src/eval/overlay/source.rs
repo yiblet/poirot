@@ -64,13 +64,20 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
     }
 
     /// Resolve a local sheet-qualified cell against baseline sheet metadata.
-    pub fn target(&self, reference: &str) -> Result<EvaluationTarget, ModelError> {
+    pub fn target(
+        &self,
+        reference: &str,
+    ) -> Result<EvaluationTarget, crate::eval::overlay::overlay_target_error::OverlayTargetError>
+    {
         let target = LocalCellTarget::parse(reference)?;
         let sheet = self
             .workbook()
-            .try_sheet_index_by_name(&target.sheet)
-            .map_err(|e| ModelError(e.to_string()))?
-            .ok_or_else(|| ModelError("target worksheet is absent".into()))?;
+            .try_sheet_index_by_name(&target.sheet)?
+            .ok_or_else(|| {
+                crate::eval::overlay::overlay_target_error::OverlayTargetError::MissingWorksheet {
+                    name: target.sheet.into_owned(),
+                }
+            })?;
         Ok(EvaluationTarget {
             sheet,
             address: target.address,
@@ -91,7 +98,9 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
     pub fn validate_target(&self, target: EvaluationTarget) -> Result<(), ModelError> {
         target.address.validate()?;
         if self.workbook().sheet(target.sheet).is_none() {
-            return Err(ModelError("worksheet index out of bounds".into()));
+            return Err(ModelError::InvalidWorksheetIndex {
+                index: target.sheet,
+            });
         }
         Ok(())
     }
@@ -414,13 +423,17 @@ macro_rules! edit_methods {
             target: EvaluationTarget,
             value: impl Into<CellValue>,
         ) -> Result<(), ModelError> {
-            let mut cell = self
-                .source
-                .source_cell(target)
-                .cloned()
-                .ok_or_else(|| ModelError("cache target is absent".into()))?;
+            let mut cell = self.source.source_cell(target).cloned().ok_or_else(|| {
+                ModelError::MissingCachedValueTarget {
+                    sheet: target.sheet,
+                    address: target.address,
+                }
+            })?;
             if cell.formula.is_none() {
-                return Err(ModelError("cache target has no formula".into()));
+                return Err(ModelError::CachedValueFormulaChanged {
+                    sheet: target.sheet,
+                    address: target.address,
+                });
             }
             cell.value = value.into();
             self.write_cell(
@@ -463,7 +476,7 @@ pub(super) use edit_methods;
 macro_rules! source_methods {
     () => {
         /// Resolve a local sheet-qualified output or input address.
-        pub fn target(&self, reference: &str) -> Result<EvaluationTarget, ModelError> {
+        pub fn target(&self, reference: &str) -> Result<EvaluationTarget, crate::eval::overlay::overlay_target_error::OverlayTargetError> {
             self.source.target(reference)
         }
         /// Borrow the immutable baseline before authored edits.

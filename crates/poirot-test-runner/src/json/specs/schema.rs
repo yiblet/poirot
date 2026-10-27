@@ -1,3 +1,4 @@
+use super::specification_error::SpecificationError;
 use poirot::eval;
 use poirot::model;
 use serde::{Deserialize, Deserializer, de::Error};
@@ -20,8 +21,6 @@ pub(crate) struct Case {
     pub rationale: String,
     /// Primary references supporting the fixture's expectations.
     pub source_urls: Vec<String>,
-    /// Default text-counting contract for this case.
-    pub text_policy: TextPolicy,
     /// Worksheet spellings in workbook index order.
     pub sheets: Vec<String>,
     /// Initial authored formulas and typed literal inputs.
@@ -91,12 +90,12 @@ struct RawCell {
 }
 impl TryFrom<RawCell> for Cell {
     /// Schema diagnostic when a fixture cell lacks exactly one formula-or-value channel.
-    type Error = &'static str;
+    type Error = SpecificationError;
     fn try_from(raw: RawCell) -> Result<Self, Self::Error> {
         let content = match (raw.formula, raw.value) {
             (Some(formula), None) => CellContent::Formula(formula),
             (None, Some(value)) => CellContent::Literal(value),
-            _ => return Err("cell must contain exactly one formula or typed value"),
+            _ => return Err(SpecificationError::InvalidCellContent),
         };
         Ok(Self {
             target: Target {
@@ -265,12 +264,14 @@ pub(crate) struct Assertion {
 }
 impl Assertion {
     /// Validate an expected footprint and expand its coordinates for public output reads.
-    pub fn expected_cells(&self) -> Result<Vec<(eval::EvaluationTarget, &Scalar)>, String> {
+    pub fn expected_cells(
+        &self,
+    ) -> Result<Vec<(eval::EvaluationTarget, &Scalar)>, SpecificationError> {
         let origin = self.target.evaluation();
         match self
             .expected
             .as_ref()
-            .ok_or("documented assertion has no expected result")?
+            .ok_or(SpecificationError::MissingExpectedResult)?
         {
             Expected::Scalar(value) => Ok(vec![(origin, value)]),
             Expected::Array(array) => {
@@ -279,10 +280,10 @@ impl Assertion {
                     .value
                     .first()
                     .filter(|row| !row.is_empty())
-                    .ok_or("empty array footprint")?
+                    .ok_or(SpecificationError::EmptyFootprint)?
                     .len();
                 if !array.value.iter().all(|row| row.len() == width) {
-                    return Err("nonrectangular array footprint".into());
+                    return Err(SpecificationError::NonrectangularFootprint);
                 }
                 let mut cells = Vec::new();
                 for (row, values) in array.value.iter().enumerate() {
@@ -291,15 +292,17 @@ impl Assertion {
                             row: origin
                                 .address
                                 .row
-                                .checked_add(u32::try_from(row).map_err(|e| e.to_string())?)
-                                .ok_or("footprint row overflow")?,
+                                .checked_add(u32::try_from(row).map_err(SpecificationError::from)?)
+                                .ok_or(SpecificationError::FootprintRowOverflow)?,
                             col: origin
                                 .address
                                 .col
-                                .checked_add(u32::try_from(col).map_err(|e| e.to_string())?)
-                                .ok_or("footprint column overflow")?,
+                                .checked_add(u32::try_from(col).map_err(SpecificationError::from)?)
+                                .ok_or(SpecificationError::FootprintColumnOverflow)?,
                         };
-                        address.validate().map_err(|e| e.to_string())?;
+                        address
+                            .validate()
+                            .map_err(|source| SpecificationError::Model(source.into()))?;
                         cells.push((
                             eval::EvaluationTarget {
                                 sheet: origin.sheet,
@@ -427,16 +430,6 @@ pub(crate) enum Currency {
     #[serde(rename = "USD")]
     Usd,
 }
-/// Documented Excel text-unit contract selected by the fixture.
-#[derive(Clone, Copy, Debug, Deserialize)]
-pub(crate) enum TextPolicy {
-    /// Compatibility-v1 text-unit behavior.
-    #[serde(rename = "excel_v1")]
-    ExcelV1,
-    /// Documented compatibility-v2 surrogate-pair counting.
-    #[serde(rename = "excel_v2")]
-    ExcelV2,
-}
 /// Explicit numeric-date field ordering used by context-sensitive parsing.
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub(crate) enum DateOrder {
@@ -508,8 +501,6 @@ pub(crate) struct InitialSettings {
     pub date_system: DateSystem,
     /// Optional initial currency formatter.
     pub currency: Option<Currency>,
-    /// Optional override of the case's text-unit contract.
-    pub text_policy: Option<TextPolicy>,
     /// Optional initial array-publication contract.
     pub array_result_policy: Option<ArrayResultPolicy>,
     /// Initial deterministic context overrides.
@@ -522,8 +513,6 @@ pub(crate) struct InitialSettings {
 pub(crate) struct SettingsUpdate {
     /// Replacement currency formatting contract.
     pub currency: Option<Currency>,
-    /// Replacement text-unit contract.
-    pub text_policy: Option<TextPolicy>,
     /// Replacement array-publication contract.
     pub array_result_policy: Option<ArrayResultPolicy>,
     /// Context fields to update for the next evaluation.
@@ -533,30 +522,9 @@ pub(crate) struct SettingsUpdate {
 
 // Typed projection of the registry fields consumed by the runner. The complete
 // coverage metadata is validated separately by the package's specification tool.
-/// Typed projection of feature coverage metadata consumed by the fixture runner.
-#[derive(Deserialize)]
+/// Current builtin availability, separate from the source-research inventory.
+#[derive(Debug, Deserialize)]
 pub(crate) struct RegistryInventory {
-    /// Registry feature declarations to match with fixture cases.
-    pub features: Vec<RegistryFeature>,
-}
-/// Feature identity and implementation status used during coverage validation.
-#[derive(Deserialize)]
-pub(crate) struct RegistryFeature {
-    /// Registry feature spelling matched by fixtures.
-    pub name: String,
-    /// Current support classification from the checked inventory.
-    pub implementation_status: ImplementationStatus,
-}
-/// Coverage inventory's declared implementation completeness.
-#[derive(Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub(crate) enum ImplementationStatus {
-    /// Feature has a registered executable implementation.
-    Registered,
-    /// Feature is explicitly unsupported.
-    Unsupported,
-    /// Only part of the feature contract is implemented.
-    Partial,
-    /// Implementation status has not been established.
-    Unknown,
+    /// Every builtin spelling exported by the current catalog.
+    pub registered_functions: Vec<String>,
 }

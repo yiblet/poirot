@@ -10,13 +10,12 @@ use crate::eval::adapters::elementwise::{
 };
 use crate::eval::functions::registry::MatrixFunction;
 use crate::eval::host::{
-    Aggregators, ArgumentCoercion, CallHost, NumericPolicy, OperandKind, OperandReader,
-    ScalarOperand,
+    Aggregators, ArgumentCoercion, CallHost, OperandKind, OperandReader, ScalarOperand,
 };
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::session::Session;
 use crate::eval::values::{
-    FunctionFailure, FunctionResult, OperandOrigin, Value, err, numeric_outcome,
+    FunctionError, FunctionResult, OperandOrigin, Value, err, numeric_outcome,
 };
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellValue::{Blank, Boolean, Error, Number};
@@ -27,11 +26,12 @@ use poirot_functions::statistics::BuiltinAggregator as A;
 fn append<T>(values: &mut Vec<T>, value: T) -> FunctionResult<()> {
     values
         .try_reserve(1)
-        .map_err(|_| EvaluationFailure::Resource {
+        .map_err(|reservation_source| EvaluationError::Resource {
             kind: crate::eval::limits::ResourceFailureKind::Allocation,
             capability: CapabilityId::FunctionAdapter,
-            source: None,
-            detail: "grouping output allocation failed".into(),
+            target: None,
+            reason: (crate::eval::limits::EvaluationReasonError::GroupingOutputAllocationFailed)
+                .with_reservation_source(reservation_source),
         })?;
     // SAFETY: The successful local reservation admits exactly this one additional member.
     values.push(value);
@@ -43,7 +43,7 @@ fn reserve<T>(host: &mut CallHost<'_, '_>, count: usize) -> FunctionResult<Vec<T
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     Ok(values)
 }
 
@@ -65,7 +65,7 @@ fn generated_text(
     let mut units = Vec::new();
     units
         .try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     for part in parts {
         // SAFETY: count is the checked sum of these unchanged part lengths, and that total capacity was reserved locally.
         units.extend(part.units());
@@ -80,8 +80,7 @@ fn ordinal_label(
     prefix: &str,
     ordinal: usize,
 ) -> FunctionResult<CellValue> {
-    let number = ArgumentCoercion::new(host)
-        .coerce_number_to_text(ordinal as f64, NumericPolicy::PinnedPoi)?;
+    let number = ArgumentCoercion::new(host).coerce_number_to_text(ordinal as f64)?;
     generated_text(
         host,
         &[
@@ -115,11 +114,9 @@ fn aggregate(
                 && (matches!(value, Number(_))
                     || (member.origin == OperandOrigin::Direct
                         && !matches!(value, Blank | Error(_))
-                        && match ArgumentCoercion::new(host)
-                            .coerce_scalar_number(value, NumericPolicy::PinnedPoi)
-                        {
+                        && match ArgumentCoercion::new(host).coerce_scalar_number(value) {
                             Ok(_) => true,
-                            Err(FunctionFailure::Spreadsheet(_)) => false,
+                            Err(FunctionError::Spreadsheet(_)) => false,
                             Err(error) => return Err(error),
                         }));
             count = count.saturating_add(poirot_functions::statistics::count_member(
@@ -149,7 +146,7 @@ fn aggregate(
             host.check_text(length.saturating_mul(2))?;
             output
                 .try_reserve(units.len())
-                .map_err(|_| host.allocation_failure())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             // SAFETY: The successful preceding reservation admits the unchanged units.len() additional members.
             output.extend(units);
         }
@@ -171,11 +168,9 @@ fn aggregate(
             Error(error) => V::Error(*error),
             value => V::Text {
                 numeric: if origin == Origin::Direct {
-                    match ArgumentCoercion::new(host)
-                        .coerce_scalar_number(value, NumericPolicy::PinnedPoi)
-                    {
+                    match ArgumentCoercion::new(host).coerce_scalar_number(value) {
                         Ok(value) => Some(value),
-                        Err(FunctionFailure::Spreadsheet(_)) => None,
+                        Err(FunctionError::Spreadsheet(_)) => None,
                         Err(error) => return Err(error),
                     }
                 } else {
@@ -196,12 +191,12 @@ fn aggregate(
     }
     if operation == A::Mode {
         host.check_values(numeric.len().saturating_mul(3))?;
-        use poirot_functions::statistics::modern::Failure as SampleFailure;
+        use poirot_functions::statistics::DistributionError as SampleError;
         poirot_functions::statistics::modern_sample::modes(&mut numeric, host.allocation_failure())
             .map_err(|error| match error {
-                SampleFailure::Spreadsheet(error) => FunctionFailure::from(error),
-                SampleFailure::Operational(error) => error.into(),
-                SampleFailure::NonConvergence | SampleFailure::ComputationalLimit => {
+                SampleError::Spreadsheet(error) => FunctionError::from(error),
+                SampleError::Operational(error) => error.into(),
+                SampleError::NonConvergence | SampleError::ComputationalLimit => {
                     host.budget_exceeded().into()
                 }
             })?;
@@ -227,7 +222,7 @@ fn aggregate_value(
     members: &[&ScalarOperand],
 ) -> FunctionResult<CellValue> {
     match aggregate(host, operation, members) {
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(Error(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(Error(error)),
         other => other,
     }
 }
@@ -246,7 +241,7 @@ fn percentof(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
         let mut members = reserve(host, values.len())?;
         members
             .try_reserve(values.len())
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: The unchanged source iterator emits exactly the locally reserved number of members.
         members.extend(values.iter());
         append(&mut sums, aggregate_value(host, A::Sum, &members)?)?;
@@ -402,7 +397,7 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
         let mut ordinals = reserve(host, group.members.len())?;
         ordinals
             .try_reserve(group.members.len())
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: The source range below has exactly the locally reserved member count.
         ordinals.extend_from_slice(
             partition
@@ -577,7 +572,7 @@ impl Output<'_> {
             || aggregators.members.is_empty()
             || results.rows() != groups.len()
         {
-            return Err(EvaluationFailure::StalePlan.into());
+            return Err(EvaluationError::StalePlan.into());
         }
         let vertical = aggregators.columns == 1 && aggregators.rows > 1;
         let fields = keys.cols();
@@ -708,7 +703,7 @@ impl Output<'_> {
             }
         }
         if output.len() != count {
-            return Err(EvaluationFailure::StalePlan.into());
+            return Err(EvaluationError::StalePlan.into());
         }
         matrices::array(host, rows, columns, output.into_iter(), address)
     }
@@ -734,7 +729,7 @@ pub(in crate::eval) fn execute(
         groupby(&mut host, address)
     } {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }

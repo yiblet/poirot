@@ -1,12 +1,11 @@
 use super::dispatch::database_failure;
 use crate::eval::adapters::elementwise::rows::Reducer;
-use crate::eval::config::BuiltinSemanticsPolicy;
-use crate::eval::host::{CallHost, PolicyReads};
+use crate::eval::host::CallHost;
 use crate::eval::values::FunctionResult;
 use crate::model::CellError::Num;
 use crate::model::CellValue;
 use crate::model::CellValue::{Blank, Error};
-use poirot_functions::database::{DatabaseFunction, FinalizationPolicy, aggregate_selected};
+use poirot_functions::database::{DatabaseFunction, aggregate_selected};
 
 /// Accumulates database payloads accepted by conditional row selection for domain aggregation.
 /// DGET can stop at a second nonblank match instead of reading further records.
@@ -31,7 +30,7 @@ impl Reducer for Selected {
         host.check_values(self.values.len().saturating_add(1))?;
         self.values
             .try_reserve(1)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: one additional slot was reserved immediately above.
         self.values.push(value);
         Ok(None)
@@ -54,10 +53,6 @@ impl Reducer for Selected {
             1
         };
         host.charge_work((values.len() as u64).saturating_mul(passes))?;
-        let policy = match PolicyReads::new(host).builtin_policy_snapshot() {
-            BuiltinSemanticsPolicy::PinnedPoi => FinalizationPolicy::PinnedPoi,
-            BuiltinSemanticsPolicy::ExcelDocumentation => FinalizationPolicy::ExcelDocumentation,
-        };
-        aggregate_selected(function, &values, policy).map_err(|error| database_failure(host, error))
+        aggregate_selected(function, &values).map_err(|error| database_failure(host, error))
     }
 }

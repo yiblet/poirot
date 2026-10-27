@@ -14,7 +14,6 @@ fn at(s: &str) -> EvaluationTarget {
 }
 fn policy() -> EvaluationPolicy {
     EvaluationPolicy {
-        builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
         ..Default::default()
     }
 }
@@ -26,8 +25,7 @@ fn formula(text: &str) -> CellValue {
         0,
         at("Z100").address,
         text,
-        &RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation),
+        &RunConfiguration::default(),
         EvaluationBudgets::default(),
     ) {
         EvaluationOutcome::Complete { value, .. } => value,
@@ -290,8 +288,7 @@ fn blockers_and_operational_budgets_are_preserved() {
             0,
             at("Z100").address,
             "IFERROR(SUM(SORT(SEQUENCE(1000))),99)",
-            &RunConfiguration::default()
-                .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation),
+            &RunConfiguration::default(),
             EvaluationBudgets {
                 materialized_values: 100,
                 ..Default::default()

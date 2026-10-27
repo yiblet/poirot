@@ -1,4 +1,4 @@
-use super::database_match_failure::DatabaseMatchFailure;
+use super::database_match_error::DatabaseMatchError;
 use super::selected::Selected;
 use crate::eval::adapters::elementwise::rows::{self, Field, Layout, PredicateErrors, Rows};
 use crate::eval::adapters::elementwise::{
@@ -6,9 +6,8 @@ use crate::eval::adapters::elementwise::{
 };
 use crate::eval::host::{ArgumentCoercion, CallHost, OperandReader};
 use crate::eval::limits::{CapabilityId, EvalResult};
-use crate::eval::ports::DependencyRead;
-use crate::eval::session::{ReadRecorder, Session};
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, function_value};
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, function_value};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellValue::{Blank, Error, Text};
 use crate::model::{CellAddress, CellValue};
@@ -26,22 +25,19 @@ pub(in crate::eval) fn execute(
     function: DatabaseFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    if function == DatabaseFunction::Average {
-        ReadRecorder::new(session).read(DependencyRead::BuiltinPolicy);
-    }
     let mut host = CallHost::new(session, sheet, address, arguments);
     function_value(evaluate(&mut host, function))
 }
 
-pub(super) fn database_failure(host: &CallHost<'_, '_>, error: DatabaseError) -> FunctionFailure {
+pub(super) fn database_failure(host: &CallHost<'_, '_>, error: DatabaseError) -> FunctionError {
     match error {
         DatabaseError::Cell(error) => error.into(),
         DatabaseError::FormulaCriteria => {
-            host.unsupported(CapabilityId::FunctionAdapter, "database formula criteria")
+            host.unsupported(CapabilityId::FunctionAdapter, crate::eval::limits::EvaluationReasonError::DatabaseFormulaCriteria)
         }
         DatabaseError::UnsupportedTextProjection => host.unsupported(
             CapabilityId::FunctionAdapter,
-            "database scalar projection cannot preserve isolated UTF16 surrogates",
+            crate::eval::limits::EvaluationReasonError::DatabaseScalarProjectionCannotPreserveIsolatedUtf16Surrogates,
         ),
     }
 }
@@ -81,7 +77,7 @@ pub(super) fn scratch(host: &mut CallHost<'_, '_>, value: &CellValue) -> Functio
     // Scalar numeric normalization has statically bounded scratch; only input
     // text grows with the workbook. Charge the text actually inspected.
     host.charge_work((bytes as u64).saturating_add(1))
-        .map_err(FunctionFailure::Operational)
+        .map_err(FunctionError::Operational)
 }
 
 pub(super) fn row_matches(
@@ -119,9 +115,10 @@ pub(super) fn row_matches(
                 if coerce_database_header_text(host, &condition)?.is_empty() {
                     return Err(VALUE_ERROR.into());
                 }
-                return Err(
-                    host.unsupported(CapabilityId::FunctionAdapter, "database formula criteria")
-                );
+                return Err(host.unsupported(
+                    CapabilityId::FunctionAdapter,
+                    crate::eval::limits::EvaluationReasonError::DatabaseFormulaCriteria,
+                ));
             };
             let value = OperandReader::new(host).read_cell(0, row, selected)?.value;
             scratch(host, &value)?;
@@ -147,14 +144,12 @@ pub(super) fn row_matches(
                     .as_ref()
                     .map(|(pattern, input)| (pattern.as_str(), input.as_str())),
                 |mut visit| {
-                    condition_matches_metered::<DatabaseMatchFailure>(
-                        &value, &condition, &mut visit,
-                    )
+                    condition_matches_metered::<DatabaseMatchError>(&value, &condition, &mut visit)
                 },
             )
             .map_err(|error| match error {
-                DatabaseMatchFailure::Domain(error) => database_failure(host, error),
-                DatabaseMatchFailure::Host(error) => error,
+                DatabaseMatchError::Domain(error) => database_failure(host, error),
+                DatabaseMatchError::Host(error) => error,
             })?;
             Ok(selected)
         },

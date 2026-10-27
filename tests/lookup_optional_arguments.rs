@@ -1,6 +1,5 @@
 //! Optional lookup operands preserve absence independently of blank values.
 use poirot::calculation::EvaluationContext;
-use poirot::eval::BuiltinSemanticsPolicy;
 use poirot::eval::EvaluationPolicy;
 use poirot::eval::overlay::Evaluation;
 use poirot::eval::overlay::Overlay;
@@ -22,15 +21,11 @@ fn lookup_optional_modes_and_fallbacks_preserve_public_argument_channels() {
         ("B2", 10.),
         ("B3", 21.),
     ] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     let context = EvaluationContext::default();
-    for builtin in [
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-        BuiltinSemanticsPolicy::PinnedPoi,
-    ] {
+    {
         let policy = EvaluationPolicy {
-            builtin,
             ..Default::default()
         };
         let mut direct = Evaluation::with_workbook(&book)
@@ -96,15 +91,11 @@ fn lookup_optional_modes_and_fallbacks_preserve_public_argument_channels() {
         ] {
             direct.set_formula(target, formula).unwrap();
             overlay.set_formula(target, formula).unwrap();
-            assert_eq!(
-                direct.cell(target).unwrap(),
-                expected,
-                "{builtin:?}: {formula}"
-            );
+            assert_eq!(direct.cell(target).unwrap(), expected, "{formula}");
             assert_eq!(
                 overlay.evaluation(&context).unwrap().cell(target).unwrap(),
                 expected,
-                "{builtin:?}: {formula}"
+                "{formula}"
             );
         }
     }

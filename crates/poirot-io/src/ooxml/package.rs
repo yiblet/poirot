@@ -26,7 +26,7 @@ impl<'a> ImportPackage<'a> {
                 options.max_input_bytes,
                 0,
                 bytes.len() as u64,
-                "XLSX package",
+                crate::IoOperation::XlsxPackage,
             ));
         }
         let mut zip = ZipArchive::new(Cursor::new(bytes)).map_err(xml)?;
@@ -36,7 +36,7 @@ impl<'a> ImportPackage<'a> {
                 options.max_zip_entries as u64,
                 0,
                 zip.len() as u64,
-                "XLSX catalog",
+                crate::IoOperation::XlsxCatalog,
             ));
         }
         let mut total = 0u64;
@@ -45,14 +45,16 @@ impl<'a> ImportPackage<'a> {
             let file = zip.by_index(index).map_err(xml)?;
             total = total
                 .checked_add(file.size())
-                .ok_or(IoError::SizeOverflow("summing expanded XLSX entries"))?;
+                .ok_or(IoError::SizeOverflow)?;
             if file.size() > options.max_zip_entry_bytes {
                 return Err(IoError::quota(
                     crate::IoResource::ZipEntryBytes,
                     options.max_zip_entry_bytes,
                     0,
                     file.size(),
-                    format!("XLSX entry {}", file.name().map_err(xml)?),
+                    crate::IoOperation::Entry {
+                        path: file.name().map_err(xml)?.into_owned(),
+                    },
                 ));
             }
             if total > options.max_zip_total_bytes {
@@ -61,7 +63,7 @@ impl<'a> ImportPackage<'a> {
                     options.max_zip_total_bytes,
                     total.saturating_sub(file.size()),
                     file.size(),
-                    "XLSX catalog",
+                    crate::IoOperation::XlsxCatalog,
                 ));
             }
             if file.is_dir() {
@@ -69,9 +71,9 @@ impl<'a> ImportPackage<'a> {
             }
             let name = file.name().map_err(xml)?.into_owned();
             if entries.insert(name.clone(), index).is_some() {
-                return Err(IoError::Unsupported(format!(
-                    "duplicate ZIP entry {name}: ambiguous import not yet covered"
-                )));
+                return Err(IoError::Unsupported(
+                    crate::WorkbookFeatureError::DuplicateZipEntry { name: name.clone() },
+                ));
             }
         }
         Ok(Self {
@@ -83,11 +85,10 @@ impl<'a> ImportPackage<'a> {
 
     /// Expand one admitted original part under the configured per-entry limit.
     pub(crate) fn read(&mut self, name: &str) -> Result<Vec<u8>, IoError> {
-        let index = self
-            .entries
-            .get(name)
-            .copied()
-            .ok_or_else(|| IoError::Opc(crate::opc::OpcError::MissingPart(name.into())))?;
+        let index =
+            self.entries.get(name).copied().ok_or_else(|| {
+                IoError::Opc(crate::opc::OpcError::MissingPart { path: name.into() })
+            })?;
         let mut file = self.zip.by_index(index).map_err(xml)?;
         let mut contents = Vec::new();
         file.by_ref()
@@ -99,7 +100,7 @@ impl<'a> ImportPackage<'a> {
                 self.max_entry_bytes,
                 0,
                 contents.len() as u64,
-                name,
+                crate::IoOperation::Entry { path: name.into() },
             ));
         }
         Ok(contents)
@@ -144,7 +145,7 @@ pub(crate) fn read_package_with_options(
             options.max_input_bytes,
             0,
             bytes.len() as u64,
-            "XLSX package",
+            crate::IoOperation::XlsxPackage,
         ));
     }
     let mut zip = ZipArchive::new(Cursor::new(bytes)).map_err(xml)?;
@@ -154,7 +155,7 @@ pub(crate) fn read_package_with_options(
             options.max_zip_entries as u64,
             0,
             zip.len() as u64,
-            "XLSX catalog",
+            crate::IoOperation::XlsxCatalog,
         ));
     }
     let mut total = 0u64;
@@ -163,14 +164,16 @@ pub(crate) fn read_package_with_options(
         let mut file = zip.by_index(i).map_err(xml)?;
         total = total
             .checked_add(file.size())
-            .ok_or(IoError::SizeOverflow("summing expanded XLSX entries"))?;
+            .ok_or(IoError::SizeOverflow)?;
         if file.size() > options.max_zip_entry_bytes {
             return Err(IoError::quota(
                 crate::IoResource::ZipEntryBytes,
                 options.max_zip_entry_bytes,
                 0,
                 file.size(),
-                format!("XLSX entry {}", file.name().map_err(xml)?),
+                crate::IoOperation::Entry {
+                    path: file.name().map_err(xml)?.into_owned(),
+                },
             ));
         }
         if total > options.max_zip_total_bytes {
@@ -179,7 +182,7 @@ pub(crate) fn read_package_with_options(
                 options.max_zip_total_bytes,
                 total.saturating_sub(file.size()),
                 file.size(),
-                "XLSX catalog",
+                crate::IoOperation::XlsxCatalog,
             ));
         }
         if file.is_dir() {
@@ -187,7 +190,7 @@ pub(crate) fn read_package_with_options(
         }
         let name = file
             .name()
-            .map_err(|e| IoError::Read(e.to_string()))?
+            .map_err(|e| IoError::Xml(e.into()))?
             .into_owned();
         let mut contents = Vec::new();
         file.by_ref()
@@ -199,13 +202,13 @@ pub(crate) fn read_package_with_options(
                 options.max_zip_entry_bytes,
                 0,
                 contents.len() as u64,
-                name.clone(),
+                crate::IoOperation::Entry { path: name.clone() },
             ));
         }
         if result.insert(name.clone(), contents).is_some() {
-            return Err(IoError::Unsupported(format!(
-                "duplicate ZIP entry {name}: ambiguous import not yet covered"
-            )));
+            return Err(IoError::Unsupported(
+                crate::WorkbookFeatureError::DuplicateZipEntry { name: name.clone() },
+            ));
         }
     }
     Ok(result)
@@ -219,22 +222,28 @@ pub(super) fn check_generated_claims(
     // Inspect every generated entry claim before allocating expanded parts.
     let mut generated_zip = ZipArchive::new(Cursor::new(bytes)).map_err(xml)?;
     if generated_zip.len() > options.max_zip_entries {
-        return Err(IoError::Limit(
-            "export package exceeds configured entry-count budget".into(),
-        ));
+        return Err(IoError::Limit(crate::ExportLimitError::EntryCount {
+            requested: generated_zip.len(),
+            limit: options.max_zip_entries,
+        }));
     }
     let mut generated_total = 0u64;
     for index in 0..generated_zip.len() {
         let entry = generated_zip.by_index(index).map_err(xml)?;
         generated_total = generated_total
             .checked_add(entry.size())
-            .ok_or_else(|| IoError::Limit("export package size overflow".into()))?;
+            .ok_or(IoError::Limit(
+                crate::ExportLimitError::ExportPackageSizeOverflow,
+            ))?;
         if entry.size() > options.max_zip_entry_bytes
             || generated_total > options.max_zip_total_bytes
         {
-            return Err(IoError::Limit(
-                "generated export ZIP exceeds entry/total budget before expansion".into(),
-            ));
+            return Err(IoError::Limit(crate::ExportLimitError::PackageBytes {
+                entry_bytes: entry.size(),
+                entry_limit: options.max_zip_entry_bytes,
+                total_bytes: generated_total,
+                total_limit: options.max_zip_total_bytes,
+            }));
         }
     }
     Ok(())
@@ -246,20 +255,24 @@ pub(super) fn write_export(
     options: crate::WriteOptions,
 ) -> Result<Vec<u8>, IoError> {
     if package.len() > options.max_zip_entries {
-        return Err(IoError::Limit(
-            "export package exceeds configured entry-count budget".into(),
-        ));
+        return Err(IoError::Limit(crate::ExportLimitError::EntryCount {
+            requested: package.len(),
+            limit: options.max_zip_entries,
+        }));
     }
     let mut total = 0u64;
-    for (name, part) in &package {
+    for part in package.values() {
         let size = part.len() as u64;
-        total = total
-            .checked_add(size)
-            .ok_or_else(|| IoError::Limit("export package size overflow".into()))?;
+        total = total.checked_add(size).ok_or(IoError::Limit(
+            crate::ExportLimitError::ExportPackageSizeOverflow,
+        ))?;
         if size > options.max_zip_entry_bytes || total > options.max_zip_total_bytes {
-            return Err(IoError::Limit(format!(
-                "export part {name} exceeds configured entry/total budget"
-            )));
+            return Err(IoError::Limit(crate::ExportLimitError::PackageBytes {
+                entry_bytes: size,
+                entry_limit: options.max_zip_entry_bytes,
+                total_bytes: total,
+                total_limit: options.max_zip_total_bytes,
+            }));
         }
     }
     let max_output_bytes = options.max_output_bytes;
@@ -271,9 +284,10 @@ pub(super) fn write_export(
     }
     let output = zip.finish().map_err(xml)?.into_inner();
     if output.len() as u64 > max_output_bytes {
-        return Err(IoError::Limit(format!(
-            "export ZIP exceeds max_output_bytes {max_output_bytes}"
-        )));
+        return Err(IoError::Limit(crate::ExportLimitError::OutputBytes {
+            requested: output.len() as u64,
+            limit: max_output_bytes,
+        }));
     }
     Ok(output)
 }
@@ -371,7 +385,7 @@ mod tests {
         let mut package = ImportPackage::new(&bytes, ReadOptions::default()).unwrap();
         package.entries.remove("cells/data.xml");
         assert!(
-            matches!(package.plan(crate::opc::OpcImportPolicy::default()), Err(IoError::Opc(crate::opc::OpcError::MissingPart(part))) if part == "cells/data.xml")
+            matches!(package.plan(crate::opc::OpcImportPolicy::default()), Err(IoError::Opc(crate::opc::OpcError::MissingPart {path:part})) if part == "cells/data.xml")
         );
     }
 }

@@ -216,6 +216,7 @@ fn direct_snapshots_reuse_bytecode_without_restoring_untracked_results() {
             .unwrap()
             .get(at("C1").address)
             .unwrap()
+            .unwrap()
             .value,
         CellValue::Number(19.)
     );
@@ -224,6 +225,7 @@ fn direct_snapshots_reuse_bytecode_without_restoring_untracked_results() {
             .sheet(0)
             .unwrap()
             .get(at("C1").address)
+            .unwrap()
             .unwrap()
             .formula
             .is_some()
@@ -506,12 +508,20 @@ fn scalar_writeback_clears_saved_spill_children_on_both_paths() {
                 applied.sheet(0).unwrap().spill_owner(at("H2").address),
                 None
             );
-            assert!(applied.sheet(0).unwrap().get(at("H2").address).is_none());
+            assert!(
+                applied
+                    .sheet(0)
+                    .unwrap()
+                    .get(at("H2").address)
+                    .unwrap()
+                    .is_none()
+            );
             assert!(
                 applied
                     .sheet(0)
                     .unwrap()
                     .get(at("G1").address)
+                    .unwrap()
                     .unwrap()
                     .formula
                     .is_some()

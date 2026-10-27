@@ -1,7 +1,7 @@
 //! Lazy contextual aggregation projection and scoped alias resolution.
 use super::call_host::CallHost;
 use crate::eval::compile::bytecode::aggregation::{Candidate, Plan};
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::{NameResolver, ReadRecorder};
 use crate::eval::values::{FunctionResult, identifier_failure};
@@ -71,7 +71,7 @@ impl Aggregators {
             host.check_values(projected.members.len())?;
             members
                 .try_reserve(projected.members.len())
-                .map_err(|_| host.budget_exceeded())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             // SAFETY: The preceding successful reservation admits this unchanged projected member count.
             members.extend(projected.members);
         }
@@ -138,7 +138,7 @@ impl Aggregators {
                 .stack
                 .names
                 .try_reserve(1)
-                .map_err(|_| host.budget_exceeded())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             // SAFETY: The successful local reservation admits this one name-cycle key.
             if !host.session.state.runtime.stack.names.insert(key) {
                 return Err(CellError::Ref.into());
@@ -150,7 +150,7 @@ impl Aggregators {
                     .workbook
                     .named_ranges
                     .get(index)
-                    .ok_or(EvaluationFailure::StalePlan)?
+                    .ok_or(EvaluationError::StalePlan)?
                     .formula;
                 host.session.state.runtime.budget.text(formula.len())?;
                 let syntax = poirot_parsing::formula::parse_formula(formula)
@@ -173,7 +173,7 @@ impl Aggregators {
         let mut members = Vec::new();
         members
             .try_reserve_exact(1)
-            .map_err(|_| host.budget_exceeded())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: One slot was reserved locally and the vector is still empty.
         members.push(operation);
         Ok(Self {

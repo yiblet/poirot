@@ -57,8 +57,6 @@ pub mod dates;
 mod elementwise;
 /// Engineering and complex number execution adapters.
 mod engineering;
-/// Typed failures shared by builtin adapters.
-pub mod failure;
 /// Per-family builtin adapters generated from one registration pattern.
 mod families;
 /// Cash flow, loan, and monetary formatting adapters.
@@ -74,6 +72,8 @@ pub mod lookup;
 pub mod math;
 /// Matrix algebra and array aggregation adapters.
 pub mod matrix;
+/// Typed failures shared by builtin adapters.
+mod operational_only;
 /// Reference construction and selection adapters.
 pub mod reference;
 mod registry;

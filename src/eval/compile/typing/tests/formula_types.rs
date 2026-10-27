@@ -1,6 +1,6 @@
 //! Prepared modal properties are source-bound and distinct from materialized cell values.
 use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
-use crate::eval::config::{ArrayResultPolicy, BuiltinSemanticsPolicy};
+use crate::eval::config::ArrayResultPolicy;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::{compile, functions, overlay};
 use crate::eval::{
@@ -87,11 +87,10 @@ fn every_registry_entry_declares_an_alias_consistent_monotone_result_rule() {
         FormulaType::array(ScalarKinds::TEXT),
         FormulaType::TOP,
     ];
-    for policy in [
-        BuiltinSemanticsPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-    ] {
-        let descriptors = functions::registry::descriptors_for_policy(policy).collect::<Vec<_>>();
+    {
+        let descriptors = functions::registry::FUNCTION_DESCRIPTORS
+            .iter()
+            .collect::<Vec<_>>();
         for descriptor in &descriptors {
             for other in &descriptors {
                 if descriptor.handler == other.handler {
@@ -118,11 +117,9 @@ fn every_registry_entry_declares_an_alias_consistent_monotone_result_rule() {
 fn root_materialization_is_separate_from_expression_reference_form() {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 2.).unwrap();
-    sheet.set_value("A2".parse().unwrap(), 3.).unwrap();
-    sheet
-        .set_formula("D1".parse().unwrap(), "TRANSPOSE(A1:A2)")
-        .unwrap();
+    sheet.set_value("A1", 2.).unwrap();
+    sheet.set_value("A2", 3.).unwrap();
+    sheet.set_formula("D1", "TRANSPOSE(A1:A2)").unwrap();
     let target = EvaluationTarget {
         sheet: 0,
         address: "E1".parse().unwrap(),
@@ -241,6 +238,7 @@ fn prepared_root_properties_follow_exact_source_and_survive_snapshot_restore() {
         .unwrap()
         .get_mut(address)
         .unwrap()
+        .unwrap()
         .formula = Some("{1,2}".into());
     assert!(!first.matches(&workbook, &policy));
     let changed = compiler.compile_workbook(&workbook, &policy);
@@ -267,9 +265,7 @@ fn spill_reference_and_runtime_profile_fallback_use_reference_result_contracts()
     // These calls remain unresolved at policy-independent binding. The runtime
     // Excel profile can select a catalog handler, so typing must include its
     // result as well as the unresolved-name error for other profiles.
-    for descriptor in
-        functions::registry::descriptors_for_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
-    {
+    for descriptor in functions::registry::FUNCTION_DESCRIPTORS.iter() {
         if functions::registry::resolve_function(&descriptor.name.into()).is_some() {
             continue;
         }

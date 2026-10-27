@@ -28,9 +28,7 @@ fn book() -> Workbook {
     book
 }
 fn configuration(arrays: ArrayResultPolicy) -> RunConfiguration {
-    RunConfiguration::default()
-        .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
-        .with_array_result_policy(arrays)
+    RunConfiguration::default().with_array_result_policy(arrays)
 }
 fn result(
     book: &Workbook,
@@ -201,33 +199,13 @@ fn scalar_projection_and_missing_rules_survive_array_support() {
     );
 }
 #[test]
-fn typed_information_shapes_are_independent_of_legacy_builtin_policy() {
+fn typed_information_shapes_follow_scalar_publication() {
     for (formula, expected) in [
-        ("ISNA({7,\"text\";TRUE,#N/A})", CellValue::Boolean(false)),
         ("TYPE({1,2})", CellValue::Number(64.)),
         ("N({TRUE,FALSE})", CellValue::Number(1.)),
         ("T({\"x\",1})", CellValue::Text("x".into())),
         ("ISREF(A1:D2)", CellValue::Boolean(true)),
     ] {
-        let at = if formula.starts_with("ISNA") {
-            "B2"
-        } else {
-            "Z100"
-        };
-        assert_eq!(
-            value(run_formula_with_configuration(
-                &book(),
-                0,
-                target(at).address,
-                formula,
-                &RunConfiguration::default()
-                    .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
-                    .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
-                EvaluationBudgets::default()
-            )),
-            expected,
-            "{formula}"
-        );
         if !formula.starts_with("ISNA") {
             expect(
                 &book(),
@@ -253,7 +231,7 @@ fn predicate_spills_preserve_both_axes_and_are_discovered_before_the_anchor() {
         let mut overlay = Overlay::with_workbook(&book)
             .with_policy(EvaluationPolicy {
                 arrays: ArrayResultPolicy::DynamicSpill,
-                builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
+
                 ..Default::default()
             })
             .build()
@@ -280,7 +258,7 @@ fn predicate_spills_preserve_both_axes_and_are_discovered_before_the_anchor() {
     }
 }
 #[test]
-fn reference_edits_and_builtin_policy_changes_invalidate_retained_predicate_results() {
+fn reference_edits_invalidate_retained_predicate_results() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
@@ -291,7 +269,6 @@ fn reference_edits_and_builtin_policy_changes_invalidate_retained_predicate_resu
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .build()
@@ -316,29 +293,6 @@ fn reference_edits_and_builtin_policy_changes_invalidate_retained_predicate_resu
             .unwrap(),
         CellValue::Number(131.)
     );
-    for (builtin, expected) in [
-        (BuiltinSemanticsPolicy::PinnedPoi, CellValue::Number(131.)),
-        (
-            BuiltinSemanticsPolicy::ExcelDocumentation,
-            CellValue::Number(131.),
-        ),
-        (BuiltinSemanticsPolicy::PinnedPoi, CellValue::Number(131.)),
-    ] {
-        overlay
-            .set_policy(EvaluationPolicy {
-                builtin,
-                ..Default::default()
-            })
-            .unwrap();
-        assert_eq!(
-            overlay
-                .evaluation(&context)
-                .unwrap()
-                .cell(target("F5"))
-                .unwrap(),
-            expected
-        );
-    }
 }
 #[test]
 fn spreadsheet_errors_are_data_but_operational_failures_and_limits_escape_iferror() {
@@ -403,7 +357,7 @@ fn singleton_predicate_arrays_publish_a_boolean_cell_without_becoming_references
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(EvaluationPolicy {
             arrays: ArrayResultPolicy::DynamicSpill,
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
+
             ..Default::default()
         })
         .build()
@@ -437,7 +391,7 @@ fn named_array_footprints_publish_with_child_first_reads() {
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(EvaluationPolicy {
             arrays: ArrayResultPolicy::DynamicSpill,
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
+
             ..Default::default()
         })
         .build()

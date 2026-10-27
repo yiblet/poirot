@@ -154,8 +154,6 @@ pub fn coerce_aggregate_argument(
 /// Business-day consumer's explicit holiday member contract.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HolidayPolicy {
-    /// Preserve the historical date-argument conversion for every member.
-    PinnedPoi,
     /// NETWORKDAYS ignores text held in worksheet holiday ranges.
     NetworkDays,
     /// WORKDAY requests date conversion for text members from every origin.
@@ -169,7 +167,7 @@ pub fn coerce_holiday_member<'a, E: From<CellError>>(
     policy: HolidayPolicy,
     date: impl FnOnce() -> Result<f64, E>,
 ) -> Result<Option<f64>, E> {
-    if policy != HolidayPolicy::PinnedPoi {
+    {
         match value {
             ScalarRef::Blank => return Ok(None),
             ScalarRef::Boolean(_) if policy == HolidayPolicy::NetworkDays => return Ok(None),

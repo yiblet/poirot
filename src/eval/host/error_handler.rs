@@ -1,7 +1,7 @@
 //! Error-handler (IFERROR, IFNA) observation and fallback evaluation.
 use super::call_host::CallHost;
 use crate::eval::functions::registry::LogicalFunction;
-use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::limits::{EvalResult, EvaluationError};
 use crate::eval::observe;
 use crate::eval::session::ObservationRecorder;
 use crate::eval::session::ResultProjection;
@@ -49,7 +49,7 @@ impl<'h, 'call, 'workbook> ErrorHandler<'h, 'call, 'workbook> {
             .host
             .arguments
             .get(1)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         ObservationRecorder::new(self.host.session).observed_fallback(
             self.host.sheet,
             self.host.address,

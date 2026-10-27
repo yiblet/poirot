@@ -5,11 +5,11 @@ use crate::eval::compile;
 use crate::eval::config::{DateOrder, EvaluationInputs, Localization};
 use crate::eval::entry::run_plan;
 use crate::eval::limits::{
-    BudgetKind, BudgetMeter, EvaluationBudgets, EvaluationFailure, EvaluationOutcome,
+    BudgetKind, BudgetMeter, EvaluationBudgets, EvaluationError, EvaluationOutcome,
 };
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::Num;
 use crate::model::CellValue::{Error, Number};
@@ -206,7 +206,7 @@ fn each_allocating_host_stage_is_admitted_before_semantic_fallback() {
         };
         let mut session = Session::new(&book, context(), BudgetMeter::new(budgets).unwrap());
         let failure = parse_with_host(&mut session, input).unwrap_err();
-        let FunctionFailure::Operational(EvaluationFailure::Budget(failure)) = failure else {
+        let FunctionError::Operational(EvaluationError::Budget(failure)) = failure else {
             panic!("allocation admission became semantic fallback");
         };
         assert_eq!(failure.kind, kind);
@@ -214,7 +214,7 @@ fn each_allocating_host_stage_is_admitted_before_semantic_fallback() {
         assert_eq!(session.state.runtime.budget.usage.text_bytes, consumed);
     }
     let mut session = Session::with_context(&book, context());
-    assert_eq!(parse_with_host(&mut session, input), Ok(0.));
+    assert_eq!((parse_with_host(&mut session, input)).unwrap(), 0.);
     let formula = "IFERROR(TIMEVALUE(\"1/01/2000 bad\"),0)";
     let plan = compile::bound::FormulaPlan::bind(
         &poirot_parsing::formula::parse_formula(formula).unwrap(),
@@ -233,7 +233,7 @@ fn each_allocating_host_stage_is_admitted_before_semantic_fallback() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));

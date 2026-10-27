@@ -394,7 +394,7 @@ fn producer_time_aggregate_preserves_operational_failure_and_atomic_cleanup() {
     // failure must escape instead of becoming the earlier spreadsheet error.
     assert!(matches!(
         run.cell(at(0, "Z1")),
-        Err(EvaluationFailure::Budget(BudgetFailure {
+        Err(EvaluationError::Budget(BudgetError {
             kind: BudgetKind::TextBytes,
             requested: 200,
             ..

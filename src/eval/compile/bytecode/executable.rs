@@ -1,7 +1,7 @@
 use super::call::Call;
 use super::operand_cursor::OperandCursor;
 use super::template::Template;
-use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::limits::{EvalResult, EvaluationError};
 
 #[derive(Clone, Debug, PartialEq)]
 /// A template with resolved builtin/extension call identities. Programs can be
@@ -23,29 +23,29 @@ impl Executable {
     pub(in crate::eval) fn text(&self, offset: u32, length: u32) -> EvalResult<&str> {
         let end = offset
             .checked_add(length)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let bytes = self
             .template
             .operands
             .get(offset as usize..end as usize)
-            .ok_or(EvaluationFailure::StalePlan)?;
-        std::str::from_utf8(bytes).map_err(|_| EvaluationFailure::StalePlan)
+            .ok_or(EvaluationError::StalePlan)?;
+        std::str::from_utf8(bytes).map_err(|_| EvaluationError::StalePlan)
     }
 
     /// Borrow a call's parsed function spelling, rejecting invalid packed storage.
     pub fn source_spelling(&self, index: usize) -> EvalResult<&str> {
-        let call = self.calls.get(index).ok_or(EvaluationFailure::StalePlan)?;
+        let call = self.calls.get(index).ok_or(EvaluationError::StalePlan)?;
         let bytes = self
             .template
             .operands
             .get(call.source_offset as usize..)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         OperandCursor(bytes).string()
     }
 
     /// Borrow the exact lookup spelling, rejecting an invalid call index.
     pub fn resolved_spelling(&self, index: usize) -> EvalResult<&str> {
-        let call = self.calls.get(index).ok_or(EvaluationFailure::StalePlan)?;
+        let call = self.calls.get(index).ok_or(EvaluationError::StalePlan)?;
         match call.resolved_name.as_deref() {
             Some(name) => Ok(name),
             None => self.source_spelling(index),

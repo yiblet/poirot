@@ -20,9 +20,7 @@ fn book() -> Workbook {
     book
 }
 fn config(arrays: ArrayResultPolicy) -> RunConfiguration {
-    RunConfiguration::default()
-        .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
-        .with_array_result_policy(arrays)
+    RunConfiguration::default().with_array_result_policy(arrays)
 }
 fn evaluate(
     book: &Workbook,
@@ -149,7 +147,7 @@ fn condition_dependency_changes_selected_members_after_snapshot_restore() {
         let mut overlay = Overlay::with_workbook(&book)
             .with_policy(EvaluationPolicy {
                 arrays,
-                builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
+
                 ..Default::default()
             })
             .build()
@@ -186,28 +184,11 @@ fn condition_dependency_changes_selected_members_after_snapshot_restore() {
         );
     }
 }
-#[test]
-fn pinned_if_retains_scalar_condition_selection() {
-    let result = run_formula_with_configuration(
-        &book(),
-        0,
-        target("Z100").address,
-        "SUM(IF({TRUE,FALSE,TRUE},2,{30,5,70}))",
-        &RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
-            .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
-        EvaluationBudgets::default(),
-    );
-    assert_eq!(value(result), CellValue::Number(2.));
-}
 
 #[test]
 fn scalar_if_forces_only_the_selected_branch() {
-    for builtin in [
-        BuiltinSemanticsPolicy::PinnedPoi,
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-    ] {
-        let config = RunConfiguration::default().with_builtin_policy(builtin);
+    {
+        let config = RunConfiguration::default();
         let outcome = run_formula_with_configuration(
             &book(),
             0,
@@ -217,7 +198,9 @@ fn scalar_if_forces_only_the_selected_branch() {
             EvaluationBudgets::default(),
         );
         assert_eq!(outcome.usage().random_accesses[0].draws, 1);
-        assert!(matches!(value(outcome), CellValue::Number(n) if (0.0..1.0).contains(&n)));
+        assert!(
+            matches ! (value (outcome) , CellValue :: Number (n) if (0.0 .. 1.0) . contains (& n))
+        );
         assert_eq!(
             value(run_formula_with_configuration(
                 &book(),
@@ -255,39 +238,6 @@ fn selected_if_work_limits_remain_operational() {
     }
 }
 
-#[test]
-fn policy_changes_invalidate_cached_if_results_in_both_directions() {
-    let mut book = book();
-    book.sheet_mut(0)
-        .unwrap()
-        .set_formula(
-            target("E1").address,
-            "SUM(IF({TRUE,FALSE,TRUE},2,{30,5,70}))",
-        )
-        .unwrap();
-    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
-    let context = EvaluationContext::default();
-    for (builtin, expected) in [
-        (BuiltinSemanticsPolicy::PinnedPoi, 2.),
-        (BuiltinSemanticsPolicy::ExcelDocumentation, 9.),
-        (BuiltinSemanticsPolicy::PinnedPoi, 2.),
-    ] {
-        overlay
-            .set_policy(EvaluationPolicy {
-                builtin,
-                ..Default::default()
-            })
-            .unwrap();
-        assert_eq!(
-            overlay
-                .evaluation(&context)
-                .unwrap()
-                .cell(target("E1"))
-                .unwrap(),
-            CellValue::Number(expected)
-        );
-    }
-}
 #[test]
 fn singleton_conditions_keep_reference_and_inline_blank_identity() {
     for arrays in [
@@ -336,7 +286,7 @@ fn condition_dimensions_bound_dynamic_spills_before_anchor_reads() {
         let mut overlay = Overlay::with_workbook(&book)
             .with_policy(EvaluationPolicy {
                 arrays: ArrayResultPolicy::DynamicSpill,
-                builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
+
                 ..Default::default()
             })
             .build()
@@ -462,7 +412,24 @@ fn deferred_if_observation_keeps_branch_order_and_member_dependencies() {
             // Each selected IF ordinal is observed once; SUM consumes its input directly.
             assert_eq!(arguments, [0, 1, 2]);
             let (outcome, execution, prior_reads) = baseline.take().unwrap();
-            assert_eq!(report.outcome, outcome);
+            match (report.outcome, outcome) {
+                (
+                    EvaluationOutcome::Complete {
+                        value: actual,
+                        usage,
+                    },
+                    EvaluationOutcome::Complete {
+                        value: expected,
+                        usage: expected_usage,
+                    },
+                ) => {
+                    assert_eq!(actual, expected);
+                    assert_eq!(usage, expected_usage);
+                }
+                (actual, expected) => {
+                    panic!("expected complete selection outcomes: {actual:?}, {expected:?}")
+                }
+            }
             assert_eq!(report.execution, execution);
             assert_eq!(reads.0, prior_reads);
         } else {

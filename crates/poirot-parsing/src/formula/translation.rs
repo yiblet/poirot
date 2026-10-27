@@ -1,5 +1,6 @@
 //! Bounded copy translations derived from POI FormulaShifter row/column copy.
 //! Deleted-reference tokens and endpoint reordering are explicit unsupported cases.
+use super::parse_reason_error::ParseReasonError;
 use crate::formula::{Expr, FormulaParsePolicy, FormulaPrinter, ParseError, ParsedFormula};
 
 /// Zero-based formula location; sheet qualification belongs to references in the AST.
@@ -50,7 +51,12 @@ impl TranslationPlan {
         for location in [source, target] {
             if location.row >= policy.parse.max_rows || location.column >= policy.parse.max_columns
             {
-                return Err(failure("formula location exceeds translation grid"));
+                return Err(failure(ParseReasonError::TranslationLocationOutsideGrid {
+                    row: location.row,
+                    column: location.column,
+                    max_rows: policy.parse.max_rows,
+                    max_columns: policy.parse.max_columns,
+                }));
             }
         }
         let mut expression = original.expression().clone();
@@ -105,25 +111,26 @@ impl TranslationPlan {
     /// Reject application if the formula source changed after planning.
     pub fn verify_source(&self, text: &str) -> Result<(), ParseError> {
         if text != self.original.source() {
-            Err(failure("stale formula translation source"))
+            Err(failure(ParseReasonError::StaleTranslationSource))
         } else {
             Ok(())
         }
     }
 }
-fn failure(message: &str) -> ParseError {
+fn failure(reason: ParseReasonError) -> ParseError {
     ParseError {
-        kind: super::ParseErrorKind::Syntax,
         position: 0,
-        message: message.into(),
+        reason,
     }
 }
 fn axis(value: &mut u32, absolute: bool, delta: i64, bound: u32) -> Result<(), ParseError> {
     let translated = i64::from(*value) + if absolute { 0 } else { delta };
     if translated < 0 || translated >= i64::from(bound) {
-        return Err(failure(
-            "unsupported deleted reference: translation crosses grid boundary",
-        ));
+        return Err(failure(ParseReasonError::TranslationOutsideGrid {
+            coordinate: *value,
+            translated,
+            bound,
+        }));
     }
     *value = translated as u32;
     Ok(())
@@ -172,7 +179,7 @@ fn translate(
                     _ => false,
                 };
                 if inverted {
-                    return Err(failure("unsupported area endpoint reordering"));
+                    return Err(failure(ParseReasonError::TranslationReordersEndpoints));
                 }
             }
         }

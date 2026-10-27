@@ -1,7 +1,7 @@
 //! Executable builtin registry. Aliases point to a typed family handler.
 //! Arity is descriptive: family executors preserve function-specific error ordering.
 //!
-//! Depends on: config (builtin semantics policy).
+//! Depends on: no other eval folder.
 
 /// Inclusive argument-count bounds of a function contract.
 mod arity;
@@ -48,11 +48,8 @@ mod text_function;
 /// Legacy lightweight metadata identity.
 mod udf_identity;
 
-/// Analysis ToolPak names supported by the pinned implementation.
-pub use crate::eval::functions::atp::PINNED_ATP_FUNCTIONS;
-
 /// Catalog used for Excel-compatible name resolution.
-pub(in crate::eval) use catalog::{EXCEL_DESCRIPTORS, resolve_excel_function};
+pub(in crate::eval) use catalog::resolve_handler;
 
 // Advertised builtin catalog and spelling resolver.
 pub use catalog::{FUNCTION_DESCRIPTORS, SUPPORTED_FUNCTIONS, resolve_function};
@@ -69,7 +66,7 @@ pub use dependency_policy::DependencyPolicy;
 pub use engineering_function::EngineeringFunction;
 pub use evaluation_strategy::EvaluationStrategy;
 pub use financial_function::FinancialFunction;
-pub use function_descriptor::{FunctionDescriptor, descriptors_for_policy};
+pub use function_descriptor::FunctionDescriptor;
 pub use function_id::FunctionId;
 pub(in crate::eval) use function_names::FunctionNames;
 pub use information_function::InformationFunction;

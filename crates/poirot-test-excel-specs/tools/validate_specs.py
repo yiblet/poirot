@@ -97,13 +97,11 @@ def names(items, sheets):
 
 
 def settings(obj, step=False):
-    keys(obj, [], ['currency', 'context', 'text_policy', 'array_result_policy'] + ([] if step else ['date_system']))
+    keys(obj, [], ['currency', 'context', 'array_result_policy'] + ([] if step else ['date_system']))
     if 'date_system' in obj:
         assert obj['date_system'] in {'1900', '1904'}
     if 'currency' in obj:
         assert obj['currency'] == 'USD'
-    if 'text_policy' in obj:
-        assert obj['text_policy'] in {'excel_v1', 'excel_v2'}
     if 'array_result_policy' in obj:
         assert obj['array_result_policy'] in {'scalar_intersection', 'dynamic_spill'}
     if 'context' in obj:
@@ -131,7 +129,11 @@ def main():
     assert len({f['id'] for f in features}) == len(features)
     obligations = {o['id']: (f, o) for f in features for o in f['obligations']}
     assert len(obligations) == sum(len(f['obligations']) for f in features)
-    registered = {f['name'] for f in features if f['kind'] == 'function' and f['implementation_status'] == 'registered'}
+    registered = set(inventory['registered_functions'])
+    assert registered and len(registered) == len(inventory['registered_functions'])
+    catalog = ROOT.parents[1] / inventory['scope']['registry_path']
+    if catalog.is_file():
+        assert registered == set(re.findall(r'^\s*"([A-Z0-9_.]+)" =>', catalog.read_text(), re.M)), 'Stale registered functions'
     # Public registry freshness is checked by the Rust runner through ROI APIs.
     for feature in features:
         urls(feature['source_urls'])
@@ -139,7 +141,7 @@ def main():
         assert feature['implementation_status'] in {'registered', 'partial', 'unsupported', 'unknown'}
         if 'implementation_scope' in feature:
             scope = feature['implementation_scope']
-            assert scope['policies'] and all(isinstance(policy, str) and policy.strip() for policy in scope['policies'])
+
             assert scope['supported'].strip()
             assert scope['limitations'] and all(isinstance(limit, str) and limit.strip() for limit in scope['limitations'])
         for obligation in feature['obligations']:
@@ -161,11 +163,10 @@ def main():
     fingerprints, evidence_counts, links, unresolved = set(), collections.Counter(), collections.defaultdict(list), []
     assertions_count = steps_count = 0
     for case in cases:
-        keys(case, ['schema_version', 'id', 'name', 'category', 'compatibility', 'text_policy', 'sheets', 'cells', 'names', 'settings', 'steps', 'source_urls', 'rationale'])
+        keys(case, ['schema_version', 'id', 'name', 'category', 'compatibility', 'sheets', 'cells', 'names', 'settings', 'steps', 'source_urls', 'rationale'])
         assert case['schema_version'] == 2
         assert re.fullmatch(r'[a-z][a-z0-9_]*', case['name'])
         assert all(isinstance(case[k], str) and case[k].strip() for k in ['category', 'compatibility', 'rationale'])
-        assert case['text_policy'] in {'excel_v1', 'excel_v2'}
         urls(case['source_urls'])
         sheets = case['sheets']
         assert sheets and all(isinstance(s, str) and s for s in sheets) and len(set(sheets)) == len(sheets)
@@ -226,7 +227,7 @@ def main():
                     assert obligations[obligation][1]['applicability'] != 'not_applicable', (case['id'], obligation)
                     links[obligation].append({'case_id': case['id'], 'step': step_index, 'assertion': assertion_index, 'evidence_kind': evidence['kind']})
         # Ignore explanations/labels while detecting repeated fixtures and oracles.
-        fingerprint = {'sheets': sheets, 'cells': case['cells'], 'names': case['names'], 'settings': case['settings'], 'text_policy': case['text_policy'], 'steps': [
+        fingerprint = {'sheets': sheets, 'cells': case['cells'], 'names': case['names'], 'settings': case['settings'], 'steps': [
             {k: v for k, v in step.items() if k != 'assertions'} | {'assertions': [{k: v for k, v in a.items() if k not in {'evidence', 'obligations'}} for a in step['assertions']]}
             for step in case['steps']]}
         fingerprint = json.dumps(fingerprint, sort_keys=True)
@@ -245,7 +246,7 @@ def main():
         state = 'specified_with_evidence' if supported else 'unresolved' if links[oid] else 'not_applicable' if obligation['applicability'] == 'not_applicable' else 'missing'
         rows.append({'id': oid, 'feature': feature['id'], 'behavior': obligation['behavior'], 'applicability': obligation['applicability'], 'specification_status': state, 'assertions': links[oid]})
     specified_features = {r['feature'] for r in rows if r['specification_status'] == 'specified_with_evidence'}
-    missing_functions = sorted(f['name'] for f in features if f['implementation_status'] == 'registered' and f['id'] not in specified_features)
+    missing_functions = sorted(registered - {f['name'] for f in features if f['id'] in specified_features})
     summary = {'case_count': len(cases), 'evaluation_steps': steps_count, 'assertion_count': assertions_count,
         'source_count': len(sources), 'feature_count': len(features), 'potential_obligation_count': len(rows),
         'obligation_status_counts': dict(collections.Counter(r['specification_status'] for r in rows)),

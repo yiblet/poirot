@@ -3,7 +3,7 @@
 //! https://support.microsoft.com/en-us/office/sum-function-043e1c7d-7726-4e80-8f32-07b23e057f89
 //! https://support.microsoft.com/en-us/office/count-function-a59cd7fc-b623-4d93-87a4-d23bf411294c
 use poirot::eval::{
-    BudgetKind, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    BudgetKind, EvaluationBudgets, EvaluationError, EvaluationInputs, EvaluationOutcome,
     run_formula, run_recalculation,
 };
 use poirot::model::{CellError, CellValue, Workbook};
@@ -11,9 +11,9 @@ use poirot::model::{CellError, CellValue, Workbook};
 fn book() -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), "4").unwrap();
-    sheet.set_value("A2".parse().unwrap(), true).unwrap();
-    sheet.set_value("A3".parse().unwrap(), 6.).unwrap();
+    sheet.set_value("A1", "4").unwrap();
+    sheet.set_value("A2", true).unwrap();
+    sheet.set_value("A3", 6.).unwrap();
     book
 }
 
@@ -82,17 +82,17 @@ fn ordered_spreadsheet_errors_and_eager_operational_failures_stay_distinct() {
     }
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("A4".parse().unwrap(), "SUM(T:S!B1)")
+        .set_formula("A4", "SUM(T:S!B1)")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_value("A3".parse().unwrap(), CellValue::Error(CellError::Ref))
+        .set_value("A3", CellValue::Error(CellError::Ref))
         .unwrap();
     book.add_sheet("T").unwrap();
     assert!(matches!(
         evaluate(&book, "SUM(A3:A4)", EvaluationBudgets::default()),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability { .. },
+            failure: EvaluationError::UnsupportedCapability { .. },
             ..
         }
     ));
@@ -103,7 +103,7 @@ fn lazy_branch_avoids_work_and_repeated_volatile_reference_uses_one_draw() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("B1".parse().unwrap(), "RAND()")
+        .set_formula("B1", "RAND()")
         .unwrap();
     assert_eq!(complete(&book, "IF(FALSE,1/0,7)"), CellValue::Number(7.));
     let skipped = evaluate(&book, "IF(FALSE,B1,7)", EvaluationBudgets::default());
@@ -133,11 +133,7 @@ fn budget_abort_does_not_publish_partial_recalculation() {
     for (cell, formula, cached) in [("B1", "1+1", 101.), ("B2", "REPT(\"x\",100)", 102.)] {
         book.sheet_mut(0)
             .unwrap()
-            .set_formula_with_cached_value(
-                cell.parse().unwrap(),
-                formula,
-                CellValue::Number(cached),
-            )
+            .set_formula_with_cached_value(cell, formula, CellValue::Number(cached))
             .unwrap();
     }
     let before = book.clone();
@@ -151,7 +147,7 @@ fn budget_abort_does_not_publish_partial_recalculation() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(ref failure),
+            failure: EvaluationError::Budget(ref failure),
             ..
         } if failure.kind == BudgetKind::TextBytes
     ));

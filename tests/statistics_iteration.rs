@@ -1,6 +1,6 @@
 //! Prospective actual-handler resource regressions; central139 owns execution.
 use poirot::eval::{
-    self as eval, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    self as eval, EvaluationBudgets, EvaluationError, EvaluationInputs, EvaluationOutcome,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
@@ -44,7 +44,7 @@ fn poisson_iterations_abort_through_actual_handler_and_iferror() {
             matches!(
                 outcome,
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::Budget(_),
+                    failure: EvaluationError::Budget(_),
                     ..
                 }
             ),
@@ -78,7 +78,7 @@ fn normal_gamma_iterations_are_charged_after_the_fixed_overhead() {
             matches!(
                 run(&book, &formula, control.usage().work_units + 2),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::Budget(_),
+                    failure: EvaluationError::Budget(_),
                     ..
                 }
             ),

@@ -2,7 +2,7 @@
 use super::broadcast::Broadcast;
 use super::member_context::MemberContext;
 use crate::eval::host::{ArgumentCoercion, CallHost, ScalarOperand, SelectionAccess};
-use crate::eval::values::{ArrayView, FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{ArrayView, FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::model::CellError::{NA, Num};
 use crate::model::CellValue::{Blank, Error};
 use crate::model::{CellAddress, CellError, CellValue, ExcelText};
@@ -18,20 +18,17 @@ pub(in crate::eval::adapters) fn units(
 
 /// Coerce a modern Excel integer, retaining checked bounds before truncation.
 pub(in crate::eval::adapters) fn integer(number: f64) -> FunctionResult<i32> {
-    poirot_functions::coercion::compatibility::coerce_text_integer_number(
-        number,
-        poirot_functions::coercion::compatibility::TextIntegerPolicy::Checked,
-    )?;
+    poirot_functions::coercion::compatibility::coerce_text_integer_number(number)?;
     Ok(number.floor() as i32)
 }
 
 /// Translate an independent text planner's failure into evaluator channels.
 pub(in crate::eval::adapters) fn plan<T>(
     host: &CallHost<'_, '_>,
-    result: Result<T, units::PlanFailure>,
+    result: Result<T, poirot_functions::text::TextPlanError>,
 ) -> FunctionResult<T> {
     result.map_err(|error| match error {
-        units::PlanFailure::Value => VALUE_ERROR.into(),
+        poirot_functions::text::TextPlanError::Value => VALUE_ERROR.into(),
         _ => host.size_overflow().into(),
     })
 }
@@ -62,7 +59,7 @@ pub(in crate::eval::adapters) fn copied(
     let mut output = Vec::new();
     output
         .try_reserve_exact(text.len())
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     // SAFETY: the entire selected slice was reserved immediately above.
     output.extend_from_slice(text);
     Ok(value(output))
@@ -124,12 +121,12 @@ pub(in crate::eval::adapters) fn rectangle(
     let mut result = Vec::new();
     result
         .try_reserve_exact(rows)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     let mut values = values.into_iter();
     for _ in 0..rows {
         let mut row = Vec::new();
         row.try_reserve_exact(columns)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         for _ in 0..columns {
             // SAFETY: exactly columns slots were reserved for this row above.
             row.push(values.next().ok_or(VALUE_ERROR)?);
@@ -224,7 +221,7 @@ pub(in crate::eval::adapters) fn fallback<K: FallbackKernel>(
     host.check_values(count)?;
     let mut mask = Vec::new();
     mask.try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     let mut needed = false;
     let result = lift.evaluate(host, address, |host, row, column| {
         let selected = kernel.apply(
@@ -242,10 +239,11 @@ pub(in crate::eval::adapters) fn fallback<K: FallbackKernel>(
                 needed = true;
                 (true, Blank)
             }
-            Err(FunctionFailure::Spreadsheet(error)) => (false, Error(error)),
+            Err(FunctionError::Spreadsheet(error)) => (false, Error(error)),
             Err(error) => return Err(error),
         };
-        mask.try_reserve(1).map_err(|_| host.allocation_failure())?;
+        mask.try_reserve(1)
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: one additional mask slot was reserved immediately above.
         mask.push(missing);
         Ok(value)
@@ -277,7 +275,7 @@ pub(in crate::eval::adapters) fn resolve_fallback(
     let branch = prepared
         .map(|value| {
             let shape = value.shape().ok_or(VALUE_ERROR)?;
-            Ok::<_, FunctionFailure>((value, shape))
+            Ok::<_, FunctionError>((value, shape))
         })
         .transpose()?;
     let Shape { rows, columns } = source_shape;
@@ -324,11 +322,8 @@ pub(in crate::eval::adapters) fn integer_argument(
 ) -> FunctionResult<f64> {
     let value = arguments.get(index).ok_or(VALUE_ERROR)?;
     let number = SelectionAccess::new(host).number(value)?;
-    poirot_functions::coercion::compatibility::coerce_text_integer_number(
-        number,
-        poirot_functions::coercion::compatibility::TextIntegerPolicy::Checked,
-    )
-    .map_err(Into::into)
+    poirot_functions::coercion::compatibility::coerce_text_integer_number(number)
+        .map_err(Into::into)
 }
 
 /// Materialize text collections in source order without reducing a delimiter set.
@@ -340,7 +335,7 @@ pub(in crate::eval::adapters) fn collection_units(
         let text = units(host, &operand)?;
         values
             .try_reserve(1)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: one additional text slot was reserved immediately above.
         values.push(text);
         Ok(())

@@ -1,7 +1,7 @@
 //! Eager operand member traversal in read order.
 
 use super::sparse_reader::SparseReader;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::session;
 use crate::eval::session::cells::{CellEvaluator, ResolvedSource};
 use crate::eval::session::composition::Session;
@@ -40,11 +40,11 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
                 let count =
                     length
                         .checked_add(additional)
-                        .ok_or_else(|| EvaluationFailure::Resource {
+                        .ok_or_else(|| EvaluationError::Resource {
                             kind: crate::eval::limits::ResourceFailureKind::SizeOverflow,
                             capability: CapabilityId::FunctionAdapter,
-                            source: self.session.state.runtime.stack.consumer,
-                            detail: "aggregate member count overflow".into(),
+                            target: self.session.state.runtime.stack.consumer,
+                            reason: crate::eval::limits::EvaluationReasonError::AggregateMemberCountOverflow,
                         })?;
                 self.session.state.runtime.budget.check_allocation(count)?;
                 self.session
@@ -53,11 +53,11 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
                     .budget
                     .charge(WorkKind::Materialization, additional as u64)?;
                 reserve_storage(&mut state, additional).map_err(|_| {
-                    EvaluationFailure::Resource {
+                    EvaluationError::Resource {
                         kind: crate::eval::limits::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
-                        source: self.session.state.runtime.stack.consumer,
-                        detail: "aggregate member allocation failed".into(),
+                        target: self.session.state.runtime.stack.consumer,
+                        reason: crate::eval::limits::EvaluationReasonError::AggregateMemberAllocationFailed,
                     }
                 })?;
                 count
@@ -101,11 +101,11 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
                 let count = rows
                     .iter()
                     .try_fold(0usize, |count, row| count.checked_add(row.len()))
-                    .ok_or_else(|| EvaluationFailure::Resource {
+                    .ok_or_else(|| EvaluationError::Resource {
                         kind: crate::eval::limits::ResourceFailureKind::SizeOverflow,
                         capability: CapabilityId::FunctionAdapter,
-                        source: self.session.state.runtime.stack.consumer,
-                        detail: "aggregate member count overflow".into(),
+                        target: self.session.state.runtime.stack.consumer,
+                        reason: crate::eval::limits::EvaluationReasonError::AggregateMemberCountOverflow,
                     })?;
                 reserve!(count);
                 for (row, values) in rows.into_iter().enumerate() {
@@ -199,15 +199,15 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
         let mut length = 0usize;
         for area in areas {
             let members = SparseReader::new(self.session).sparse_members(area)?;
-            length =
-                length
-                    .checked_add(members.len())
-                    .ok_or_else(|| EvaluationFailure::Resource {
-                        kind: crate::eval::limits::ResourceFailureKind::SizeOverflow,
-                        capability: CapabilityId::FunctionAdapter,
-                        source: self.session.state.runtime.stack.consumer,
-                        detail: "aggregate member count overflow".into(),
-                    })?;
+            length = length.checked_add(members.len()).ok_or_else(|| {
+                EvaluationError::Resource {
+                    kind: crate::eval::limits::ResourceFailureKind::SizeOverflow,
+                    capability: CapabilityId::FunctionAdapter,
+                    target: self.session.state.runtime.stack.consumer,
+                    reason:
+                        crate::eval::limits::EvaluationReasonError::AggregateMemberCountOverflow,
+                }
+            })?;
             self.session.state.runtime.budget.check_allocation(length)?;
             self.session
                 .state
@@ -246,7 +246,7 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
             |values, additional| values.try_reserve(additional),
             |values, member| {
                 if values.len() >= values.capacity() {
-                    return Err(EvaluationFailure::StalePlan);
+                    return Err(EvaluationError::StalePlan);
                 }
                 // SAFETY: The local capacity check proves this one push cannot grow the vector.
                 values.push(project(

@@ -14,7 +14,7 @@
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let mut book = Workbook::new();
-//!     book.add_sheet("Inputs")?.set_formula("B1".parse()?, "A1*2")?;
+//!     book.add_sheet("Inputs")?.set_formula("B1", "A1*2")?;
 //!     let mut evaluation = Evaluation::with_workbook(&book)
 //!         .build(EvaluationContext::default())?;
 //!     let input = evaluation.target("Inputs!A1")?;
@@ -105,7 +105,8 @@ pub use entry::{
 
 // Evaluation runs, observers, and completion reports.
 pub use run::{
-    EvaluationProbe, EvaluationRun, RunReport, SharedRunFailure, SharedWorkbook, WorkbookView,
+    EvaluationProbe, EvaluationRun, InputPreparationError, RunReport, SharedRunError,
+    SharedWorkbook, WorkbookView,
 };
 
 // Read, completion and cached-result ports of a run.
@@ -115,38 +116,29 @@ pub use ports::{
 };
 
 // Sparse scenario inputs and effective workbook reads.
-pub use inputs::{EffectiveStoredCells, EffectiveWorkbook, RunInputs};
+pub use inputs::{EffectiveStoredCells, EffectiveWorkbook, InputError, RunInputs};
 
 // Run configuration, policy selections, and cache identity types.
 pub use config::{
-    ArrayResultPolicy, BuiltinSemanticsPolicy, ComputationFingerprint, ConfigurationFingerprint,
-    ContextFingerprint, CurrencyContext, DateOrder, EvaluationContext, EvaluationInputs,
-    EvaluationPolicy, FormattingConfiguration, Localization, ProducerPolicy, RunConfiguration,
+    ArrayResultPolicy, ComputationFingerprint, ConfigurationFingerprint, ContextFingerprint,
+    CurrencyContext, DateOrder, EvaluationContext, EvaluationInputs, EvaluationPolicy,
+    FormattingConfiguration, Localization, ProducerPolicy, RunConfiguration,
 };
-
-/// Identified exceptions to pinned source behavior.
-pub use crate::model::KnownSourceException;
 
 /// One calculated output returned by bulk evaluation.
 pub use values::CellEvaluation;
 
-/// Numeric policy and its pinned source identity.
-pub use values::numeric_outcome::NumericSourceBinding;
-
 /// Explicit numeric input tokens for locale-parametric argument parsing.
 pub use poirot_parsing::number::NumberLocale;
-
-// Text semantics and the pinned implementation identity.
-pub use poirot_functions::text_units::{SourceVersion as TextSourceVersion, TextSemanticsPolicy};
 
 /// Native regex guards, independently configurable from evaluator work quotas.
 pub use poirot_functions::text::regex::ExecutionLimits as RegexSettings;
 
 // Public evaluation limits, outcomes, failures, and usage counters.
 pub use limits::{
-    BudgetFailure, BudgetKind, CapabilityId, EvaluationBudgets, EvaluationFailure,
-    EvaluationLimits, EvaluationOutcome, EvaluationUsage, MemoRetentionLimits, MemoRetentionUsage,
-    RandomAccess, ResourceFailureKind, RunUsage, WorkKind,
+    BudgetError, BudgetKind, CapabilityId, EvaluationBudgets, EvaluationError, EvaluationLimits,
+    EvaluationOutcome, EvaluationReasonError, EvaluationUsage, MemoRetentionLimits,
+    MemoRetentionUsage, RandomAccess, ResourceFailureKind, RunUsage, WorkKind,
 };
 
 // Cell identity and the coordinate-keyed memo of evaluated cells.
@@ -169,7 +161,5 @@ pub use adapters::search::execution::{SearchAxis, SearchMode, SearchSelection};
 
 // Formula cache publication policies and receipts.
 pub use materialization::{
-    CellSetterSourceBinding, FormulaCacheMaterializationIdentity,
-    FormulaCacheMaterializationPolicy, FormulaCachePublicationReceipt, FormulaCacheWriteReceipt,
-    MaterializedScalarSummary,
+    FormulaCachePublicationReceipt, FormulaCacheWriteReceipt, MaterializedScalarSummary,
 };

@@ -10,7 +10,7 @@ use poirot_functions::scalar::ParamVec;
 use poirot_parsing::formula::FunctionName;
 
 /// Default adapter that exposes and dispatches all builtin function families.
-/// Its shared registry retains catalog order and handles ordinary and compatibility-profile lookup.
+/// Its shared registry retains catalog order and resolves serialized builtin aliases.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct BuiltinAdapters;
 
@@ -22,13 +22,6 @@ pub fn builtins() -> BuiltinAdapters {
 pub(super) fn builtin_registry() -> &'static AdapterRegistry {
     static REGISTRY: std::sync::LazyLock<AdapterRegistry> = std::sync::LazyLock::new(builtin_chain);
     &REGISTRY
-}
-
-/// Resolve a profile-only descriptor using documented Excel builtin spellings.
-pub(in crate::eval) fn profile_descriptor(
-    name: &FunctionName,
-) -> Option<&'static FunctionDescriptor> {
-    builtin_registry().resolve_profile(name)
 }
 
 pub(super) fn builtin_chain() -> AdapterRegistry {
@@ -53,14 +46,14 @@ pub(in crate::eval) fn execute(
     target: crate::eval::coordinates::EvaluationTarget,
     function: FunctionId,
     parameters: crate::eval::vm::ArgumentsRef<'_>,
-) -> Result<crate::eval::values::Value, crate::eval::limits::EvaluationFailure> {
+) -> Result<crate::eval::values::Value, crate::eval::limits::EvaluationError> {
     builtins()
         .execute(
             &mut CallContext { session, target },
             function,
             FunctionParameters(parameters),
         )
-        .ok_or(crate::eval::limits::EvaluationFailure::StalePlan)?
+        .ok_or(crate::eval::limits::EvaluationError::StalePlan)?
         .map(|value| value.0)
 }
 
@@ -69,16 +62,8 @@ impl FunctionAdapter for BuiltinAdapters {
         FUNCTION_DESCRIPTORS.iter()
     }
 
-    fn profile_functions(&self) -> impl Iterator<Item = &'static FunctionDescriptor> {
-        crate::eval::functions::registry::EXCEL_DESCRIPTORS.iter()
-    }
-
     fn resolve(&self, name: &FunctionName) -> Option<&'static FunctionDescriptor> {
         builtin_registry().resolve(name)
-    }
-
-    fn resolve_profile(&self, name: &FunctionName) -> Option<&'static FunctionDescriptor> {
-        builtin_registry().resolve_profile(name)
     }
 
     fn call(
@@ -86,7 +71,7 @@ impl FunctionAdapter for BuiltinAdapters {
         context: &mut CallContext<'_, '_>,
         name: &FunctionName,
         parameters: ParamVec<crate::eval::compile::bytecode::Compiled>,
-    ) -> Result<FunctionValue, crate::eval::limits::EvaluationFailure> {
+    ) -> Result<FunctionValue, crate::eval::limits::EvaluationError> {
         builtin_registry().call(context, name, parameters)
     }
 
@@ -103,7 +88,7 @@ impl FunctionAdapter for BuiltinAdapters {
         context: &mut CallContext<'_, '_>,
         function: FunctionId,
         parameters: FunctionParameters<'_>,
-    ) -> Option<Result<FunctionValue, crate::eval::limits::EvaluationFailure>> {
+    ) -> Option<Result<FunctionValue, crate::eval::limits::EvaluationError>> {
         builtin_registry().execute(context, function, parameters)
     }
 }

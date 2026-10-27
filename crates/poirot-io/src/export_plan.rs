@@ -111,7 +111,7 @@ pub fn plan_xlsx_export<W: WorkbookSource>(
 ) -> Result<ExportPlan<'_, W>, IoError> {
     if workbook.sheets().is_empty() {
         return Err(IoError::Unsupported(
-            "cannot export workbook without worksheets".into(),
+            crate::WorkbookFeatureError::MissingWorksheets,
         ));
     }
     crate::ooxml::validate_spills(workbook)?;
@@ -121,12 +121,14 @@ pub fn plan_xlsx_export<W: WorkbookSource>(
     let mut charge = |bytes: usize| -> Result<(), IoError> {
         source_bytes = source_bytes
             .checked_add(bytes as u64)
-            .ok_or_else(|| IoError::Limit("export source size overflow".into()))?;
+            .ok_or(IoError::Limit(
+                crate::ExportLimitError::ExportSourceSizeOverflow,
+            ))?;
         if source_bytes > options.max_source_bytes {
-            return Err(IoError::Limit(format!(
-                "export source payload {source_bytes} exceeds max_source_bytes {} before backend serialization",
-                options.max_source_bytes
-            )));
+            return Err(IoError::Limit(crate::ExportLimitError::SourceBytes {
+                requested: source_bytes,
+                limit: options.max_source_bytes,
+            }));
         }
         Ok(())
     };
@@ -134,51 +136,57 @@ pub fn plan_xlsx_export<W: WorkbookSource>(
         workbook
             .style_context()
             .retained_bytes()
-            .ok_or_else(|| IoError::Limit("style context size overflow".into()))?,
+            .ok_or(IoError::Limit(
+                crate::ExportLimitError::StyleContextSizeOverflow,
+            ))?,
     )?;
     for sheet in workbook.sheets() {
         let mut sheet_text_bytes = 0u64;
         charge(sheet.name().len())?;
         for row in sheet.row_indices() {
             crate::CellAddress::new(row, 0)?;
-            row_count = row_count
-                .checked_add(1)
-                .ok_or_else(|| IoError::Limit("export row count overflow".into()))?;
+            row_count = row_count.checked_add(1).ok_or(IoError::Limit(
+                crate::ExportLimitError::ExportRowCountOverflow,
+            ))?;
             charge(24)?;
         }
         for (address, cell) in sheet.cells() {
             address.validate()?;
-            cell_count = cell_count
-                .checked_add(1)
-                .ok_or_else(|| IoError::Limit("export cell count overflow".into()))?;
+            cell_count = cell_count.checked_add(1).ok_or(IoError::Limit(
+                crate::ExportLimitError::ExportCellCountOverflow,
+            ))?;
             charge(match &cell.value {
                 CellValue::Text(s) => s.len(),
-                CellValue::TextUtf16(s) => s
-                    .units()
-                    .len()
-                    .checked_mul(2)
-                    .ok_or_else(|| IoError::Limit("UTF16 source size overflow".into()))?,
+                CellValue::TextUtf16(s) => {
+                    s.units().len().checked_mul(2).ok_or({
+                        IoError::Limit(crate::ExportLimitError::Utf16SourceSizeOverflow)
+                    })?
+                }
                 _ => 8,
             })?;
             if cell.value.text_ref().is_some() {
                 let storage_bytes = match &cell.value {
                     CellValue::Text(s) => s.len(),
-                    CellValue::TextUtf16(s) => s
-                        .units()
-                        .len()
-                        .checked_mul(2)
-                        .ok_or_else(|| IoError::Limit("UTF16 source size overflow".into()))?,
-                    _ => return Err(IoError::Unsupported("invalid text representation".into())),
+                    CellValue::TextUtf16(s) => s.units().len().checked_mul(2).ok_or({
+                        IoError::Limit(crate::ExportLimitError::Utf16SourceSizeOverflow)
+                    })?,
+                    _ => {
+                        return Err(IoError::Unsupported(
+                            crate::WorkbookFeatureError::InvalidTextRepresentation,
+                        ));
+                    }
                 };
-                sheet_text_bytes = sheet_text_bytes
-                    .checked_add(storage_bytes as u64)
-                    .ok_or_else(|| IoError::Limit("export worksheet payload overflow".into()))?;
+                sheet_text_bytes = sheet_text_bytes.checked_add(storage_bytes as u64).ok_or({
+                    IoError::Limit(crate::ExportLimitError::ExportWorksheetPayloadOverflow)
+                })?;
                 if sheet_text_bytes > options.max_zip_entry_bytes {
-                    return Err(IoError::Limit(format!(
-                        "worksheet {} text payload exceeds max_zip_entry_bytes {} before backend allocation",
-                        sheet.name(),
-                        options.max_zip_entry_bytes
-                    )));
+                    return Err(IoError::Limit(
+                        crate::ExportLimitError::WorksheetTextBytes {
+                            sheet: sheet.name().into(),
+                            requested: sheet_text_bytes,
+                            limit: options.max_zip_entry_bytes,
+                        },
+                    ));
                 }
             }
             if let Some(formula) = &cell.formula {
@@ -187,7 +195,7 @@ pub fn plan_xlsx_export<W: WorkbookSource>(
             charge(
                 cell.style
                     .text_bytes()
-                    .ok_or_else(|| IoError::Limit("style size overflow".into()))?,
+                    .ok_or(IoError::Limit(crate::ExportLimitError::StyleSizeOverflow))?,
             )?;
             crate::numeric_representation::check(sheet.name(), *address, cell)?;
         }

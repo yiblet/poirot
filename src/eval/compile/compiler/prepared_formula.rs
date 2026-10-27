@@ -43,7 +43,7 @@ impl PreparedFormula {
                 .properties()
                 .filter(|p| p.result.may_spill())
                 .map(|p| p.shape),
-            Self::ParseFailure { error, .. } => (error.kind
+            Self::ParseFailure { error, .. } => (error.kind()
                 != poirot_parsing::formula::ParseErrorKind::Syntax)
                 .then_some(crate::model::ShapeBounds::UNKNOWN),
             Self::CompilationFailure { .. } | Self::RegistryMismatch { .. } => {

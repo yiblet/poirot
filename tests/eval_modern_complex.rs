@@ -357,7 +357,7 @@ fn direct_overlay_edits_spill_children_and_saved_state_remain_coherent() {
     );
 }
 #[test]
-fn profile_alias_and_checked_utf16_admission_preserve_existing_contracts() {
+fn aliases_and_checked_utf16_admission_preserve_existing_contracts() {
     let mut b = book();
     b.sheet_mut(0)
         .unwrap()
@@ -392,15 +392,6 @@ fn profile_alias_and_checked_utf16_admission_preserve_existing_contracts() {
         "IMPOWER(\"j\",2)",
     ] {
         assert_eq!(call(&b, &format!("_xlfn.{formula}")), call(&b, formula));
-        let pinned = run_formula_with_configuration(
-            &b,
-            0,
-            at("Z100").address,
-            formula,
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-            Default::default(),
-        );
-        assert_eq!(value(pinned), CellValue::Error(CellError::Name));
     }
     for formula in ["IMABS(TRUE)", "IMCONJUGATE(FALSE)", "IMSUM({TRUE})"] {
         assert_eq!(call(&b, formula), CellValue::Error(CellError::Value));

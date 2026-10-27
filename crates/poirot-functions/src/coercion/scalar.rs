@@ -1,14 +1,15 @@
+use crate::coercion::ExpectedInput;
 use crate::coercion::{
-    CellError, CellValue, Coerce, CoercionContext, CoercionFailure, Input, Origin, TextRef, coerce,
+    CellError, CellValue, Coerce, CoercionContext, CoercionError, Input, Origin, TextRef, coerce,
     parsing::{coerce_decimal_text, coerce_text_view},
 };
 use std::{borrow::Cow, marker::PhantomData};
 
-fn required_value(input: Input<'_>) -> Result<&CellValue, CoercionFailure> {
+fn required_value(input: Input<'_>) -> Result<&CellValue, CoercionError> {
     match input.value() {
-        Some(CellValue::Error(error)) => Err(CoercionFailure::Worksheet(*error)),
+        Some(CellValue::Error(error)) => Err(CoercionError::Worksheet(*error)),
         Some(value) => Ok(value),
-        None => Err(CoercionFailure::mismatch("present scalar")),
+        None => Err(CoercionError::mismatch(ExpectedInput::PresentScalar)),
     }
 }
 
@@ -19,10 +20,10 @@ pub struct ExactNumber;
 impl Coerce<'_> for ExactNumber {
     type Output = f64;
 
-    fn coerce_input(input: Input<'_>, _: &mut CoercionContext) -> Result<f64, CoercionFailure> {
+    fn coerce_input(input: Input<'_>, _: &mut CoercionContext) -> Result<f64, CoercionError> {
         match required_value(input)? {
             CellValue::Number(number) => Ok(*number),
-            _ => Err(CoercionFailure::mismatch("existing number")),
+            _ => Err(CoercionError::mismatch(ExpectedInput::ExistingNumber)),
         }
     }
 }
@@ -33,10 +34,10 @@ pub struct ExactBoolean;
 impl Coerce<'_> for ExactBoolean {
     type Output = bool;
 
-    fn coerce_input(input: Input<'_>, _: &mut CoercionContext) -> Result<bool, CoercionFailure> {
+    fn coerce_input(input: Input<'_>, _: &mut CoercionContext) -> Result<bool, CoercionError> {
         match required_value(input)? {
             CellValue::Boolean(boolean) => Ok(*boolean),
-            _ => Err(CoercionFailure::mismatch("existing boolean")),
+            _ => Err(CoercionError::mismatch(ExpectedInput::ExistingBoolean)),
         }
     }
 }
@@ -50,10 +51,10 @@ impl<'a> Coerce<'a> for ExactText {
     fn coerce_input(
         input: Input<'a>,
         _: &mut CoercionContext,
-    ) -> Result<Self::Output, CoercionFailure> {
+    ) -> Result<Self::Output, CoercionError> {
         required_value(input)?
             .text_ref()
-            .ok_or_else(|| CoercionFailure::mismatch("existing text"))
+            .ok_or_else(|| CoercionError::mismatch(ExpectedInput::ExistingText))
     }
 }
 
@@ -63,13 +64,12 @@ pub struct ExactError;
 impl Coerce<'_> for ExactError {
     type Output = CellError;
 
-    fn coerce_input(
-        input: Input<'_>,
-        _: &mut CoercionContext,
-    ) -> Result<CellError, CoercionFailure> {
+    fn coerce_input(input: Input<'_>, _: &mut CoercionContext) -> Result<CellError, CoercionError> {
         match input.value() {
             Some(CellValue::Error(error)) => Ok(*error),
-            _ => Err(CoercionFailure::mismatch("existing worksheet error")),
+            _ => Err(CoercionError::mismatch(
+                ExpectedInput::ExistingWorksheetError,
+            )),
         }
     }
 }
@@ -80,10 +80,7 @@ pub struct Identity;
 impl<'a> Coerce<'a> for Identity {
     type Output = Input<'a>;
 
-    fn coerce_input(
-        input: Input<'a>,
-        _: &mut CoercionContext,
-    ) -> Result<Input<'a>, CoercionFailure> {
+    fn coerce_input(input: Input<'a>, _: &mut CoercionContext) -> Result<Input<'a>, CoercionError> {
         Ok(input)
     }
 }
@@ -95,23 +92,20 @@ pub struct DecimalNumber;
 impl Coerce<'_> for DecimalNumber {
     type Output = f64;
 
-    fn coerce_input(
-        input: Input<'_>,
-        context: &mut CoercionContext,
-    ) -> Result<f64, CoercionFailure> {
+    fn coerce_input(input: Input<'_>, context: &mut CoercionContext) -> Result<f64, CoercionError> {
         let value = required_value(input)?;
         match value {
             CellValue::Number(number) if number.is_finite() => Ok(*number),
-            CellValue::Number(_) => Err(CoercionFailure::Worksheet(CellError::Num)),
+            CellValue::Number(_) => Err(CoercionError::Worksheet(CellError::Num)),
             CellValue::Blank => Ok(0.0),
             CellValue::Boolean(boolean) => Ok(f64::from(u8::from(*boolean))),
             _ => {
                 let text = value
                     .text_ref()
-                    .ok_or_else(|| CoercionFailure::mismatch("finite decimal number"))?;
+                    .ok_or_else(|| CoercionError::mismatch(ExpectedInput::FiniteDecimalNumber))?;
                 let text = coerce_text_view(text, context)?;
                 coerce_decimal_text(&text)
-                    .ok_or_else(|| CoercionFailure::mismatch("finite decimal number"))
+                    .ok_or_else(|| CoercionError::mismatch(ExpectedInput::FiniteDecimalNumber))
             }
         }
     }
@@ -127,18 +121,18 @@ impl Coerce<'_> for LogicalBoolean {
     fn coerce_input(
         input: Input<'_>,
         context: &mut CoercionContext,
-    ) -> Result<bool, CoercionFailure> {
+    ) -> Result<bool, CoercionError> {
         match required_value(input)? {
             CellValue::Boolean(boolean) => Ok(*boolean),
             CellValue::Blank => Ok(false),
             CellValue::Number(number) if number.is_finite() => Ok(*number != 0.0),
-            CellValue::Number(_) => Err(CoercionFailure::Worksheet(CellError::Num)),
+            CellValue::Number(_) => Err(CoercionError::Worksheet(CellError::Num)),
             value => {
                 let text = value
                     .text_ref()
-                    .ok_or_else(|| CoercionFailure::mismatch("logical scalar"))?;
+                    .ok_or_else(|| CoercionError::mismatch(ExpectedInput::LogicalScalar))?;
                 let length = u64::try_from(text.storage_bytes())
-                    .map_err(|_| CoercionFailure::Limit(crate::coercion::Resource::Work))?;
+                    .map_err(|_| CoercionError::Limit(crate::coercion::Resource::Work))?;
                 context.charge(length)?;
                 let equals = |expected: &str| {
                     text.units()
@@ -154,7 +148,7 @@ impl Coerce<'_> for LogicalBoolean {
                 } else if equals("false") {
                     Ok(false)
                 } else {
-                    Err(CoercionFailure::mismatch("logical scalar"))
+                    Err(CoercionError::mismatch(ExpectedInput::LogicalScalar))
                 }
             }
         }
@@ -171,7 +165,7 @@ impl<'a> Coerce<'a> for FormulaText {
     fn coerce_input(
         input: Input<'a>,
         context: &mut CoercionContext,
-    ) -> Result<Self::Output, CoercionFailure> {
+    ) -> Result<Self::Output, CoercionError> {
         match required_value(input)? {
             CellValue::Blank => Ok(Cow::Borrowed("")),
             CellValue::Boolean(true) => Ok(Cow::Borrowed("TRUE")),
@@ -180,11 +174,11 @@ impl<'a> Coerce<'a> for FormulaText {
                 context.admit_text(crate::numeric::number_text::ALLOCATION_BOUND)?;
                 Ok(Cow::Owned(crate::numeric::number_text::render(*number)))
             }
-            CellValue::Number(_) => Err(CoercionFailure::Worksheet(CellError::Num)),
+            CellValue::Number(_) => Err(CoercionError::Worksheet(CellError::Num)),
             value => {
                 let text = value
                     .text_ref()
-                    .ok_or_else(|| CoercionFailure::mismatch("formula text"))?;
+                    .ok_or_else(|| CoercionError::mismatch(ExpectedInput::FormulaText))?;
                 coerce_text_view(text, context)
             }
         }
@@ -198,19 +192,13 @@ pub struct TextCount;
 impl Coerce<'_> for TextCount {
     type Output = i32;
 
-    fn coerce_input(
-        input: Input<'_>,
-        context: &mut CoercionContext,
-    ) -> Result<i32, CoercionFailure> {
+    fn coerce_input(input: Input<'_>, context: &mut CoercionContext) -> Result<i32, CoercionError> {
         let number = coerce::<DecimalNumber>(input, context)?;
         if number < 0.0 {
-            return Err(CoercionFailure::Worksheet(CellError::Value));
+            return Err(CoercionError::Worksheet(CellError::Value));
         }
-        let number = crate::coercion::compatibility::coerce_text_integer_number(
-            number,
-            crate::coercion::compatibility::TextIntegerPolicy::Checked,
-        )
-        .map_err(CoercionFailure::Worksheet)?;
+        let number = crate::coercion::compatibility::coerce_text_integer_number(number)
+            .map_err(CoercionError::Worksheet)?;
         Ok(number.trunc() as i32)
     }
 }
@@ -225,7 +213,7 @@ impl<'a, R: Coerce<'a>> Coerce<'a> for Optional<R> {
     fn coerce_input(
         input: Input<'a>,
         context: &mut CoercionContext,
-    ) -> Result<Self::Output, CoercionFailure> {
+    ) -> Result<Self::Output, CoercionError> {
         if input.value().is_none() {
             Ok(None)
         } else {
@@ -247,9 +235,9 @@ macro_rules! origin_rule {
             fn coerce_input(
                 input: Input<'a>,
                 context: &mut CoercionContext,
-            ) -> Result<Self::Output, CoercionFailure> {
+            ) -> Result<Self::Output, CoercionError> {
                 if input.origin() != Origin::$origin {
-                    return Err(CoercionFailure::mismatch($description));
+                    return Err(CoercionError::mismatch(ExpectedInput::$origin));
                 }
                 coerce::<R>(input, context)
             }

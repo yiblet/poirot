@@ -204,7 +204,7 @@ pub(super) fn transfer(
                         // unbound call. Its possible result must be admitted before
                         // producer classification, including reference-valued aliases.
                         if let Some(handler) =
-                            crate::eval::functions::registry::resolve_excel_function(name)
+                            crate::eval::functions::registry::resolve_handler(name)
                         {
                             let descriptor = handler.descriptor();
                             effects.possible_reads =

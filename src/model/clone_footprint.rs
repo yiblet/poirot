@@ -6,7 +6,7 @@
 //! use poirot::model::clone_footprint::CloneFootprint;
 //!
 //! let mut book = Workbook::new();
-//! book.add_sheet("Data")?.set_value("A1".parse()?, "baseline")?;
+//! book.add_sheet("Data")?.set_value("A1", "baseline")?;
 //! let before = CloneFootprint::measure(&book).ok_or("accounting overflow")?;
 //! let projected = CloneFootprint::measure_with_assignments(
 //!     &book, &[(0, "B1".parse()?, CellValue::Number(42.))],
@@ -69,7 +69,7 @@ impl CloneFootprint {
         for (sheet, worksheet) in workbook.sheets().iter().enumerate() {
             for (address, spill) in &worksheet.spill_cache {
                 let removed_style = if final_values.contains_key(&(sheet, spill.owner)) {
-                    worksheet.get(*address).map(|cell| &cell.style)
+                    worksheet.get_validated(*address).map(|cell| &cell.style)
                 } else if final_values.contains_key(&(sheet, *address)) {
                     spill.source.as_ref().map(|cell| &cell.style)
                 } else {
@@ -83,7 +83,7 @@ impl CloneFootprint {
         let mut added_rows = std::collections::BTreeSet::new();
         for ((sheet, address), value) in final_values {
             let worksheet = workbook.sheet(sheet)?;
-            if let Some(cell) = worksheet.get(address) {
+            if let Some(cell) = worksheet.get_validated(address) {
                 result.text_bytes = result
                     .text_bytes
                     .checked_sub(cell.value.text_storage_bytes())?;
@@ -155,18 +155,11 @@ mod tests {
         let mut workbook = Workbook::new();
         let sheet = workbook.add_sheet("S").unwrap();
         sheet
-            .set_value(
-                "A1".parse().unwrap(),
-                CellValue::from(ExcelText::from_units(vec![0xd800])),
-            )
+            .set_value("A1", CellValue::from(ExcelText::from_units(vec![0xd800])))
             .unwrap();
-        sheet
-            .get_mut("A1".parse().unwrap())
-            .unwrap()
-            .style
-            .number_format = Some("0.0".into());
-        sheet.set_value("A2".parse().unwrap(), "removed").unwrap();
-        sheet.remove("A2".parse().unwrap());
+        sheet.get_mut("A1").unwrap().unwrap().style.number_format = Some("0.0".into());
+        sheet.set_value("A2", "removed").unwrap();
+        sheet.remove("A2").unwrap();
         workbook.named_ranges.push(NamedRange {
             name: "N".into(),
             formula: "S!A1".into(),
@@ -182,19 +175,11 @@ mod tests {
         let mut workbook = Workbook::new();
         let sheet = workbook.add_sheet("S").unwrap();
         sheet
-            .set_formula_with_cached_value(
-                "A1".parse().unwrap(),
-                "long formula",
-                CellValue::Text("old text".into()),
-            )
+            .set_formula_with_cached_value("A1", "long formula", CellValue::Text("old text".into()))
             .unwrap();
-        sheet
-            .get_mut("A1".parse().unwrap())
-            .unwrap()
-            .style
-            .number_format = Some("0.000".into());
-        sheet.set_value("A3".parse().unwrap(), "removed").unwrap();
-        sheet.remove("A3".parse().unwrap());
+        sheet.get_mut("A1").unwrap().unwrap().style.number_format = Some("0.000".into());
+        sheet.set_value("A3", "removed").unwrap();
+        sheet.remove("A3").unwrap();
         let assignments = vec![
             (0, "A1".parse().unwrap(), CellValue::Blank),
             (0, "A3".parse().unwrap(), CellValue::Text("new".into())),

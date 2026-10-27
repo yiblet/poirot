@@ -1,6 +1,6 @@
 //! Adapters own source interpretation; scheduling and reporting use one interface.
 use crate::{
-    Error, invalid,
+    RunnerError,
     model::{self, CaseMetadata, CaseResult, Change, Observation, Outcome, Source},
 };
 use std::{
@@ -11,7 +11,7 @@ use std::{
 
 pub(crate) trait TestSuite: Send + Sync {
     fn cases(&self) -> &[CaseMetadata];
-    fn run(&self, selected: &BTreeSet<String>) -> Result<Vec<CaseResult>, Error>;
+    fn run(&self, selected: &BTreeSet<String>) -> Result<Vec<CaseResult>, RunnerError>;
 }
 
 /// One extracted native FODS fixture exposed through the unified test-suite interface.
@@ -28,7 +28,7 @@ impl TestSuite for FodsSuite {
     fn cases(&self) -> &[CaseMetadata] {
         &self.cases
     }
-    fn run(&self, selected: &BTreeSet<String>) -> Result<Vec<CaseResult>, Error> {
+    fn run(&self, selected: &BTreeSet<String>) -> Result<Vec<CaseResult>, RunnerError> {
         let mut plan = crate::fods::plan::prepare_fixture(
             self.entry.clone(),
             self.source.clone(),
@@ -45,7 +45,7 @@ impl TestSuite for FodsSuite {
                     .cases
                     .iter()
                     .find(|case| case.id == id)
-                    .ok_or_else(|| invalid(format!("unknown executed FODS case: {id}")))?
+                    .ok_or_else(|| RunnerError::UnknownFodsCase { case: id.clone() })?
                     .clone();
                 let (observation, mut reason) = if let Some(failure) = &native.failure {
                     let category = failure.gap_type.label().to_owned();
@@ -57,9 +57,16 @@ impl TestSuite for FodsSuite {
                         | crate::fods::gaps::GapKind::UnsupportedArrayContext
                         | crate::fods::gaps::GapKind::ResourceLimit
                         | crate::fods::gaps::GapKind::UnsupportedCapability
-                        | crate::fods::gaps::GapKind::UnsupportedCheck
-                        | crate::fods::gaps::GapKind::SourceException => Outcome::Blocked,
-                        _ => Outcome::Mismatch,
+                        | crate::fods::gaps::GapKind::UnsupportedCheck => Outcome::Blocked,
+                        crate::fods::gaps::GapKind::NameResolution
+                        | crate::fods::gaps::GapKind::WrongErrorType
+                        | crate::fods::gaps::GapKind::UnexpectedError
+                        | crate::fods::gaps::GapKind::ExpectedError
+                        | crate::fods::gaps::GapKind::NumericMismatch
+                        | crate::fods::gaps::GapKind::TextMismatch
+                        | crate::fods::gaps::GapKind::BooleanMismatch
+                        | crate::fods::gaps::GapKind::ValueTypeMismatch
+                        | crate::fods::gaps::GapKind::PredicateMismatch => Outcome::Mismatch,
                     };
                     (
                         Observation {
@@ -99,7 +106,7 @@ impl TestSuite for FodsSuite {
     }
 }
 
-pub(crate) fn fods(root: &Path) -> Result<Vec<Box<dyn TestSuite>>, Error> {
+pub(crate) fn fods(root: &Path) -> Result<Vec<Box<dyn TestSuite>>, RunnerError> {
     let corpus = crate::fods::corpus::Corpus::open(root)?;
     let baseline = Arc::new(corpus.baseline);
     corpus
@@ -160,17 +167,17 @@ impl TestSuite for JsonSuite {
     fn cases(&self) -> &[CaseMetadata] {
         &self.cases
     }
-    fn run(&self, selected: &BTreeSet<String>) -> Result<Vec<CaseResult>, Error> {
+    fn run(&self, selected: &BTreeSet<String>) -> Result<Vec<CaseResult>, RunnerError> {
         let names: BTreeSet<_> = self
             .cases
             .iter()
             .filter(|case| selected.contains(&case.id))
             .map(|case| case.name.as_str())
             .collect();
-        let results = crate::json::run_selected(&self.suite, &names).map_err(invalid)?;
+        let results = crate::json::run_selected(&self.suite, &names)?;
         results.into_iter().map(|native| {
             let case = self.cases.iter().find(|case| case.name == native.name)
-                .ok_or_else(|| invalid("unknown executed JSON scenario"))?.clone();
+                .ok_or(RunnerError::UnknownJsonScenario)?.clone();
             let details = serde_json::to_value(&native)?;
             let category = match native.status {
                 crate::json::Status::Passed => None,
@@ -222,7 +229,7 @@ impl TestSuite for ExcelSpecSuite {
     fn cases(&self) -> &[CaseMetadata] {
         &self.cases
     }
-    fn run(&self, selected: &BTreeSet<String>) -> Result<Vec<CaseResult>, Error> {
+    fn run(&self, selected: &BTreeSet<String>) -> Result<Vec<CaseResult>, RunnerError> {
         let Some(case) = self
             .cases
             .first()
@@ -230,7 +237,7 @@ impl TestSuite for ExcelSpecSuite {
         else {
             return Ok(Vec::new());
         };
-        let observed = crate::json::specs::observe(&self.case).map_err(invalid)?;
+        let observed = crate::json::specs::observe(&self.case)?;
         let observation = if !observed.mode_errors.is_empty() {
             Observation {
                 outcome: Outcome::Blocked,
@@ -264,9 +271,9 @@ impl TestSuite for ExcelSpecSuite {
     }
 }
 
-fn files(root: &Path, out: &mut Vec<std::path::PathBuf>) -> Result<(), Error> {
+fn files(root: &Path, out: &mut Vec<std::path::PathBuf>) -> Result<(), RunnerError> {
     if root.is_symlink() {
-        return Err(invalid("corpus roots must not be symlinks"));
+        return Err(RunnerError::SymlinkCorpus);
     }
     if root.is_file() {
         out.push(root.to_owned());
@@ -287,7 +294,7 @@ fn files(root: &Path, out: &mut Vec<std::path::PathBuf>) -> Result<(), Error> {
     Ok(())
 }
 
-pub(crate) fn json(root: &Path) -> Result<Vec<Box<dyn TestSuite>>, Error> {
+pub(crate) fn json(root: &Path) -> Result<Vec<Box<dyn TestSuite>>, RunnerError> {
     let groups: std::collections::BTreeMap<String, String> =
         serde_json::from_slice(&std::fs::read(crate::package_root().join("groups.json"))?)?;
     let mut paths = Vec::new();
@@ -295,7 +302,7 @@ pub(crate) fn json(root: &Path) -> Result<Vec<Box<dyn TestSuite>>, Error> {
     paths.sort();
     paths
         .into_iter()
-        .map(|path| -> Result<Vec<Box<dyn TestSuite>>, Error> {
+        .map(|path| -> Result<Vec<Box<dyn TestSuite>>, RunnerError> {
             let bytes = std::fs::read(&path)?;
             let relative = path.strip_prefix(if root.is_file() {
                 root.parent().unwrap_or(root)
@@ -305,8 +312,7 @@ pub(crate) fn json(root: &Path) -> Result<Vec<Box<dyn TestSuite>>, Error> {
             let input_digest = model::digest(&bytes);
             let name = relative.to_string_lossy().replace('\\', "/");
             if bytes.iter().find(|b| !b.is_ascii_whitespace()) == Some(&b'[') {
-                return crate::json::specs::parse(&bytes)
-                    .map_err(invalid)?
+                return crate::json::specs::parse(&bytes)?
                     .into_iter()
                     .map(|case| {
                         let metadata = CaseMetadata {
@@ -350,8 +356,13 @@ pub(crate) fn json(root: &Path) -> Result<Vec<Box<dyn TestSuite>>, Error> {
                     })
                     .collect();
             }
-            let suite = crate::json::parse_suite(std::str::from_utf8(&bytes)?)
-                .map_err(|error| invalid(format!("{}: {error}", relative.display())))?;
+            let suite =
+                crate::json::parse_suite(std::str::from_utf8(&bytes)?).map_err(|source| {
+                    RunnerError::ScenarioFile {
+                        path: relative.to_owned(),
+                        source,
+                    }
+                })?;
             let name = relative.to_string_lossy().replace('\\', "/");
             let group = suite
                 .group
@@ -396,10 +407,7 @@ pub(crate) fn json(root: &Path) -> Result<Vec<Box<dyn TestSuite>>, Error> {
                             .collect::<Vec<_>>()
                             .join("; "),
                     ),
-                    authority: format!(
-                        "Authored expectations; {:?}; consult evidence",
-                        suite.builtin_policy
-                    ),
+                    authority: "Authored expectations; consult evidence".into(),
                     evidence: scenario.evidence.clone(),
                     input_digest: input_digest.clone(),
                     fods: None,
@@ -415,7 +423,7 @@ pub(crate) fn json(root: &Path) -> Result<Vec<Box<dyn TestSuite>>, Error> {
 
 // Fingerprints are persisted observations, independent of serde_json feature
 // unification (GPUI enables preserve_order). Keep the original sorted-key bytes.
-fn json_observation_fingerprint(mut value: serde_json::Value) -> Result<String, Error> {
+fn json_observation_fingerprint(mut value: serde_json::Value) -> Result<String, RunnerError> {
     value.sort_all_objects();
     Ok(model::digest(&serde_json::to_vec(&value)?))
 }

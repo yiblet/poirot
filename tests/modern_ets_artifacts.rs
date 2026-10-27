@@ -19,7 +19,7 @@ fn ets_executes_after_actual_xlsx_roundtrip() {
         ("C1", "FORECAST.ETS.SEASONALITY({1;2;3},{1;2;3})"),
         ("D1", "FORECAST.ETS.STAT({1;2;3},{1;2;3},8)"),
     ] {
-        s.set_formula(c.parse().unwrap(), f).unwrap();
+        s.set_formula(c, f).unwrap();
     }
     let bytes = b.save_xlsx().to_buffer().unwrap();
     let reopened = poirot_io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
@@ -35,8 +35,8 @@ fn ets_executes_after_actual_xlsx_roundtrip() {
 fn incompatible_ets_preparation_recovers_source_and_overlay_edits() {
     let mut b = Workbook::new();
     let s = b.add_sheet("S").unwrap();
-    s.set_value("A1".parse().unwrap(), 3.).unwrap();
-    s.set_formula("D1".parse().unwrap(), "FORECAST.ETS(A1,{3;5;7},{1;2;3},0)")
+    s.set_value("A1", 3.).unwrap();
+    s.set_formula("D1", "FORECAST.ETS(A1,{3;5;7},{1;2;3},0)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(b).build().unwrap();
     let input = overlay.target("S!A1").unwrap();

@@ -1,4 +1,5 @@
 //! Typed classic MATCH traversal, separate from pinned POI and XMATCH search.
+use crate::lookup::MatchSelectionError;
 use std::cmp::Ordering;
 
 /// Approximate MATCH contract; exact matching retains its existing first-match path.
@@ -24,36 +25,26 @@ pub trait MatchCandidateReader {
     fn compare(&mut self, index: usize) -> Result<Option<Ordering>, Self::Error>;
 }
 
-/// A malformed host position is distinct from a failure while reading a candidate.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum MatchSelectionFailure<E> {
-    /// Preserve the host's original operational failure.
-    Reader(E),
-    /// A reader returned a position outside the requested logical interval.
-    InvalidPosition,
-}
 fn next<R: MatchCandidateReader>(
     reader: &mut R,
     first: usize,
     end: usize,
-) -> Result<Option<usize>, MatchSelectionFailure<R::Error>> {
+) -> Result<Option<usize>, MatchSelectionError<R::Error>> {
     let index = reader
         .next(first, end)
-        .map_err(MatchSelectionFailure::Reader)?;
+        .map_err(MatchSelectionError::Reader)?;
     if index.is_some_and(|index| index < first || index >= end) {
-        return Err(MatchSelectionFailure::InvalidPosition);
+        return Err(MatchSelectionError::InvalidPosition);
     }
     Ok(index)
 }
 fn previous<R: MatchCandidateReader>(
     reader: &mut R,
     end: usize,
-) -> Result<Option<usize>, MatchSelectionFailure<R::Error>> {
-    let index = reader
-        .previous(end)
-        .map_err(MatchSelectionFailure::Reader)?;
+) -> Result<Option<usize>, MatchSelectionError<R::Error>> {
+    let index = reader.previous(end).map_err(MatchSelectionError::Reader)?;
     if index.is_some_and(|index| index >= end) {
-        return Err(MatchSelectionFailure::InvalidPosition);
+        return Err(MatchSelectionError::InvalidPosition);
     }
     Ok(index)
 }
@@ -63,7 +54,7 @@ pub fn classic_match_index<R: MatchCandidateReader>(
     len: usize,
     mode: ClassicMatchMode,
     reader: &mut R,
-) -> Result<Option<usize>, MatchSelectionFailure<R::Error>> {
+) -> Result<Option<usize>, MatchSelectionError<R::Error>> {
     if len == 0 {
         return Ok(None);
     }
@@ -71,10 +62,7 @@ pub fn classic_match_index<R: MatchCandidateReader>(
         let mut candidate = None;
         let mut position = next(reader, 0, len)?;
         while let Some(index) = position {
-            match reader
-                .compare(index)
-                .map_err(MatchSelectionFailure::Reader)?
-            {
+            match reader.compare(index).map_err(MatchSelectionError::Reader)? {
                 Some(Ordering::Equal) => return Ok(Some(index)),
                 Some(Ordering::Greater) => return Ok(candidate),
                 Some(Ordering::Less) => candidate = Some(index),
@@ -94,10 +82,7 @@ pub fn classic_match_index<R: MatchCandidateReader>(
         let mut position = next(reader, middle, high.saturating_add(1))?;
         let mut compared = None;
         while let Some(index) = position {
-            if let Some(order) = reader
-                .compare(index)
-                .map_err(MatchSelectionFailure::Reader)?
-            {
+            if let Some(order) = reader.compare(index).map_err(MatchSelectionError::Reader)? {
                 compared = Some((index, order));
                 break;
             }
@@ -112,7 +97,7 @@ pub fn classic_match_index<R: MatchCandidateReader>(
                         == Some(last.saturating_add(1))
                     && reader
                         .compare(last.saturating_add(1))
-                        .map_err(MatchSelectionFailure::Reader)?
+                        .map_err(MatchSelectionError::Reader)?
                         == Some(Ordering::Equal)
                 {
                     last = last.saturating_add(1);
@@ -129,9 +114,7 @@ pub fn classic_match_index<R: MatchCandidateReader>(
     let mut position = previous(reader, low.saturating_add(1))?;
     while let Some(index) = position {
         if matches!(
-            reader
-                .compare(index)
-                .map_err(MatchSelectionFailure::Reader)?,
+            reader.compare(index).map_err(MatchSelectionError::Reader)?,
             Some(Ordering::Equal | Ordering::Greater)
         ) {
             return Ok(Some(index));
@@ -144,6 +127,10 @@ pub fn classic_match_index<R: MatchCandidateReader>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    /// Reader's deliberate operational refusal.
+    #[derive(Clone, Debug, thiserror::Error, PartialEq, Eq)]
+    #[error("test reader refused candidate")]
+    struct ReaderError;
     /// Test candidate reader that records comparison order and can fail at a chosen index.
     /// Missing numeric values model type mismatches without removing their logical positions.
     struct Reader {
@@ -153,7 +140,7 @@ mod tests {
         fail: Option<usize>,
     }
     impl MatchCandidateReader for Reader {
-        type Error = &'static str;
+        type Error = ReaderError;
         fn next(&mut self, first: usize, end: usize) -> Result<Option<usize>, Self::Error> {
             Ok((first < end).then_some(first))
         }
@@ -163,7 +150,7 @@ mod tests {
         fn compare(&mut self, index: usize) -> Result<Option<Ordering>, Self::Error> {
             self.reads.push(index);
             if self.fail == Some(index) {
-                return Err("budget refused");
+                return Err(ReaderError);
             }
             Ok(self.values[index].map(|v| self.key.cmp(&v)))
         }
@@ -221,7 +208,7 @@ mod tests {
         r.fail = Some(2);
         assert_eq!(
             classic_match_index(values.len(), ClassicMatchMode::Descending, &mut r),
-            Err(MatchSelectionFailure::Reader("budget refused"))
+            Err(MatchSelectionError::Reader(ReaderError))
         );
         assert_eq!(r.reads, [0, 1, 2]);
         let mut r = reader(
@@ -246,7 +233,7 @@ mod tests {
         r.fail = Some(1);
         assert_eq!(
             classic_match_index(8, ClassicMatchMode::Ascending, &mut r),
-            Err(MatchSelectionFailure::Reader("budget refused"))
+            Err(MatchSelectionError::Reader(ReaderError))
         );
         assert_eq!(r.reads, [3, 1]);
     }
@@ -294,13 +281,13 @@ mod tests {
         host.invalid_next = true;
         assert_eq!(
             classic_match_index(2, ClassicMatchMode::Descending, &mut host),
-            Err(MatchSelectionFailure::InvalidPosition)
+            Err(MatchSelectionError::InvalidPosition)
         );
         host.invalid_next = false;
         host.invalid_previous = true;
         assert_eq!(
             classic_match_index(1, ClassicMatchMode::Ascending, &mut host),
-            Err(MatchSelectionFailure::InvalidPosition)
+            Err(MatchSelectionError::InvalidPosition)
         );
         assert_eq!(
             classic_match_index(0, ClassicMatchMode::Ascending, &mut host),

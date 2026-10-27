@@ -1,19 +1,12 @@
-use poirot::eval::{
-    EvaluationOutcome, RunConfiguration, TextSemanticsPolicy, TextSourceVersion,
-    run_formula_with_configuration,
-};
+use poirot::eval::{EvaluationOutcome, RunConfiguration, run_formula_with_configuration};
 use poirot::model::{CellAddress, CellValue, Workbook};
 
 #[test]
-fn both_pinned_profiles_consume_numeric_text_optional_zero_policy() {
+fn numeric_text_optional_zero_arguments_follow_documented_rules() {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();
-    for source in [
-        TextSourceVersion::Poi7321209,
-        TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-    ] {
-        let configuration =
-            RunConfiguration::default().with_text_policy(TextSemanticsPolicy { source });
+    {
+        let configuration = RunConfiguration::default();
         for (formula, expected) in [
             (r####"TEXT(0,"$###,###")"####, "$0"),
             (r####"TEXT(0,"###")"####, "0"),
@@ -46,11 +39,9 @@ fn both_pinned_profiles_consume_numeric_text_optional_zero_policy() {
                 &configuration,
                 Default::default(),
             ) {
-                EvaluationOutcome::Complete { value, .. } => assert_eq!(
-                    value,
-                    CellValue::Text(expected.into()),
-                    "{source:?} {formula}"
-                ),
+                EvaluationOutcome::Complete { value, .. } => {
+                    assert_eq!(value, CellValue::Text(expected.into()), "{formula}")
+                }
                 other => panic!("{other:?}"),
             }
         }

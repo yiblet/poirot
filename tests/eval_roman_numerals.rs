@@ -1,22 +1,21 @@
 use poirot::eval::{
-    BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationOutcome, RunConfiguration,
-    run_formula_with_configuration,
+    EvaluationBudgets, EvaluationOutcome, RunConfiguration, run_formula_with_configuration,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 fn book() -> Workbook {
     let mut book = Workbook::new();
     book.add_sheet("S").unwrap();
     let sheet = book.sheet_mut(0).unwrap();
-    sheet.set_value("A1".parse().unwrap(), "mcmxii").unwrap();
-    sheet.set_value("A2".parse().unwrap(), 999.).unwrap();
-    sheet.set_value("A3".parse().unwrap(), false).unwrap();
+    sheet.set_value("A1", "mcmxii").unwrap();
+    sheet.set_value("A2", 999.).unwrap();
+    sheet.set_value("A3", false).unwrap();
     sheet
-        .set_value("A4".parse().unwrap(), CellValue::Error(CellError::NA))
+        .set_value("A4", CellValue::Error(CellError::NA))
         .unwrap();
     book
 }
 fn config() -> RunConfiguration {
-    RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
+    RunConfiguration::default()
 }
 fn run(
     book: &Workbook,

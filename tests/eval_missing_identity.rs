@@ -1,6 +1,6 @@
 //! Independent public-boundary probes for selected helper MissingArgEval identity.
 use poirot::eval::{
-    EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome, run_formula,
+    EvaluationBudgets, EvaluationError, EvaluationInputs, EvaluationOutcome, run_formula,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
@@ -18,7 +18,7 @@ fn execute(formula: &str) -> EvaluationOutcome<CellValue> {
 }
 
 #[test]
-fn selected_missing_retains_source_exception_boundaries() {
+fn selected_missing_retains_operational_failure_boundaries() {
     // A selected omitted result still lacks worksheet publication support.
     // Preserve this known operational gap rather than claiming native Excel behavior.
     for formula in ["IFS(TRUE,)", "IFERROR(IFS(TRUE,),42)"] {
@@ -26,7 +26,7 @@ fn selected_missing_retains_source_exception_boundaries() {
             matches!(
                 execute(formula),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability { .. },
+                    failure: EvaluationError::UnsupportedCapability { .. },
                     ..
                 }
             ),
@@ -57,12 +57,12 @@ fn final_missing_bulk_abort_publishes_no_partial_cache_or_style_changes() {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();
     for (address, formula, cache) in [("A1", "1+1", 101.), ("A2", "IFS(TRUE,)", 102.)] {
-        let address = address.parse().unwrap();
+        let address = address.parse::<poirot::model::CellAddress>().unwrap();
         let sheet = workbook.sheet_mut(0).unwrap();
         sheet
             .set_formula_with_cached_value(address, formula, CellValue::Number(cache))
             .unwrap();
-        sheet.get_mut(address).unwrap().style.number_format = Some("0.00".into());
+        sheet.get_mut(address).unwrap().unwrap().style.number_format = Some("0.00".into());
     }
     let before = workbook.clone();
     match poirot::eval::run_recalculation(
@@ -71,7 +71,7 @@ fn final_missing_bulk_abort_publishes_no_partial_cache_or_style_changes() {
         EvaluationBudgets::default(),
     ) {
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability { .. },
+            failure: EvaluationError::UnsupportedCapability { .. },
             usage,
         } => {
             assert!(usage.completed_cells >= 1);

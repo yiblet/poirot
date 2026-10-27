@@ -10,27 +10,13 @@
 //! Whole-axis pairs retain their exact source bytes and cannot be rebound.
 //! Arrays and error literals currently request normal parser fallback. An iterator may yield tokens before reporting unsupported input;
 //! consume to completion before publishing a hash or collected bindings.
+pub use super::classification_error::ClassificationError;
 use crate::formula::references::cell_coordinates;
 use crate::formula::tokens::{identifier, identifier_character, number_token, whitespace};
 
 /// Coordinate representation shared with the full reference parser.
 pub use crate::formula::references::CellCoordinates;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-/// Classification needs the full parser, either for invalid input or syntax
-/// outside this fast path. This is not itself a formula parsing diagnostic.
-pub enum Unsupported {
-    /// Syntax requires the full parser rather than token classification.
-    Syntax,
-    /// Reference syntax cannot be safely classified by this fast path.
-    Reference,
-    /// Range endpoints are not a supported bounded cell pair.
-    Range,
-    /// Sheet qualification requires the full parser.
-    QualifiedReference,
-    /// Array or error literal requires full syntax parsing.
-    ArrayOrError,
-}
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 /// Literal source bytes or a cell occurrence whose coordinates can be rebound
 /// separately from the shared template.
@@ -82,12 +68,15 @@ impl<'a> Tokens<'a> {
             qualified_cell: false,
         }
     }
-    fn read(&mut self) -> Result<Option<Token<'a>>, Unsupported> {
+    fn read(&mut self) -> Result<Option<Token<'a>>, ClassificationError> {
         let start = self.position;
-        let tail = self.source.get(start..).ok_or(Unsupported::Syntax)?;
+        let tail = self
+            .source
+            .get(start..)
+            .ok_or(ClassificationError::Syntax)?;
         let Some(first) = tail.chars().next() else {
             return if self.range_cell || self.qualified_cell {
-                Err(Unsupported::Range)
+                Err(ClassificationError::Range)
             } else {
                 Ok(None)
             };
@@ -105,7 +94,7 @@ impl<'a> Tokens<'a> {
             self.position = self
                 .position
                 .checked_add(length)
-                .ok_or(Unsupported::Syntax)?;
+                .ok_or(ClassificationError::Syntax)?;
             self.last_cell = false;
             self.range_cell = false;
             self.qualified_cell = false;
@@ -113,7 +102,7 @@ impl<'a> Tokens<'a> {
                 raw: self
                     .source
                     .get(start..self.position)
-                    .ok_or(Unsupported::Syntax)?,
+                    .ok_or(ClassificationError::Syntax)?,
                 start,
                 end: self.position,
                 kind: TokenKind::FixedReference,
@@ -126,7 +115,7 @@ impl<'a> Tokens<'a> {
             let mut end = 1;
             loop {
                 if end >= bytes.len() {
-                    return Err(Unsupported::Syntax);
+                    return Err(ClassificationError::Syntax);
                 }
                 // SAFETY: The preceding termination check rejects end at or beyond bytes.len() before this byte access.
                 if bytes[end] == b'\'' {
@@ -145,17 +134,18 @@ impl<'a> Tokens<'a> {
             if self.qualified_cell
                 || tail
                     .get(..length)
-                    .ok_or(Unsupported::Syntax)?
+                    .ok_or(ClassificationError::Syntax)?
                     .contains([':', '[', ']'])
             {
-                return Err(Unsupported::QualifiedReference);
+                return Err(ClassificationError::QualifiedReference);
             }
-            let (_, text) = identifier(tail.get(length..).ok_or(Unsupported::Syntax)?)
-                .map_err(|_| Unsupported::QualifiedReference)?;
+            let (_, text) = identifier(tail.get(length..).ok_or(ClassificationError::Syntax)?)
+                .map_err(|_| ClassificationError::QualifiedReference)?;
             if !matches!(cell_coordinates(text), Ok(Some(_)))
-                && fixed_axis_range(tail.get(length..).ok_or(Unsupported::Syntax)?).is_none()
+                && fixed_axis_range(tail.get(length..).ok_or(ClassificationError::Syntax)?)
+                    .is_none()
             {
-                return Err(Unsupported::QualifiedReference);
+                return Err(ClassificationError::QualifiedReference);
             }
             self.position += length;
             self.qualified_cell = true;
@@ -163,14 +153,14 @@ impl<'a> Tokens<'a> {
                 raw: self
                     .source
                     .get(start..self.position)
-                    .ok_or(Unsupported::Syntax)?,
+                    .ok_or(ClassificationError::Syntax)?,
                 start,
                 end: self.position,
                 kind: TokenKind::Literal,
             }));
         }
         let (length, kind, space) = if first.is_whitespace() {
-            let (rest, _) = whitespace(tail).map_err(|_| Unsupported::Syntax)?;
+            let (rest, _) = whitespace(tail).map_err(|_| ClassificationError::Syntax)?;
             (tail.len() - rest.len(), TokenKind::Literal, true)
         } else if first == '"' {
             // Doubled quotes are escaped quotes, exactly as quoted_token handles them.
@@ -178,7 +168,7 @@ impl<'a> Tokens<'a> {
             let mut end = 1;
             loop {
                 if end == bytes.len() {
-                    return Err(Unsupported::Syntax);
+                    return Err(ClassificationError::Syntax);
                 }
                 // SAFETY: The preceding termination check rejects end at or beyond bytes.len() before this byte access.
                 if bytes[end] == b'"' {
@@ -191,23 +181,23 @@ impl<'a> Tokens<'a> {
             }
             (end, TokenKind::Text, false)
         } else if matches!(first, '\'' | '!') {
-            return Err(Unsupported::QualifiedReference);
+            return Err(ClassificationError::QualifiedReference);
         } else if matches!(first, '{' | '}' | '#') {
-            return Err(Unsupported::ArrayOrError);
+            return Err(ClassificationError::ArrayOrError);
         } else if first.is_ascii_digit() || first == '.' {
-            let (rest, value) = number_token(tail).map_err(|_| Unsupported::Syntax)?;
+            let (rest, value) = number_token(tail).map_err(|_| ClassificationError::Syntax)?;
             if !value.is_finite() {
-                return Err(Unsupported::Syntax);
+                return Err(ClassificationError::Syntax);
             }
             (tail.len() - rest.len(), TokenKind::Number, false)
         } else if first.is_alphanumeric() || matches!(first, '$' | '_' | '\\') {
-            let (_, text) = word.ok_or(Unsupported::Syntax)?;
-            let lookahead = after_word.ok_or(Unsupported::Syntax)?;
+            let (_, text) = word.ok_or(ClassificationError::Syntax)?;
+            let lookahead = after_word.ok_or(ClassificationError::Syntax)?;
             let kind = word_kind(text, lookahead.starts_with('('))?;
             (text.len(), kind, false)
         } else if first == ':' {
             if !self.last_cell || self.range_cell {
-                return Err(Unsupported::Range);
+                return Err(ClassificationError::Range);
             }
             self.range_cell = true;
             self.last_cell = false;
@@ -216,7 +206,7 @@ impl<'a> Tokens<'a> {
                 raw: self
                     .source
                     .get(start..self.position)
-                    .ok_or(Unsupported::Syntax)?,
+                    .ok_or(ClassificationError::Syntax)?,
                 start,
                 end: self.position,
                 kind: TokenKind::Literal,
@@ -224,12 +214,12 @@ impl<'a> Tokens<'a> {
         } else if "+-*/^&=<>%,();@".contains(first) {
             (first.len_utf8(), TokenKind::Literal, false)
         } else {
-            return Err(Unsupported::Syntax);
+            return Err(ClassificationError::Syntax);
         };
         if !space {
             let cell = matches!(kind, TokenKind::Cell(_));
             if (self.range_cell || self.qualified_cell) && !cell {
-                return Err(Unsupported::Range);
+                return Err(ClassificationError::Range);
             }
             self.range_cell = false;
             self.qualified_cell = false;
@@ -240,7 +230,7 @@ impl<'a> Tokens<'a> {
             raw: self
                 .source
                 .get(start..self.position)
-                .ok_or(Unsupported::Syntax)?,
+                .ok_or(ClassificationError::Syntax)?,
             start,
             end: self.position,
             kind,
@@ -262,7 +252,7 @@ pub fn cell_prefix(source: &str) -> Option<(&str, CellCoordinates)> {
     }
 }
 /// Preserve the parser's function-versus-cell priority in every classification entry point.
-fn word_kind(text: &str, call: bool) -> Result<TokenKind, Unsupported> {
+fn word_kind(text: &str, call: bool) -> Result<TokenKind, ClassificationError> {
     let decoded = cell_coordinates(text);
     // A1(A2) starts as a cell; LOG10(A2) is a known function, while LOG10 alone is a cell.
     if call
@@ -270,14 +260,14 @@ fn word_kind(text: &str, call: bool) -> Result<TokenKind, Unsupported> {
             || crate::formula::reference_classes::return_class_insensitive(text).is_some())
     {
         if text.contains('$') {
-            return Err(Unsupported::Reference);
+            return Err(ClassificationError::Reference);
         }
         Ok(TokenKind::Literal)
     } else {
         match decoded {
             Ok(Some(cell)) => Ok(TokenKind::Cell(cell)),
             Ok(None) if !text.contains('$') => Ok(TokenKind::Literal),
-            _ => Err(Unsupported::Reference),
+            _ => Err(ClassificationError::Reference),
         }
     }
 }
@@ -302,7 +292,7 @@ fn fixed_axis_range(source: &str) -> Option<usize> {
 }
 impl<'a> Iterator for Tokens<'a> {
     /// Classified source token or an explicit full-parser fallback reason.
-    type Item = Result<Token<'a>, Unsupported>;
+    type Item = Result<Token<'a>, ClassificationError>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.failed {
             return None;
@@ -338,7 +328,7 @@ fn fnv1a(state: u64, bytes: &[u8]) -> u64 {
 /// contributes byte `0`, its byte length as a little-endian `u64`, then its raw
 /// bytes, and each cell token contributes byte `1`. Changing it requires a
 /// prepared-format compatibility bump; the golden-value test pins it.
-pub fn normalized_hash(source: &str) -> Result<u64, Unsupported> {
+pub fn normalized_hash(source: &str) -> Result<u64, ClassificationError> {
     let mut hash = FNV_OFFSET_BASIS;
     for token in Tokens::new(source) {
         let token = token?;
@@ -362,7 +352,7 @@ pub fn normalized_hash(source: &str) -> Result<u64, Unsupported> {
 
 /// Exact normalized token comparison, including complete tails on both sides.
 /// Reference anchor flags/coordinates become per-instance bindings, not key bytes.
-pub fn normalized_equal(left: &str, right: &str) -> Result<bool, Unsupported> {
+pub fn normalized_equal(left: &str, right: &str) -> Result<bool, ClassificationError> {
     let mut left = Tokens::new(left);
     let mut right = Tokens::new(right);
     let mut equal = true;

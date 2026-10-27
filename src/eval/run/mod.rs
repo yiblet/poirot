@@ -19,10 +19,10 @@
 //! use poirot::model::{Workbook, CellValue};
 //! let mut workbook = Workbook::new();
 //! let sheet = workbook.add_sheet("Sheet1")?;
-//! sheet.set_value("A1".parse()?, 3.0)?;
-//! sheet.set_formula("B1".parse()?, "A1*2")?;
-//! sheet.set_formula("C1".parse()?, "B1+1")?;
-//! sheet.set_formula("D1".parse()?, "B1+2")?;
+//! sheet.set_value("A1", 3.0)?;
+//! sheet.set_formula("B1", "A1*2")?;
+//! sheet.set_formula("C1", "B1+1")?;
+//! sheet.set_formula("D1", "B1+2")?;
 //! let policy = PreparationPolicy::default();
 //! let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
 //! let view = WorkbookView::new(&workbook, &plan, &policy)?;
@@ -40,10 +40,11 @@
 //! calls), ports (observer, read and cache ports), inputs (scenario inputs) and observe
 //! (execution and builtin observers).
 
-/// A requested cell, prepared formula, or bound expression evaluated at a target cell.
 mod evaluation_probe;
 /// Calculates several requested cells or formulas with shared budgets and memoized dependencies.
 mod evaluation_run;
+/// A requested cell, prepared formula, or bound expression evaluated at a target cell.
+mod input_preparation_error;
 /// Owned results of one run.
 mod retained_run;
 /// Caller-supplied observers attached to the run's execution session.
@@ -51,7 +52,7 @@ mod run_observers;
 /// A calculation outcome and its execution counters.
 mod run_report;
 /// Failure to start a shared-source run.
-mod shared_run_failure;
+mod shared_run_error;
 /// Immutable workbook ownership for independent what-if runs.
 mod shared_workbook;
 /// Unit tests for run isolation, caching, observers and memo retention.
@@ -65,6 +66,8 @@ pub use evaluation_run::EvaluationRun;
 pub use retained_run::RetainedRun;
 pub use run_observers::RunObservers;
 pub use run_report::RunReport;
-pub use shared_run_failure::SharedRunFailure;
+pub use shared_run_error::SharedRunError;
 pub use shared_workbook::SharedWorkbook;
 pub use workbook_view::WorkbookView;
+
+pub use input_preparation_error::InputPreparationError;

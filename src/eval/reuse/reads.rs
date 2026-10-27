@@ -168,7 +168,6 @@ impl Reads {
             },
             DependencyRead::Formatting => trace.formatting = true,
             DependencyRead::NumberLocale => trace.number_locale = true,
-            DependencyRead::TextPolicy => trace.text_policy = true,
             _ => {}
         }
     }

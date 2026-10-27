@@ -32,7 +32,7 @@ fn writer_encodes_modern_functions_and_reader_retains_storage_spelling() {
         ("AB1", "_xlfn._xlws.UNKNOWN(1)", "_xlfn._xlws.UNKNOWN(1)"),
     ];
     for (cell, formula, _) in examples {
-        sheet.set_formula(cell.parse().unwrap(), formula).unwrap();
+        sheet.set_formula(cell, formula).unwrap();
     }
     let bytes = write_xlsx_to_buffer(&book).unwrap();
     let mut zip = zip::ZipArchive::new(Cursor::new(&bytes)).unwrap();
@@ -51,7 +51,8 @@ fn writer_encodes_modern_functions_and_reader_retains_storage_spelling() {
             reopened
                 .sheet(0)
                 .unwrap()
-                .get(cell.parse().unwrap())
+                .get(cell)
+                .unwrap()
                 .unwrap()
                 .formula
                 .as_deref(),
@@ -81,7 +82,7 @@ fn regex_names_are_encoded_without_rewriting_pattern_literals() {
         ),
     ];
     for (cell, source, _) in examples {
-        sheet.set_formula(cell.parse().unwrap(), source).unwrap();
+        sheet.set_formula(cell, source).unwrap();
     }
     let bytes = write_xlsx_to_buffer(&book).unwrap();
     let reopened = read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
@@ -90,7 +91,8 @@ fn regex_names_are_encoded_without_rewriting_pattern_literals() {
             reopened
                 .sheet(0)
                 .unwrap()
-                .get(cell.parse().unwrap())
+                .get(cell)
+                .unwrap()
                 .unwrap()
                 .formula
                 .as_deref(),
@@ -107,7 +109,7 @@ fn random_and_trim_storage_preserve_literals_and_arguments() {
         ("A1", "RANDARRAY(2,3,-5,7,TRUE)"),
         ("G1", r#"TRIMRANGE(A1:D5,1,2)&"TRIMRANGE(1)""#),
     ] {
-        sheet.set_formula(at.parse().unwrap(), source).unwrap();
+        sheet.set_formula(at, source).unwrap();
     }
     let reopened =
         read_workbook_bytes::<poirot::model::Workbook>(&write_xlsx_to_buffer(&book).unwrap())
@@ -120,7 +122,8 @@ fn random_and_trim_storage_preserve_literals_and_arguments() {
             reopened
                 .sheet(0)
                 .unwrap()
-                .get(at.parse().unwrap())
+                .get(at)
+                .unwrap()
                 .unwrap()
                 .formula
                 .as_deref(),
@@ -133,14 +136,15 @@ fn grouping_storage_keeps_aggregation_identifiers_and_string_literals() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     let source = r#"GROUPBY({1;1},{2;8},HSTACK(SUM,PERCENTOF),0,0)&"GROUPBY(1)""#;
-    sheet.set_formula("A1".parse().unwrap(), source).unwrap();
+    sheet.set_formula("A1", source).unwrap();
     let bytes = write_xlsx_to_buffer(&book).unwrap();
     let reopened = read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
     assert_eq!(
         reopened
             .sheet(0)
             .unwrap()
-            .get("A1".parse().unwrap())
+            .get("A1")
+            .unwrap()
             .unwrap()
             .formula
             .as_deref(),
@@ -176,7 +180,7 @@ fn scalar_utility_storage_uses_normative_names_and_preserves_literals() {
         ),
     ];
     for (cell, source, _) in examples {
-        sheet.set_formula(cell.parse().unwrap(), source).unwrap();
+        sheet.set_formula(cell, source).unwrap();
     }
     let reopened =
         read_workbook_bytes::<poirot::model::Workbook>(&write_xlsx_to_buffer(&book).unwrap())
@@ -186,7 +190,8 @@ fn scalar_utility_storage_uses_normative_names_and_preserves_literals() {
             reopened
                 .sheet(0)
                 .unwrap()
-                .get(cell.parse().unwrap())
+                .get(cell)
+                .unwrap()
                 .unwrap()
                 .formula
                 .as_deref(),

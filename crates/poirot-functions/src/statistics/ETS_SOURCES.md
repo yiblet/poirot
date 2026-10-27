@@ -57,7 +57,7 @@ Selectors are exact integers, not silently truncated. Missing optional scalar
 arguments use their defaults; actual blanks numerically coerce to zero and can
 therefore be invalid selector values. Scalar targets/options/selectors lift over
 arrays; values/timeline collections do not drive output dimensions. Invalid arity
-is rejected before reading arguments. Pinned POI registration remains unchanged.
+is rejected before reading arguments.
 
 ## Model and bounded fitting policy
 

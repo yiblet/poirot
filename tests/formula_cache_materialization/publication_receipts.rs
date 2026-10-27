@@ -20,19 +20,17 @@ fn actual_nonincremental_publication_retains_raw_receipts_and_mutates_only_formu
     for row in 0..4 {
         set_formula(&mut b, row, 1, &format!("A{}", row + 1));
     }
-    let c = config(M::PinnedPoiCellSetter);
-    let receipt = match eval::run_recalculation_with_receipts(
-        b.model_mut(),
-        &c,
-        eval::EvaluationBudgets::default(),
-    ) {
-        EvaluationOutcome::Complete { value, .. } => value,
-        other => panic!("{other:?}"),
-    };
+    let c = config();
+    let receipt =
+        match eval::run_recalculation_with_receipts(&mut b, &c, eval::EvaluationBudgets::default())
+        {
+            EvaluationOutcome::Complete { value, .. } => value,
+            other => panic!("{other:?}"),
+        };
     assert_eq!(receipt.writes.len(), 4);
-    assert_eq!(receipt.identity, c.materialization_policy().identity());
-    assert_eq!(get(&b, 0, 1), CellValue::Error(CellError::Div0));
-    assert_eq!(get(&b, 1, 1), CellValue::Error(CellError::Num));
+
+    assert_eq!(bits(get(&b, 0, 1)), f64::INFINITY.to_bits());
+    assert_eq!(bits(get(&b, 1, 1)), 0xfff8_0000_0000_0099);
     assert_eq!(bits(get(&b, 2, 1)), (-0.0f64).to_bits());
     assert_eq!(bits(get(&b, 3, 1)), 0);
     assert_eq!(bits(get(&b, 1, 0)), 0xfff8_0000_0000_0099);
@@ -43,14 +41,13 @@ fn actual_nonincremental_publication_retains_raw_receipts_and_mutates_only_formu
         .find(|r| r.target.address == at(1, 1))
         .unwrap();
     assert_eq!(
-        nan.computed,
+        nan.value,
         S::Number(model::IeeeNumberBits::from_bits(0xfff8_0000_0000_0099))
     );
-    assert_eq!(nan.stored, S::Error(CellError::Num));
-    let raw = config(M::PreserveComputed);
+    let raw = config();
     assert!(matches!(
         eval::run_recalculation_with_configuration(
-            b.model_mut(),
+            &mut b,
             &raw,
             eval::EvaluationBudgets::default()
         ),
@@ -63,10 +60,10 @@ fn actual_nonincremental_publication_retains_raw_receipts_and_mutates_only_formu
 fn receipt_allocation_is_admitted_after_computation_and_before_any_write() {
     let mut b = book();
     set_formula(&mut b, 0, 0, "1+1");
-    let before = b.model().clone();
-    let cfg = config(M::PinnedPoiCellSetter);
+    let before = b.clone();
+    let cfg = config();
     let work = match eval::run_recalculation_with_configuration(
-        &mut b.model().clone(),
+        &mut b.clone(),
         &cfg,
         Default::default(),
     ) {
@@ -77,9 +74,9 @@ fn receipt_allocation_is_admitted_after_computation_and_before_any_write() {
         run_work: work,
         ..Default::default()
     };
-    match eval::run_recalculation_with_receipts(b.model_mut(), &cfg, budget) {
+    match eval::run_recalculation_with_receipts(&mut b, &cfg, budget) {
         EvaluationOutcome::Aborted {
-            failure: eval::EvaluationFailure::Budget(failure),
+            failure: eval::EvaluationError::Budget(failure),
             usage,
         } => {
             assert_eq!(failure.kind, eval::BudgetKind::RunWork);
@@ -88,9 +85,9 @@ fn receipt_allocation_is_admitted_after_computation_and_before_any_write() {
         }
         other => panic!("{other:?}"),
     }
-    assert_eq!(b.model(), &before);
+    assert_eq!(&b, &before);
     assert!(matches!(
-        eval::run_recalculation_with_configuration(b.model_mut(), &cfg, budget),
+        eval::run_recalculation_with_configuration(&mut b, &cfg, budget),
         EvaluationOutcome::Complete { .. }
     ));
     assert_eq!(get(&b, 0, 0), CellValue::Number(2.));

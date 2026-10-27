@@ -10,6 +10,7 @@ description = "XLS and XLSX workbook import and XLSX export"
 include = ["/tests/fixtures/poi-*.xls", "/src/**", "/README.md", "/LICENSES/**"]
 
 [dependencies]
+thiserror.workspace = true
 serde_bytes = "0.11.19"
 serde.workspace = true
 poirot-functions = { version = "0.1.0", path = "../poirot-functions" }

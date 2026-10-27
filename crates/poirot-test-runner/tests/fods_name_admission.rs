@@ -146,7 +146,7 @@ fn unused_rejection_is_explicit_and_both_actual_and_correct_execute() {
         assert_eq!(diagnostic.name, "GQ17");
         assert_eq!(diagnostic.original_definition.as_deref(), Some("of:=123"));
         assert_eq!(diagnostic.base_cell_address.as_deref(), Some("Main.A1"));
-        assert_eq!(diagnostic.rejection, "invalid defined name");
+        assert_eq!(diagnostic.rejection, "invalid defined name \"GQ17\"");
         assert_eq!(diagnostic.disposition, NameDisposition::QuarantinedUnused);
         let report = execute::execute(&plan).unwrap();
         assert_eq!(

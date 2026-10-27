@@ -3,11 +3,9 @@ use super::search_axis::SearchAxis;
 use super::search_mode::SearchMode;
 use super::selection::select_with_reader;
 use super::{prefix, sparse};
-use crate::eval::config::BuiltinSemanticsPolicy;
 use crate::eval::host;
-use crate::eval::limits::{EvalResult, EvaluationFailure};
-use crate::eval::ports::DependencyRead;
-use crate::eval::session::{CellEvaluator, ReadRecorder, Session};
+use crate::eval::limits::{EvalResult, EvaluationError};
+use crate::eval::session::{CellEvaluator, Session};
 use crate::eval::values::FunctionResult;
 use crate::model::CellValue::Error;
 use crate::model::{CellAddress, CellValue};
@@ -37,7 +35,7 @@ impl<'s, 'a> SessionSearch<'s, 'a> {
         };
         match table {
             LookupTable::SheetCells(areas) => {
-                let a = *areas.get(row).ok_or(EvaluationFailure::StalePlan)?;
+                let a = *areas.get(row).ok_or(EvaluationError::StalePlan)?;
                 CellEvaluator::new(self.session).range_cell(
                     a.sheet,
                     CellAddress {
@@ -55,13 +53,13 @@ impl<'s, 'a> SessionSearch<'s, 'a> {
             ),
             LookupTable::Signed(a) => CellEvaluator::new(self.session).signed_range_read(
                 a.read(row as u64, col as u64)
-                    .ok_or(EvaluationFailure::StalePlan)?,
+                    .ok_or(EvaluationError::StalePlan)?,
             ),
             LookupTable::Array(a) => {
                 let value = a
                     .get(row)
                     .and_then(|values| values.get(col))
-                    .ok_or(EvaluationFailure::StalePlan)?;
+                    .ok_or(EvaluationError::StalePlan)?;
                 if let Some(text) = value.text_ref() {
                     self.session
                         .state
@@ -90,13 +88,8 @@ impl<'s, 'a> SessionSearch<'s, 'a> {
             && key
                 .text_ref()
                 .is_some_and(|text| text.units().any(|unit| matches!(unit, 0x2a | 0x3f)));
-        let excel_match = is_match
-            && !pattern_match
-            && mode != SearchMode::Exact
-            && self.session.policies.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation;
-        if is_match && mode != SearchMode::Exact {
-            ReadRecorder::new(self.session).read(DependencyRead::BuiltinPolicy);
-        }
+        let excel_match = is_match && !pattern_match && mode != SearchMode::Exact;
+
         if excel_match {
             poirot_functions::lookup::classic_match_index(
                 vector.len,
@@ -116,9 +109,9 @@ impl<'s, 'a> SessionSearch<'s, 'a> {
                 },
             )
             .map_err(|failure| match failure {
-                poirot_functions::lookup::MatchSelectionFailure::Reader(failure) => failure,
-                poirot_functions::lookup::MatchSelectionFailure::InvalidPosition => {
-                    EvaluationFailure::StalePlan.into()
+                poirot_functions::lookup::MatchSelectionError::Reader(failure) => failure,
+                poirot_functions::lookup::MatchSelectionError::InvalidPosition => {
+                    EvaluationError::StalePlan.into()
                 }
             })
         } else {

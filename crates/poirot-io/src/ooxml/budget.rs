@@ -7,10 +7,9 @@ use std::io::Write;
 pub(super) struct SizeCounter(#[doc = "Current admitted cumulative byte count."] pub(super) u64);
 impl Write for SizeCounter {
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-        self.0 = self
-            .0
-            .checked_add(bytes.len() as u64)
-            .ok_or_else(|| std::io::Error::other("export XML size overflow"))?;
+        self.0 = self.0.checked_add(bytes.len() as u64).ok_or_else(|| {
+            std::io::Error::other(crate::ExportLimitError::ExportPackageSizeOverflow)
+        })?;
         Ok(bytes.len())
     }
     fn flush(&mut self) -> std::io::Result<()> {
@@ -27,11 +26,16 @@ pub(super) fn next_total(
     let total = total
         .checked_sub(previous)
         .and_then(|n| n.checked_add(size))
-        .ok_or_else(|| IoError::Limit("export package size overflow".into()))?;
+        .ok_or(IoError::Limit(
+            crate::ExportLimitError::ExportPackageSizeOverflow,
+        ))?;
     if size > options.max_zip_entry_bytes || total > options.max_zip_total_bytes {
-        return Err(IoError::Limit(
-            "patched export XML exceeds configured entry/total budget before allocation".into(),
-        ));
+        return Err(IoError::Limit(crate::ExportLimitError::PackageBytes {
+            entry_bytes: size,
+            entry_limit: options.max_zip_entry_bytes,
+            total_bytes: total,
+            total_limit: options.max_zip_total_bytes,
+        }));
     }
     Ok(total)
 }

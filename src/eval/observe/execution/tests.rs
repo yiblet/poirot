@@ -9,7 +9,7 @@ use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
 use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions;
-use crate::eval::limits::{CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::limits::{CapabilityId, EvaluationBudgets, EvaluationError, EvaluationOutcome};
 use crate::eval::ports::{DependencyRead, DependencyReadSink, ReadEvent};
 use crate::eval::run::{EvaluationRun, RunReport, WorkbookView};
 use crate::model::{CellAddress, CellError, CellValue, Workbook};
@@ -187,7 +187,7 @@ fn event_value_and_text_caps_leave_partial_without_masking_operational_failure()
         assert!(matches!(
             report.outcome,
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::ResourceLimit { .. },
+                failure: EvaluationError::ResourceLimit { .. },
                 ..
             }
         ));
@@ -212,7 +212,7 @@ fn event_value_and_text_caps_leave_partial_without_masking_operational_failure()
     assert!(matches!(
         report.outcome,
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -270,7 +270,7 @@ fn callback_failure_is_operational_and_trace_frame_is_cleaned_for_next_probe() {
         fail_once: bool,
     }
     impl ExecutionObserver for Observer {
-        fn observe(&mut self, event: ExecutionEvent<'_>) -> Result<(), EvaluationFailure> {
+        fn observe(&mut self, event: ExecutionEvent<'_>) -> Result<(), EvaluationError> {
             if let ExecutionEvent::Begin(operation) = event {
                 self.begins.push(operation);
             }
@@ -283,10 +283,10 @@ fn callback_failure_is_operational_and_trace_frame_is_cleaned_for_next_probe() {
             ) && self.fail_once
             {
                 self.fail_once = false;
-                return Err(EvaluationFailure::UnsupportedCapability {
+                return Err(EvaluationError::UnsupportedCapability {
                     capability: CapabilityId::FunctionAdapter,
-                    source: None,
-                    detail: "observer fidelity refusal".into(),
+                    target: None,
+                    reason: crate::eval::limits::EvaluationReasonError::ObserverRejected,
                 });
             }
             Ok(())
@@ -316,11 +316,11 @@ fn callback_failure_is_operational_and_trace_frame_is_cleaned_for_next_probe() {
     };
     assert!(matches!(
         run.evaluate_formula(target, &prepared),
-        Err(EvaluationFailure::UnsupportedCapability { .. })
+        Err(EvaluationError::UnsupportedCapability { .. })
     ));
     assert!(matches!(
         run.evaluate_formula(target, &second),
-        Err(EvaluationFailure::UnsupportedCapability { .. })
+        Err(EvaluationError::UnsupportedCapability { .. })
     ));
     let report = run.finish(Ok(()));
     assert!(matches!(report.outcome, EvaluationOutcome::Aborted { .. }));
@@ -393,7 +393,24 @@ fn read_events_match_with_observation_enabled_and_disabled() {
         .with_execution_observer(&mut trace);
         let b = with.evaluate_cell(target);
         let b = with.finish(b);
-        assert_eq!(a.outcome, b.outcome);
+        match (a.outcome, b.outcome) {
+            (
+                EvaluationOutcome::Complete {
+                    value: actual,
+                    usage,
+                },
+                EvaluationOutcome::Complete {
+                    value: expected,
+                    usage: expected_usage,
+                },
+            ) => {
+                assert_eq!(actual, expected);
+                assert_eq!(usage, expected_usage);
+            }
+            (actual, expected) => {
+                panic!("expected matching successful outcomes: {actual:?}, {expected:?}")
+            }
+        }
         assert_eq!(a.execution, b.execution);
         assert_eq!(without_reads.0, with_reads.0);
         assert!(

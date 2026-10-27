@@ -1,5 +1,7 @@
-//! Numeric-text datetime continuations with explicit modern and pinned contracts.
-/// Locale capability available to the pinned numeric-text date fallback.
+//! Consumer-specific numeric-text date and datetime parsing.
+use super::date_time_error::DateTimeError;
+
+/// Locale capability available to numeric-text date parsing.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LocalePolicy {
     /// Recognize the supported English date/time names.
@@ -51,7 +53,7 @@ pub enum Outcome {
     /// Ordinary text that does not match the supported date fallback.
     Rejected,
     /// Parsing needs a capability outside the supplied context.
-    Unsupported(&'static str),
+    Unsupported(DateTimeError),
 }
 fn leap(y: i32) -> bool {
     y % 4 == 0 && (y % 100 != 0 || y % 400 == 0)
@@ -85,7 +87,7 @@ fn parse_inner(
 ) -> Outcome {
     if context.locale != LocalePolicy::English {
         effects.locale = true;
-        return Outcome::Unsupported("formatter locale");
+        return Outcome::Unsupported(DateTimeError::FormatterLocale);
     }
     let Ok(f) = poirot_parsing::datetime::parse_source_fields(text, &mut effects.locale) else {
         return Outcome::Rejected;
@@ -136,18 +138,18 @@ fn parse_inner(
         effects.timezone = true;
         if !matches!(context.timezone,TimezonePolicy::FixedOffsetSeconds(offset) if (-64800..=64800).contains(&offset))
         {
-            return Outcome::Unsupported("date timezone");
+            return Outcome::Unsupported(DateTimeError::DateTimezone);
         }
         effects.default_year = f.year.is_none();
         let y = f.year.unwrap_or(context.default_year);
         if f.year.is_none() && !(1..=10000).contains(&y) {
-            return Outcome::Unsupported("default year outside proven calendar range");
+            return Outcome::Unsupported(DateTimeError::DefaultYearOutOfRange { year: y });
         }
         if !(1..=999_999_999).contains(&y) {
             return Outcome::Rejected;
         }
         if y > 10000 {
-            return Outcome::Unsupported("extended year calendar conversion");
+            return Outcome::Unsupported(DateTimeError::ExtendedYear { year: y });
         }
         // SAFETY: The local date/time flags require these fields to be Some; they are not changed before this access.
         let m = f.month.unwrap();
@@ -292,6 +294,78 @@ mod tests {
         }
     }
     #[test]
+    fn unsupported_context_preserves_exact_effects() {
+        let mut c = context(2024);
+        c.locale = LocalePolicy::Unsupported;
+        assert_eq!(
+            coerce_date_time_with_effects("1 Jan 2024", c),
+            (
+                Outcome::Unsupported(DateTimeError::FormatterLocale),
+                Effects {
+                    locale: true,
+                    ..Effects::default()
+                },
+            ),
+        );
+        for timezone in [
+            TimezonePolicy::Unsupported,
+            TimezonePolicy::FixedOffsetSeconds(64801),
+        ] {
+            c = context(2024);
+            c.timezone = timezone;
+            assert_eq!(
+                coerce_date_time_with_effects("1 Jan 2024", c),
+                (
+                    Outcome::Unsupported(DateTimeError::DateTimezone),
+                    Effects {
+                        locale: true,
+                        timezone: true,
+                        default_year: false
+                    },
+                ),
+            );
+            assert!(matches!(
+                coerce_date_time("12:00", c),
+                Outcome::Valid { .. }
+            ));
+        }
+    }
+
+    #[test]
+    fn unsupported_calendar_years_retain_typed_year_and_effects() {
+        for year in [i32::MIN, 0, 10001, i32::MAX] {
+            assert_eq!(
+                coerce_date_time_with_effects("1 Jan", context(year)),
+                (
+                    Outcome::Unsupported(DateTimeError::DefaultYearOutOfRange { year }),
+                    Effects {
+                        default_year: true,
+                        locale: true,
+                        timezone: true
+                    },
+                ),
+            );
+        }
+        assert_eq!(
+            coerce_date_time_with_effects("1 Jan +10001", context(0)),
+            (
+                Outcome::Unsupported(DateTimeError::ExtendedYear { year: 10001 }),
+                Effects {
+                    default_year: false,
+                    locale: true,
+                    timezone: true
+                },
+            ),
+        );
+        assert_eq!(
+            coerce_date_time("1 Jan 0000", context(2024)),
+            Outcome::Rejected
+        );
+        fn check<T: std::error::Error + Send + Sync + 'static>() {}
+        check::<DateTimeError>();
+    }
+
+    #[test]
     fn unsupported_policies_are_distinct() {
         let (outcome, effects) = coerce_date_time_with_effects("1 nope", context(2024));
         assert_eq!(outcome, Outcome::Rejected);
@@ -303,7 +377,10 @@ mod tests {
             }
         );
         let (outcome, effects) = coerce_date_time_with_effects("1 Jan", context(0));
-        assert!(matches!(outcome, Outcome::Unsupported(_)));
+        assert_eq!(
+            outcome,
+            Outcome::Unsupported(DateTimeError::DefaultYearOutOfRange { year: 0 })
+        );
         assert_eq!(
             effects,
             Effects {
@@ -314,16 +391,16 @@ mod tests {
         );
         let mut c = context(2024);
         c.locale = LocalePolicy::Unsupported;
-        assert!(matches!(
+        assert_eq!(
             coerce_date_time("1 Jan 2024", c),
-            Outcome::Unsupported(_)
-        ));
+            Outcome::Unsupported(DateTimeError::FormatterLocale)
+        );
         c = context(2024);
         c.timezone = TimezonePolicy::Unsupported;
-        assert!(matches!(
+        assert_eq!(
             coerce_date_time("1 Jan 2024", c),
-            Outcome::Unsupported(_)
-        ));
+            Outcome::Unsupported(DateTimeError::DateTimezone)
+        );
         assert!(matches!(
             coerce_date_time("12:00", c),
             Outcome::Valid { .. }

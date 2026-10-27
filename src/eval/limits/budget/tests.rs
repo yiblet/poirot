@@ -1,9 +1,9 @@
-use super::budget_failure::BudgetFailure;
+use super::budget_error::BudgetError;
 use super::budget_kind::BudgetKind;
 use super::budget_meter::BudgetMeter;
 use super::capability_id::CapabilityId;
 use super::evaluation_budgets::EvaluationBudgets;
-use super::evaluation_failure::EvaluationFailure;
+use super::evaluation_error::EvaluationError;
 use super::evaluation_limits::EvaluationLimits;
 use super::evaluation_outcome::EvaluationOutcome;
 use super::evaluation_usage::EvaluationUsage;
@@ -15,10 +15,9 @@ use crate::eval::entry::{
     run_cell, run_plan, run_plan_with_configuration, run_recalculation, run_workbook,
 };
 use crate::eval::session::{CellEvaluator, Session};
-use crate::eval::values::{Area, AreaKind, FunctionFailure, Value, function_value};
+use crate::eval::values::{Area, AreaKind, FunctionError, Value, function_value};
 use crate::eval::vm::ReferenceOperators;
 use crate::model::{CellAddress, CellError, CellValue, Workbook};
-use poirot_functions::text_units::{SourceVersion as TextSourceVersion, TextSemanticsPolicy};
 
 const AT: CellAddress = CellAddress { row: 0, col: 0 };
 
@@ -40,10 +39,10 @@ fn value(outcome: EvaluationOutcome<CellValue>) -> CellValue {
     }
 }
 
-fn failure<T: std::fmt::Debug>(outcome: EvaluationOutcome<T>) -> (BudgetFailure, EvaluationUsage) {
+fn failure<T: std::fmt::Debug>(outcome: EvaluationOutcome<T>) -> (BudgetError, EvaluationUsage) {
     match outcome {
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(failure),
+            failure: EvaluationError::Budget(failure),
             usage,
         } => (failure, usage),
         other => panic!("expected operational failure: {other:?}"),
@@ -274,8 +273,7 @@ fn literal_and_absent_cells_keep_depth_failures_and_unwind_frames() {
             EvaluationInputs::default(),
             BudgetMeter::new(limited).unwrap(),
         );
-        let Err(EvaluationFailure::Budget(failure)) =
-            CellEvaluator::new(&mut session).cell(0, leaf)
+        let Err(EvaluationError::Budget(failure)) = CellEvaluator::new(&mut session).cell(0, leaf)
         else {
             panic!("leaf read must retain its depth charge");
         };
@@ -380,7 +378,7 @@ fn depth_abort_is_not_a_cycle_and_frames_unwind_after_failure() {
 fn aborted_bulk_pass_never_publishes_partial_caches_or_metadata() {
     let mut workbook = workbook();
     for (address, formula, cache) in [("A1", "1", 101.), ("A2", "2", 102.), ("A3", "3", 103.)] {
-        let address = address.parse().unwrap();
+        let address = address.parse::<crate::model::CellAddress>().unwrap();
         workbook
             .sheet_mut(0)
             .unwrap()
@@ -390,6 +388,7 @@ fn aborted_bulk_pass_never_publishes_partial_caches_or_metadata() {
             .sheet_mut(0)
             .unwrap()
             .get_mut(address)
+            .unwrap()
             .unwrap()
             .style
             .number_format = Some("0.00".into());
@@ -425,7 +424,8 @@ fn aborted_bulk_pass_never_publishes_partial_caches_or_metadata() {
             workbook
                 .sheet(0)
                 .unwrap()
-                .get(address.parse().unwrap())
+                .get(address)
+                .unwrap()
                 .unwrap()
                 .value,
             CellValue::Number(expected)
@@ -440,7 +440,7 @@ fn completed_bulk_values_and_direct_cell_allowances_ignore_prior_workload() {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_formula(address.parse().unwrap(), formula)
+            .set_formula(address, formula)
             .unwrap();
     }
     let context = EvaluationInputs::default();
@@ -469,7 +469,7 @@ fn completed_bulk_values_and_direct_cell_allowances_ignore_prior_workload() {
                 EvaluationOutcome::Complete { .. } => high = allowance,
                 EvaluationOutcome::Aborted {
                     failure:
-                        EvaluationFailure::Budget(BudgetFailure {
+                        EvaluationError::Budget(BudgetError {
                             kind: BudgetKind::CellWork,
                             ..
                         }),
@@ -600,9 +600,7 @@ fn expanding_text_checks_output_bytes_before_growth() {
             0,
             AT,
             &plan(formula),
-            &RunConfiguration::from(context).with_text_policy(TextSemanticsPolicy {
-                source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-            }),
+            &RunConfiguration::from(context),
             EvaluationBudgets {
                 text_bytes: limit,
                 ..EvaluationBudgets::default()
@@ -652,19 +650,19 @@ fn formatter_reservations_and_unsupported_capabilities_are_operational() {
         )),
         CellValue::Text("1".into())
     );
-    let unsupported = EvaluationFailure::UnsupportedCapability {
+    let unsupported = EvaluationError::UnsupportedCapability {
         capability: CapabilityId::NumericConversion,
-        source: Some(EvaluationTarget {
+        target: Some(EvaluationTarget {
             sheet: 0,
             address: AT,
         }),
-        detail: "unsupported conversion mode".into(),
+        reason: crate::eval::limits::budget::evaluation_reason_error::EvaluationReasonError::NumericDateDefaultYearOutsideSupportedCalendar,
     };
     assert!(unsupported.budget().is_none());
-    let result = function_value(Err(FunctionFailure::Operational(unsupported.clone())));
-    assert!(matches!(result, Err(failure) if failure == unsupported));
+    let result = function_value(Err(FunctionError::Operational(unsupported.clone())));
+    assert!(matches!(result, Err(EvaluationError::UnsupportedCapability { capability: CapabilityId::NumericConversion, target: Some(_), reason: super::evaluation_reason_error::EvaluationReasonError::NumericDateDefaultYearOutsideSupportedCalendar })));
     assert!(matches!(
-        function_value(Err(FunctionFailure::Spreadsheet(CellError::Num))),
+        function_value(Err(FunctionError::Spreadsheet(CellError::Num))),
         Ok(Value::Scalar(CellValue::Error(CellError::Num)))
     ));
 }
@@ -706,7 +704,7 @@ fn finite_work_admission_stays_transactional_beside_unlimited_counters() {
     let before = meter.usage.clone();
     assert!(matches!(
         meter.charge(WorkKind::Comparison, 1),
-        Err(EvaluationFailure::Budget(BudgetFailure {
+        Err(EvaluationError::Budget(BudgetError {
             kind: BudgetKind::CellWork,
             consumed: 1,
             requested: 1,
@@ -721,7 +719,7 @@ fn finite_work_admission_stays_transactional_beside_unlimited_counters() {
     .unwrap();
     finite.charge(WorkKind::Comparison, u64::MAX - 1).unwrap();
     assert!(
-        matches!(finite.charge(WorkKind::Comparison, 1), Err(EvaluationFailure::Budget(BudgetFailure { kind: BudgetKind::RunWork, consumed, requested: 1, .. })) if consumed == u64::MAX - 1)
+        matches!(finite.charge(WorkKind::Comparison, 1), Err(EvaluationError::Budget(BudgetError { kind: BudgetKind::RunWork, consumed, requested: 1, .. })) if consumed == u64::MAX - 1)
     );
 }
 
@@ -794,15 +792,14 @@ fn zero_work_preserves_accounting_and_next_charge_attribution() {
                     };
                     let next = meter.charge(kind, 1);
                     if let Some((kind, limit)) = rejection {
-                        assert_eq!(
-                            next,
-                            Err(EvaluationFailure::Budget(BudgetFailure {
+                        assert!(
+                            matches!(next, Err(EvaluationError::Budget(actual)) if actual == BudgetError {
                                 kind,
                                 limit,
                                 consumed,
                                 requested: 1,
                                 target: active.then_some(target),
-                            }))
+                            })
                         );
                         assert_eq!(meter.usage, usage);
                         assert_eq!(meter.frames, frames);
@@ -830,7 +827,7 @@ fn ordinary_accounting_skips_details_but_explicit_maximum_work_remains_a_quota()
     meter.charge(WorkKind::HelperOperation, u64::MAX).unwrap();
     assert_eq!(meter.usage.helper_operations, 0);
     assert!(
-        matches!(meter.charge(WorkKind::HelperOperation, 1), Err(EvaluationFailure::Budget(failure)) if failure.kind == BudgetKind::RunWork && failure.limit == u64::MAX && failure.consumed == u64::MAX && failure.requested == 1)
+        matches!(meter.charge(WorkKind::HelperOperation, 1), Err(EvaluationError::Budget(failure)) if failure.kind == BudgetKind::RunWork && failure.limit == u64::MAX && failure.consumed == u64::MAX && failure.requested == 1)
     );
     let mut ordinary = BudgetMeter::configured(Default::default(), false).unwrap();
     ordinary
@@ -840,4 +837,72 @@ fn ordinary_accounting_skips_details_but_explicit_maximum_work_remains_a_quota()
         .charge(WorkKind::HelperOperation, u64::MAX)
         .unwrap();
     assert_eq!(ordinary.usage, EvaluationUsage::default());
+}
+
+#[test]
+fn operation_errors_keep_typed_causes_and_thread_safe_payloads() {
+    use super::evaluation_reason_error::EvaluationReasonError;
+    use std::error::Error;
+    use std::sync::Arc;
+
+    fn send_sync_static<T: Send + Sync + 'static>() {}
+    send_sync_static::<EvaluationError>();
+    send_sync_static::<EvaluationReasonError>();
+    send_sync_static::<crate::eval::overlay::OverlayError>();
+    send_sync_static::<crate::eval::artifact::SnapshotError>();
+    send_sync_static::<crate::files::XlsxSaveError>();
+
+    let parse = Arc::new(poirot_parsing::formula::parse_formula("1+").unwrap_err());
+    let failure = EvaluationError::UnsupportedCapability {
+        capability: CapabilityId::FormulaParsing,
+        target: None,
+        reason: EvaluationReasonError::Parse(Arc::clone(&parse)),
+    };
+    let EvaluationError::UnsupportedCapability { reason, .. } = &failure else {
+        panic!("expected unsupported parser policy");
+    };
+    assert!(
+        Error::source(&failure)
+            .unwrap()
+            .is::<EvaluationReasonError>()
+    );
+    let EvaluationReasonError::Parse(retained) = reason else {
+        panic!("expected typed parser cause");
+    };
+    assert!(Arc::ptr_eq(retained, &parse));
+    assert!(Error::source(reason).is_some());
+
+    let budget = BudgetError {
+        kind: BudgetKind::RunWork,
+        limit: 3,
+        consumed: 2,
+        requested: 2,
+        target: None,
+    };
+    let failure = EvaluationError::from(budget.clone());
+    assert_eq!(failure.budget(), Some(&budget));
+    assert!(Error::source(&failure).unwrap().is::<BudgetError>());
+}
+
+#[test]
+fn storage_reservation_retains_native_cause_and_typed_operation() {
+    use super::evaluation_reason_error::EvaluationReasonError;
+    use std::error::Error;
+
+    let native = Vec::<u8>::new().try_reserve(usize::MAX).unwrap_err();
+    let reason =
+        EvaluationReasonError::AggregateMemberAllocationFailed.with_reservation_source(native);
+    let EvaluationReasonError::Reservation { operation, source } = &reason else {
+        panic!("expected preserved reservation diagnostic");
+    };
+    assert!(matches!(
+        operation.as_ref(),
+        EvaluationReasonError::AggregateMemberAllocationFailed
+    ));
+    assert!(Error::source(&reason).is_some());
+    let inherited = Error::source(&reason)
+        .unwrap()
+        .downcast_ref::<std::sync::Arc<std::collections::TryReserveError>>()
+        .unwrap();
+    assert!(std::sync::Arc::ptr_eq(source, inherited));
 }

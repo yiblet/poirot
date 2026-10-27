@@ -1,6 +1,10 @@
 //! Independent PCRE2/text examples derived from the Microsoft function contracts
 //! linked by the parent module. No upstream tests or spreadsheet fixtures reused.
 use super::*;
+/// Test-controlled host refusal.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+#[error("host refused admission")]
+struct AdmissionError;
 /// Test regex host that accepts resource requests and counts estimated work.
 /// Tests use the count to check that repeated searches continue to request admission.
 #[derive(Default)]
@@ -9,15 +13,15 @@ struct Admission {
 }
 impl Host for Admission {
     /// A test-controlled refusal marker.
-    type Failure = &'static str;
-    fn work(&mut self, units: usize) -> Result<(), Self::Failure> {
+    type Error = AdmissionError;
+    fn work(&mut self, units: usize) -> Result<(), Self::Error> {
         self.work += units;
         Ok(())
     }
-    fn text(&mut self, _: usize) -> Result<(), Self::Failure> {
+    fn text(&mut self, _: usize) -> Result<(), Self::Error> {
         Ok(())
     }
-    fn values(&mut self, _: usize) -> Result<(), Self::Failure> {
+    fn values(&mut self, _: usize) -> Result<(), Self::Error> {
         Ok(())
     }
 }
@@ -80,10 +84,10 @@ fn extraction_modes_and_unmatched_optional_groups() {
             .unwrap(),
         ["", "b"]
     );
-    assert_eq!(
+    assert!(matches!(
         p.extract("none", Extraction::First, &mut host),
-        Err(Failure::NoMatch)
-    );
+        Err(RegexError::NoMatch)
+    ));
 }
 #[test]
 fn replacement_occurrences_captures_and_literal_dollars() {
@@ -141,25 +145,25 @@ fn invalid_patterns_and_native_resource_exhaustion_are_distinct() {
     let mut host = Admission::default();
     assert!(matches!(
         Program::compile("[", Case::Sensitive, &mut host),
-        Err(Failure::Pattern)
+        Err(RegexError::Pattern(_))
     ));
     let deeply_nested = format!("{}a{}", "(".repeat(500), ")".repeat(500));
     assert!(matches!(
         Program::compile(&deeply_nested, Case::Sensitive, &mut host),
-        Err(Failure::Native(119))
+        Err(RegexError::Native(error)) if error.code() == 119
     ));
     let p = program(r"(*LIMIT_MATCH=10)(*NO_START_OPT)(a+)+$");
     assert!(matches!(
         p.test("aaaaaaaaaaaaaaaaaaaa!", &mut host),
-        Err(Failure::Native(-47))
+        Err(RegexError::Native(error)) if error.code() == -47
     ));
     assert!(matches!(
         p.extract("aaaaaaaaaaaaaaaaaaaa!", Extraction::All, &mut host),
-        Err(Failure::Native(-47))
+        Err(RegexError::Native(error)) if error.code() == -47
     ));
     assert!(matches!(
         p.replace("aaaaaaaaaaaaaaaaaaaa!", "x", 0, &mut host),
-        Err(Failure::Native(-47))
+        Err(RegexError::Native(error)) if error.code() == -47
     ));
 }
 #[test]
@@ -167,7 +171,7 @@ fn byte_escape_is_refused_without_rejecting_escaped_or_quoted_literals() {
     let mut host = Admission::default();
     assert!(matches!(
         Program::compile(r"^\C$", Case::Sensitive, &mut host),
-        Err(Failure::Unsupported(_))
+        Err(RegexError::ByteEscape)
     ));
     assert!(program(r"\\C").test(r"\C", &mut host).unwrap());
     assert!(program(r"\Q\C\E").test(r"\C", &mut host).unwrap());
@@ -175,29 +179,29 @@ fn byte_escape_is_refused_without_rejecting_escaped_or_quoted_literals() {
 #[test]
 fn output_size_and_caller_refusal_are_not_silent_truncation() {
     let mut host = Admission::default();
-    assert_eq!(
+    assert!(matches!(
         program("a").replace(&"a".repeat(18000), "aa", 0, &mut host),
-        Err(Failure::TextLimit)
-    );
+        Err(RegexError::TextLimit)
+    ));
     /// Admission that refuses native execution.
     struct Refuse;
     impl Host for Refuse {
         /// Exact operational marker propagated by the algorithm.
-        type Failure = &'static str;
-        fn work(&mut self, _: usize) -> Result<(), Self::Failure> {
-            Err("refused")
+        type Error = AdmissionError;
+        fn work(&mut self, _: usize) -> Result<(), Self::Error> {
+            Err(AdmissionError)
         }
-        fn text(&mut self, _: usize) -> Result<(), Self::Failure> {
+        fn text(&mut self, _: usize) -> Result<(), Self::Error> {
             Ok(())
         }
-        fn values(&mut self, _: usize) -> Result<(), Self::Failure> {
+        fn values(&mut self, _: usize) -> Result<(), Self::Error> {
             Ok(())
         }
     }
-    assert_eq!(
+    assert!(matches!(
         program("a").test("a", &mut Refuse),
-        Err(Failure::Host("refused"))
-    );
+        Err(RegexError::Host(AdmissionError))
+    ));
 }
 #[test]
 fn native_empty_retry_preserves_lookbehind_recursion_and_extended_comments() {
@@ -228,6 +232,6 @@ fn native_empty_retry_preserves_lookbehind_recursion_and_extended_comments() {
     );
     assert!(matches!(
         Program::compile(r"\Q\\E\C", Case::Sensitive, &mut host),
-        Err(Failure::Unsupported(_))
+        Err(RegexError::ByteEscape)
     ));
 }

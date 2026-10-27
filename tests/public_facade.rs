@@ -6,20 +6,15 @@ fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Data").unwrap();
     sheet
-        .set_formula_with_cached_value("A1".parse().unwrap(), "1=1", CellValue::Boolean(true))
+        .set_formula_with_cached_value("A1", "1=1", CellValue::Boolean(true))
         .unwrap();
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let reopened = Workbook::load().from_bytes(&bytes).unwrap();
-    let cell = reopened
-        .sheet(0)
-        .unwrap()
-        .get("A1".parse().unwrap())
-        .unwrap();
-    assert_eq!(cell.value, CellValue::Boolean(true));
-    assert!(cell.formula.is_some());
+    let cell = reopened.sheet(0).unwrap().get("A1").unwrap();
+    assert_eq!(cell.unwrap().value, CellValue::Boolean(true));
+    assert!(cell.unwrap().formula.is_some());
     assert!(
         !reopened
-            .model()
             .file_metadata
             .as_ref()
             .unwrap()
@@ -28,43 +23,35 @@ fn saved_typed_formula_evidence_and_import_losses_remain_discoverable() {
             .is_empty()
     );
     let warnings = reopened
-        .model()
         .file_metadata
         .as_ref()
         .unwrap()
         .import_warnings
         .as_slice()
         .to_vec();
-    assert_eq!(
-        reopened.into_model().file_metadata.unwrap().import_warnings,
-        warnings
-    );
+    assert_eq!(reopened.file_metadata.unwrap().import_warnings, warnings);
 }
 
 #[test]
-fn save_preserves_source_and_budget_failure_has_typed_cause() {
-    use std::error::Error;
+fn save_preserves_source_and_budget_error_has_typed_cause() {
     let mut book = Workbook::new();
     book.add_sheet("Data")
         .unwrap()
-        .set_value("A1".parse().unwrap(), "payload")
+        .set_value("A1", "payload")
         .unwrap();
-    let before = book.model().clone();
+    let before = book.clone();
     let options = io::WriteOptions {
         max_source_bytes: 0,
         ..Default::default()
     };
     let error = book.save_xlsx().options(options).to_buffer().unwrap_err();
-    assert!(
-        error
-            .source()
-            .unwrap()
-            .downcast_ref::<io::IoError>()
-            .is_some()
-    );
-    assert_eq!(book.model(), &before);
+    assert!(matches!(
+        error,
+        poirot::files::XlsxSaveError::Io(io::IoError::Limit(_))
+    ));
+    assert_eq!(&book, &before);
     assert!(!book.save_xlsx().to_buffer().unwrap().is_empty());
-    assert_eq!(book.model(), &before);
+    assert_eq!(&book, &before);
 }
 
 fn formula_book(formulas: &[(&str, &str)]) -> Workbook {
@@ -72,11 +59,7 @@ fn formula_book(formulas: &[(&str, &str)]) -> Workbook {
     let sheet = book.add_sheet("Data").unwrap();
     for (address, formula) in formulas {
         sheet
-            .set_formula_with_cached_value(
-                address.parse().unwrap(),
-                *formula,
-                CellValue::Number(-999.0),
-            )
+            .set_formula_with_cached_value(*address, *formula, CellValue::Number(-999.0))
             .unwrap();
     }
     book
@@ -90,7 +73,7 @@ fn target(reference: &str) -> poirot::eval::EvaluationTarget {
 #[test]
 fn overlay_recursively_invalidates_and_applies_owned_cached_changes() {
     let book = formula_book(&[("B1", "A1+1"), ("C1", "B1+1"), ("D1", "8")]);
-    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(&book)
         .build()
         .unwrap();
     let context = poirot::calculation::EvaluationContext::default();
@@ -115,7 +98,7 @@ fn overlay_recursively_invalidates_and_applies_owned_cached_changes() {
 fn captured_random_cells_reuse_until_the_seed_changes() {
     let book = formula_book(&[("A1", "RAND()"), ("B1", "A1+1"), ("C1", "8")]);
     let mut context = poirot::calculation::EvaluationContext::default();
-    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(&book)
         .build()
         .unwrap();
     overlay.evaluation(&context).unwrap().all().unwrap();
@@ -131,13 +114,10 @@ fn captured_random_cells_reuse_until_the_seed_changes() {
     assert_eq!(changed.usage().external_cache_hits, 1);
 }
 #[test]
-fn formatting_context_and_text_policy_invalidate_actual_consumers() {
+fn formatting_context_invalidates_only_actual_consumers() {
     let book = formula_book(&[("A1", "DOLLAR(1,2)"), ("B1", r#"LEN("😀")"#), ("C1", "8")]);
-    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(&book)
         .with_policy(poirot::eval::EvaluationPolicy {
-            text: poirot::eval::TextSemanticsPolicy {
-                source: poirot::eval::TextSourceVersion::Poi7321209,
-            },
             ..Default::default()
         })
         .build()
@@ -155,10 +135,10 @@ fn formatting_context_and_text_policy_invalidate_actual_consumers() {
     };
     context.formatting = poirot::eval::FormattingConfiguration::with_currency(currency.clone());
     overlay.evaluation(&context).unwrap().all().unwrap();
-    // The explicit POI contract counts the emoji's two UTF16 units.
+    // Documented V2 counts the emoji surrogate pair once.
     assert_eq!(
         *overlay.cached_value(target("B1")).unwrap(),
-        CellValue::Number(2.)
+        CellValue::Number(1.)
     );
     currency.positive_prefix = "USD ".into();
     context.formatting = poirot::eval::FormattingConfiguration::with_currency(currency);
@@ -169,21 +149,21 @@ fn formatting_context_and_text_policy_invalidate_actual_consumers() {
     assert_eq!(outputs[0].value, CellValue::Text("USD 1.00".into()));
     assert_eq!(evaluation.usage().formula_executions, 1);
     drop(evaluation);
-    let mut policy = overlay.policy().clone();
-    policy.text.source = poirot::eval::TextSourceVersion::ExcelCompatibilityV2Documented;
+    let policy = overlay.policy().clone();
+
     overlay.set_policy(policy).unwrap();
     let mut evaluation = overlay.evaluation(&context).unwrap();
     let outputs = evaluation
         .outputs(&[target("A1"), target("B1"), target("C1")])
         .unwrap();
     assert_eq!(outputs[1].value, CellValue::Number(1.));
-    assert_eq!(evaluation.usage().formula_executions, 1);
+    assert_eq!(evaluation.usage().formula_executions, 0);
 }
 #[test]
-fn budget_failure_preserves_source_and_previously_completed_cache() {
+fn budget_error_preserves_source_and_previously_completed_cache() {
     let book = formula_book(&[("A1", "1+2")]);
-    let before = book.model().clone();
-    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
+    let before = book.clone();
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(&book)
         .build()
         .unwrap();
     overlay
@@ -203,7 +183,7 @@ fn budget_failure_preserves_source_and_previously_completed_cache() {
     assert!(evaluation.cell(target("A1")).is_err());
     assert!(evaluation.result_changes().unwrap().is_empty());
     drop(evaluation);
-    assert_eq!(book.model(), &before);
+    assert_eq!(&book, &before);
     assert_eq!(
         *overlay.cached_value(target("A1")).unwrap(),
         CellValue::Number(3.)
@@ -214,10 +194,10 @@ fn empty_rows_and_defined_names_flow_through_overlay_evaluation() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Data").unwrap();
     sheet.create_row(5).unwrap();
-    sheet.set_value("A1".parse().unwrap(), 4.).unwrap();
-    sheet.set_formula("B1".parse().unwrap(), "Rate*A1").unwrap();
-    book.model_mut().define_name("Rate", "2", None).unwrap();
-    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
+    sheet.set_value("A1", 4.).unwrap();
+    sheet.set_formula("B1", "Rate*A1").unwrap();
+    book.define_name("Rate", "2", None).unwrap();
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(&book)
         .build()
         .unwrap();
     assert_eq!(
@@ -232,18 +212,13 @@ fn empty_rows_and_defined_names_flow_through_overlay_evaluation() {
 }
 
 #[test]
-fn unsupported_signature_keeps_typed_error_chain() {
-    use std::error::Error;
+fn unsupported_signature_keeps_typed_error() {
     let error = Workbook::load().from_bytes(b"unsupported").unwrap_err();
-    assert!(matches!(
-        error.source().unwrap().downcast_ref::<io::IoError>(),
-        Some(io::IoError::Unsupported(_))
-    ));
+    assert!(matches!(error, io::IoError::Unsupported(_)));
 }
 
 #[test]
 fn serialization_failure_preserves_existing_destination() {
-    use std::error::Error;
     let book = formula_book(&[("A1", "1+2")]);
     let save = book.save_xlsx().options(io::WriteOptions {
         max_output_bytes: 0,
@@ -255,13 +230,10 @@ fn serialization_failure_preserves_existing_destination() {
     ));
     std::fs::write(&path, b"existing destination").unwrap();
     let error = save.write_file(&path).unwrap_err();
-    assert!(
-        error
-            .source()
-            .unwrap()
-            .downcast_ref::<io::IoError>()
-            .is_some()
-    );
+    assert!(matches!(
+        error,
+        poirot::files::XlsxSaveError::Io(io::IoError::Limit(_))
+    ));
     assert_eq!(std::fs::read(&path).unwrap(), b"existing destination");
     std::fs::remove_file(path).unwrap();
 }

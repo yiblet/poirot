@@ -1,6 +1,7 @@
 //! Independently derived, scaled sample statistics; see SAMPLE_SOURCES.md.
+use super::distribution_error::DistributionError;
 use crate::scalar::CellError;
-use crate::statistics::modern::{Failure, Result};
+use crate::statistics::modern::Result;
 use crate::statistics::modern_tails::{self as tails, BetaCoordinate, Tail};
 
 /// Compensated summation of bounded centered terms.
@@ -27,13 +28,13 @@ struct Moments {
 }
 impl Moments {
     /// Summarize a finite nonempty admitted sample without raw powers.
-    fn new<O>(values: &[f64]) -> std::result::Result<Self, Failure<O>> {
+    fn new<O>(values: &[f64]) -> std::result::Result<Self, DistributionError<O>> {
         let first = values
             .first()
             .copied()
-            .ok_or(Failure::Spreadsheet(CellError::Div0))?;
+            .ok_or(DistributionError::Spreadsheet(CellError::Div0))?;
         if values.iter().any(|v| !v.is_finite()) {
-            return Err(Failure::Spreadsheet(CellError::Num));
+            return Err(DistributionError::Spreadsheet(CellError::Num));
         }
         let anchor = if values.iter().all(|v| (v - first).is_finite()) {
             first
@@ -79,8 +80,8 @@ impl Moments {
         2.0 * self.scale.ln() + (self.second / (self.count - 1.0)).ln()
     }
 }
-fn error<O>(e: CellError) -> Failure<O> {
-    Failure::Spreadsheet(e)
+fn error<O>(e: CellError) -> DistributionError<O> {
+    DistributionError::Spreadsheet(e)
 }
 fn checked<O>(value: f64) -> Result<O> {
     if value.is_finite() {
@@ -133,13 +134,13 @@ pub fn harmonic_mean<O>(values: &[f64]) -> Result<O> {
 pub fn modes<O>(
     values: &mut [f64],
     allocation_failure: O,
-) -> std::result::Result<usize, Failure<O>> {
+) -> std::result::Result<usize, DistributionError<O>> {
     crate::statistics::finite(values).map_err(error)?;
     let key = |v: f64| if v == 0.0 { 0 } else { v.to_bits() };
     let mut counts = std::collections::HashMap::<u64, usize>::new();
     counts
         .try_reserve(values.len())
-        .map_err(|_| Failure::Operational(allocation_failure))?;
+        .map_err(|_| DistributionError::Operational(allocation_failure))?;
     for &v in values.iter() {
         // SAFETY: reserve admitted values.len distinct keys; this loop inserts at most that many.
         let count = counts.entry(key(v)).or_default();
@@ -400,13 +401,13 @@ pub fn t_test<O>(
         return Err(error(CellError::Div0));
     }
     let (log_t, degrees) = if kind == TestKind::Paired {
-        meter(x.len() as u64).map_err(Failure::Operational)?;
+        meter(x.len() as u64).map_err(DistributionError::Operational)?;
         let half = x.iter().zip(y).any(|(&a, &b)| !(a - b).is_finite());
         let factor = if half { 0.5 } else { 1.0 };
         let mut differences = Vec::new();
         differences
             .try_reserve_exact(x.len())
-            .map_err(|_| Failure::ComputationalLimit)?;
+            .map_err(|_| DistributionError::ComputationalLimit)?;
         for (&a, &b) in x.iter().zip(y) {
             // SAFETY: x.len slots were reserved and zip emits at most x.len pairs.
             differences.push(a * factor - b * factor);

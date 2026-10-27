@@ -1,6 +1,6 @@
 //! Pure ingress parsing; workbook-dependent identifier lookup stays in the shell.
+use super::overlay_target_error::OverlayTargetError;
 use crate::model;
-use crate::model::ModelError;
 use poirot_parsing::formula;
 use std::borrow::Cow;
 
@@ -14,8 +14,8 @@ pub(super) struct LocalCellTarget<'a> {
 
 impl<'a> LocalCellTarget<'a> {
     /// Parse one sheet-qualified cell, rejecting ranges and external references.
-    pub fn parse(reference: &'a str) -> Result<Self, ModelError> {
-        let invalid = || ModelError("target must be one local sheet-qualified cell".into());
+    pub fn parse(reference: &'a str) -> Result<Self, OverlayTargetError> {
+        let invalid = || OverlayTargetError::InvalidReference;
         if reference.starts_with('=') {
             return Err(invalid());
         }
@@ -27,9 +27,7 @@ impl<'a> LocalCellTarget<'a> {
             if !sheet.ends_with('\'') {
                 return Err(invalid());
             }
-            let formula::Expr::Cell(parsed) =
-                formula::parse_formula(reference).map_err(|_| invalid())?
-            else {
+            let formula::Expr::Cell(parsed) = formula::parse_formula(reference)? else {
                 return Err(invalid());
             };
             let decoded = parsed.sheet.ok_or_else(invalid)?;

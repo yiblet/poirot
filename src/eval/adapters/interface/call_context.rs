@@ -4,10 +4,9 @@ use super::function_value::FunctionValue;
 use crate::eval::compile::bytecode::Compiled;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::registry::{FunctionDescriptor, FunctionId};
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::session::{ReadRecorder, ResultProjection, Session};
-use crate::eval::vm::{AdmissionOrder, ResolvedCall};
-use crate::eval::vm::{CallAdmission, ExecutableRef};
+use crate::eval::vm::ExecutableRef;
 use crate::model::CellValue;
 use poirot_functions::scalar::ParamVec;
 use poirot_parsing::formula::FunctionName;
@@ -54,30 +53,25 @@ impl<'call, 'workbook> CallContext<'call, 'workbook> {
     pub(in crate::eval::adapters) fn invoke_registration(
         &mut self,
         name: &FunctionName,
-        default: bool,
         descriptor: Option<&'static FunctionDescriptor>,
         parameters: ParamVec<Compiled>,
         execute: impl FnOnce(
             &mut Self,
             FunctionId,
             FunctionParameters<'_>,
-        ) -> Option<Result<FunctionValue, EvaluationFailure>>,
-    ) -> Result<FunctionValue, EvaluationFailure> {
-        CallAdmission::new(self.session).admit(
-            ResolvedCall {
-                invocation: descriptor.map(|entry| {
-                    crate::eval::observe::ConsumedBuiltinInvocation {
-                        target: self.target,
-                        handler: entry.handler,
-                        parsed_spelling: name.as_str(),
-                        resolved_spelling: name.as_str(),
-                        argument_count: parameters.len(),
-                    }
-                }),
-                read_builtin_policy: !default,
-            },
-            AdmissionOrder::PolicyBeforeObserver,
-        )?;
+        ) -> Option<Result<FunctionValue, EvaluationError>>,
+    ) -> Result<FunctionValue, EvaluationError> {
+        self.session
+            .ports
+            .observe_resolved_call(descriptor.map(|entry| {
+                crate::eval::observe::ConsumedBuiltinInvocation {
+                    target: self.target,
+                    handler: entry.handler,
+                    parsed_spelling: name.as_str(),
+                    resolved_spelling: name.as_str(),
+                    argument_count: parameters.len(),
+                }
+            }))?;
         let Some(descriptor) = descriptor else {
             ReadRecorder::new(self.session).read_lazy(|| {
                 crate::eval::ports::DependencyRead::OpaqueProvider(name.as_str().to_owned())
@@ -87,17 +81,19 @@ impl<'call, 'workbook> CallContext<'call, 'workbook> {
             )));
         };
         execute(self, descriptor.handler, parameters.as_slice().into()).unwrap_or_else(|| {
-            Err(EvaluationFailure::UnsupportedCapability {
+            Err(EvaluationError::UnsupportedCapability {
                 capability: crate::eval::limits::CapabilityId::FunctionAdapter,
-                source: Some(self.target),
-                detail: format!("registered function {name} has no executable adapter"),
+                target: Some(self.target),
+                reason: crate::eval::limits::EvaluationReasonError::MissingFunctionAdapter {
+                    function: name.as_str().to_owned(),
+                },
             })
         })
     }
 
     /// Select a scalar at the current caller coordinates, resolving reference or
     /// array values only when this projection is requested.
-    pub fn scalar(&mut self, value: FunctionValue) -> Result<CellValue, EvaluationFailure> {
+    pub fn scalar(&mut self, value: FunctionValue) -> Result<CellValue, EvaluationError> {
         ResultProjection::new(self.session).select_legacy_scalar(self.target.address, value.0)
     }
 }

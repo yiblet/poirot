@@ -1,39 +1,19 @@
 //! Explicit NUMBERVALUE argument grammars, including pinned Java behavior.
-
-/// Catchable spreadsheet failures from pure text kernels.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Error {
-    /// Invalid text-function argument (`#VALUE!`).
-    Value,
-    /// Numeric text-function argument is outside its supported domain (`#NUM!`).
-    Num,
-}
-/// Source or unsupported text contracts that remain operational failures.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum HostFault {
-    /// Source parser requires a nonempty separator.
-    EmptySeparator,
-    /// Separator spelling forms an invalid source parsing pattern.
-    InvalidSeparatorPattern,
-    /// Supplementary separator character needs a verified UTF-16 admission contract.
-    UnsupportedSeparatorUnit,
-}
-/// NUMBERVALUE failure preserving spreadsheet errors versus operational refusals.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ParseFailure {
-    /// Catchable numeric-text parsing error.
-    Spreadsheet(Error),
-    /// Pinned source fault retained for operational handling.
-    Source(HostFault),
-}
+pub use crate::coercion::{NumericTextError, NumericTextParseError, NumericTextSourceError};
 
 /// Parse numeric text using explicit decimal and grouping separators.
-pub fn coerce_number_value(text: &str, decimal: u16, grouping: u16) -> Result<f64, ParseFailure> {
-    let value_error = || ParseFailure::Spreadsheet(Error::Value);
+pub fn coerce_number_value(
+    text: &str,
+    decimal: u16,
+    grouping: u16,
+) -> Result<f64, NumericTextParseError> {
+    let value_error = || NumericTextParseError::Spreadsheet(NumericTextError::Value);
     // These characters have special or invalid meanings inside Java's [x] regex.
     // A lone caret leaves an unclosed negated character class in Java.
     if decimal == b'\\' as u16 || decimal == b'[' as u16 || decimal == b'^' as u16 {
-        return Err(ParseFailure::Source(HostFault::InvalidSeparatorPattern));
+        return Err(NumericTextParseError::Source(
+            NumericTextSourceError::InvalidSeparatorPattern,
+        ));
     }
     let mut units: Vec<u16> = if text.is_empty() {
         vec![b'0' as u16]
@@ -93,7 +73,7 @@ pub fn coerce_number_value(text: &str, decimal: u16, grouping: u16) -> Result<f6
     if number.is_finite() {
         Ok(number)
     } else {
-        Err(ParseFailure::Spreadsheet(Error::Num))
+        Err(NumericTextParseError::Spreadsheet(NumericTextError::Num))
     }
 }
 
@@ -107,16 +87,18 @@ pub fn coerce_number_value_excel(
     locale: &poirot_parsing::number::NumberLocale,
     decimal_argument: Option<&str>,
     grouping_argument: Option<&str>,
-) -> Result<f64, ParseFailure> {
+) -> Result<f64, NumericTextParseError> {
     use nom::{Parser, combinator::all_consuming};
-    let value_error = || ParseFailure::Spreadsheet(Error::Value);
+    let value_error = || NumericTextParseError::Spreadsheet(NumericTextError::Value);
     if decimal_argument
         .into_iter()
         .chain(grouping_argument)
         .filter_map(|s| s.chars().next())
         .any(|c| c.len_utf16() != 1)
     {
-        return Err(ParseFailure::Source(HostFault::UnsupportedSeparatorUnit));
+        return Err(NumericTextParseError::Source(
+            NumericTextSourceError::UnsupportedSeparatorUnit,
+        ));
     }
     let explicit_decimal = decimal_argument
         .map(|s| {
@@ -217,27 +199,33 @@ mod tests {
         let parse = |s| coerce_number_value_excel(s, &locale, None, None);
         assert_eq!(
             parse("1.23456789e308"),
-            Err(ParseFailure::Spreadsheet(Error::Value))
+            Err(NumericTextParseError::Spreadsheet(NumericTextError::Value))
         );
         assert_eq!(
             parse("1.23456789e-310"),
-            Err(ParseFailure::Spreadsheet(Error::Value))
+            Err(NumericTextParseError::Spreadsheet(NumericTextError::Value))
         );
         let many_percent = format!("50{}", "%".repeat(160));
         assert_eq!(
             parse(&many_percent),
-            Err(ParseFailure::Spreadsheet(Error::Value))
+            Err(NumericTextParseError::Spreadsheet(NumericTextError::Value))
         );
         assert_eq!(
             parse("1e-324"),
-            Err(ParseFailure::Spreadsheet(Error::Value))
+            Err(NumericTextParseError::Spreadsheet(NumericTextError::Value))
         );
-        assert_eq!(parse("1e309"), Err(ParseFailure::Spreadsheet(Error::Value)));
+        assert_eq!(
+            parse("1e309"),
+            Err(NumericTextParseError::Spreadsheet(NumericTextError::Value))
+        );
         assert_eq!(parse("1,,2.5"), Ok(12.5));
-        assert_eq!(parse("1.2,3"), Err(ParseFailure::Spreadsheet(Error::Value)));
+        assert_eq!(
+            parse("1.2,3"),
+            Err(NumericTextParseError::Spreadsheet(NumericTextError::Value))
+        );
         let synthetic = poirot_parsing::number::NumberLocale::new("::", Some("__"), None, "%", ":");
         // Locale validation deliberately forbids overlapping decimal/time tokens.
-        assert!(synthetic.is_none());
+        assert!(synthetic.is_err());
         let synthetic =
             poirot_parsing::number::NumberLocale::new("::", Some("__"), None, "%", "|").unwrap();
         assert_eq!(
@@ -246,7 +234,7 @@ mod tests {
         );
         assert_eq!(
             coerce_number_value_excel("1.5", &synthetic, None, None),
-            Err(ParseFailure::Spreadsheet(Error::Value))
+            Err(NumericTextParseError::Spreadsheet(NumericTextError::Value))
         );
     }
     #[test]
@@ -254,15 +242,60 @@ mod tests {
         let parse = |s| coerce_number_value(s, '.' as u16, ',' as u16);
         assert_eq!(parse(" 3,0 00.25%%"), Ok(0.300025));
         assert_eq!(parse("12.."), Ok(12.));
-        assert_eq!(parse("1.2,3"), Err(ParseFailure::Spreadsheet(Error::Value)));
+        assert_eq!(
+            parse("1.2,3"),
+            Err(NumericTextParseError::Spreadsheet(NumericTextError::Value))
+        );
         assert_eq!(parse(""), Ok(0.));
-        assert_eq!(parse("NaN"), Err(ParseFailure::Spreadsheet(Error::Num)));
+        assert_eq!(
+            parse("NaN"),
+            Err(NumericTextParseError::Spreadsheet(NumericTextError::Num))
+        );
         assert_eq!(
             parse("Infinity"),
-            Err(ParseFailure::Spreadsheet(Error::Num))
+            Err(NumericTextParseError::Spreadsheet(NumericTextError::Num))
         );
-        assert_eq!(parse("inf"), Err(ParseFailure::Spreadsheet(Error::Value)));
+        assert_eq!(
+            parse("inf"),
+            Err(NumericTextParseError::Spreadsheet(NumericTextError::Value))
+        );
         assert_eq!(parse("0x1p2"), Ok(4.));
         assert_eq!(parse("7D"), Ok(7.));
+    }
+}
+
+#[cfg(test)]
+mod error_tests {
+    use super::{
+        NumericTextError, NumericTextParseError, NumericTextSourceError, coerce_number_value,
+    };
+    use std::error::Error;
+
+    #[test]
+    fn numeric_text_failures_retain_their_exact_category_and_cause() {
+        let input_error = coerce_number_value("bad", '.' as u16, ',' as u16).unwrap_err();
+        assert_eq!(
+            input_error,
+            NumericTextParseError::Spreadsheet(NumericTextError::Value)
+        );
+        assert_eq!(
+            input_error
+                .source()
+                .and_then(|cause| cause.downcast_ref::<NumericTextError>()),
+            Some(&NumericTextError::Value)
+        );
+        let source_error = coerce_number_value("12", '[' as u16, ',' as u16).unwrap_err();
+        assert_eq!(
+            source_error,
+            NumericTextParseError::Source(NumericTextSourceError::InvalidSeparatorPattern)
+        );
+        assert_eq!(
+            source_error
+                .source()
+                .and_then(|cause| cause.downcast_ref::<NumericTextSourceError>()),
+            Some(&NumericTextSourceError::InvalidSeparatorPattern)
+        );
+        fn assert_send_sync_static<T: Send + Sync + 'static>() {}
+        assert_send_sync_static::<NumericTextParseError>();
     }
 }

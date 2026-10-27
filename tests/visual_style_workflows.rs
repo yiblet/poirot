@@ -72,6 +72,7 @@ fn imported_styles_reach_evaluation_and_survive_edits_reset_flush_and_snapshots(
         .unwrap()
         .get(at("B1").address)
         .unwrap()
+        .unwrap()
         .style
         .clone();
     assert_eq!(original.number_format.as_deref(), Some("0.00"));
@@ -93,6 +94,7 @@ fn imported_styles_reach_evaluation_and_survive_edits_reset_flush_and_snapshots(
             .unwrap()
             .get(at("C1").address)
             .unwrap()
+            .unwrap()
             .style
             .visual
             .as_ref()
@@ -100,20 +102,18 @@ fn imported_styles_reach_evaluation_and_survive_edits_reset_flush_and_snapshots(
     ));
     let source = book.save_snapshot().to_buffer().unwrap();
     assert_eq!(
-        Workbook::from_model(
-            Workbook::restore_snapshot()
-                .from_bytes(&source)
-                .unwrap()
-                .into_artifact()
-                .into_parts()
-                .0
-        ),
+        Workbook::restore_snapshot()
+            .from_bytes(&source)
+            .unwrap()
+            .into_artifact()
+            .into_parts()
+            .0,
         book
     );
 
     let context = EvaluationContext::default();
     let mut overlay = poirot::calculation::Overlay::from_overlay(
-        poirot::eval::overlay::Overlay::with_workbook(book.model().clone())
+        poirot::eval::overlay::Overlay::with_workbook(book.clone())
             .build()
             .unwrap(),
     );
@@ -182,6 +182,7 @@ fn imported_styles_reach_evaluation_and_survive_edits_reset_flush_and_snapshots(
             .unwrap()
             .get(at("B1").address)
             .unwrap()
+            .unwrap()
             .style,
         edited
     );
@@ -190,6 +191,7 @@ fn imported_styles_reach_evaluation_and_survive_edits_reset_flush_and_snapshots(
             .sheet(0)
             .unwrap()
             .get(at("C1").address)
+            .unwrap()
             .unwrap()
             .style,
         original
@@ -200,11 +202,17 @@ fn imported_styles_reach_evaluation_and_survive_edits_reset_flush_and_snapshots(
             .unwrap()
             .get(at("C1").address)
             .unwrap()
+            .unwrap()
             .value,
         CellValue::Blank
     );
     assert_eq!(
-        book.sheet(0).unwrap().get(at("B1").address).unwrap().value,
+        book.sheet(0)
+            .unwrap()
+            .get(at("B1").address)
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Number(6.)
     );
 }

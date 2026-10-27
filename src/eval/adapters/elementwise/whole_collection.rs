@@ -114,7 +114,7 @@ impl WholeCollection {
         let mut selected = Vec::new();
         selected
             .try_reserve_exact(rows)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         for row in start..rows {
             if !present
                 || core_projection::coerce_operand_boolean(

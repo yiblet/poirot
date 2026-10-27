@@ -1,14 +1,13 @@
 use crate::eval::compile;
-use crate::eval::config::{BuiltinSemanticsPolicy, EvaluationInputs, RunConfiguration};
+use crate::eval::config::{EvaluationInputs, RunConfiguration};
 use crate::eval::entry::run_formula_with_configuration;
-use crate::eval::limits::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::limits::{EvaluationBudgets, EvaluationError, EvaluationOutcome};
 use crate::eval::ports::{DependencyRead, DependencyReadSink, ReadEvent};
 use crate::eval::session::{ResultProjection, Session};
 use crate::eval::vm::ExpressionRunner;
 use crate::model::CellError::{NA, Ref};
 use crate::model::CellValue::{Error, Number, Text};
 use crate::model::{CellValue, Workbook};
-use poirot_functions::text_units::{SourceVersion as TextSourceVersion, TextSemanticsPolicy};
 
 fn book() -> Workbook {
     let mut w = Workbook::new();
@@ -16,13 +15,13 @@ fn book() -> Workbook {
     w
 }
 
-fn value(w: &Workbook, formula: &str, policy: BuiltinSemanticsPolicy) -> CellValue {
+fn value(w: &Workbook, formula: &str) -> CellValue {
     match run_formula_with_configuration(
         w,
         0,
         "Z20".parse().unwrap(),
         formula,
-        &RunConfiguration::default().with_builtin_policy(policy),
+        &RunConfiguration::default(),
         EvaluationBudgets::default(),
     ) {
         EvaluationOutcome::Complete { value, .. } => value,
@@ -33,7 +32,7 @@ fn value(w: &Workbook, formula: &str, policy: BuiltinSemanticsPolicy) -> CellVal
 #[test]
 fn approximate_match_preserves_verified_typed_candidate_rules() {
     let w = book();
-    let excel = BuiltinSemanticsPolicy::ExcelDocumentation;
+    let excel = true;
     // Pinned ClosedXML LookupTests (09f2f21) independently supplies these typed
     // expectations, including deliberate unordered trajectories. Calc agrees on
     // the originals but differs on descending duplicates and mixed/error entries.
@@ -60,19 +59,11 @@ fn approximate_match_preserves_verified_typed_candidate_rules() {
     ] {
         for separator in [",", ";"] {
             let formula = format!("MATCH({key},{{{}}},{mode})", vector.replace(',', separator));
-            assert_eq!(value(&w, &formula, excel), expected, "{formula}");
+            assert_eq!(value(&w, &formula,), expected, "{formula}");
         }
     }
-    for (formula, expected) in [
-        ("MATCH(5,{TRUE},-1)", Number(1.)),
-        ("MATCH(12,{5;15;18;18;11;1;15;17})", Number(6.)),
-    ] {
-        assert_eq!(
-            value(&w, formula, BuiltinSemanticsPolicy::PinnedPoi),
-            expected
-        );
-    }
-    for policy in [excel, BuiltinSemanticsPolicy::PinnedPoi] {
+    {}
+    for _policy in [excel] {
         for (formula, expected) in [
             (
                 "VLOOKUP(12,{5,1;15,2;18,3;18,4;11,5;1,6;15,7;17,8},2,TRUE)",
@@ -84,7 +75,7 @@ fn approximate_match_preserves_verified_typed_candidate_rules() {
             ),
             ("MATCH(5,{10,#REF!,5,3},0)", Number(3.)),
         ] {
-            assert_eq!(value(&w, formula, policy), expected, "{formula}");
+            assert_eq!(value(&w, formula,), expected, "{formula}");
         }
     }
 }
@@ -101,22 +92,16 @@ fn approximate_match_preserves_blank_positions_lazy_failures_and_policy_dependen
     }
     let mut w = book();
     let sheet = w.sheet_mut(0).unwrap();
-    sheet.set_value("A1".parse().unwrap(), 10.).unwrap();
-    sheet
-        .set_value("A3".parse().unwrap(), Text("5".into()))
-        .unwrap();
-    sheet.set_value("A4".parse().unwrap(), Error(Ref)).unwrap();
-    sheet.set_value("A5".parse().unwrap(), 5.).unwrap();
-    sheet.set_formula("A6".parse().unwrap(), "RAND()").unwrap();
-    sheet.set_value("B1".parse().unwrap(), 5.).unwrap();
-    sheet.set_value("C1".parse().unwrap(), -1.).unwrap();
-    for policy in [
-        BuiltinSemanticsPolicy::ExcelDocumentation,
-        BuiltinSemanticsPolicy::PinnedPoi,
-    ] {
+    sheet.set_value("A1", 10.).unwrap();
+    sheet.set_value("A3", Text("5".into())).unwrap();
+    sheet.set_value("A4", Error(Ref)).unwrap();
+    sheet.set_value("A5", 5.).unwrap();
+    sheet.set_formula("A6", "RAND()").unwrap();
+    sheet.set_value("B1", 5.).unwrap();
+    sheet.set_value("C1", -1.).unwrap();
+    {
         let mut reads = Reads::default();
         let mut session = Session::with_context(&w, EvaluationInputs::default());
-        session.policies.builtin_policy = policy;
         session.ports.dependency_sink = Some(&mut reads);
         let syntax = poirot_parsing::formula::parse_formula("MATCH(B1,A1:A6,C1)").unwrap();
         let plan = compile::bound::FormulaPlan::bind(&syntax).unwrap();
@@ -144,31 +129,21 @@ fn approximate_match_preserves_blank_positions_lazy_failures_and_policy_dependen
             ["C1", "B1", "A1", "A3", "A4", "A5"].map(|s| s.parse().unwrap())
         );
         assert!(
-            reads
-                .0
-                .iter()
-                .any(|e| e.read == DependencyRead::BuiltinPolicy)
-        );
-        assert!(
             !reads
                 .0
                 .iter()
                 .any(|e| matches!(e.read, DependencyRead::Random(_)))
         );
     }
-    let excel = BuiltinSemanticsPolicy::ExcelDocumentation;
-    assert_eq!(value(&w, "MATCH(0,A1:A5,0)", excel), Error(NA));
-    assert_eq!(value(&w, "MATCH(6,A1:A5,-1)", excel), Number(1.));
-    assert_eq!(value(&w, "MATCH(5,A2:A5,-1)", excel), Number(4.));
+
+    assert_eq!(value(&w, "MATCH(0,A1:A5,0)",), Error(NA));
+    assert_eq!(value(&w, "MATCH(6,A1:A5,-1)",), Number(1.));
+    assert_eq!(value(&w, "MATCH(5,A2:A5,-1)",), Number(4.));
     w.sheet_mut(0)
         .unwrap()
-        .set_value("A4".parse().unwrap(), Text("oversized".into()))
+        .set_value("A4", Text("oversized".into()))
         .unwrap();
-    let configuration = RunConfiguration::default()
-        .with_builtin_policy(excel)
-        .with_text_policy(TextSemanticsPolicy {
-            source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-        });
+    let configuration = RunConfiguration::default();
     for budgets in [
         EvaluationBudgets {
             text_bytes: 1,
@@ -189,14 +164,14 @@ fn approximate_match_preserves_blank_positions_lazy_failures_and_policy_dependen
                 budgets
             ),
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::Budget(_),
+                failure: EvaluationError::Budget(_),
                 ..
             }
         ));
     }
     // The error in the mode is resolved before either the key or candidate providers.
     assert_eq!(
-        value(&w, "IFERROR(MATCH(RAND(),A1:A5,#DIV/0!),99)", excel),
+        value(&w, "IFERROR(MATCH(RAND(),A1:A5,#DIV/0!),99)",),
         Number(99.)
     );
 }
@@ -218,16 +193,18 @@ fn ascending_match_bisection_reads_only_consumed_candidates_in_original_order() 
     {
         w.sheet_mut(0)
             .unwrap()
-            .set_value(format!("A{}", index + 1).parse().unwrap(), number)
+            .set_value(
+                format!("A{}", index + 1)
+                    .parse::<crate::model::CellAddress>()
+                    .unwrap(),
+                number,
+            )
             .unwrap();
     }
-    w.sheet_mut(0)
-        .unwrap()
-        .set_formula("A7".parse().unwrap(), "RAND()")
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_formula("A7", "RAND()").unwrap();
     let mut reads = Reads::default();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
-    session.policies.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
+
     session.ports.dependency_sink = Some(&mut reads);
     let syntax = poirot_parsing::formula::parse_formula("MATCH(12,A1:A8)").unwrap();
     let plan = compile::bound::FormulaPlan::bind(&syntax).unwrap();
@@ -260,17 +237,7 @@ fn ascending_match_bisection_reads_only_consumed_candidates_in_original_order() 
     // A sparse blank retains its logical position in a documented sorted vector.
     let mut w = book();
     for (cell, number) in [("A1", 1.), ("A3", 3.), ("A4", 5.)] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(cell.parse().unwrap(), number)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(cell, number).unwrap();
     }
-    assert_eq!(
-        value(
-            &w,
-            "MATCH(4,A1:A4,1)",
-            BuiltinSemanticsPolicy::ExcelDocumentation
-        ),
-        Number(3.)
-    );
+    assert_eq!(value(&w, "MATCH(4,A1:A4,1)",), Number(3.));
 }

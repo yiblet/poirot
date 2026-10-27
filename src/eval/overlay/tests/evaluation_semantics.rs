@@ -4,7 +4,7 @@ use crate::eval::config::{ArrayResultPolicy, EvaluationInputs, RunConfiguration}
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::entry::{ExtensionExecution, run_cell_with_extensions};
 use crate::eval::functions::extensions::*;
-use crate::eval::limits::{EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{EvaluationBudgets, EvaluationError};
 use crate::eval::overlay;
 use crate::eval::overlay::incremental::Overlay;
 use crate::eval::run::{EvaluationRun, WorkbookView};
@@ -230,7 +230,7 @@ fn cache_hits_keep_result_admission_limits_but_save_actual_work() {
                 .cell(at(output))
                 .unwrap_err();
             assert!(
-                matches!(failure, EvaluationFailure::Budget(ref b) if b.kind == kind),
+                matches!(failure, EvaluationError::Budget(ref b) if b.kind == kind),
                 "{failure:?}"
             );
         }
@@ -252,7 +252,7 @@ fn cache_hits_keep_result_admission_limits_but_save_actual_work() {
     let mut fresh = Overlay::with_workbook(&book).build().unwrap();
     assert!(matches!(
         fresh.evaluation(&context).unwrap().cell(at("G1")),
-        Err(EvaluationFailure::Budget(_))
+        Err(EvaluationError::Budget(_))
     ));
 }
 

@@ -2,6 +2,7 @@
 use super::cached_source::CachedSource;
 use super::compiled_formula::CompiledFormula;
 use super::formula_compiler::FormulaCompiler;
+use super::plan_snapshot_error::PlanSnapshotError;
 use super::potential_dependencies::PotentialDependencies;
 use super::preparation_policy::PreparationPolicy;
 use super::prepared_formula::PreparedFormula;
@@ -51,7 +52,7 @@ impl<'a> CacheSnapshot<'a> {
     pub(in crate::eval) fn capture(
         compiler: &'a FormulaCompiler,
         policy: &PreparationPolicy,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, PlanSnapshotError> {
         let mut snapshot = Self {
             programs: Vec::new(),
             formulas: Vec::new(),
@@ -63,7 +64,7 @@ impl<'a> CacheSnapshot<'a> {
             .pool
             .get(index)
             .map(|(_, pool)| pool)
-            .ok_or("compiler cache policy index")?;
+            .ok_or(PlanSnapshotError::CompilerCachePolicyIndex)?;
         let exemplars: HashMap<*const CompiledFormula, u64> = compiler
             .templates
             .get(index)
@@ -97,7 +98,7 @@ impl<'a> CacheSnapshot<'a> {
                     Body::CompilationFailed(*error)
                 }
                 PreparedFormula::RegistryMismatch { .. } => {
-                    return Err("registry mismatch in compiler cache".into());
+                    return Err(PlanSnapshotError::RegistryMismatchInCompilerCache);
                 }
             };
             snapshot.formulas.push(Formula {
@@ -145,9 +146,9 @@ impl<'a> CacheSnapshot<'a> {
     pub(in crate::eval) fn restore(
         self,
         policy: &PreparationPolicy,
-    ) -> Result<FormulaCompiler, String> {
+    ) -> Result<FormulaCompiler, PlanSnapshotError> {
         if self.programs.len() > 1_000_000 || self.formulas.len() > 1_000_000 {
-            return Err("compiler snapshot count limit".into());
+            return Err(PlanSnapshotError::CompilerSnapshotCountLimit);
         }
         let mut templates = TemplatePool::default();
         let programs = self
@@ -156,10 +157,12 @@ impl<'a> CacheSnapshot<'a> {
             .map(|p| {
                 template_validation::validate_template(&p.template, p.calls.len())?;
                 if !p.typing.matches(&p.template) {
-                    return Err("compiler typing boundaries".into());
+                    return Err(PlanSnapshotError::CompilerTypingBoundaries);
                 }
                 if p.extension_identity.as_ref() != policy.registry.extensions.as_deref() {
-                    return Err("compiled registry identity differs from overlay policy".into());
+                    return Err(
+                        PlanSnapshotError::CompiledRegistryIdentityDiffersFromOverlayPolicy,
+                    );
                 }
                 for call in &p.calls {
                     let start = call.source_offset as usize;
@@ -167,21 +170,25 @@ impl<'a> CacheSnapshot<'a> {
                         .template
                         .operands
                         .get(start..)
-                        .ok_or("call source offset")?;
+                        .ok_or(PlanSnapshotError::CallSourceOffset)?;
                     let n = u32::from_le_bytes(
                         // SAFETY: The immediately preceding get(..4) returns an exactly four-byte slice or an error, so conversion to [u8; 4] succeeds.
                         bytes
                             .get(..4)
-                            .ok_or("call source length")?
+                            .ok_or(PlanSnapshotError::CallSourceLength)?
                             .try_into()
                             .unwrap(),
                     ) as usize;
                     std::str::from_utf8(
                         bytes
-                            .get(4..4usize.checked_add(n).ok_or("call source overflow")?)
-                            .ok_or("call source text")?,
+                            .get(
+                                4..4usize
+                                    .checked_add(n)
+                                    .ok_or(PlanSnapshotError::CallSourceOverflow)?,
+                            )
+                            .ok_or(PlanSnapshotError::CallSourceText)?,
                     )
-                    .map_err(|_| "call source UTF-8")?;
+                    .map_err(|_| PlanSnapshotError::CallSourceUTF8)?;
                 }
                 let program = Arc::new(p.into_owned());
                 templates
@@ -191,7 +198,7 @@ impl<'a> CacheSnapshot<'a> {
                     .push(program.clone());
                 Ok(program)
             })
-            .collect::<Result<Vec<_>, String>>()?;
+            .collect::<Result<Vec<_>, PlanSnapshotError>>()?;
         let mut pool = HashMap::with_capacity(self.formulas.len());
         for formula in self.formulas {
             let source = formula.source.into_shared();
@@ -204,7 +211,7 @@ impl<'a> CacheSnapshot<'a> {
                 } => {
                     let executable = programs
                         .get(program)
-                        .ok_or("compiled program index")?
+                        .ok_or(PlanSnapshotError::CompiledProgramIndex)?
                         .clone();
                     template_validation::validate_references(
                         &references,
@@ -240,7 +247,7 @@ impl<'a> CacheSnapshot<'a> {
                 },
             };
             if pool.insert(source, Arc::new(prepared)).is_some() {
-                return Err("duplicate compiled source".into());
+                return Err(PlanSnapshotError::DuplicateCompiledSource);
             }
         }
         Ok(FormulaCompiler {

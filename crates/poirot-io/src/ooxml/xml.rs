@@ -8,8 +8,8 @@ use quick_xml::{
 use std::io::Write;
 
 /// Convert an XML codec failure to the I/O diagnostic channel.
-pub(super) fn xml(e: impl std::fmt::Display) -> IoError {
-    IoError::Xml(e.to_string())
+pub(super) fn xml(e: impl Into<crate::XmlCodecError>) -> IoError {
+    IoError::Xml(e.into())
 }
 /// Read and decode one optional attribute by its exact XML name.
 pub(super) fn attr(e: &BytesStart<'_>, name: &str) -> Result<Option<String>, IoError> {
@@ -36,7 +36,7 @@ pub(super) fn events(bytes: &[u8]) -> Reader<&[u8]> {
 pub(super) fn part<'a>(p: &'a Package, name: &str) -> Result<&'a [u8], IoError> {
     p.get(name)
         .map(Vec::as_slice)
-        .ok_or_else(|| IoError::Read(format!("missing package part {name}")))
+        .ok_or_else(|| IoError::Opc(crate::opc::OpcError::MissingPart { path: name.into() }))
 }
 /// Read element text and decode XML entities.
 pub(super) fn text(

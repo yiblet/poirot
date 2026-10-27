@@ -1,5 +1,6 @@
 //! Pure canonical syntax/grouping rules shared with external encoders.
-use super::{BinaryOp, Expr, ParseError, ParseErrorKind, UnaryOp, parse_formula};
+use super::parse_reason_error::ParseReasonError;
+use super::{BinaryOp, Expr, ParseError, UnaryOp, parse_formula};
 impl BinaryOp {
     /// Return operator binding strength for parsing-compatible printing.
     pub fn precedence(self) -> u8 {
@@ -97,19 +98,17 @@ impl FormulaPrinter {
         write_expr(expression, &mut output, 0, &mut 0)?;
         if parse_formula(&output)? != *expression {
             return Err(ParseError {
-                kind: super::ParseErrorKind::Syntax,
                 position: 0,
-                message: "AST cannot be preserved by canonical syntax".into(),
+                reason: ParseReasonError::UnrepresentableAst,
             });
         }
         Ok(output)
     }
 }
-fn failure(message: &str) -> ParseError {
+fn failure(reason: ParseReasonError) -> ParseError {
     ParseError {
-        kind: super::ParseErrorKind::Syntax,
         position: 0,
-        message: message.into(),
+        reason,
     }
 }
 fn grouped(
@@ -138,7 +137,7 @@ fn qualifier(sheet: &Option<String>, out: &mut String) {
 }
 fn column_name(column: u32) -> Result<String, ParseError> {
     if column >= 16384 {
-        return Err(failure("column exceeds canonical grid"));
+        return Err(failure(ParseReasonError::ColumnOutsideGrid { column }));
     }
     let mut n = column + 1;
     let mut name = Vec::new();
@@ -158,15 +157,17 @@ fn write_expr(
     *nodes += 1;
     if depth >= 128 || *nodes > 1024 {
         return Err(ParseError {
-            kind: ParseErrorKind::ResourceLimit,
             position: 0,
-            message: "printer complexity limit exceeded".into(),
+            reason: ParseReasonError::PrinterLimit {
+                depth,
+                nodes: *nodes,
+            },
         });
     }
     match expr {
         Expr::Number(n) => {
             if !n.is_finite() {
-                return Err(failure("nonfinite formula number"));
+                return Err(failure(ParseReasonError::NonfiniteNumber));
             }
             out.push_str(&n.to_string());
         }
@@ -190,7 +191,7 @@ fn write_expr(
                 || span.start.sheet.is_some()
                 || span.end.as_ref().is_some_and(|c| c.sheet.is_some())
             {
-                return Err(failure("invalid bounded sheet-span reference"));
+                return Err(failure(ParseReasonError::InvalidSheetSpan));
             }
             out.push('\'');
             out.push_str(&span.first_sheet.replace('\'', "''"));
@@ -215,7 +216,7 @@ fn write_expr(
             out.push_str(
                 &(c.row
                     .checked_add(1)
-                    .ok_or_else(|| failure("row overflow"))?)
+                    .ok_or_else(|| failure(ParseReasonError::RowOverflow))?)
                 .to_string(),
             );
         }
@@ -239,7 +240,12 @@ fn write_expr(
             if *absolute {
                 out.push('$');
             }
-            out.push_str(&(row.checked_add(1).ok_or_else(|| failure("row overflow"))?).to_string());
+            out.push_str(
+                &(row
+                    .checked_add(1)
+                    .ok_or_else(|| failure(ParseReasonError::RowOverflow))?)
+                .to_string(),
+            );
         }
         Expr::Unary { op, operand } => {
             if !matches!(op, UnaryOp::Percent | UnaryOp::SpillRange) {
@@ -419,20 +425,19 @@ mod tests {
             ..FormulaParsePolicy::default()
         };
         assert!(
-            parse_formula_with_policy("1+2+3", tiny)
-                .unwrap_err()
-                .message
-                .contains("complexity")
+            parse_formula_with_policy("1+2+3", tiny).unwrap_err().reason
+                == ParseReasonError::ExpressionLimit {
+                    limit: 2,
+                    admitted: 2
+                }
         );
         let tiny = FormulaParsePolicy {
             max_depth: 2,
             ..FormulaParsePolicy::default()
         };
         assert!(
-            parse_formula_with_policy("((1))", tiny)
-                .unwrap_err()
-                .message
-                .contains("nesting")
+            parse_formula_with_policy("((1))", tiny).unwrap_err().reason
+                == ParseReasonError::NestingLimit { limit: 2, depth: 2 }
         );
         let xls = FormulaParsePolicy {
             max_rows: 65536,
@@ -442,10 +447,11 @@ mod tests {
         for source in ["A65537", "IW1", "$IW:$IW", "65537:65538"] {
             assert!(parse_formula(source).is_ok());
             assert!(
-                parse_formula_with_policy(source, xls)
-                    .unwrap_err()
-                    .message
-                    .contains("configured grid")
+                parse_formula_with_policy(source, xls).unwrap_err().reason
+                    == ParseReasonError::ConfiguredGrid {
+                        max_rows: 65536,
+                        max_columns: 256
+                    }
             );
         }
         assert!(parse_formula_with_policy("IV65536", xls).is_ok());

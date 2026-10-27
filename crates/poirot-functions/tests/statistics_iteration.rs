@@ -1,4 +1,4 @@
-use poirot_functions::statistics::{KernelFailure, normal_dist_metered, poisson_metered};
+use poirot_functions::statistics::{StatisticalKernelError, normal_dist_metered, poisson_metered};
 
 /// Distinct operational error returned by a test meter at a chosen iteration boundary.
 /// It lets tests verify that statistical kernels preserve host failures unchanged.
@@ -12,16 +12,16 @@ fn first_iteration_failure_is_returned_without_numeric_conversion() {
     for (count, mean) in [(2.0, 1.0), (2.0, 4.0)] {
         assert_eq!(
             poisson_metered(count, mean, true, &mut meter),
-            Err(KernelFailure::Operational(Stop("sentinel")))
+            Err(StatisticalKernelError::Operational(Stop("sentinel")))
         );
     }
     assert_eq!(
         normal_dist_metered(1.0, 0.0, 1.0, true, &mut meter),
-        Err(KernelFailure::Operational(Stop("sentinel")))
+        Err(StatisticalKernelError::Operational(Stop("sentinel")))
     );
     assert_eq!(
         poisson_metered(10.0, 10.1, false, &mut meter),
-        Err(KernelFailure::Operational(Stop("sentinel")))
+        Err(StatisticalKernelError::Operational(Stop("sentinel")))
     );
 }
 
@@ -38,7 +38,7 @@ fn meter_stops_before_the_next_iteration_and_preserves_source_fast_paths() {
     };
     assert_eq!(
         poisson_metered(1000000.0, 1000000.0, true, &mut meter),
-        Err(KernelFailure::Operational(Stop("third iteration")))
+        Err(StatisticalKernelError::Operational(Stop("third iteration")))
     );
     assert_eq!(charged, 2);
     let mut reject = |_| Err(Stop("must not iterate"));

@@ -7,9 +7,9 @@ use poirot::{CellValue, Workbook};
 fn incompatible_security_preparation_preserves_formulas_and_overlay_edits() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 0.1).unwrap();
+    sheet.set_value("A1", 0.1).unwrap();
     sheet
-        .set_formula("D1".parse().unwrap(), "PRICEDISC(45000,45180,A1,100,2)")
+        .set_formula("D1", "PRICEDISC(45000,45180,A1,100,2)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(book).build().unwrap();
     let input = overlay.target("S!A1").unwrap();
@@ -45,7 +45,13 @@ fn incompatible_security_preparation_preserves_formulas_and_overlay_edits() {
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedIncompatible);
     assert_eq!(
-        workbook.sheet(0).unwrap().get(input.address).unwrap().value,
+        workbook
+            .sheet(0)
+            .unwrap()
+            .get(input.address)
+            .unwrap()
+            .unwrap()
+            .value,
         0.20.into()
     );
     let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
@@ -64,7 +70,13 @@ fn incompatible_security_preparation_preserves_formulas_and_overlay_edits() {
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedByRequest);
     assert_eq!(
-        workbook.sheet(0).unwrap().get(input.address).unwrap().value,
+        workbook
+            .sheet(0)
+            .unwrap()
+            .get(input.address)
+            .unwrap()
+            .unwrap()
+            .value,
         0.20.into()
     );
 }
@@ -80,7 +92,7 @@ fn stored_security_names_execute_after_xlsx_roundtrip() {
             "PRICE(DATE(2024,1,15),DATE(2026,1,15),{0.1;0.2},0,100,1)",
         ),
     ] {
-        sheet.set_formula(cell.parse().unwrap(), formula).unwrap();
+        sheet.set_formula(cell, formula).unwrap();
     }
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let book = poirot_io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();

@@ -1,5 +1,5 @@
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::model::CellValue;
 use std::sync::Arc;
 
@@ -16,5 +16,5 @@ pub trait CachedCellReader {
     fn cached_cell(
         &mut self,
         target: EvaluationTarget,
-    ) -> Result<Option<Arc<CellValue>>, EvaluationFailure>;
+    ) -> Result<Option<Arc<CellValue>>, EvaluationError>;
 }

@@ -54,10 +54,6 @@ pub enum DependencyRead {
     Formatting,
     /// Numeric input tokens consumed while parsing a text argument.
     NumberLocale,
-    /// Text semantics consumed by execution.
-    TextPolicy,
-    /// Execution-time builtin contracts; guarded globally by computation identity.
-    BuiltinPolicy,
     /// Executed extension binding and declared volatility.
     Extension(ExtensionInvocation),
     /// Access to a cell-local random stream.

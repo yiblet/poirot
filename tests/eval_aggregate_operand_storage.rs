@@ -12,9 +12,9 @@ use poirot::model::{CellError, CellValue, Workbook};
 fn eager_members_and_selected_origins_follow_aggregate_coercion() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), "3").unwrap();
-    sheet.set_value("A2".parse().unwrap(), true).unwrap();
-    sheet.set_value("A3".parse().unwrap(), 4.).unwrap();
+    sheet.set_value("A1", "3").unwrap();
+    sheet.set_value("A2", true).unwrap();
+    sheet.set_value("A3", 4.).unwrap();
     for (formula, expected) in [
         ("SUM(A1:A4)", CellValue::Number(4.)),
         ("SUM(\"3\",TRUE,4)", CellValue::Number(8.)),
@@ -67,7 +67,7 @@ fn compact_reference_members_preserve_empty_text_boolean_and_error_contracts() {
         ("A5", CellValue::Boolean(true)),
         ("A6", CellValue::Error(CellError::Ref)),
     ] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     for (formula, expected) in [
         ("SUM(A1:A5)", CellValue::Number(4.)),
@@ -103,13 +103,11 @@ fn eager_reference_projection_does_not_hide_a_later_operational_failure() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     sheet
-        .set_value("A1".parse().unwrap(), CellValue::Error(CellError::Div0))
+        .set_value("A1", CellValue::Error(CellError::Div0))
         .unwrap();
     // A reversed sheet span is an unsupported capability, distinct from an
     // Excel error. Eager references must finish this body before coercion.
-    sheet
-        .set_formula("A2".parse().unwrap(), "SUM(T:S!B1)")
-        .unwrap();
+    sheet.set_formula("A2", "SUM(T:S!B1)").unwrap();
     book.add_sheet("T").unwrap();
     assert!(matches!(
         run_formula(
@@ -121,7 +119,7 @@ fn eager_reference_projection_does_not_hide_a_later_operational_failure() {
             Default::default(),
         ),
         EvaluationOutcome::Aborted {
-            failure: poirot::eval::EvaluationFailure::UnsupportedCapability {
+            failure: poirot::eval::EvaluationError::UnsupportedCapability {
                 capability: poirot::eval::CapabilityId::FunctionAdapter,
                 ..
             },
@@ -135,14 +133,14 @@ fn eager_reference_projection_does_not_hide_a_later_operational_failure() {
 struct AggregateObservations(
     Vec<(
         poirot::eval::EvaluationTarget,
-        Result<CellValue, poirot::eval::EvaluationFailure>,
+        Result<CellValue, poirot::eval::EvaluationError>,
     )>,
 );
 impl poirot::eval::CellObserver for AggregateObservations {
     fn completed(
         &mut self,
         event: poirot::eval::CellCompletion<'_>,
-    ) -> Result<(), poirot::eval::EvaluationFailure> {
+    ) -> Result<(), poirot::eval::EvaluationError> {
         self.0
             .push((event.target, event.result.cloned().map_err(Clone::clone)));
         Ok(())
@@ -184,11 +182,9 @@ fn ignored_reference_text_still_has_full_completion_values_and_text_admission() 
         let result = run.evaluate_cell(at("Z1"));
         let report = run.finish(result.clone());
         if text_bytes == 16 {
-            assert!(
-                matches!(result, Err(EvaluationFailure::Budget(BudgetFailure {
+            assert!(matches!(result, Err(EvaluationError::Budget(BudgetError {
                 kind: BudgetKind::TextBytes, target: Some(target), ..
-            })) if target == at("A1"))
-            );
+            })) if target == at("A1")));
             assert_eq!(
                 observed
                     .0
@@ -198,18 +194,23 @@ fn ignored_reference_text_still_has_full_completion_values_and_text_admission() 
                 vec![at("A1"), at("Z1")]
             );
         } else {
-            assert_eq!(result, Ok(CellValue::Number(7.)));
+            assert_eq!((result).unwrap(), CellValue::Number(7.));
             assert_eq!(
-                observed.0,
+                observed
+                    .0
+                    .iter()
+                    .map(|(target, value)| (*target, value.as_ref().unwrap().clone()))
+                    .collect::<Vec<_>>(),
                 vec![
                     (
                         at("A1"),
-                        Ok(CellValue::TextUtf16(poirot::model::ExcelText::from_units(
-                            vec![0xd800; 16]
-                        )))
+                        CellValue::TextUtf16(poirot::model::ExcelText::from_units(vec![
+                            0xd800;
+                            16
+                        ]))
                     ),
-                    (at("A2"), Ok(CellValue::Number(7.))),
-                    (at("Z1"), Ok(CellValue::Number(7.))),
+                    (at("A2"), CellValue::Number(7.)),
+                    (at("Z1"), CellValue::Number(7.)),
                 ]
             );
             assert_eq!(report.outcome.usage().cell_reads, 3);

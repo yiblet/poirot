@@ -1,7 +1,7 @@
 use super::retained_event::RetainedEvent;
 use super::retained_value::RetainedValue;
 use super::retention_limits::RetentionLimits;
-use crate::eval::limits::{CapabilityId, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvaluationError};
 use crate::eval::observe::execution::{ExecutionEvent, ExecutionObserver, ObservedValue};
 use crate::model::CellValue;
 
@@ -41,17 +41,17 @@ impl BoundedExecutionTrace {
     }
 
     /// Required after the run even when failure precedes the first execution event.
-    pub fn finish(&mut self, result: Result<(), &EvaluationFailure>) {
+    pub fn finish(&mut self, result: Result<(), &EvaluationError>) {
         self.partial |= result.is_err();
     }
 
-    fn failure(&mut self) -> EvaluationFailure {
+    fn failure(&mut self) -> EvaluationError {
         self.partial = true;
         self.rejected = true;
-        EvaluationFailure::ResourceLimit {
+        EvaluationError::ResourceLimit {
             capability: CapabilityId::ExecutionObservation,
-            source: None,
-            detail: "execution evidence retention capacity exhausted".into(),
+            target: None,
+            reason: crate::eval::limits::EvaluationReasonError::ExecutionEvidenceRetentionCapacityExhausted,
         }
     }
 }
@@ -62,16 +62,19 @@ fn text_bytes(value: &CellValue) -> usize {
 }
 
 /// Detail text bytes copied when retaining an operational failure.
-fn failure_text(failure: &EvaluationFailure) -> usize {
+fn failure_text(failure: &EvaluationError) -> usize {
     match failure {
-        EvaluationFailure::ResourceLimit { detail, .. }
-        | EvaluationFailure::UnsupportedCapability { detail, .. } => detail.len(),
-        _ => 0,
+        EvaluationError::ResourceLimit { reason, .. }
+        | EvaluationError::UnsupportedCapability { reason, .. }
+        | EvaluationError::Resource { reason, .. } => reason.retained_text_bytes(),
+        EvaluationError::MemoRetentionLimit { .. }
+        | EvaluationError::StalePlan
+        | EvaluationError::Budget(_) => 0,
     }
 }
 
 impl ExecutionObserver for BoundedExecutionTrace {
-    fn observe(&mut self, event: ExecutionEvent<'_>) -> Result<(), EvaluationFailure> {
+    fn observe(&mut self, event: ExecutionEvent<'_>) -> Result<(), EvaluationError> {
         let (values, text) = match event {
             ExecutionEvent::Complete {
                 result: Ok(ObservedValue::Scalar(value)),

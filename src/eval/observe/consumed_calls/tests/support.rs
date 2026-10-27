@@ -2,7 +2,7 @@ use super::super::builtin_invocation_observer::BuiltinInvocationObserver;
 use super::super::consumed_builtin_invocation::ConsumedBuiltinInvocation;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::registry::FunctionId;
-use crate::eval::limits::{BudgetFailure, BudgetKind, EvaluationFailure};
+use crate::eval::limits::{BudgetError, BudgetKind, EvaluationError};
 use crate::model::{CellAddress, Workbook};
 
 /// Owned builtin entry evidence used to compare observed call identities.
@@ -60,7 +60,7 @@ impl Bounded {
 }
 
 impl BuiltinInvocationObserver for Bounded {
-    fn consumed(&mut self, call: ConsumedBuiltinInvocation<'_>) -> Result<(), EvaluationFailure> {
+    fn consumed(&mut self, call: ConsumedBuiltinInvocation<'_>) -> Result<(), EvaluationError> {
         let bytes = call
             .parsed_spelling
             .len()
@@ -91,7 +91,7 @@ impl BuiltinInvocationObserver for Bounded {
             self.retained_bytes += bytes;
             return Ok(());
         };
-        Err(EvaluationFailure::Budget(BudgetFailure {
+        Err(EvaluationError::Budget(BudgetError {
             kind,
             limit: limit as u64,
             consumed: consumed as u64,

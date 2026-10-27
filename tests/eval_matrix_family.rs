@@ -1,5 +1,5 @@
 use poirot::eval::{
-    BudgetKind, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    BudgetKind, EvaluationBudgets, EvaluationError, EvaluationInputs, EvaluationOutcome,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
@@ -140,7 +140,7 @@ fn operational_limits_abort_before_requested_reference_traversal() {
     );
     match outcome {
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(failure),
+            failure: EvaluationError::Budget(failure),
             usage,
         } => {
             assert_eq!(failure.kind, BudgetKind::Materialization);
@@ -162,7 +162,7 @@ fn operational_limits_abort_before_requested_reference_traversal() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -170,7 +170,7 @@ fn operational_limits_abort_before_requested_reference_traversal() {
 
 #[test]
 fn documented_numeric_matrix_admission_preserves_types() {
-    use poirot::eval::{BuiltinSemanticsPolicy, RunConfiguration, run_formula_with_configuration};
+    use poirot::eval::{RunConfiguration, run_formula_with_configuration};
     let mut w = workbook();
     for invalid in [
         CellValue::Blank,
@@ -184,8 +184,7 @@ fn documented_numeric_matrix_admission_preserves_types() {
             .set_value(CellAddress { row: 0, col: 1 }, invalid)
             .unwrap();
         for f in ["MDETERM(A1:B2)", "MINVERSE(A1:B2)"] {
-            let c = RunConfiguration::default()
-                .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
+            let c = RunConfiguration::default();
             assert!(
                 matches!(
                     run_formula_with_configuration(&w, 0, AT, f, &c, EvaluationBudgets::default()),
@@ -222,15 +221,13 @@ fn documented_numeric_matrix_admission_preserves_types() {
             CellValue::Error(CellError::Value),
         ),
     ] {
-        let c = RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
+        let c = RunConfiguration::default();
         match run_formula_with_configuration(&w, 0, AT, formula, &c, EvaluationBudgets::default()) {
             EvaluationOutcome::Complete { value, .. } => assert_eq!(value, expected, "{formula}"),
             other => panic!("{formula}: {other:?}"),
         }
     }
-    let c =
-        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
+    let c = RunConfiguration::default();
     for budgets in [
         EvaluationBudgets {
             materialized_values: 3,
@@ -244,7 +241,7 @@ fn documented_numeric_matrix_admission_preserves_types() {
         assert!(matches!(
             run_formula_with_configuration(&w, 0, AT, "IFERROR(MINVERSE(A1:B2),99)", &c, budgets),
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::Budget(_),
+                failure: EvaluationError::Budget(_),
                 ..
             }
         ));
@@ -266,7 +263,6 @@ fn modern_formula(
         address,
         formula,
         &poirot::eval::RunConfiguration::from(inputs)
-            .with_builtin_policy(poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation)
             .with_array_result_policy(poirot::eval::ArrayResultPolicy::ScalarIntersection),
         budgets,
     )

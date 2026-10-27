@@ -3,7 +3,7 @@ use crate::eval::adapters::elementwise::{Broadcast, MemberContext, NumericParame
 use crate::eval::functions::registry::EngineeringFunction;
 use crate::eval::limits::{CapabilityId, EvalResult};
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::Num;
 use crate::model::CellValue::Number;
@@ -87,11 +87,11 @@ impl crate::eval::adapters::elementwise::Kernel for Special {
                 };
                 kernel::bessel(kind, x, order, |units| context.host.charge_work(units)).map_err(
                     |error| match error {
-                        kernel::Failure::Number => FunctionFailure::Spreadsheet(Num),
-                        kernel::Failure::Operational(error) => error.into(),
-                        kernel::Failure::ComputationalLimit => context.host.unsupported(
+                        poirot_functions::engineering::BesselError::Number => FunctionError::Spreadsheet(Num),
+                        poirot_functions::engineering::BesselError::Operational(error) => error.into(),
+                        poirot_functions::engineering::BesselError::ComputationalLimit => context.host.unsupported(
                             CapabilityId::FunctionAdapter,
-                            "Bessel computation exceeds the bounded order/series envelope",
+                            crate::eval::limits::EvaluationReasonError::BesselComputationExceedsTheBoundedOrderSeriesEnvelope,
                         ),
                     },
                 )?

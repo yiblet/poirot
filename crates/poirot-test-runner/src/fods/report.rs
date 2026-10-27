@@ -174,10 +174,9 @@ enum Record<'a> {
 fn json_record(
     output: &mut impl std::io::Write,
     record: &Record<'_>,
-) -> Result<(), crate::fods::Error> {
-    serde_json::to_writer(&mut *output, record)
-        .map_err(|error| crate::fods::Error::Output(std::io::Error::other(error)))?;
-    writeln!(output).map_err(crate::fods::Error::Output)
+) -> Result<(), crate::fods::FodsError> {
+    serde_json::to_writer(&mut *output, record).map_err(crate::fods::FodsError::JsonOutput)?;
+    writeln!(output).map_err(crate::fods::FodsError::Output)
 }
 
 /// Render one typed case outcome using the selected presentation format.
@@ -186,8 +185,8 @@ pub fn render_case(
     output: &mut impl std::io::Write,
     format: crate::fods::cli::OutputFormat,
     strict: bool,
-) -> Result<(), crate::fods::Error> {
-    use crate::fods::{Error, cli::OutputFormat};
+) -> Result<(), crate::fods::FodsError> {
+    use crate::fods::{FodsError, cli::OutputFormat};
     match format {
         OutputFormat::Json => json_record(output, &Record::Case { result: case })?,
         OutputFormat::Text => {
@@ -208,7 +207,7 @@ pub fn render_case(
                     format!("FAILED ({label}: {kind})")
                 }
             };
-            writeln!(output, "test {} ... {status}", case.id).map_err(Error::Output)?;
+            writeln!(output, "test {} ... {status}", case.id).map_err(FodsError::Output)?;
             for diagnostic in &case.preparation_diagnostics {
                 writeln!(
                     output,
@@ -219,7 +218,7 @@ pub fn render_case(
                     diagnostic.rejection,
                     diagnostic.reason
                 )
-                .map_err(Error::Output)?;
+                .map_err(FodsError::Output)?;
             }
             if (matches!(
                 case.status,
@@ -232,11 +231,11 @@ pub fn render_case(
                     "  {}!{}: {}",
                     case.sheet, case.cell, failure.message
                 )
-                .map_err(Error::Output)?;
+                .map_err(FodsError::Output)?;
             }
         }
     }
-    output.flush().map_err(Error::Output)
+    output.flush().map_err(FodsError::Output)
 }
 
 /// Render the final typed run summary.
@@ -245,8 +244,8 @@ pub fn render_summary(
     output: &mut impl std::io::Write,
     format: crate::fods::cli::OutputFormat,
     strict: bool,
-) -> Result<(), crate::fods::Error> {
-    use crate::fods::{Error, cli::OutputFormat};
+) -> Result<(), crate::fods::FodsError> {
+    use crate::fods::{FodsError, cli::OutputFormat};
     match format {
         OutputFormat::Json => json_record(
             output,
@@ -261,9 +260,9 @@ pub fn render_summary(
             writeln!(output,
                 "{} fixtures; {} cases: {} passed, {} known gaps, {} regressions, {} improvements, {} harness errors; {} without case layout; {} workers",
                 s.fixtures, s.cases, s.passed, s.known_gaps, s.regressions, s.improvements,
-                s.harness_errors, s.no_case_fixtures, s.workers).map_err(Error::Output)?;
+                s.harness_errors, s.no_case_fixtures, s.workers).map_err(FodsError::Output)?;
             for (kind, count) in &s.gap_types {
-                writeln!(output, "  {}: {count}", kind.label()).map_err(Error::Output)?;
+                writeln!(output, "  {}: {count}", kind.label()).map_err(FodsError::Output)?;
             }
             Ok(())
         }
@@ -276,7 +275,7 @@ pub fn render(
     output: &mut impl std::io::Write,
     format: crate::fods::cli::OutputFormat,
     strict: bool,
-) -> Result<(), crate::fods::Error> {
+) -> Result<(), crate::fods::FodsError> {
     for case in &report.cases {
         render_case(case, output, format, strict)?;
     }

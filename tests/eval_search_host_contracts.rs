@@ -11,7 +11,7 @@ fn classic_search_observation_preserves_deferred_result_and_mode_order() {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
     for (address, value) in [("A1", 1.), ("A2", 2.), ("B1", 10.), ("B2", 20.)] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     let policy = PreparationPolicy::default();
     let mut compiler = FormulaCompiler::new();
@@ -90,7 +90,7 @@ fn checked_search_retains_duplicates_and_reference_results_in_direct_and_overlay
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
     for (address, value) in [("A1", 2.), ("A2", 2.), ("B1", 20.), ("B2", 21.)] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     for (address, formula) in [
         ("D1", "VLOOKUP(2,A:B,2,FALSE)"),
@@ -100,9 +100,7 @@ fn checked_search_retains_duplicates_and_reference_results_in_direct_and_overlay
         ("D5", "ROW(XLOOKUP(2,A1:A2,B1:B2))"),
         ("D6", "LOOKUP(2,A1:A2,B1:B2)"),
     ] {
-        sheet
-            .set_formula(address.parse().unwrap(), formula)
-            .unwrap();
+        sheet.set_formula(address, formula).unwrap();
     }
     let mut direct = Evaluation::with_workbook(&workbook)
         .build(Default::default())
@@ -156,7 +154,7 @@ fn search_work_failures_keep_caller_provenance_and_escape_iferror() {
         assert!(
             matches!(run_formula(&workbook, target.sheet, target.address, formula,
             Default::default(), EvaluationBudgets {run_work: 5, ..Default::default()}),
-            EvaluationOutcome::Aborted {failure: EvaluationFailure::Budget(BudgetFailure {target: Some(at), ..}), ..} if at == target),
+            EvaluationOutcome::Aborted {failure: EvaluationError::Budget(BudgetError {target: Some(at), ..}), ..} if at == target),
             "{formula}"
         );
     }

@@ -3,7 +3,7 @@ use super::call_host::CallHost;
 use super::cell_read_plan::CellReadPlan;
 use super::operand_description::OperandDescription;
 use super::scalar_operand::ScalarOperand;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::session::{ArgumentReader, CellEvaluator, SparseReader};
 use crate::eval::spill::SpillDemand;
 use crate::eval::values::{
@@ -110,7 +110,7 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
             .host
             .argument_base
             .checked_add(index)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let runtime = &mut *self.host.session.state.runtime;
         let operand = &runtime
             .vm
@@ -188,7 +188,7 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
             Value::SheetSpan(_) => {
                 return Err(self.host.unsupported(
                     CapabilityId::FunctionAdapter,
-                    "this coordinate port has no verified multi-sheet selection policy",
+                    crate::eval::limits::EvaluationReasonError::ThisCoordinatePortHasNoVerifiedMultiSheetSelectionPolicy,
                 ));
             }
             Value::Refs(_) => return Err(VALUE_ERROR.into()),
@@ -257,7 +257,7 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
             .host
             .argument_base
             .checked_add(index)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let runtime = &mut *self.host.session.state.runtime;
         let count = match &runtime
             .vm
@@ -292,7 +292,7 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
         usize::try_from(count).map_err(|_| {
             self.host.unsupported(
                 CapabilityId::FunctionAdapter,
-                "collection length does not fit this platform",
+                crate::eval::limits::EvaluationReasonError::CollectionLengthDoesNotFitThisPlatform,
             )
         })
     }
@@ -308,7 +308,7 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
             .host
             .argument_base
             .checked_add(index)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let runtime = &mut *self.host.session.state.runtime;
         match &runtime
             .vm
@@ -413,7 +413,7 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
                 areas[0].positive_shape().ok_or_else(|| {
                     self.host.unsupported(
                         CapabilityId::FunctionAdapter,
-                        "shape port cannot represent zero/negative Java source dimensions",
+                        crate::eval::limits::EvaluationReasonError::ShapePortCannotRepresentZeroNegativeJavaSourceDimensions,
                     )
                 })
             }
@@ -457,7 +457,7 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
                 }
             }
             Value::SignedRefs(areas) => {
-                // Pinned COUNTBLANK accepts RefEval/ThreeDEval, not a RefListEval union.
+                // COUNTBLANK requires a single rectangular reference.
                 if areas.len() != 1 {
                     return Err(VALUE_ERROR.into());
                 }

@@ -15,7 +15,7 @@ fn workbook() -> Workbook {
         ("B2", 20.),
         ("B3", 30.),
     ] {
-        s.set_value(address.parse().unwrap(), value).unwrap();
+        s.set_value(address, value).unwrap();
     }
     for (address, value) in [
         ("D1", CellValue::Text("N".into())),
@@ -31,7 +31,7 @@ fn workbook() -> Workbook {
         ("H1", "N".into()),
         ("H2", CellValue::Blank),
     ] {
-        s.set_value(address.parse().unwrap(), value).unwrap();
+        s.set_value(address, value).unwrap();
     }
     w
 }
@@ -140,13 +140,13 @@ fn rejected_rows_and_later_criteria_ranges_stay_unread() {
     let mut w = workbook();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula_with_cached_value("B1".parse().unwrap(), "SUBTOTAL(109,A1)", 0.0.into())
+        .set_formula_with_cached_value("B1", "SUBTOTAL(109,A1)", 0.0.into())
         .unwrap();
     check(&w, "SUMIF(A1:A3,2,B1:B3)", 50.0.into());
     check(&w, "COUNTIFS(A1:A3,99,B1:B3,1)", 0.0.into());
     w.sheet_mut(0)
         .unwrap()
-        .set_formula_with_cached_value("D3".parse().unwrap(), "SUBTOTAL(109,A1)", 0.0.into())
+        .set_formula_with_cached_value("D3", "SUBTOTAL(109,A1)", 0.0.into())
         .unwrap();
     check(&w, "DSUM(D1:E4,\"N\",G1:G2)", 8.0.into());
     check(&w, "COUNTIF(B1:B3,C1)", 0.0.into());
@@ -254,10 +254,7 @@ fn database_catches_missing_fields_and_accepts_observed_numeric_headers() {
         ("C1", "".into()),
         ("C2", CellValue::Blank),
     ] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(address.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(address, value).unwrap();
     }
     check(
         &w,
@@ -279,10 +276,7 @@ fn database_catches_missing_fields_and_accepts_observed_numeric_headers() {
         ("D2", 3.0.into()),
     ];
     for (address, value) in positional_header_inputs {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(address.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(address, value).unwrap();
     }
     check(&w, "DSUM(A1:B2,2,D1:D2)", 7.0.into());
     // NumberEval implements StringValueEval, so DStarRunner accepts a numeric
@@ -290,7 +284,7 @@ fn database_catches_missing_fields_and_accepts_observed_numeric_headers() {
     // Blank conditions skip the header check in the source.
     w.sheet_mut(0)
         .unwrap()
-        .set_value("D2".parse().unwrap(), CellValue::Blank)
+        .set_value("D2", CellValue::Blank)
         .unwrap();
     check(&w, "DSUM(A1:B2,2,D1:D2)", 7.0.into());
 }

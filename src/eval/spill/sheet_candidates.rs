@@ -1,7 +1,7 @@
 use super::expansion::Expansion;
 use super::producer_candidate::ProducerCandidate;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError};
 use crate::eval::values::Area;
 use crate::model::CellAddress;
 
@@ -90,12 +90,12 @@ impl SheetCandidates {
             }
             if end_row <= last.row && column != last.col {
                 budget.check_allocation(expansion.removed_columns.len().saturating_add(1))?;
-                expansion.removed_columns.try_reserve(1).map_err(|_| {
-                    EvaluationFailure::Resource {
+                expansion.removed_columns.try_reserve(1).map_err(|reservation_source| {
+                    EvaluationError::Resource {
                         kind: crate::eval::limits::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
-                        source: consumer,
-                        detail: "spill frontier replacement allocation failed".into(),
+                        target: consumer,
+                        reason: (crate::eval::limits::EvaluationReasonError::SpillFrontierReplacementAllocationFailed).with_reservation_source(reservation_source),
                     }
                 })?;
                 // SAFETY: The successful reservation provides one dominated endpoint slot.

@@ -3,7 +3,7 @@ use poirot::eval::compile::bytecode;
 use poirot::eval::overlay::Overlay;
 use poirot::eval::overlay::snapshot::Snapshot;
 use poirot::eval::{
-    EvaluationBudgets, EvaluationContext as JobContext, EvaluationFailure, EvaluationInputs,
+    EvaluationBudgets, EvaluationContext as JobContext, EvaluationError, EvaluationInputs,
     EvaluationRun, EvaluationTarget, FormulaCompiler, PreparationPolicy, PreparedFormula,
     WorkbookView,
 };
@@ -82,7 +82,7 @@ fn explicit_lowering_failure_is_an_operational_abort_when_reached() {
     };
     assert!(matches!(
         run.evaluate_formula(at("A1"), &failure),
-        Err(EvaluationFailure::ResourceLimit {
+        Err(EvaluationError::ResourceLimit {
             capability: poirot::eval::CapabilityId::FormulaCompilation,
             ..
         })

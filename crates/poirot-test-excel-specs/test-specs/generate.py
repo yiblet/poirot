@@ -108,23 +108,19 @@ for text in ['banana','ababab','AAAA','aaaa','x*y?z']:
                 out=pos+1 if pos>=0 and start<=len(text) else '#VALUE!'
                 add('search',f'{fn}_{text}_{needle}_{start}',f'={fn}(B1,A1,{start})',out,[cell('A1',text),cell('B1',needle)],[S['find'] if fn=='FIND' else url('search')],rationale=f'{fn} searches {needle!r} in {text!r} starting at {start}; tests case sensitivity, repeated occurrences, and absent/out-of-range matches.')
 
-# Compatibility version is a workbook setting, not a change in expected ROI behavior.
-def units(s):
-    b=s.encode('utf-16-le','surrogatepass');return [int.from_bytes(b[i:i+2],'little') for i in range(0,len(b),2)]
+# Documented Version 2 text counting is the supported execution contract.
 unicode_inputs=['😀','A😀B','😀😀','e\u0301','❤️','👍🏽','👩\u200d💻','𝄞x','a😀e\u0301z','🇺🇸']
 for ix,text in enumerate(unicode_inputs):
-    for ver in [1,2]:
-        seq=units(text) if ver==1 else list(text)
-        compat=f'Excel / Compatibility Version {ver}'
-        add('unicode',f'len_utf_{ix}_v{ver}','=LEN(A1)',len(seq),[cell('A1',text)],[url('len'),S['compat']],compat,rationale=f'Version {ver} counts {len(seq)} units for {text!r}; combining marks, selectors, modifiers, and joiners are separate units.')
-        for start,length in [(1,1),(2,1),(2,2),(3,1),(1,99),(len(seq),1),(len(seq)+1,1)]:
-            result=seq[start-1:start-1+length]
-            out=result if ver==1 else ''.join(result)
-            add('unicode',f'mid_utf_{ix}_v{ver}_{start}_{length}',f'=MID(A1,{start},{length})',out,[cell('A1',text)],[url('mid'),S['compat']],compat,rationale=f'Version {ver} slices at {start} for {length}; legacy slicing can expose an isolated UTF-16 surrogate, retained exactly by the fixture.')
-        for start,length in [(1,1),(2,1),(2,2),(len(seq)+1,0)]:
-            result=seq[:start-1]+([88] if ver==1 else ['X'])+seq[start-1+length:]
-            add('unicode',f'replace_utf_{ix}_v{ver}_{start}_{length}',f'=REPLACE(A1,{start},{length},"X")',result if ver==1 else ''.join(result),[cell('A1',text)],[url('replace'),S['compat']],compat,rationale='Replacement positions follow the workbook compatibility counting policy; insertion at the end and slicing through surrogate pairs differ.')
-
+    seq=list(text)
+    compat='Excel / Compatibility Version 2'
+    add('unicode',f'len_utf_{ix}_v2','=LEN(A1)',len(seq),[cell('A1',text)],[url('len'),S['compat']],compat,rationale=f'Version 2 counts {len(seq)} units for {text!r}; combining marks, selectors, modifiers, and joiners are separate units.')
+    for start,length in [(1,1),(2,1),(2,2),(3,1),(1,99),(len(seq),1),(len(seq)+1,1)]:
+        result=seq[start-1:start-1+length]
+        out=''.join(result)
+        add('unicode',f'mid_utf_{ix}_v2_{start}_{length}',f'=MID(A1,{start},{length})',out,[cell('A1',text)],[url('mid'),S['compat']],compat,rationale=f'Version 2 slices at {start} for {length}; surrogate pairs count once while combining components remain separate.')
+    for start,length in [(1,1),(2,1),(2,2),(len(seq)+1,0)]:
+        result=seq[:start-1]+['X']+seq[start-1+length:]
+        add('unicode',f'replace_utf_{ix}_v2_{start}_{length}',f'=REPLACE(A1,{start},{length},"X")',''.join(result),[cell('A1',text)],[url('replace'),S['compat']],compat,rationale='Replacement positions count surrogate pairs once; insertion at the end preserves preceding characters.')
 # Gregorian normalization is modeled independently; Excel's inserted serial 60 is explicit.
 epoch=datetime.date(1899,12,31)
 def serial(y,m,d):
@@ -203,7 +199,7 @@ while len(chosen)<1000:
     if not progress: raise RuntimeError(f'Only {len(chosen)} cases')
 seen=set()
 def signature(spec):
-    return json.dumps([spec['cells'],spec['target'],spec['expected'],spec['compatibility']],sort_keys=True)
+    return json.dumps([spec['cells'],spec['target'],spec['expected']],sort_keys=True)
 for i,spec in enumerate(chosen):
     while signature(spec) in seen:
         spec=groups[spec['category']].pop(0)
@@ -211,7 +207,7 @@ for i,spec in enumerate(chosen):
     seen.add(signature(spec))
 for i,spec in enumerate(chosen):
     spec['id']=i
-    spec['text_policy']='excel_v2' if 'Version 2' in spec['compatibility'] else 'excel_v1'
+
     spec['name']=re.sub('[^a-z0-9]+','_',spec['name'].lower()).strip('_')+f'_{i:04d}'
 assert len({s['name'] for s in chosen})==1000
 from extend import extend

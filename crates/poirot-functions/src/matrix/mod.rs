@@ -23,30 +23,18 @@ pub use selection::{
     select, selection_work, sort, unique,
 };
 
-/// Matrix formula error, resource-budget refusal, or unsupported reference-source behavior.
-#[derive(Debug, Clone, PartialEq)]
-pub enum Error {
-    /// Catchable spreadsheet failure from matrix validation or arithmetic.
-    Formula(CellError),
-    /// Operational refusal before exceeding the matrix resource budget.
-    BudgetExceeded,
-    /// A checked shape or work estimate cannot be represented.
-    SizeOverflow,
-    /// A fallible storage reservation was refused by the allocator.
-    AllocationFailure,
-    /// The pinned POI implementation explicitly throws NotImplementedException.
-    SourceUnsupported(&'static str),
-}
+mod matrix_error;
+pub use matrix_error::MatrixError;
 /// Matrix result preserving formula errors, resource refusal, and unsupported source behavior.
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, MatrixError>;
 fn value<T>() -> Result<T> {
-    Err(Error::Formula(CellError::Value))
+    Err(MatrixError::Formula(CellError::Value))
 }
 fn num<T>() -> Result<T> {
-    Err(Error::Formula(CellError::Num))
+    Err(MatrixError::Formula(CellError::Num))
 }
 fn reference<T>() -> Result<T> {
-    Err(Error::Formula(CellError::Ref))
+    Err(MatrixError::Formula(CellError::Ref))
 }
 
 /// Limits on retained elements and estimated work for a matrix operation.
@@ -64,8 +52,8 @@ impl Budget {
     pub fn check(self, cells: Option<usize>, work: Option<usize>) -> Result<()> {
         match (cells, work) {
             (Some(c), Some(w)) if c <= self.max_cells && w <= self.max_work => Ok(()),
-            (Some(_), Some(_)) => Err(Error::BudgetExceeded),
-            _ => Err(Error::SizeOverflow),
+            (Some(_), Some(_)) => Err(MatrixError::BudgetExceeded),
+            _ => Err(MatrixError::SizeOverflow),
         }
     }
 }
@@ -115,10 +103,10 @@ impl<T> Matrix<T> {
         let index = row
             .checked_mul(self.cols)
             .and_then(|start| start.checked_add(col))
-            .ok_or(Error::Formula(CellError::Value))?;
+            .ok_or(MatrixError::Formula(CellError::Value))?;
         self.values
             .get(index)
-            .ok_or(Error::Formula(CellError::Value))
+            .ok_or(MatrixError::Formula(CellError::Value))
     }
 }
 fn finite(values: &[f64]) -> Result<()> {
@@ -205,15 +193,6 @@ pub fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
     collection::sumproduct(args, budget)
 }
 
-/// Observation requirement for regression prediction, independent of residual statistics.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TrendFitPolicy {
-    /// Preserve the pinned POI minimum sizes and constant-predictor shortcut.
-    PinnedPoi,
-    /// Use the modern rank-aware fit, including determined and redundant designs.
-    Determined,
-}
-
 /// Least squares with Householder QR (never the unstable normal equations).
 /// Optional inputs represent missing arguments, not blank cells. The adapter
 /// must require numeric TREND elements and a literal boolean fourth argument.
@@ -224,26 +203,7 @@ pub fn trend(
     constant: bool,
     budget: Budget,
 ) -> Result<Matrix<f64>> {
-    regression::trend(
-        y,
-        known_x,
-        new_x,
-        constant,
-        budget,
-        TrendFitPolicy::PinnedPoi,
-    )
-}
-
-/// Fit a trend under an explicit prediction sample requirement.
-pub fn trend_with_policy(
-    y: &Matrix<f64>,
-    known_x: Option<&Matrix<f64>>,
-    new_x: Option<&Matrix<f64>>,
-    constant: bool,
-    budget: Budget,
-    policy: TrendFitPolicy,
-) -> Result<Matrix<f64>> {
-    regression::trend(y, known_x, new_x, constant, budget, policy)
+    regression::trend(y, known_x, new_x, constant, budget)
 }
 
 impl<'a> From<&'a Cell> for crate::coercion::compatibility::ScalarRef<'a> {
@@ -278,7 +238,7 @@ mod tests {
         for (row, column) in [(2, 0), (0, 2), (usize::MAX, 0), (0, usize::MAX)] {
             assert_eq!(
                 matrix.get(row, column),
-                Err(Error::Formula(CellError::Value))
+                Err(MatrixError::Formula(CellError::Value))
             );
         }
     }
@@ -294,7 +254,10 @@ mod tests {
             transpose(&a, B).unwrap(),
             m(3, 2, &[1., 4., 2., 5., 3., 6.])
         );
-        assert_eq!(multiply(&a, &a, B), Err(Error::Formula(CellError::Value)));
+        assert_eq!(
+            multiply(&a, &a, B),
+            Err(MatrixError::Formula(CellError::Value))
+        );
     }
     #[test]
     fn pivoted_inverse_and_determinant() {
@@ -306,7 +269,10 @@ mod tests {
         }
         let singular = m(2, 2, &[1., 2., 2., 4.]);
         assert_eq!(determinant(&singular, B), Ok(0.));
-        assert_eq!(inverse(&singular, B), Err(Error::Formula(CellError::Num)));
+        assert_eq!(
+            inverse(&singular, B),
+            Err(MatrixError::Formula(CellError::Num))
+        );
     }
     #[test]
     fn histogram_boundaries_and_empty() {
@@ -328,9 +294,9 @@ mod tests {
         };
         assert_eq!(
             inverse(&m(2, 2, &[1., 0., 0., 1.]), b),
-            Err(Error::BudgetExceeded)
+            Err(MatrixError::BudgetExceeded)
         );
-        assert_eq!(frequency(&[], &[1.], b), Err(Error::BudgetExceeded));
+        assert_eq!(frequency(&[], &[1.], b), Err(MatrixError::BudgetExceeded));
     }
     #[test]
     fn sumproduct_area_text_and_error_precedence() {
@@ -341,7 +307,7 @@ mod tests {
         let error = Input::Area(Matrix::new(1, 1, vec![Cell::Error(CellError::NA)]).unwrap());
         assert_eq!(
             sumproduct(&[a, error], B),
-            Err(Error::Formula(CellError::NA))
+            Err(MatrixError::Formula(CellError::NA))
         );
         assert_eq!(
             sumproduct(
@@ -351,7 +317,7 @@ mod tests {
                 ],
                 B
             ),
-            Err(Error::Formula(CellError::Value))
+            Err(MatrixError::Formula(CellError::Value))
         );
     }
     #[test]
@@ -373,7 +339,7 @@ mod tests {
         );
         assert_eq!(
             coerce_matrix_collection(&a, MatrixCollection::Determinant, B),
-            Err(Error::Formula(CellError::Value))
+            Err(MatrixError::Formula(CellError::Value))
         );
         assert_eq!(
             coerce_matrix_collection(&a, MatrixCollection::Transpose, B).unwrap(),
@@ -381,17 +347,17 @@ mod tests {
         );
         assert_eq!(
             coerce_trend_collection(&a, B),
-            Err(Error::Formula(CellError::Value))
+            Err(MatrixError::Formula(CellError::Value))
         );
         let one = Matrix::new(1, 1, vec![Cell::Number(2.)]).unwrap();
         assert_eq!(
             coerce_matrix_collection(&one, MatrixCollection::Inverse, B),
-            Err(Error::Formula(CellError::Value))
+            Err(MatrixError::Formula(CellError::Value))
         );
         let error = Matrix::new(1, 1, vec![Cell::Error(CellError::NA)]).unwrap();
         assert_eq!(
             coerce_trend_collection(&error, B),
-            Err(Error::Formula(CellError::Value))
+            Err(MatrixError::Formula(CellError::Value))
         );
     }
     #[test]
@@ -424,7 +390,7 @@ mod tests {
                 let input = Matrix::new(2, 2, cells).unwrap();
                 assert_eq!(
                     coerce_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
-                    Err(Error::Formula(CellError::Value))
+                    Err(MatrixError::Formula(CellError::Value))
                 );
             }
         }
@@ -436,7 +402,7 @@ mod tests {
         for policy in [MatrixCollection::Determinant, MatrixCollection::Inverse] {
             assert_eq!(
                 coerce_matrix_collection(&singleton, policy, B),
-                Err(Error::Formula(CellError::Value))
+                Err(MatrixError::Formula(CellError::Value))
             );
         }
         for (rows, cols, values) in [
@@ -446,17 +412,17 @@ mod tests {
         ] {
             assert_eq!(
                 Matrix::new(rows, cols, values),
-                Err(Error::Formula(CellError::Value))
+                Err(MatrixError::Formula(CellError::Value))
             );
         }
         let nonsquare = m(1, 2, &[1., 2.]);
         assert_eq!(
             determinant(&nonsquare, B),
-            Err(Error::Formula(CellError::Value))
+            Err(MatrixError::Formula(CellError::Value))
         );
         assert_eq!(
             inverse(&nonsquare, B),
-            Err(Error::Formula(CellError::Value))
+            Err(MatrixError::Formula(CellError::Value))
         );
         assert_eq!(
             coerce_matrix_collection(
@@ -467,7 +433,7 @@ mod tests {
                     max_work: 100
                 }
             ),
-            Err(Error::BudgetExceeded)
+            Err(MatrixError::BudgetExceeded)
         );
         assert_eq!(
             coerce_matrix_collection(
@@ -478,7 +444,7 @@ mod tests {
                     max_work: 3
                 }
             ),
-            Err(Error::BudgetExceeded)
+            Err(MatrixError::BudgetExceeded)
         );
     }
     #[test]
@@ -500,7 +466,7 @@ mod tests {
             let input = Matrix::new(2, 2, cells).unwrap();
             assert_eq!(
                 coerce_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
-                Err(Error::Formula(CellError::Value))
+                Err(MatrixError::Formula(CellError::Value))
             );
         }
         for (first, second) in [
@@ -520,7 +486,7 @@ mod tests {
             .unwrap();
             assert_eq!(
                 coerce_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
-                Err(Error::Formula(first))
+                Err(MatrixError::Formula(first))
             );
         }
     }
@@ -570,12 +536,12 @@ pub fn sequence(
     if !start.is_finite() || !step.is_finite() {
         return num();
     }
-    let count = rows.checked_mul(columns).ok_or(Error::SizeOverflow)?;
+    let count = rows.checked_mul(columns).ok_or(MatrixError::SizeOverflow)?;
     budget.check(Some(count), Some(count))?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| Error::AllocationFailure)?;
+        .map_err(|_| MatrixError::AllocationFailure)?;
     for index in 0..count {
         let number = start + step * index as f64;
         if !number.is_finite() {
@@ -619,13 +585,16 @@ mod sequence_tests {
         };
         assert_eq!(
             sequence(0, 1, 1., 1., budget),
-            Err(Error::Formula(CellError::Value))
+            Err(MatrixError::Formula(CellError::Value))
         );
         assert_eq!(
             sequence(usize::MAX, 2, 1., 1., budget),
-            Err(Error::SizeOverflow)
+            Err(MatrixError::SizeOverflow)
         );
-        assert_eq!(sequence(3, 2, 1., 1., budget), Err(Error::BudgetExceeded));
+        assert_eq!(
+            sequence(3, 2, 1., 1., budget),
+            Err(MatrixError::BudgetExceeded)
+        );
         assert_eq!(
             sequence(
                 2,
@@ -637,15 +606,15 @@ mod sequence_tests {
                     max_work: 3
                 }
             ),
-            Err(Error::BudgetExceeded)
+            Err(MatrixError::BudgetExceeded)
         );
         assert_eq!(
             sequence(1, 1, f64::INFINITY, 1., budget),
-            Err(Error::Formula(CellError::Num))
+            Err(MatrixError::Formula(CellError::Num))
         );
         assert_eq!(
             sequence(2, 1, 1E308, 1E308, budget),
-            Err(Error::Formula(CellError::Num))
+            Err(MatrixError::Formula(CellError::Num))
         );
     }
 }
@@ -657,12 +626,12 @@ pub fn unit(dimension: usize, budget: Budget) -> Result<Matrix<f64>> {
     }
     let count = dimension
         .checked_mul(dimension)
-        .ok_or(Error::SizeOverflow)?;
+        .ok_or(MatrixError::SizeOverflow)?;
     budget.check(Some(count), Some(count))?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| Error::AllocationFailure)?;
+        .map_err(|_| MatrixError::AllocationFailure)?;
     for row in 0..dimension {
         for column in 0..dimension {
             // SAFETY: count = dimension squared was checked and reserved above;

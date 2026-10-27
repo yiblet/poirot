@@ -497,7 +497,7 @@ fn nasd_accrual_splits_nonadditive_february_fragments_and_charges_work() {
             true,
             |_| Err("budget")
         ),
-        Err(super::modern::Failure::Operational("budget"))
+        Err(super::financial_calculation_error::FinancialCalculationError::Operational("budget"))
     ));
 }
 

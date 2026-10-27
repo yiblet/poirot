@@ -1,8 +1,9 @@
 //! Irregular cash-flow equations and date-prorated depreciation, independently implemented.
 //! Contracts and native worksheet uncertainties are recorded in ODD_SOURCES.md.
+use super::financial_calculation_error::FinancialCalculationError;
 use crate::financial::{
     FinancialError as E, Result, checked, finite,
-    modern::{Failure, scaled_product, scaled_quotient},
+    modern::{scaled_product, scaled_quotient},
     securities::{self as calendar, Basis, Day, Frequency},
 };
 
@@ -31,8 +32,8 @@ impl OddFirst {
         frequency: Frequency,
         basis: Basis,
         mut charge: impl FnMut(u64) -> std::result::Result<(), O>,
-    ) -> std::result::Result<Self, Failure<O>> {
-        use Failure::Spreadsheet;
+    ) -> std::result::Result<Self, FinancialCalculationError<O>> {
+        use FinancialCalculationError::Spreadsheet;
         finite(&[coupon, redemption]).map_err(Spreadsheet)?;
         if !(issue < settlement && settlement < first && first < maturity)
             || coupon < 0.0
@@ -136,8 +137,8 @@ impl OddFirst {
         self,
         price: f64,
         mut charge: impl FnMut(u64) -> std::result::Result<(), O>,
-    ) -> std::result::Result<f64, Failure<O>> {
-        use Failure::Spreadsheet;
+    ) -> std::result::Result<f64, FinancialCalculationError<O>> {
+        use FinancialCalculationError::Spreadsheet;
         finite(&[price]).map_err(Spreadsheet)?;
         if price <= 0.0 {
             return Err(Spreadsheet(E::Num));
@@ -164,7 +165,7 @@ impl OddFirst {
         let mut rate = 0.1_f64;
         let mut prior = f64::INFINITY;
         for _ in 0..100 {
-            charge(32).map_err(Failure::Operational)?;
+            charge(32).map_err(FinancialCalculationError::Operational)?;
             let (value, derivative) = match bond.discounted(rate) {
                 Ok(v) => v,
                 Err(e) if rate >= 0.0 => return Err(Spreadsheet(e)),
@@ -226,8 +227,8 @@ impl OddLast {
         frequency: Frequency,
         basis: Basis,
         mut charge: impl FnMut(u64) -> std::result::Result<(), O>,
-    ) -> std::result::Result<Self, Failure<O>> {
-        use Failure::Spreadsheet;
+    ) -> std::result::Result<Self, FinancialCalculationError<O>> {
+        use FinancialCalculationError::Spreadsheet;
         finite(&[coupon, redemption]).map_err(Spreadsheet)?;
         if !(last < settlement && settlement < maturity) || coupon < 0.0 || redemption <= 0.0 {
             return Err(Spreadsheet(E::Num));
@@ -321,8 +322,8 @@ pub fn amortization<O>(
     basis: Basis,
     operation: Amortization,
     mut charge: impl FnMut(u64) -> std::result::Result<(), O>,
-) -> std::result::Result<f64, Failure<O>> {
-    use Failure::Spreadsheet;
+) -> std::result::Result<f64, FinancialCalculationError<O>> {
+    use FinancialCalculationError::Spreadsheet;
     finite(&[cost, salvage, period, rate]).map_err(Spreadsheet)?;
     if cost < 0.0
         || salvage < 0.0
@@ -388,12 +389,12 @@ pub fn amortization<O>(
         return Ok(0.0);
     }
     if period > 100_000.0 {
-        return Err(Failure::ComputationalLimit);
+        return Err(FinancialCalculationError::ComputationalLimit);
     }
     let mut book = cost - initial;
     let mut value = 0.0;
     for index in 1..=period as u32 {
-        charge(4).map_err(Failure::Operational)?;
+        charge(4).map_err(FinancialCalculationError::Operational)?;
         let remaining = (book - salvage).max(0.0);
         value = round(scaled_product([book, accelerated]).map_err(Spreadsheet)?)?;
         if value > remaining {

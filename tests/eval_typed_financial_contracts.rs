@@ -61,7 +61,7 @@ fn child_first_numeric_text_and_collection_controls_spill_in_both_evaluators() {
         ("W1", "FVSCHEDULE({100;200},{0.1;0.2})"),
         ("Z1", "XNPV({0;0},{-100;120},{1;366})"),
     ] {
-        sheet.set_formula(cell.parse().unwrap(), formula).unwrap();
+        sheet.set_formula(cell, formula).unwrap();
     }
     let target = |cell: &str| EvaluationTarget {
         sheet: 0,
@@ -117,9 +117,7 @@ fn child_first_numeric_text_and_collection_controls_spill_in_both_evaluators() {
 fn all_financial_catalog_shapes_match_their_typed_source_roles() {
     use poirot::eval::functions::registry::{FunctionId, ResultRule};
     let mut count = 0;
-    for descriptor in poirot::eval::functions::registry::descriptors_for_policy(
-        poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
-    ) {
+    for descriptor in poirot::eval::functions::registry::FUNCTION_DESCRIPTORS.iter() {
         if !matches!(descriptor.handler, FunctionId::Financial(_)) {
             continue;
         }

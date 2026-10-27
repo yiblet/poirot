@@ -52,20 +52,29 @@ pub(crate) fn patch_export(
     )
     .map_err(|error| match error {
         // Generated-package validation retains the existing export error contract.
-        IoError::Quota(failure) => IoError::Limit(format!(
-            "generated package {:?} limit {} exceeded (consumed {}, requested {})",
-            failure.resource, failure.limit, failure.consumed, failure.requested
-        )),
-        other => other,
+        IoError::Quota(failure) => IoError::Limit(crate::ExportLimitError::GeneratedQuota(failure)),
+        other @ (IoError::SizeOverflow
+        | IoError::Allocation(_)
+        | IoError::File(_)
+        | IoError::Read(_)
+        | IoError::Xlsx(_)
+        | IoError::Write(_)
+        | IoError::Model(_)
+        | IoError::Xml(_)
+        | IoError::Opc(_)
+        | IoError::BiffPreflight(_)
+        | IoError::Limit(_)
+        | IoError::Unsupported(_)
+        | IoError::NumericFidelity(_)
+        | IoError::Style(_)
+        | IoError::Formula(_)) => other,
     })?;
     generated::normalize(&mut package)?;
     let inventory = crate::opc::PackageInventory { parts: package };
     let plan = inventory.plan()?;
     let mut package = inventory.parts;
     if plan.sheets.len() != workbook.sheets().len() || plan.sheets.iter().any(|s| !s.supported) {
-        return Err(IoError::Opc(crate::opc::OpcError::SheetMismatch(
-            "export sheet cardinality mismatch".into(),
-        )));
+        return Err(IoError::Opc(crate::opc::OpcError::ExportSheetInventory));
     }
     let mut patched_total = package.values().map(|part| part.len() as u64).sum();
     for (index, sheet) in workbook.sheets().iter().enumerate() {
@@ -73,7 +82,11 @@ pub(crate) fn patch_export(
             .sheets
             .iter()
             .find(|s| s.name == sheet.name())
-            .ok_or_else(|| IoError::Opc(crate::opc::OpcError::SheetMismatch(sheet.name().into())))?
+            .ok_or_else(|| {
+                IoError::Opc(crate::opc::OpcError::MissingSheet {
+                    name: sheet.name().into(),
+                })
+            })?
             .part
             .clone();
         let original = part(&package, &path)?;
@@ -83,8 +96,8 @@ pub(crate) fn patch_export(
             sheet,
             shared: &shared,
             styles,
-            stored_formulas: stored_formulas.get(index).ok_or_else(|| {
-                IoError::Unsupported("export formula spellings do not match sheets".into())
+            stored_formulas: stored_formulas.get(index).ok_or({
+                IoError::Unsupported(crate::WorkbookFeatureError::FormulaSheetInventory)
             })?,
         };
         let size = patch.execute(SizeCounter::default())?.0;
@@ -92,10 +105,9 @@ pub(crate) fn patch_export(
         let updated = patch.execute(Vec::new())?;
         package.insert(path, updated);
     }
-    let path = plan
-        .styles_part
-        .as_ref()
-        .ok_or_else(|| IoError::Read("generated package has no styles part".into()))?;
+    let path = plan.styles_part.as_ref().ok_or(IoError::Read(
+        crate::WorkbookReadError::GeneratedPackageHasNoStylesPart,
+    ))?;
     let original = part(&package, path)?;
     let size = styles
         .execute(SizeCounter::default(), workbook.style_context())?

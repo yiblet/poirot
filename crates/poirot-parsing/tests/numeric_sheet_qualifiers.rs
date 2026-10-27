@@ -102,7 +102,9 @@ fn numbers_and_invalid_qualifiers_keep_their_boundaries() {
     };
     for source in ["2024!A2", "1Q!B1"] {
         assert_eq!(
-            parse_formula_with_policy(source, policy).unwrap_err().kind,
+            parse_formula_with_policy(source, policy)
+                .unwrap_err()
+                .kind(),
             ParseErrorKind::ResourceLimit
         );
     }
@@ -113,7 +115,7 @@ fn numbers_and_invalid_qualifiers_keep_their_boundaries() {
     assert_eq!(
         parse_formula_with_policy("SUM(2024!A1)", policy)
             .unwrap_err()
-            .kind,
+            .kind(),
         ParseErrorKind::ResourceLimit
     );
 }

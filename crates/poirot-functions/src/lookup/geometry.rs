@@ -1,5 +1,5 @@
 use crate::lookup::Reference;
-use crate::lookup::{Context, Error, Failure};
+use crate::lookup::{Context, LookupError, LookupValueError};
 /// Translate and normalize an OFFSET axis within an exclusive worksheet limit.
 /// Negative lengths retain the displaced cell as the last endpoint; zero is invalid.
 /// Positive dimensions and grid bounds follow Microsoft's OFFSET documentation:
@@ -10,17 +10,19 @@ pub fn offset_extent(
     displacement: i64,
     length: i64,
     limit: u32,
-) -> Result<(u32, u32), Error> {
+) -> Result<(u32, u32), LookupValueError> {
     if length == 0 {
-        return Err(Error::Ref);
+        return Err(LookupValueError::Ref);
     }
-    let displaced = start.checked_add(displacement).ok_or(Error::Ref)?;
+    let displaced = start
+        .checked_add(displacement)
+        .ok_or(LookupValueError::Ref)?;
     let (first, last) = if length < 0 {
         (
             displaced
                 .checked_add(length)
                 .and_then(|n| n.checked_add(1))
-                .ok_or(Error::Ref)?,
+                .ok_or(LookupValueError::Ref)?,
             displaced,
         )
     } else {
@@ -29,15 +31,15 @@ pub fn offset_extent(
             displaced
                 .checked_add(length)
                 .and_then(|n| n.checked_sub(1))
-                .ok_or(Error::Ref)?,
+                .ok_or(LookupValueError::Ref)?,
         )
     };
     if first < 0 || last >= i64::from(limit) {
-        return Err(Error::Ref);
+        return Err(LookupValueError::Ref);
     }
     Ok((
-        u32::try_from(first).map_err(|_| Error::Ref)?,
-        u32::try_from(last).map_err(|_| Error::Ref)?,
+        u32::try_from(first).map_err(|_| LookupValueError::Ref)?,
+        u32::try_from(last).map_err(|_| LookupValueError::Ref)?,
     ))
 }
 /// Resolved single-cell coordinates passed from reference geometry to host reads.
@@ -50,7 +52,10 @@ pub(super) struct CellSelection {
     pub(super) col: u32,
 }
 /// Resolve legacy scalar intersection for workbook-independent lookup consumers.
-pub(super) fn scalar_selection(r: &Reference, context: Context) -> Result<CellSelection, Failure> {
+pub(super) fn scalar_selection(
+    r: &Reference,
+    context: Context,
+) -> Result<CellSelection, LookupError> {
     let (row, col) = if r.height() == 1 && r.width() == 1 {
         (r.first_row(), r.first_col())
     } else if r.width() == 1 && (r.first_row()..=r.last_row()).contains(&context.row) {
@@ -62,7 +67,7 @@ pub(super) fn scalar_selection(r: &Reference, context: Context) -> Result<CellSe
     {
         (context.row, context.col)
     } else {
-        return Err(Error::Value.into());
+        return Err(LookupValueError::Value.into());
     };
 
     Ok(CellSelection {

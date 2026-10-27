@@ -4,7 +4,7 @@
 //! use poirot::eval::{FormulaCompiler, PreparationPolicy, WorkbookView};
 //! use poirot::model::Workbook;
 //! let mut book = Workbook::new();
-//! book.add_sheet("Data")?.set_formula("A1".parse()?, "2*3")?;
+//! book.add_sheet("Data")?.set_formula("A1", "2*3")?;
 //! let policy = PreparationPolicy::default();
 //! let plan = FormulaCompiler::new().compile_workbook(&book, &policy);
 //! let _view = WorkbookView::new(&book, &plan, &policy)?;
@@ -14,7 +14,6 @@
 //! Depends on: functions (registry and extensions) and coordinates (formula
 //! cell targets); siblings bound, bytecode and typing.
 
-/// Serializable compiled-source cache used by overlay snapshots.
 pub(in crate::eval) mod cache_snapshot;
 /// Formula text of a compiler-cache entry, borrowed when captured and shared when decoded.
 mod cached_source;
@@ -30,6 +29,8 @@ mod compiler_usage;
 mod formula_compiler;
 /// Full compiled-plan DTO for the trusted local disk cache.
 mod plan_snapshot;
+/// Serializable compiled-source cache used by overlay snapshots.
+mod plan_snapshot_error;
 /// Conservative references and names visible in formula syntax before execution.
 mod potential_dependencies;
 /// A sheet-qualified defined name found while preparing a formula.
@@ -80,3 +81,5 @@ pub use preparation_policy::PreparationPolicy;
 pub use prepared_formula::PreparedFormula;
 pub use registry_identity::RegistryIdentity;
 pub use source_fingerprint::SourceFingerprint;
+
+pub use plan_snapshot_error::PlanSnapshotError;

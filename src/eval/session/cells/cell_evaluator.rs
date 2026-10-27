@@ -6,7 +6,7 @@ use super::completion_context::CompletionContext;
 use super::resolved_source::ResolvedSource;
 use crate::eval::config::ArrayResultPolicy;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{EvalResult, EvaluationError, WorkKind};
 use crate::eval::ports::{CellProvenance, DependencyRead};
 use crate::eval::session::composition::Session;
 use crate::eval::session::reads::ReadRecorder;
@@ -172,9 +172,7 @@ impl<'s, 'a> CellEvaluator<'s, 'a> {
             return Ok(None);
         };
         let mut evidence = {
-            let cache = cache
-                .try_borrow()
-                .map_err(|_| EvaluationFailure::StalePlan)?;
+            let cache = cache.try_borrow().map_err(|_| EvaluationError::StalePlan)?;
             let Some(entry) = cache.retained(key) else {
                 return Ok(None);
             };
@@ -189,13 +187,11 @@ impl<'s, 'a> CellEvaluator<'s, 'a> {
         // Validating evidence must not replace the original consumed dependency trace
         // with the narrower set of dirty causes, or leak these reads into a caller.
         let previous = self.session.state.runtime.stack.consumer.take();
-        let unchanged = (|| {
+        let unchanged: Result<bool, EvaluationError> = (|| {
             loop {
                 let prior = {
-                    let cache = cache
-                        .try_borrow()
-                        .map_err(|_| EvaluationFailure::StalePlan)?;
-                    let entry = cache.retained(key).ok_or(EvaluationFailure::StalePlan)?;
+                    let cache = cache.try_borrow().map_err(|_| EvaluationError::StalePlan)?;
+                    let entry = cache.retained(key).ok_or(EvaluationError::StalePlan)?;
                     let Some((cause, expected_version)) = evidence
                         .1
                         .next(&entry.validity, &mut self.session.state.runtime.budget)?

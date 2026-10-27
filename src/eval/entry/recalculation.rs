@@ -1,8 +1,6 @@
 //! Whole-workbook recalculation with atomic formula-cache publication.
 
-use crate::eval::materialization::{
-    FormulaCacheMaterializationPolicy, FormulaCachePublicationReceipt,
-};
+use crate::eval::materialization::FormulaCachePublicationReceipt;
 use crate::eval::session::CellEvaluator;
 use crate::eval::values::CellEvaluation;
 
@@ -76,12 +74,7 @@ pub(in crate::eval) fn recalculate(
     let prepared =
         super::direct_runs::execute_configuration(workbook, configuration, budgets, |session| {
             let updates = formula_updates(workbook, session)?;
-            let changes = publication_changes(
-                workbook,
-                session,
-                &updates,
-                configuration.materialization_policy(),
-            )?;
+            let changes = publication_changes(workbook, session, &updates)?;
             if capture_receipts {
                 session.state.runtime.budget.allocation(updates.len())?;
             }
@@ -89,18 +82,16 @@ pub(in crate::eval) fn recalculate(
                 .iter()
                 .filter(|_| capture_receipts)
                 .map(|update| {
-                    configuration
-                        .materialization_policy()
-                        .receipt(update.target, &update.value)
+                    crate::eval::materialization::FormulaCacheWriteReceipt::new(
+                        update.target,
+                        &update.value,
+                    )
                 })
                 .collect();
             Ok((
                 updates.len(),
                 changes,
-                FormulaCachePublicationReceipt {
-                    identity: configuration.materialization_policy().identity(),
-                    writes,
-                },
+                FormulaCachePublicationReceipt { writes },
             ))
         });
     match prepared {
@@ -113,7 +104,7 @@ pub(in crate::eval) fn recalculate(
         } => {
             if workbook.apply(changes).is_err() {
                 return crate::eval::limits::EvaluationOutcome::Aborted {
-                    failure: crate::eval::limits::EvaluationFailure::StalePlan,
+                    failure: crate::eval::limits::EvaluationError::StalePlan,
                     usage,
                 };
             }
@@ -130,7 +121,6 @@ fn publication_changes(
     workbook: &crate::model::Workbook,
     session: &mut crate::eval::session::Session<'_>,
     updates: &[CellEvaluation],
-    policy: FormulaCacheMaterializationPolicy,
 ) -> crate::eval::limits::EvalResult<Vec<crate::model::WorkbookChange>> {
     use crate::model::WorkbookChange;
     let runtime = &mut *session.state.runtime;
@@ -139,7 +129,7 @@ fn publication_changes(
         .len()
         .checked_mul(2)
         .and_then(|n| n.checked_add(publication.generated_count()))
-        .ok_or(crate::eval::limits::EvaluationFailure::StalePlan)?;
+        .ok_or(crate::eval::limits::EvaluationError::StalePlan)?;
     runtime.budget.allocation(count)?;
     let mut changes = Vec::with_capacity(count);
     for update in updates {
@@ -153,9 +143,9 @@ fn publication_changes(
             .sheet(update.target.sheet)
             .and_then(|sheet| sheet.source_cell(update.target.address))
             .and_then(|cell| cell.formula.as_deref())
-            .ok_or(crate::eval::limits::EvaluationFailure::StalePlan)?;
+            .ok_or(crate::eval::limits::EvaluationError::StalePlan)?;
         runtime.budget.text(formula.len())?;
-        let value = policy.convert_stored_value(update.value.clone());
+        let value = update.value.clone();
         if let Some(last) = publication.extent((update.target.sheet, update.target.address)) {
             changes.push(WorkbookChange::SetSpillAnchorCachedValue {
                 sheet: update.target.sheet,
@@ -180,12 +170,12 @@ fn publication_changes(
             .sheet(sheet)
             .and_then(|sheet| sheet.source_cell(anchor))
             .and_then(|cell| cell.formula.as_deref())
-            .ok_or(crate::eval::limits::EvaluationFailure::StalePlan)?;
+            .ok_or(crate::eval::limits::EvaluationError::StalePlan)?;
         let value = runtime
             .memo
             .cache
             .get(&(sheet, address))
-            .ok_or(crate::eval::limits::EvaluationFailure::StalePlan)?;
+            .ok_or(crate::eval::limits::EvaluationError::StalePlan)?;
         runtime
             .budget
             .text(formula.len().saturating_add(value.text_storage_bytes()))?;
@@ -194,7 +184,7 @@ fn publication_changes(
             address,
             anchor,
             expected_formula: formula.into(),
-            value: policy.convert_stored_value(value.clone()),
+            value: value.clone(),
         });
     }
     Ok(changes)

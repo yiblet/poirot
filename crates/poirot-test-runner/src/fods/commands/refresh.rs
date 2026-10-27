@@ -1,6 +1,6 @@
 //! Refresh source assets and observation baseline without changing upstream expectations.
 use crate::fods::{
-    Error,
+    FodsError,
     cli::RefreshArgs,
     corpus::{Baseline, BaselineCase, BaselineStatus, CorpusManifest, FixtureEntry},
     execute,
@@ -13,14 +13,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
-fn io(path: &Path, source: std::io::Error) -> Error {
-    Error::Io {
+fn io(path: &Path, source: std::io::Error) -> FodsError {
+    FodsError::Io {
         path: path.to_owned(),
         source,
     }
 }
 
-fn collect(directory: &Path, files: &mut Vec<PathBuf>) -> Result<(), Error> {
+fn collect(directory: &Path, files: &mut Vec<PathBuf>) -> Result<(), FodsError> {
     for entry in std::fs::read_dir(directory).map_err(|e| io(directory, e))? {
         let entry = entry.map_err(|e| io(directory, e))?;
         let path = entry.path();
@@ -34,7 +34,7 @@ fn collect(directory: &Path, files: &mut Vec<PathBuf>) -> Result<(), Error> {
     Ok(())
 }
 
-fn source_revision(source: &Path) -> Result<String, Error> {
+fn source_revision(source: &Path) -> Result<String, FodsError> {
     if source.join(".git").exists() {
         let output = std::process::Command::new("git")
             .arg("-C")
@@ -43,9 +43,7 @@ fn source_revision(source: &Path) -> Result<String, Error> {
             .output()
             .map_err(|e| io(source, e))?;
         if !output.status.success() {
-            return Err(Error::InvalidPlan(
-                "cannot read source checkout revision".into(),
-            ));
+            return Err(FodsError::SourceRevisionUnavailable);
         }
         let diff = std::process::Command::new("git")
             .arg("-C")
@@ -60,9 +58,7 @@ fn source_revision(source: &Path) -> Result<String, Error> {
             .status()
             .map_err(|e| io(source, e))?;
         if !diff.success() {
-            return Err(Error::InvalidPlan(
-                "source formula fixtures must match the pinned checkout without local edits".into(),
-            ));
+            return Err(FodsError::SourceFixturesChanged);
         }
         Ok(String::from_utf8_lossy(&output.stdout).trim().to_owned())
     } else {
@@ -73,8 +69,8 @@ fn source_revision(source: &Path) -> Result<String, Error> {
     }
 }
 
-fn write_json(path: &Path, value: &impl serde::Serialize) -> Result<(), Error> {
-    let bytes = serde_json::to_vec_pretty(value).map_err(|source| Error::Metadata {
+fn write_json(path: &Path, value: &impl serde::Serialize) -> Result<(), FodsError> {
+    let bytes = serde_json::to_vec_pretty(value).map_err(|source| FodsError::Metadata {
         path: path.to_owned(),
         source,
     })?;
@@ -82,18 +78,16 @@ fn write_json(path: &Path, value: &impl serde::Serialize) -> Result<(), Error> {
 }
 
 /// Extract pinned source fixtures and rebuild checked corpus metadata.
-pub fn run(args: &RefreshArgs) -> Result<bool, Error> {
+pub fn run(args: &RefreshArgs) -> Result<bool, FodsError> {
     if source_revision(&args.source)? != SOURCE_COMMIT {
-        return Err(Error::InvalidPlan(format!(
-            "source must be pinned at {SOURCE_COMMIT}"
-        )));
+        return Err(FodsError::SourceRevisionMismatch {
+            expected: SOURCE_COMMIT,
+        });
     }
     // An existing destination must be a corpus, never an arbitrary directory.
     if args.corpus.exists() {
         if args.corpus.is_symlink() {
-            return Err(Error::InvalidPlan(
-                "refresh destination must not be a symlink".into(),
-            ));
+            return Err(FodsError::SymlinkDestination);
         }
         crate::fods::corpus::Corpus::open(&args.corpus)?;
         for entry in std::fs::read_dir(&args.corpus).map_err(|e| io(&args.corpus, e))? {
@@ -108,10 +102,7 @@ pub fn run(args: &RefreshArgs) -> Result<bool, Error> {
                         | "COPYING.MPL"
                 )
             ) {
-                return Err(Error::InvalidPlan(format!(
-                    "refresh destination contains unrelated content: {}",
-                    entry.path().display()
-                )));
+                return Err(FodsError::UnrelatedDestinationContent { path: entry.path() });
             }
         }
     }
@@ -120,9 +111,7 @@ pub fn run(args: &RefreshArgs) -> Result<bool, Error> {
     collect(&input, &mut paths)?;
     paths.sort();
     if paths.is_empty() {
-        return Err(Error::InvalidPlan(
-            "source contains no FODS formula fixtures".into(),
-        ));
+        return Err(FodsError::MissingSourceFixtures);
     }
     let parent = args
         .corpus
@@ -132,7 +121,7 @@ pub fn run(args: &RefreshArgs) -> Result<bool, Error> {
     std::fs::create_dir_all(parent).map_err(|e| io(parent, e))?;
     let stamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .map_err(|e| Error::InvalidPlan(e.to_string()))?
+        .map_err(FodsError::Clock)?
         .as_nanos();
     let staging = parent.join(format!(".fods-refresh-{}-{stamp}", std::process::id()));
     std::fs::create_dir(&staging).map_err(|e| io(&staging, e))?;
@@ -149,7 +138,7 @@ fn refresh_staged(
     paths: &[PathBuf],
     staging: &Path,
     stamp: u128,
-) -> Result<bool, Error> {
+) -> Result<bool, FodsError> {
     let mut manifest = CorpusManifest {
         source_repository: "https://github.com/LibreOffice/core".into(),
         source_commit: SOURCE_COMMIT.into(),
@@ -161,16 +150,14 @@ fn refresh_staged(
     let mut baseline = HashMap::new();
     let mut fixtures = Vec::new();
     for path in paths {
-        let relative = path
-            .strip_prefix(input)
-            .map_err(|e| Error::InvalidPlan(e.to_string()))?;
+        let relative = path.strip_prefix(input).map_err(FodsError::PathPrefix)?;
         let name = relative.to_string_lossy().replace('\\', "/");
         let source = format!("sc/qa/unit/data/functions/{name}");
         let bytes = std::fs::read(path).map_err(|e| io(path, e))?;
         let data =
-            crate::fods::xml::extract_bytes(&bytes, &source).map_err(|message| Error::Fods {
+            crate::fods::xml::extract_bytes(&bytes, &source).map_err(|source| FodsError::Fods {
                 path: path.clone(),
-                message,
+                source,
             })?;
         let entry = FixtureEntry {
             fixture: name.clone(),
@@ -191,7 +178,7 @@ fn refresh_staged(
                 gap_type: None,
             };
             if baseline.insert(record.id.clone(), record).is_some() {
-                return Err(Error::InvalidPlan("source case IDs collide".into()));
+                return Err(FodsError::DuplicateSourceCase);
             }
         }
         manifest.case_count += entry.cases;
@@ -214,13 +201,9 @@ fn refresh_staged(
         manifest.fixtures.push(entry);
         let destination = staging.join("fixtures").join(relative);
         std::fs::create_dir_all(destination.parent().ok_or_else(|| {
-            io(
-                &destination,
-                std::io::Error::new(
-                    std::io::ErrorKind::InvalidInput,
-                    "destination has no parent",
-                ),
-            )
+            FodsError::MissingDestinationParent {
+                path: destination.clone(),
+            }
         })?)
         .map_err(|e| io(&destination, e))?;
         std::fs::write(&destination, &bytes).map_err(|e| io(&destination, e))?;
@@ -231,15 +214,13 @@ fn refresh_staged(
         jobs: args.jobs,
     })?;
     if report.summary.harness_errors != 0 {
-        return Err(Error::InvalidPlan(
-            "evaluator panic prevents publishing a refresh baseline".into(),
-        ));
+        return Err(FodsError::RefreshEvaluatorPanicked);
     }
     let mut records = Vec::with_capacity(report.cases.len());
     for case in report.cases {
         let mut record = baseline
             .remove(&case.id)
-            .ok_or_else(|| Error::InvalidPlan("missing source case during refresh".into()))?;
+            .ok_or(FodsError::MissingRefreshCase)?;
         record.classification = if matches!(case.status, CaseStatus::Pass | CaseStatus::Improvement)
         {
             BaselineStatus::Pass

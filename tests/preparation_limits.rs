@@ -2,7 +2,7 @@
 use poirot::calculation::EvaluationContext;
 use poirot::eval::overlay::Overlay;
 use poirot::eval::{
-    self as eval, CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationInputs,
+    self as eval, CapabilityId, EvaluationBudgets, EvaluationError, EvaluationInputs,
     EvaluationOutcome, EvaluationTarget,
 };
 use poirot::{CellValue, Workbook};
@@ -16,7 +16,7 @@ fn target(address: &str) -> EvaluationTarget {
 #[test]
 fn parser_classifies_limits_separately_from_syntax_and_invalid_configuration() {
     assert_eq!(
-        formula::parse_formula("SUM(").unwrap_err().kind,
+        formula::parse_formula("SUM(").unwrap_err().kind(),
         ParseErrorKind::Syntax
     );
     assert!(
@@ -55,7 +55,7 @@ fn parser_classifies_limits_separately_from_syntax_and_invalid_configuration() {
         assert_eq!(
             formula::parse_formula_with_policy(source, policy)
                 .unwrap_err()
-                .kind,
+                .kind(),
             ParseErrorKind::ResourceLimit
         );
     }
@@ -68,7 +68,7 @@ fn parser_classifies_limits_separately_from_syntax_and_invalid_configuration() {
             }
         )
         .unwrap_err()
-        .kind,
+        .kind(),
         ParseErrorKind::InvalidPolicy
     );
 }
@@ -97,7 +97,7 @@ fn scalar_policy_preparation_refusals_abort_iferror_but_lazy_sources_remain_unus
         arrays: eval::ArrayResultPolicy::ScalarIntersection,
         ..Default::default()
     };
-    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(book.model())
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(&book)
         .with_policy(policy.clone())
         .build(context.clone())
         .unwrap();
@@ -105,12 +105,12 @@ fn scalar_policy_preparation_refusals_abort_iferror_but_lazy_sources_remain_unus
     assert_eq!(direct.cell(target("E1")).unwrap(), CellValue::Number(42.));
     assert!(matches!(
         direct.cell(target("B1")),
-        Err(EvaluationFailure::ResourceLimit {
+        Err(EvaluationError::ResourceLimit {
             capability: CapabilityId::FormulaParsing,
             ..
         })
     ));
-    let mut overlay = Overlay::with_workbook(book.model())
+    let mut overlay = Overlay::with_workbook(&book)
         .with_policy(policy)
         .build()
         .unwrap();
@@ -124,14 +124,14 @@ fn scalar_policy_preparation_refusals_abort_iferror_but_lazy_sources_remain_unus
     );
     assert!(matches!(
         overlay.evaluation(&context).unwrap().cell(target("B1")),
-        Err(EvaluationFailure::ResourceLimit {
+        Err(EvaluationError::ResourceLimit {
             capability: CapabilityId::FormulaParsing,
             ..
         })
     ));
     assert!(matches!(
         eval::run_formula(
-            book.model(),
+            &book,
             0,
             target("A1").address,
             &large,
@@ -139,7 +139,7 @@ fn scalar_policy_preparation_refusals_abort_iferror_but_lazy_sources_remain_unus
             EvaluationBudgets::default()
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::ResourceLimit {
+            failure: EvaluationError::ResourceLimit {
                 capability: CapabilityId::FormulaParsing,
                 ..
             },

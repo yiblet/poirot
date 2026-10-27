@@ -1,12 +1,12 @@
 use clap::Parser;
 use poirot_test_runner::fods::{
-    Error,
+    FodsError,
     cli::{Cli, Command},
     commands,
 };
 use std::process::ExitCode;
 
-fn dispatch(cli: Cli) -> Result<bool, Error> {
+fn dispatch(cli: Cli) -> Result<bool, FodsError> {
     match cli.command {
         Some(Command::Run(args)) => commands::run::run(&args),
         Some(Command::Inspect(args)) => commands::inspect::run(&args),

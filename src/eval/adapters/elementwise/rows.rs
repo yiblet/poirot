@@ -5,7 +5,7 @@ use super::lift::Lift;
 use super::whole_collection::WholeCollection;
 use crate::eval::host::{CallHost, OperandKind, OperandReader, ScalarOperand, SubtotalReader};
 use crate::eval::limits::CapabilityId;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, finite};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, finite};
 use crate::model::CellError::{Div0, Num};
 use crate::model::CellValue::{Error, Number};
 use crate::model::{CellAddress, CellValue};
@@ -155,7 +155,7 @@ pub(in crate::eval::adapters) fn select<R: Reducer>(
         }));
     for (row, column) in positions {
         let matched = match predicate(host, row, column) {
-            Err(FunctionFailure::Spreadsheet(_)) if matches!(errors, PredicateErrors::Value) => {
+            Err(FunctionError::Spreadsheet(_)) if matches!(errors, PredicateErrors::Value) => {
                 return Err(VALUE_ERROR.into());
             }
             result => result?,
@@ -246,7 +246,7 @@ impl Reducer for Numbers {
 }
 
 /// Admit wildcard scratch and meter matching states without losing domain errors.
-pub(in crate::eval::adapters) fn matching<E: From<FunctionFailure>>(
+pub(in crate::eval::adapters) fn matching<E: From<FunctionError>>(
     host: &mut CallHost<'_, '_>,
     wildcard: Option<(&str, &str)>,
     test: impl FnOnce(&mut dyn FnMut() -> Result<(), E>) -> Result<bool, E>,
@@ -366,11 +366,11 @@ impl<R: ArgumentRole> PairedCollections<R> {
         let mut pairs = Vec::new();
         pairs
             .try_reserve_exact(count)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         let mut controls = Vec::new();
         controls
             .try_reserve_exact(count)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         for pair in 0..count {
             let index = pair
                 .checked_mul(2)
@@ -447,13 +447,13 @@ impl<R: ArgumentRole> PairedCollections<R> {
             let mut controls = Vec::new();
             controls
                 .try_reserve_exact(self.pairs.len())
-                .map_err(|_| host.allocation_failure())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             for member in 0..self.pairs.len() {
                 let operand = self.lift.member(host, member, row, column)?;
                 if operand.missing {
                     return Err(host.unsupported(
                         CapabilityId::FunctionAdapter,
-                        "omitted conditional control",
+                        crate::eval::limits::EvaluationReasonError::OmittedConditionalControl,
                     ));
                 }
                 let control = compile(host, operand.value)?;

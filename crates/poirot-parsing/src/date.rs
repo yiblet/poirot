@@ -8,9 +8,7 @@ use nom::{
     sequence::{preceded, terminated},
 };
 
-/// Date text does not match the selected field grammar.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct DateSyntaxError;
+pub use crate::date_syntax_error::DateSyntaxError;
 
 /// Parse DATEVALUE fields and its admitted trailing time text.
 pub fn date_parts(input: &str) -> Result<Vec<&str>, DateSyntaxError> {
@@ -35,10 +33,15 @@ pub fn date_parts(input: &str) -> Result<Vec<&str>, DateSyntaxError> {
 
 use nom::bytes::complete::take_while_m_n;
 /// Inspected TIMEVALUE date components before optional default-year resolution.
+/// These are syntactic fields: numeric and calendar ranges are not validated,
+/// and no workbook date system or serial-number epoch is applied.
 #[derive(Clone, Copy)]
 pub struct TimeValueDate<'a> {
+    /// Four-digit source year, or absent when the consumer must select a default.
     pub year: Option<i64>,
+    /// Borrowed source month token, which may be numeric or a name; not normalized or validated.
     pub month: &'a str,
+    /// Parsed one- or two-digit day, without calendar range validation.
     pub day: i64,
 }
 fn digits(input: &str, min: usize, max: usize) -> IResult<&str, &str> {

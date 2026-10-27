@@ -467,7 +467,10 @@ fn admission_refusal_and_aborts_leave_no_partial_publication_or_reusable_run() {
         let failure = run
             .outputs(&[at(0, "D1"), at(0, "D2"), at(0, "E1")])
             .unwrap_err();
-        assert_eq!(run.cell(at(0, "D2")).unwrap_err(), failure);
+        assert_eq!(
+            (run.cell(at(0, "D2")).unwrap_err()).budget().unwrap(),
+            failure.budget().unwrap()
+        );
     }
     assert!(overlay.cached_value(at(0, "D1")).is_none());
     assert!(overlay.cached_value(at(0, "D2")).is_none());
@@ -500,7 +503,10 @@ fn an_operational_failure_inside_a_range_function_cannot_publish_or_resume() {
         let mut run = overlay.evaluation(&context).unwrap();
         assert_eq!(run.cell(at(0, "D1")).unwrap(), 67.0.into());
         let failure = run.cell(at(0, "D2")).unwrap_err();
-        assert_eq!(run.cell(at(0, "D1")).unwrap_err(), failure);
+        assert_eq!(
+            (run.cell(at(0, "D1")).unwrap_err()).budget().unwrap(),
+            failure.budget().unwrap()
+        );
     }
     assert!(overlay.cached_value(at(0, "D1")).is_some());
     assert!(overlay.cached_value(at(0, "D2")).is_none());

@@ -1,7 +1,5 @@
 use crate::eval::config::calendar::{date, max_serial, serial};
-use crate::eval::config::{
-    BuiltinSemanticsPolicy, DateOrder, EvaluationInputs, Localization, RunConfiguration,
-};
+use crate::eval::config::{DateOrder, EvaluationInputs, Localization, RunConfiguration};
 use crate::eval::functions::registry::{FUNCTION_DESCRIPTORS, FunctionId};
 use crate::eval::values::VALUE_ERROR;
 use crate::model::CellError::{Div0, NA, Num, Ref};
@@ -30,8 +28,7 @@ fn evaluate(w: &Workbook, f: &str) -> CellValue {
                 utc_offset_seconds: 0,
                 date_order: DateOrder::MonthDayYear,
             },
-        })
-        .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation),
+        }),
         Default::default(),
     ) {
         crate::eval::limits::EvaluationOutcome::Complete { value, .. } => value,
@@ -199,30 +196,22 @@ fn localization_context_and_recalculation() {
     c.as_of_time = UNIX_EPOCH + Duration::from_secs(1_609_502_400);
     w.sheet_mut(0)
         .unwrap()
-        .set_formula_with_cached_value("A1".parse().unwrap(), "NOW()", Number(777.))
+        .set_formula_with_cached_value("A1", "NOW()", Number(777.))
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula_with_cached_value("A2".parse().unwrap(), "NOW()", Number(777.))
+        .set_formula_with_cached_value("A2", "NOW()", Number(777.))
         .unwrap();
     match crate::eval::entry::run_recalculation(&mut w, c, Default::default()) {
         crate::eval::limits::EvaluationOutcome::Complete { .. } => (),
         outcome => panic!("evaluation aborted: {outcome:?}"),
     };
     assert_eq!(
-        w.sheet(0)
-            .unwrap()
-            .get("A1".parse().unwrap())
-            .unwrap()
-            .value,
+        w.sheet(0).unwrap().get("A1").unwrap().unwrap().value,
         Number(44197.5)
     );
     assert_eq!(
-        w.sheet(0)
-            .unwrap()
-            .get("A2".parse().unwrap())
-            .unwrap()
-            .value,
+        w.sheet(0).unwrap().get("A2").unwrap().unwrap().value,
         Number(44197.5)
     );
     c.as_of_time += Duration::from_secs(86400);
@@ -231,11 +220,7 @@ fn localization_context_and_recalculation() {
         outcome => panic!("evaluation aborted: {outcome:?}"),
     };
     assert_eq!(
-        w.sheet(0)
-            .unwrap()
-            .get("A1".parse().unwrap())
-            .unwrap()
-            .value,
+        w.sheet(0).unwrap().get("A1").unwrap().unwrap().value,
         Number(44198.5)
     );
 }
@@ -282,11 +267,11 @@ fn business_days_holidays_and_weekends() {
     }
     w.sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), Number(44467.))
+        .set_value("A1", Number(44467.))
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_value("A2".parse().unwrap(), Number(44467.))
+        .set_value("A2", Number(44467.))
         .unwrap();
     num(&w, "NETWORKDAYS(DATE(2021,9,27),DATE(2021,10,1),A1:A2)", 4.);
     num(&w, "WORKDAY(DATE(2021,9,27),1,A1:A2)", 44468.);

@@ -59,6 +59,7 @@ fn engineering_storage_prefixes_and_legacy_spellings() {
                     col: 0
                 })
                 .unwrap()
+                .unwrap()
                 .formula
                 .as_deref(),
             Some(expected.as_str())

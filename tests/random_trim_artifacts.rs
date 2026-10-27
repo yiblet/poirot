@@ -8,13 +8,9 @@ use poirot::{CellValue, Workbook};
 fn previous_random_trim_preparation_recovers_authored_source_and_edits() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A3".parse().unwrap(), 8.0).unwrap();
-    sheet
-        .set_formula("D1".parse().unwrap(), "TRIMRANGE(A1:A5)")
-        .unwrap();
-    sheet
-        .set_formula("G1".parse().unwrap(), "RANDARRAY(2,2)")
-        .unwrap();
+    sheet.set_value("A3", 8.0).unwrap();
+    sheet.set_formula("D1", "TRIMRANGE(A1:A5)").unwrap();
+    sheet.set_formula("G1", "RANDARRAY(2,2)").unwrap();
     let mut overlay = Overlay::with_workbook(book).build().unwrap();
     let input = overlay.target("S!A3").unwrap();
     let trimmed = overlay.target("S!D1").unwrap();
@@ -45,7 +41,13 @@ fn previous_random_trim_preparation_recovers_authored_source_and_edits() {
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedIncompatible);
     assert_eq!(
-        workbook.sheet(0).unwrap().get(input.address).unwrap().value,
+        workbook
+            .sheet(0)
+            .unwrap()
+            .get(input.address)
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Number(11.0)
     );
     let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)

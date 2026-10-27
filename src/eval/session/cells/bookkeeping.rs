@@ -1,16 +1,21 @@
 //! Cell bookkeeping helpers shared by the read lifecycle stages.
 
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError};
 use crate::model::CellValue;
 
 /// Attribute exhausted bookkeeping storage to the cell whose attempt needed it.
-pub(super) fn cell_allocation_failure(target: EvaluationTarget) -> EvaluationFailure {
-    EvaluationFailure::Resource {
+pub(super) fn cell_allocation_failure(
+    target: EvaluationTarget,
+    reservation_source: std::collections::TryReserveError,
+) -> EvaluationError {
+    EvaluationError::Resource {
         kind: crate::eval::limits::ResourceFailureKind::Allocation,
         capability: CapabilityId::FunctionAdapter,
-        source: Some(target),
-        detail: "cell execution bookkeeping allocation failed".into(),
+        target: Some(target),
+        reason:
+            crate::eval::limits::EvaluationReasonError::CellExecutionBookkeepingAllocationFailed
+                .with_reservation_source(reservation_source),
     }
 }
 

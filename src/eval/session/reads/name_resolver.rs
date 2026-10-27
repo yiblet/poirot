@@ -1,7 +1,7 @@
 //! Metered sheet and scoped-name resolution with dependency reporting.
 
 use super::read_recorder::ReadRecorder;
-use crate::eval::limits::{EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{EvalResult, EvaluationError, WorkKind};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::cells::FormulaExecution;
 use crate::eval::session::composition::Session;
@@ -117,7 +117,7 @@ impl<'s, 'a> NameResolver<'s, 'a> {
                 .workbook
                 .named_ranges
                 .get(index)
-                .ok_or(EvaluationFailure::StalePlan)?
+                .ok_or(EvaluationError::StalePlan)?
                 .formula;
             self.session.state.runtime.budget.text(formula.len())?;
             if self.session.state.runtime.budget.profiling {

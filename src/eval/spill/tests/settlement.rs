@@ -5,7 +5,7 @@ use super::super::settlement::Settlement;
 use super::super::sheet_candidates::SheetCandidates;
 use super::super::spill_preparation::SpillPreparation;
 use crate::eval::coordinates::{CellSet, EvaluationTarget};
-use crate::eval::limits::{EvalResult, EvaluationFailure, MemoRetentionUsage};
+use crate::eval::limits::{EvalResult, EvaluationError, MemoRetentionUsage};
 use crate::eval::ports::CellProvenance;
 use crate::eval::session;
 use crate::eval::values::{Area, AreaKind};
@@ -100,7 +100,7 @@ impl<'a> Execution<'a> for ScriptedExecution {
             .candidates
             .get(&sheet)
             .map(read)
-            .ok_or(EvaluationFailure::StalePlan)
+            .ok_or(EvaluationError::StalePlan)
     }
 
     fn select_known(
@@ -139,9 +139,9 @@ impl<'a> Execution<'a> for ScriptedExecution {
                     consumer: None,
                     target: EvaluationTarget { sheet, address: at },
                     provenance: CellProvenance::Evaluated,
-                    result: Err(EvaluationFailure::StalePlan),
+                    result: Err(EvaluationError::StalePlan),
                 });
-            return Err(EvaluationFailure::StalePlan);
+            return Err(EvaluationError::StalePlan);
         }
         Ok(())
     }
@@ -248,7 +248,7 @@ fn engine_rolls_back_provisional_success_and_delivers_only_operational_failure()
     assert!(execution.state.settlement.active().is_none());
     assert!(matches!(
         execution.state.failure,
-        Some(EvaluationFailure::StalePlan)
+        Some(EvaluationError::StalePlan)
     ));
     let before = execution.events.len();
     assert!(

@@ -1,5 +1,5 @@
 //! Source-derived scalar LogicalFunction classification, not Excel observations.
-use poirot::eval::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use poirot::eval::{EvaluationBudgets, EvaluationError, EvaluationOutcome};
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
 fn workbook() -> Workbook {
@@ -14,7 +14,7 @@ fn workbook() -> Workbook {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_value(address.parse().unwrap(), value)
+            .set_value(address, value)
             .unwrap();
     }
     workbook
@@ -27,7 +27,6 @@ fn execute(formula: &str, address: &str) -> EvaluationOutcome<CellValue> {
         address.parse::<CellAddress>().unwrap(),
         formula,
         &poirot::eval::RunConfiguration::default()
-            .with_builtin_policy(poirot::eval::BuiltinSemanticsPolicy::PinnedPoi)
             .with_array_result_policy(poirot::eval::ArrayResultPolicy::ScalarIntersection),
         EvaluationBudgets::default(),
     )
@@ -147,7 +146,7 @@ fn arity_and_lazy_errors_do_not_turn_operational_failures_into_cell_errors() {
             matches!(
                 execute(formula, "C3"),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability { .. },
+                    failure: EvaluationError::UnsupportedCapability { .. },
                     ..
                 }
             ),

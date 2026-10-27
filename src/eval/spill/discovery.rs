@@ -5,7 +5,7 @@ use super::producer_candidate::ProducerCandidate;
 use super::sheet_candidates::SheetCandidates;
 use crate::eval::compile::compiler::CompiledWorkbook;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::model::{CellAddress, Workbook};
 
 /// Discovers possible array producers from authored cells and compiled shape bounds.
@@ -25,7 +25,7 @@ pub(super) struct Discovery<'a, 's> {
 impl Discovery<'_, '_> {
     /// Inspect only new origin-prefix strips and publish completeness atomically.
     pub(super) fn discover(&mut self, sheet: usize, last: CellAddress) -> EvalResult<()> {
-        last.validate().map_err(|_| EvaluationFailure::StalePlan)?;
+        last.validate().map_err(|_| EvaluationError::StalePlan)?;
         let consumer = self.consumer;
         let plan =
             |index: &CandidateIndex, budget: &mut BudgetMeter| -> EvalResult<Option<Expansion>> {
@@ -43,7 +43,7 @@ impl Discovery<'_, '_> {
         let expansion = if let Some(shared) = self.shared {
             let index = shared
                 .try_borrow()
-                .map_err(|_| EvaluationFailure::StalePlan)?;
+                .map_err(|_| EvaluationError::StalePlan)?;
             plan(&index, self.budget)?
         } else {
             plan(self.local, self.budget)?
@@ -70,11 +70,11 @@ impl Discovery<'_, '_> {
                             .check_allocation(unique.len().saturating_add(1))?;
                         unique
                             .try_reserve(1)
-                            .map_err(|_| EvaluationFailure::Resource {
+                            .map_err(|reservation_source| EvaluationError::Resource {
                                 kind: crate::eval::limits::ResourceFailureKind::Allocation,
                                 capability: CapabilityId::FunctionAdapter,
-                                source: self.consumer,
-                                detail: "legacy spill owner allocation failed".into(),
+                                target: self.consumer,
+                                reason: (crate::eval::limits::EvaluationReasonError::LegacySpillOwnerAllocationFailed).with_reservation_source(reservation_source),
                             })?;
                         // SAFETY: The successful reservation above provides one owner slot.
                         unique.insert(owner);
@@ -84,11 +84,11 @@ impl Discovery<'_, '_> {
             let mut owners = Vec::new();
             owners
                 .try_reserve(unique.len())
-                .map_err(|_| EvaluationFailure::Resource {
+                .map_err(|reservation_source| EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: self.consumer,
-                    detail: "legacy spill owner ordering allocation failed".into(),
+                    target: self.consumer,
+                    reason: (crate::eval::limits::EvaluationReasonError::LegacySpillOwnerOrderingAllocationFailed).with_reservation_source(reservation_source),
                 })?;
             for owner in unique {
                 // SAFETY: Reservation above covers every unique owner, moved exactly once.
@@ -100,11 +100,11 @@ impl Discovery<'_, '_> {
                 .checked_mul(std::mem::size_of::<CellAddress>())
                 .and_then(|bytes| bytes.checked_add(2 * std::mem::size_of::<usize>()))
                 .filter(|bytes| *bytes <= isize::MAX as usize)
-                .ok_or_else(|| EvaluationFailure::Resource {
+                .ok_or( EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::SizeOverflow,
                     capability: CapabilityId::FunctionAdapter,
-                    source: self.consumer,
-                    detail: "legacy spill owner shared allocation overflow".into(),
+                    target: self.consumer,
+                    reason: crate::eval::limits::EvaluationReasonError::LegacySpillOwnerSharedAllocationOverflow,
                 })?;
             // SAFETY: The checked bytes include the Arc reference-count header;
             // CellAddress and usize have compatible alignment and representable layout.
@@ -115,7 +115,7 @@ impl Discovery<'_, '_> {
         for membership in strips {
             for (&at, cell) in effective
                 .stored(membership)
-                .map_err(|_| EvaluationFailure::StalePlan)?
+                .map_err(|_| EvaluationError::StalePlan)?
             {
                 self.budget.charge(WorkKind::SparseScan, 1)?;
                 if let Some(source) = cell.formula.as_deref()
@@ -127,11 +127,11 @@ impl Discovery<'_, '_> {
                         .check_allocation(added.len().saturating_add(1))?;
                     added
                         .try_reserve(1)
-                        .map_err(|_| EvaluationFailure::Resource {
+                        .map_err(|reservation_source| EvaluationError::Resource {
                             kind: crate::eval::limits::ResourceFailureKind::Allocation,
                             capability: CapabilityId::FunctionAdapter,
-                            source: self.consumer,
-                            detail: "spill candidate allocation failed".into(),
+                            target: self.consumer,
+                            reason: (crate::eval::limits::EvaluationReasonError::SpillCandidateAllocationFailed).with_reservation_source(reservation_source),
                         })?;
                     let mut candidate = ProducerCandidate::new(sheet, at, shape);
                     // Saved geometry is independent of current computed shape.
@@ -157,12 +157,12 @@ impl Discovery<'_, '_> {
         let consumer = self.consumer;
         let commit = |index: &mut CandidateIndex| -> EvalResult<()> {
             let update = |discovery: &mut SheetCandidates| -> EvalResult<()> {
-                discovery.candidates.try_reserve(added.len()).map_err(|_| {
-                    EvaluationFailure::Resource {
+                discovery.candidates.try_reserve(added.len()).map_err(|reservation_source| {
+                    EvaluationError::Resource {
                         kind: crate::eval::limits::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
-                        source: consumer,
-                        detail: "spill candidate append allocation failed".into(),
+                        target: consumer,
+                        reason: (crate::eval::limits::EvaluationReasonError::SpillCandidateAppendAllocationFailed).with_reservation_source(reservation_source),
                     }
                 })?;
                 // The successful candidate reservation admits this complete count.
@@ -171,11 +171,11 @@ impl Discovery<'_, '_> {
                 discovery
                     .ending_rows
                     .try_reserve(summary_additional)
-                    .map_err(|_| EvaluationFailure::Resource {
+                    .map_err(|reservation_source| EvaluationError::Resource {
                         kind: crate::eval::limits::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
-                        source: consumer,
-                        detail: "spill candidate row summary allocation failed".into(),
+                        target: consumer,
+                        reason: (crate::eval::limits::EvaluationReasonError::SpillCandidateRowSummaryAllocationFailed).with_reservation_source(reservation_source),
                     })?;
                 let interleaved = discovery
                     .candidates
@@ -223,7 +223,7 @@ impl Discovery<'_, '_> {
         if let Some(shared) = self.shared {
             let mut index = shared
                 .try_borrow_mut()
-                .map_err(|_| EvaluationFailure::StalePlan)?;
+                .map_err(|_| EvaluationError::StalePlan)?;
             commit(&mut index)
         } else {
             commit(self.local)

@@ -1,7 +1,7 @@
 //! Rectangular array construction and broadcast member reads.
 
 use super::shape::Shape;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::session::{CellEvaluator, Session};
 use crate::eval::values::{ArrayView, VALUE_ERROR, Value, convert_legacy_missing_blank};
 use crate::model::CellValue::Error;
@@ -43,7 +43,7 @@ impl<'s, 'a> RectangularTraversal<'s, 'a> {
             shape.rows,
             self.session.state.runtime.stack.consumer,
             CapabilityId::FunctionAdapter,
-            "rectangular row allocation",
+            crate::eval::limits::EvaluationReasonError::RectangularRowAllocation,
         )?;
         for row in 0..shape.rows {
             let mut values = Vec::new();
@@ -52,7 +52,7 @@ impl<'s, 'a> RectangularTraversal<'s, 'a> {
                 shape.columns,
                 self.session.state.runtime.stack.consumer,
                 CapabilityId::FunctionAdapter,
-                "rectangular member allocation",
+                crate::eval::limits::EvaluationReasonError::RectangularMemberAllocation,
             )?;
             for column in 0..shape.columns {
                 // SAFETY: Reservation admitted shape.columns slots and this loop pushes exactly that many.
@@ -85,9 +85,9 @@ impl<'s, 'a> RectangularTraversal<'s, 'a> {
             Value::Array(array) => array
                 .get(row)
                 .and_then(|values| values.get(column))
-                .ok_or(EvaluationFailure::StalePlan)?,
+                .ok_or(EvaluationError::StalePlan)?,
             Value::Refs(areas) | Value::SheetSpan(areas) => {
-                let area = *areas.first().ok_or(EvaluationFailure::StalePlan)?;
+                let area = *areas.first().ok_or(EvaluationError::StalePlan)?;
                 return CellEvaluator::new(self.session).cell(
                     area.sheet,
                     CellAddress {
@@ -100,9 +100,9 @@ impl<'s, 'a> RectangularTraversal<'s, 'a> {
                 return CellEvaluator::new(self.session).signed_read(
                     areas
                         .first()
-                        .ok_or(EvaluationFailure::StalePlan)?
+                        .ok_or(EvaluationError::StalePlan)?
                         .read(row as u64, column as u64)
-                        .ok_or(EvaluationFailure::StalePlan)?,
+                        .ok_or(EvaluationError::StalePlan)?,
                 );
             }
         };

@@ -1,10 +1,8 @@
 //! Negative-size OFFSET expectations use checked A2:B3 normalization; native Excel
 //! behavior is unverified. Direct SignedArea tests retain off-grid channel contracts.
 use crate::eval::compile;
-use crate::eval::config::{
-    ArrayResultPolicy, BuiltinSemanticsPolicy, EvaluationInputs, RunConfiguration,
-};
-use crate::eval::limits::{BudgetMeter, EvaluationBudgets, EvaluationFailure};
+use crate::eval::config::{ArrayResultPolicy, EvaluationInputs, RunConfiguration};
+use crate::eval::limits::{BudgetMeter, EvaluationBudgets, EvaluationError};
 use crate::eval::ports::{DependencyRead, DependencyReadSink, ReadEvent};
 use crate::eval::session::{ArgumentReader, ItemFolder, ResultProjection, Session};
 use crate::eval::values::area::Area;
@@ -32,10 +30,7 @@ fn fixture() -> Workbook {
         ("A3", 3.),
         ("B3", 30.),
     ] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(address.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(address, value).unwrap();
     }
     w
 }
@@ -51,7 +46,6 @@ fn formula(w: &Workbook, expression: &str) -> CellValue {
         "P1".parse().unwrap(),
         &plan,
         &RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
             .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
         Default::default(),
     ) {
@@ -110,15 +104,9 @@ fn normalized_offset_dense_readers_use_checked_dimensions() {
 fn normalized_offset_sparse_projection_tracks_selected_rectangle() {
     let mut w = fixture();
     assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(55.));
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A2".parse().unwrap(), 200.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("A2", 200.).unwrap();
     assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(253.));
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("C2".parse().unwrap(), 9999.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("C2", 9999.).unwrap();
     assert_eq!(formula(&w, "SUM(OFFSET(B3,0,0,-2,-2))"), Number(253.));
 }
 
@@ -157,7 +145,6 @@ fn formula_at(w: &Workbook, expression: &str, address: &str, sheet: usize) -> Ce
         address.parse().unwrap(),
         &plan,
         &RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
             .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
         Default::default(),
     ) {
@@ -213,26 +200,14 @@ fn indirect_transports_normalized_offset_named_references() {
 #[test]
 fn normalized_offset_countblank_classification_and_union_counting() {
     let mut w = fixture();
+    w.sheet_mut(0).unwrap().set_value("A1", "").unwrap();
+    w.sheet_mut(0).unwrap().set_formula("B1", "\"\"").unwrap();
+    w.sheet_mut(0).unwrap().set_value("A2", Blank).unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), "")
+        .set_value("B2", Error(Div0))
         .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_formula("B1".parse().unwrap(), "\"\"")
-        .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A2".parse().unwrap(), Blank)
-        .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("B2".parse().unwrap(), Error(Div0))
-        .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A3".parse().unwrap(), true)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("A3", true).unwrap();
     assert_eq!(formula(&w, "COUNTBLANK(OFFSET(B3,0,0,-2,-2))"), Number(1.));
     assert_eq!(
         formula(
@@ -294,7 +269,7 @@ fn traced_formula(
 #[test]
 fn normalized_offset_sparse_dependencies_and_overlays_use_selected_rectangle() {
     let mut w = fixture();
-    w.sheet_mut(0).unwrap().remove("A2".parse().unwrap());
+    w.sheet_mut(0).unwrap().remove("A2").unwrap();
     let inputs = crate::eval::inputs::RunInputs::new(
         &w,
         [
@@ -362,14 +337,14 @@ fn normalized_offset_sparse_membership_insert_remove_and_unrelated_edit() {
     use crate::eval::config::EvaluationContext;
     use crate::eval::overlay::Overlay;
     let mut w = fixture();
-    w.sheet_mut(0).unwrap().remove("A2".parse().unwrap());
+    w.sheet_mut(0).unwrap().remove("A2").unwrap();
     for (address, formula) in [
         ("P1", "SUM(OFFSET(B3,0,0,-2,-2))"),
         ("Q1", "COUNTBLANK(OFFSET(B3,0,0,-2,-2))"),
     ] {
         w.sheet_mut(0)
             .unwrap()
-            .set_formula(address.parse().unwrap(), formula)
+            .set_formula(address, formula)
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&w)
@@ -420,14 +395,8 @@ fn unsigned_sparse_fastpath_preserves_layout_and_small_materialization_budget() 
     );
     let mut w = Workbook::new();
     w.add_sheet("Sheet1").unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A1".parse().unwrap(), 7.)
-        .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("B500000".parse().unwrap(), 9999.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("A1", 7.).unwrap();
+    w.sheet_mut(0).unwrap().set_value("B500000", 9999.).unwrap();
     let budgets = EvaluationBudgets {
         materialized_values: 2,
         ..EvaluationBudgets::default()
@@ -546,7 +515,7 @@ fn normalized_offset_algebra_retains_union_and_range_geometry() {
 }
 
 #[test]
-fn normalized_offset_union_consumes_ordinary_references_without_signed_source_exception() {
+fn normalized_offset_union_consumes_ordinary_references() {
     let w = fixture();
     for expression in [
         "SUM((OFFSET(B3,0,0,-2,-2),A1:B2))",
@@ -757,7 +726,7 @@ fn additional_envelope_members_consume_work_without_reading_cells() {
                 wrap(vec![a]),
             );
             if extra {
-                assert!(matches!(result, Err(EvaluationFailure::Budget(_))));
+                assert!(matches!(result, Err(EvaluationError::Budget(_))));
             } else {
                 assert!(result.is_ok());
             }

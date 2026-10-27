@@ -15,8 +15,8 @@ mod resource;
 mod run_usage;
 
 pub use budget::{
-    BudgetFailure, BudgetKind, CapabilityId, EvaluationBudgets, EvaluationFailure,
-    EvaluationLimits, EvaluationOutcome, EvaluationUsage, RandomAccess, ResourceFailureKind,
+    BudgetError, BudgetKind, CapabilityId, EvaluationBudgets, EvaluationError, EvaluationLimits,
+    EvaluationOutcome, EvaluationReasonError, EvaluationUsage, RandomAccess, ResourceFailureKind,
     WorkKind,
 };
 pub(in crate::eval) use budget::{BudgetMeter, EvalResult};

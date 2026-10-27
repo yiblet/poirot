@@ -1,7 +1,7 @@
 //! Actual TEXT bridge regressions for retained Output!D304 sign placement.
 use poirot::eval::{
-    BudgetKind, EvaluationBudgets, EvaluationFailure, EvaluationOutcome, RunConfiguration,
-    TextSemanticsPolicy, TextSourceVersion, run_formula_with_configuration,
+    BudgetKind, EvaluationBudgets, EvaluationError, EvaluationOutcome, RunConfiguration,
+    run_formula_with_configuration,
 };
 use poirot::model::{CellAddress, CellValue, ExcelText, Workbook};
 
@@ -12,13 +12,11 @@ fn workbook() -> Workbook {
 }
 
 #[test]
-fn text_numeric_affixes_match_in_default_and_pinned_poi_configuration() {
+fn text_numeric_affixes_follow_default_formatting() {
     let workbook = workbook();
     let default = RunConfiguration::default();
-    let poi = default.clone().with_text_policy(TextSemanticsPolicy {
-        source: TextSourceVersion::Poi7321209,
-    });
-    for configuration in [&default, &poi] {
+    let configuration = &default;
+    {
         for (formula, expected) in [
             (r#"TEXT(-6653,"$###,###")"#, "-$6,653"),
             (r#"TEXT(6653,"$###,###")"#, "$6,653"),
@@ -71,7 +69,7 @@ fn text_format_budget_and_lossless_failures_are_not_caught_by_iferror() {
     );
     assert!(
         matches!(outcome, EvaluationOutcome::Aborted {
-        failure: EvaluationFailure::Budget(ref failure), ..
+        failure: EvaluationError::Budget(ref failure), ..
     } if failure.kind == BudgetKind::TextBytes),
         "{outcome:?}"
     );
@@ -95,7 +93,7 @@ fn text_format_budget_and_lossless_failures_are_not_caught_by_iferror() {
         matches!(
             outcome,
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::UnsupportedCapability { .. },
+                failure: EvaluationError::UnsupportedCapability { .. },
                 ..
             }
         ),

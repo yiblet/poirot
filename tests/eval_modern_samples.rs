@@ -374,29 +374,10 @@ fn scaled_public_controls_and_signed_z_tail() {
     );
 }
 #[test]
-fn laziness_profile_isolation_and_uncatchable_work() {
+fn laziness_and_uncatchable_work() {
     let b = book();
     near(call(&b, "IF(FALSE,T.TEST({0;2},{2;3;4},2,3),7)"), 7.);
-    let config = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    for (formula, _) in cases() {
-        assert!(
-            matches!(
-                run_formula_with_configuration(
-                    &b,
-                    0,
-                    target("Z100").address,
-                    formula,
-                    &config,
-                    Default::default()
-                ),
-                EvaluationOutcome::Complete {
-                    value: CellValue::Error(CellError::Name),
-                    ..
-                }
-            ),
-            "{formula}"
-        );
-    }
+
     for formula in [
         "IFERROR(T.TEST({0;2},{2;3;4},2,3),99)",
         "IFERROR(MODE.MULT({7;2;7;2}),99)",

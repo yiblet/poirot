@@ -182,9 +182,7 @@ fn literal_kinds_and_qualifiers_preserve_syntax_distinctions() {
 fn every_catalog_transfer_keeps_literal_variants_conservative() {
     let policy = PreparationPolicy::default();
     let mut compiler = FormulaCompiler::new();
-    for descriptor in crate::eval::functions::registry::descriptors_for_policy(
-        crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation,
-    ) {
+    for descriptor in crate::eval::functions::registry::FUNCTION_DESCRIPTORS.iter() {
         for (cell, number, text) in [("A1", 1, "a"), ("B2", 7, "longer")] {
             for source in [
                 format!("{}({cell},{number},\"{text}\")", descriptor.name),

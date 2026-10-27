@@ -72,32 +72,3 @@ impl IeeeNumberBits {
         }
     }
 }
-/// Unchecked exceptions thrown by inspected pinned handlers, not CellError values.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum KnownSourceException {
-    /// Pinned numeric comparison rejects a special binary64 input.
-    SpecialDoubleComparison {
-        /// Source argument index that triggered the rejection.
-        argument: u8,
-        /// Exact rejected numeric payload.
-        bits: IeeeNumberBits,
-    },
-    /// Pinned Commons Math iteration failed to converge.
-    CommonsConvergence(CommonsConvergence),
-    /// Pinned Poisson distribution constructor rejects a zero mean.
-    PoissonMeanZeroConstructor,
-    /// Pinned numeric handler throws while coercing an omitted argument.
-    MissingArgumentCoercion,
-    /// MultiOperandNumericFunction.collectValue rejects a RefListEval union.
-    AggregateReferenceListConversion,
-}
-/// Reason a Commons Math iteration failed to converge in the reference algorithm.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum CommonsConvergence {
-    /// Source iteration limit was exhausted.
-    IterationLimit,
-    /// Continued fraction diverged to infinity.
-    InfiniteContinuedFraction,
-    /// Continued fraction produced NaN.
-    NanContinuedFraction,
-}

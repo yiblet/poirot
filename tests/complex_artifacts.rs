@@ -7,13 +7,9 @@ use poirot::{CellValue, Workbook};
 fn old_complex_preparation_recovers_authored_source_and_edits() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), "3+4j").unwrap();
-    sheet
-        .set_formula("D1".parse().unwrap(), "IMCONJUGATE(A1:A2)")
-        .unwrap();
-    sheet
-        .set_formula("G1".parse().unwrap(), "IMSUM(A1:A2)")
-        .unwrap();
+    sheet.set_value("A1", "3+4j").unwrap();
+    sheet.set_formula("D1", "IMCONJUGATE(A1:A2)").unwrap();
+    sheet.set_formula("G1", "IMSUM(A1:A2)").unwrap();
     let mut overlay = Overlay::with_workbook(book).build().unwrap();
     let input = overlay.target("S!A2").unwrap();
     let output = overlay.target("S!G1").unwrap();
@@ -45,7 +41,13 @@ fn old_complex_preparation_recovers_authored_source_and_edits() {
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedIncompatible);
     assert_eq!(
-        workbook.sheet(0).unwrap().get(input.address).unwrap().value,
+        workbook
+            .sheet(0)
+            .unwrap()
+            .get(input.address)
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Text("2j".into())
     );
     let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
@@ -76,7 +78,7 @@ fn xlsx_roundtrip_executes_complex_profiles_and_spills() {
         ("G1", "IMCOSH(0)"),
         ("J1", "IMSUM({\"i\";\"2i\"})"),
     ] {
-        sheet.set_formula(cell.parse().unwrap(), formula).unwrap();
+        sheet.set_formula(cell, formula).unwrap();
     }
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let reopened = poirot_io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();

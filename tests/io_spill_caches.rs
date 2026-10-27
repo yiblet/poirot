@@ -47,7 +47,10 @@ fn dynamic_metadata_typed_children_and_blank_source_style_roundtrip() {
     let reopened = read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
     let sheet = reopened.sheet(0).unwrap();
     assert_eq!(sheet.spill_owner(at("B1")), Some(at("A1")));
-    assert_eq!(sheet.get(at("C1")).unwrap().value, CellValue::Number(3.));
+    assert_eq!(
+        sheet.get(at("C1")).unwrap().unwrap().value,
+        CellValue::Number(3.)
+    );
     assert!(sheet.source_cell(at("C1")).is_none());
     let source = sheet.source_cell(at("B1")).unwrap();
     assert_eq!(source.value, CellValue::Blank);
@@ -67,11 +70,23 @@ fn modern_error_values_and_formula_caches_survive_backend_adaptation() {
         read_workbook_bytes::<poirot::model::Workbook>(&write_xlsx_to_buffer(&book).unwrap())
             .unwrap();
     assert_eq!(
-        reopened.sheet(0).unwrap().get(at("A1")).unwrap().value,
+        reopened
+            .sheet(0)
+            .unwrap()
+            .get(at("A1"))
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Error(CellError::Spill)
     );
     assert_eq!(
-        reopened.sheet(0).unwrap().get(at("B1")).unwrap().value,
+        reopened
+            .sheet(0)
+            .unwrap()
+            .get(at("B1"))
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Error(CellError::Calc)
     );
 }
@@ -91,7 +106,7 @@ fn export_refuses_authored_holes_and_overlapping_or_nested_spill_owners() {
         .unwrap();
     assert!(write_xlsx_to_buffer(&book).is_err());
     let sheet = book.sheet_mut(0).unwrap();
-    sheet.remove(at("C1"));
+    sheet.remove(at("C1")).unwrap();
     // Styled blanks in a sparse cache rectangle are not authored blockers.
     sheet
         .set(

@@ -28,7 +28,7 @@ fn book() -> Workbook {
     w
 }
 fn excel() -> RunConfiguration {
-    RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
+    RunConfiguration::default()
 }
 fn formula(name: &str, criterion: &str) -> String {
     if matches!(name, "SUMIF" | "AVERAGEIF") {
@@ -105,7 +105,6 @@ fn criterion_changes_invalidate_retained_results() {
         .unwrap();
     let mut overlay = Overlay::with_workbook(&w)
         .with_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .build()
@@ -262,7 +261,6 @@ fn contextual_criteria_invalidate_retained_locale_and_date_order_reads() {
         .unwrap();
     let mut overlay = Overlay::with_workbook(&w)
         .with_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .build()

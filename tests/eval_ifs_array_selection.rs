@@ -27,9 +27,7 @@ fn book() -> Workbook {
     book
 }
 fn config(arrays: ArrayResultPolicy) -> RunConfiguration {
-    RunConfiguration::default()
-        .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
-        .with_array_result_policy(arrays)
+    RunConfiguration::default().with_array_result_policy(arrays)
 }
 fn result(
     book: &Workbook,
@@ -288,7 +286,7 @@ fn condition_and_selected_result_dimensions_bound_child_first_spills() {
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(EvaluationPolicy {
             arrays: ArrayResultPolicy::DynamicSpill,
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
+
             ..Default::default()
         })
         .build()

@@ -1,5 +1,5 @@
 //! Generic flattening geometry and filtering, independent of spreadsheet storage.
-use crate::matrix::{Axis, Budget, Error, Matrix, Result};
+use crate::matrix::{Axis, Budget, Matrix, MatrixError, Result};
 use crate::scalar::CellError;
 
 /// The order in which an input rectangle is traversed.
@@ -61,13 +61,13 @@ pub fn flatten<T: Clone>(
         .filter(|v| ignore.retains(classify(v)))
         .count();
     if count == 0 {
-        return Err(Error::Formula(CellError::Calc));
+        return Err(MatrixError::Formula(CellError::Calc));
     }
     budget.check(Some(count), input.values().len().checked_add(count))?;
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| Error::AllocationFailure)?;
+        .map_err(|_| MatrixError::AllocationFailure)?;
     let (outer, inner) = match scan {
         ScanOrder::Rows => (input.rows(), input.cols()),
         ScanOrder::Columns => (input.cols(), input.rows()),
@@ -82,7 +82,7 @@ pub fn flatten<T: Clone>(
                 // A caller-provided classifier may use interior mutability. Refuse
                 // inconsistent admissions rather than growing beyond the checked count.
                 if values.len() >= count {
-                    return Err(Error::Formula(CellError::Value));
+                    return Err(MatrixError::Formula(CellError::Value));
                 }
                 values.push(value.clone());
             }

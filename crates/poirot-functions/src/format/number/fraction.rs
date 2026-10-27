@@ -6,7 +6,9 @@ use crate::format::{FormatError, RenderedText, Token, error};
 const MAX_EXACT_INTEGER: f64 = 9_007_199_254_740_992.;
 fn exact_integer(n: f64) -> Result<u64, FormatError> {
     if !n.is_finite() || !(0. ..=MAX_EXACT_INTEGER).contains(&n) || n.fract() != 0. {
-        return Err(error("fraction integer exceeds supported exact range"));
+        return Err(error(
+            crate::format::FormatReasonError::FractionIntegerExceedsSupportedExactRange,
+        ));
     }
     Ok(n as u64)
 }
@@ -15,7 +17,9 @@ fn fraction_literals(tokens: &[Token]) -> Result<RenderedText, FormatError> {
         .iter()
         .any(|t| !matches!(t, Token::Literal(_) | Token::Padding(_) | Token::Fill(_)))
     {
-        return Err(error("unsupported tokens in fraction literal region"));
+        return Err(error(
+            crate::format::FormatReasonError::UnsupportedTokensInFractionLiteralRegion,
+        ));
     }
     Ok(RenderedText::literals(tokens))
 }
@@ -26,7 +30,9 @@ impl FractionPlan {
             .iter()
             .any(|t| matches!(t, Token::Percent | Token::Comma))
         {
-            return Err(error("fraction percent/comma scaling is unsupported"));
+            return Err(error(
+                crate::format::FormatReasonError::FractionPercentCommaScalingIsUnsupported,
+            ));
         }
         let slashes: Vec<_> = tokens
             .iter()
@@ -34,7 +40,9 @@ impl FractionPlan {
             .filter_map(|(i, t)| matches!(t, Token::Slash).then_some(i))
             .collect();
         if slashes.len() != 1 {
-            return Err(error("fraction requires one slash"));
+            return Err(error(
+                crate::format::FormatReasonError::FractionRequiresOneSlash,
+            ));
         }
         // SAFETY: The slash count is one; all positions are selected within tokens, and first/end delimit a nonempty digit run before the numerator.
         let slash = slashes[0];
@@ -43,10 +51,12 @@ impl FractionPlan {
             // SAFETY: The slash count is one; all positions are selected within tokens, and first/end delimit a nonempty digit run before the numerator.
             .take_while(|i| matches!(tokens[*i], Token::Digit(_)))
             .last()
-            .ok_or_else(|| error("fraction has no numerator"))?;
+            .ok_or_else(|| error(crate::format::FormatReasonError::FractionHasNoNumerator))?;
         let numerator_width = slash - numerator_start;
         if numerator_width > 15 {
-            return Err(error("fraction numerator width exceeds limit"));
+            return Err(error(
+                crate::format::FormatReasonError::FractionNumeratorWidthExceedsLimit,
+            ));
         }
         let denom_end = (slash + 1..tokens.len()).take_while(|i| {
             // SAFETY: The slash count is one; all positions are selected within tokens, and first/end delimit a nonempty digit run before the numerator.
@@ -67,20 +77,22 @@ impl FractionPlan {
                 })
                 .collect::<String>();
             if dt.iter().any(|t| matches!(t, Token::Digit(c) if *c != '0')) {
-                return Err(error("mixed fixed/variable fraction denominator"));
+                return Err(error(
+                    crate::format::FormatReasonError::MixedFixedVariableFractionDenominator,
+                ));
             }
-            let d = text
-                .parse::<u32>()
-                .map_err(|_| error("fixed fraction denominator exceeds u32 range"))?;
+            let d = text.parse::<u32>().map_err(|_| {
+                error(crate::format::FormatReasonError::FixedFractionDenominatorExceedsU32Range)
+            })?;
             if d == 0 {
-                return Err(error("zero fraction denominator"));
+                return Err(error(
+                    crate::format::FormatReasonError::ZeroFractionDenominator,
+                ));
             }
             (FractionDenominator::Fixed(d), text.len())
         } else {
             if dt.is_empty() || dt.len() > 4 {
-                return Err(error(
-                    "fraction denominator requires one to four placeholders",
-                ));
+                return Err(error(crate::format::FormatReasonError::FractionDenominatorRequiresOneToFourPlaceholders));
             }
             (
                 // SAFETY: The local guard restricts dt.len() to 1..=4; 10^4 fits u64 and the result is positive.
@@ -100,7 +112,9 @@ impl FractionPlan {
                 .unwrap()
                 + 1;
             if end - first > 15 {
-                return Err(error("fraction whole width exceeds limit"));
+                return Err(error(
+                    crate::format::FormatReasonError::FractionWholeWidthExceedsLimit,
+                ));
             }
             (
                 // SAFETY: The slash count is one; all positions are selected within tokens, and first/end delimit a nonempty digit run before the numerator.
@@ -131,7 +145,9 @@ impl FractionPlan {
     /// Render an admitted fraction layout and preserve literal spans.
     pub(super) fn render_fraction_output(&self, n: f64) -> Result<RenderedText, FormatError> {
         if !n.is_finite() || n.abs() > MAX_EXACT_INTEGER {
-            return Err(error("fraction magnitude exceeds exact integer range"));
+            return Err(error(
+                crate::format::FormatReasonError::FractionMagnitudeExceedsExactIntegerRange,
+            ));
         }
         let magnitude = n.abs();
         let mut whole = if self.mixed {
@@ -161,9 +177,11 @@ impl FractionPlan {
         if self.mixed && numerator >= denominator {
             whole = whole
                 .checked_add(numerator / denominator)
-                .ok_or_else(|| error("fraction whole overflow"))?;
+                .ok_or_else(|| error(crate::format::FormatReasonError::FractionWholeOverflow))?;
             if whole > MAX_EXACT_INTEGER as u64 {
-                return Err(error("fraction whole exceeds exact range"));
+                return Err(error(
+                    crate::format::FormatReasonError::FractionWholeExceedsExactRange,
+                ));
             }
             numerator %= denominator;
         }
@@ -182,7 +200,9 @@ impl FractionPlan {
                     .checked_add(1)
                     .and_then(|w| w.checked_add(self.denominator_width))
                     .filter(|w| *w <= 32767)
-                    .ok_or_else(|| error("fraction padding exceeds cell limit"))?;
+                    .ok_or_else(|| {
+                        error(crate::format::FormatReasonError::FractionPaddingExceedsCellLimit)
+                    })?;
                 // SAFETY: The checked padding width is at most 32767; each repeated space is one byte.
                 " ".repeat(width)
             }

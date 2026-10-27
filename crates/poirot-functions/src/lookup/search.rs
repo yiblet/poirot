@@ -4,8 +4,9 @@ use crate::lookup::operands::{
 };
 use crate::lookup::table::Table;
 use crate::lookup::{
-    Array, Context, Error, Failure, MatchMode, ReferenceKind, Scalar, Search, SearchMode,
-    Unsupported, Value, Work, Workbook, approximate_index, xmatch_index,
+    Array, Context, LookupError, LookupUnsupportedError, LookupValueError, MatchMode,
+    ReferenceKind, Scalar, Search, SearchMode, Value, Work, Workbook, approximate_index,
+    xmatch_index,
 };
 // XLOOKUP and XMATCH default omitted modes to exact matching and forward search.
 // https://support.microsoft.com/en-us/excel/functions/xlookup-function
@@ -15,7 +16,7 @@ fn modes(
     match_index: usize,
     c: Context,
     w: &mut impl Workbook,
-) -> Result<(MatchMode, SearchMode), Failure> {
+) -> Result<(MatchMode, SearchMode), LookupError> {
     let mode = match if args.len() > match_index {
         Some(args.get(match_index, c, w)?)
     } else {
@@ -30,7 +31,7 @@ fn modes(
         0 => MatchMode::Exact,
         1 => MatchMode::Larger,
         2 => MatchMode::Wildcard,
-        _ => return Err(Error::Value.into()),
+        _ => return Err(LookupValueError::Value.into()),
     };
     let search = match if args.len() > match_index + 1 {
         Some(args.get(match_index + 1, c, w)?)
@@ -46,7 +47,7 @@ fn modes(
         -1 => SearchMode::Backward,
         1 => SearchMode::Forward,
         2 => SearchMode::BinaryAscending,
-        _ => return Err(Error::Value.into()),
+        _ => return Err(LookupValueError::Value.into()),
     };
     Ok((mode, search))
 }
@@ -56,11 +57,11 @@ pub(super) fn search(
     args: &Arguments<'_>,
     c: Context,
     w: &mut impl Workbook,
-) -> Result<Value, Failure> {
+) -> Result<Value, LookupError> {
     match f {
         Search::Lookup => {
             if !(2..=3).contains(&args.len()) {
-                return Err(Error::Value.into());
+                return Err(LookupValueError::Value.into());
             }
             let key = scalar(&args.get(0, c, w)?, c, w)?;
             let lookup_argument = args.get(1, c, w)?;
@@ -75,17 +76,23 @@ pub(super) fn search(
                 table.cols <= table.rows
             } else {
                 if table.rows != 1 && table.cols != 1 {
-                    return Err(Failure::Unsupported(Unsupported::LookupNonVector));
+                    return Err(LookupError::Unsupported(
+                        LookupUnsupportedError::LookupNonVector,
+                    ));
                 }
                 table.cols == 1
             };
             let vector = table.vector(column, 0, w)?;
             if let Some(result) = result_table {
                 if result.rows != 1 && result.cols != 1 {
-                    return Err(Failure::Unsupported(Unsupported::LookupNonVector));
+                    return Err(LookupError::Unsupported(
+                        LookupUnsupportedError::LookupNonVector,
+                    ));
                 }
                 if vector.len() > result.rows.max(result.cols) {
-                    return Err(Failure::Unsupported(Unsupported::LookupShortResult));
+                    return Err(LookupError::Unsupported(
+                        LookupUnsupportedError::LookupShortResult,
+                    ));
                 }
                 let index = approximate_index(&key, &vector, w)?;
                 Ok(result.selected(if result.cols == 1 {
@@ -105,7 +112,7 @@ pub(super) fn search(
         Search::XMatch | Search::XLookup => {
             let minimum = if f == Search::XLookup { 3 } else { 2 };
             if args.len() < minimum {
-                return Err(Error::Value.into());
+                return Err(LookupValueError::Value.into());
             }
             // This fallback is resolved before search even when a match exists.
             // Missing optional arguments use the same defaults as absent slots:
@@ -135,7 +142,9 @@ pub(super) fn search(
             let vector = table.vector(column, 0, w)?;
             let index = match (xmatch_index(&key, &vector, mode, direction, w), fallback) {
                 (Ok(index), _) => index,
-                (Err(Failure::Spreadsheet(Error::Na)), Some(fallback)) if f == Search::XLookup => {
+                (Err(LookupError::Spreadsheet(LookupValueError::Na)), Some(fallback))
+                    if f == Search::XLookup =>
+                {
                     let return_argument = args.get(2, c, w)?;
                     if let Value::SignedReference(r) = &return_argument
                         && r.kind == ReferenceKind::Area
@@ -174,8 +183,14 @@ pub(super) fn search(
             }
             match &args.get(2, c, w)? {
                 Value::Reference(r) if r.kind() == ReferenceKind::Area => {
-                    let row = r.first_row().checked_add(index as u32).ok_or(Error::Ref)?;
-                    let col = r.first_col().checked_add(index as u32).ok_or(Error::Ref)?;
+                    let row = r
+                        .first_row()
+                        .checked_add(index as u32)
+                        .ok_or(LookupValueError::Ref)?;
+                    let col = r
+                        .first_col()
+                        .checked_add(index as u32)
+                        .ok_or(LookupValueError::Ref)?;
                     let rows = if column {
                         row..=row
                     } else {
@@ -205,7 +220,7 @@ pub(super) fn search(
                         result.last_col = result.first_col;
                     }
                     if !result.valid() {
-                        return Err(Error::Ref.into());
+                        return Err(LookupValueError::Ref.into());
                     }
                     Ok(Value::SignedReference(result))
                 }

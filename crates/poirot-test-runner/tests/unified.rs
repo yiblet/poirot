@@ -327,12 +327,13 @@ fn duplicate_baseline_keys_are_rejected_instead_of_silently_overwritten() {
         poirot_test_runner::fods::xml::SOURCE_COMMIT,
     );
     std::fs::write(&fixture.options.baseline, text).unwrap();
-    assert!(
-        Baseline::load(&fixture.options.baseline)
-            .unwrap_err()
-            .to_string()
-            .contains("duplicate baseline")
-    );
+    let poirot_test_runner::RunnerError::Json(source) =
+        Baseline::load(&fixture.options.baseline).unwrap_err()
+    else {
+        panic!("wrong baseline error category")
+    };
+    assert!(source.is_data());
+    assert!(source.to_string().contains("duplicate baseline"));
 }
 
 #[test]

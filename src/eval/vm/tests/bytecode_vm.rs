@@ -1,10 +1,10 @@
 use super::super::bytecode_vm::{decode_binary, decode_unary};
 use crate::eval::compile::bound::Expression;
 use crate::eval::compile::bytecode::{Compiled, OperandCursor};
-use crate::eval::config::{ArrayResultPolicy, BuiltinSemanticsPolicy, EvaluationInputs};
+use crate::eval::config::{ArrayResultPolicy, EvaluationInputs};
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{
-    BudgetMeter, CapabilityId, EvalResult, EvaluationBudgets, EvaluationFailure,
+    BudgetMeter, CapabilityId, EvalResult, EvaluationBudgets, EvaluationError,
 };
 use crate::eval::observe::{
     BuiltinInvocationObserver, ConsumedBuiltinInvocation, ExecutionEvent, ExecutionObserver,
@@ -21,19 +21,19 @@ use poirot_parsing::formula::UnaryOp;
 #[test]
 fn malformed_reference_encoding_returns_stale_plan() {
     for length in 0..4 {
-        assert_eq!(
+        assert!(matches!(
             OperandCursor(&[0; 4][..length]).word(),
-            Err(EvaluationFailure::StalePlan)
-        );
+            Err(EvaluationError::StalePlan)
+        ));
     }
-    assert_eq!(
+    assert!(matches!(
         OperandCursor(&[5, 0, 0, 0, b'a']).string(),
-        Err(EvaluationFailure::StalePlan)
-    );
-    assert_eq!(
+        Err(EvaluationError::StalePlan)
+    ));
+    assert!(matches!(
         OperandCursor(&[1, 0, 0, 0, 0xff]).string(),
-        Err(EvaluationFailure::StalePlan)
-    );
+        Err(EvaluationError::StalePlan)
+    ));
     assert!(OperandCursor(&[0; 16]).cell().is_err());
     assert!(decode_unary(u32::MAX).is_err());
     assert!(decode_binary(u32::MAX).is_err());
@@ -79,12 +79,12 @@ fn workbook() -> Workbook {
         workbook
             .sheet_mut(index)
             .unwrap()
-            .set_value("A1".parse().unwrap(), 2.)
+            .set_value("A1", 2.)
             .unwrap();
         workbook
             .sheet_mut(index)
             .unwrap()
-            .set_value("B1".parse().unwrap(), 4.)
+            .set_value("B1", 4.)
             .unwrap();
     }
     workbook
@@ -130,15 +130,11 @@ fn compare(
     registry: Option<&functions::extensions::ExtensionRegistry>,
 ) {
     {
-        for builtin in [
-            BuiltinSemanticsPolicy::PinnedPoi,
-            BuiltinSemanticsPolicy::ExcelDocumentation,
-        ] {
+        {
             compare_configured(
                 syntax,
                 budgets,
                 registry,
-                builtin,
                 ArrayResultPolicy::ScalarIntersection,
             );
         }
@@ -149,7 +145,7 @@ fn compare_configured(
     syntax: &poirot_parsing::formula::Expr,
     budgets: EvaluationBudgets,
     registry: Option<&functions::extensions::ExtensionRegistry>,
-    builtin: BuiltinSemanticsPolicy,
+
     arrays: ArrayResultPolicy,
 ) {
     let workbook = workbook();
@@ -173,7 +169,6 @@ fn compare_configured(
         });
         session.sources.extensions = registry;
 
-        session.policies.builtin_policy = builtin;
         session.policies.array_result_policy = arrays;
         session.ports.execution_observer = Some(&mut tree_events);
         session.ports.dependency_sink = Some(&mut tree_reads);
@@ -199,7 +194,6 @@ fn compare_configured(
         });
         session.sources.extensions = registry;
 
-        session.policies.builtin_policy = builtin;
         session.policies.array_result_policy = arrays;
         session.ports.execution_observer = Some(&mut vm_events);
         session.ports.dependency_sink = Some(&mut vm_reads);
@@ -211,7 +205,7 @@ fn compare_configured(
             std::mem::take(&mut session.state.runtime.effects.extension_trace),
         )
     };
-    assert_eq!(tree_result, vm_result, "{syntax:?}");
+    assert_result_parity(tree_result, vm_result);
     assert_eq!(tree_usage, vm_usage, "{syntax:?}");
     assert_eq!(tree_extensions, vm_extensions, "{syntax:?}");
     assert_eq!(tree_reads.0, vm_reads.0, "{syntax:?}");
@@ -266,10 +260,7 @@ fn array_operator_tree_and_bytecode_match_values_reads_events_and_budgets() {
     ] {
         let syntax = poirot_parsing::formula::parse_formula(source).unwrap();
         {
-            for builtin in [
-                BuiltinSemanticsPolicy::PinnedPoi,
-                BuiltinSemanticsPolicy::ExcelDocumentation,
-            ] {
+            {
                 for budgets in [
                     EvaluationBudgets::default(),
                     EvaluationBudgets {
@@ -285,7 +276,7 @@ fn array_operator_tree_and_bytecode_match_values_reads_events_and_budgets() {
                         ArrayResultPolicy::ScalarIntersection,
                         ArrayResultPolicy::DynamicSpill,
                     ] {
-                        compare_configured(&syntax, budgets, None, builtin, arrays);
+                        compare_configured(&syntax, budgets, None, arrays);
                     }
                 }
             }
@@ -316,10 +307,7 @@ fn bytecode_stack_reuses_capacity_across_nested_cells_and_lazy_arguments() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(
-            "A2".parse().unwrap(),
-            "10+IF(TRUE,SUM({1,2;3,4}),UNKNOWN())",
-        )
+        .set_formula("A2", "10+IF(TRUE,SUM({1,2;3,4}),UNKNOWN())")
         .unwrap();
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     let program =
@@ -400,7 +388,7 @@ fn lazy_argument_frames_grow_only_through_forced_indices() {
 }
 
 #[test]
-fn bytecode_stack_returns_to_frame_base_after_budget_failure() {
+fn bytecode_stack_returns_to_frame_base_after_budget_error() {
     let workbook = workbook();
     // Abort after partial operands, including nested lazy arguments and array construction.
     for source in [
@@ -449,7 +437,7 @@ fn bytecode_stack_unwinds_nested_observer_refusals_with_tree_trace_parity() {
         fn observe(&mut self, event: ExecutionEvent<'_>) -> EvalResult<()> {
             self.events.push(format!("{event:?}"));
             if self.events.len() == self.ordinal {
-                Err(EvaluationFailure::StalePlan)
+                Err(EvaluationError::StalePlan)
             } else {
                 Ok(())
             }
@@ -459,10 +447,7 @@ fn bytecode_stack_unwinds_nested_observer_refusals_with_tree_trace_parity() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_formula(
-            "A2".parse().unwrap(),
-            "10+IF(TRUE,SUM({1,2;3,4}),UNKNOWN())",
-        )
+        .set_formula("A2", "10+IF(TRUE,SUM({1,2;3,4}),UNKNOWN())")
         .unwrap();
     let syntax =
         poirot_parsing::formula::parse_formula("100+IF(TRUE,A2+SUM({5,6}),UNKNOWN())").unwrap();
@@ -499,9 +484,12 @@ fn bytecode_stack_unwinds_nested_observer_refusals_with_tree_trace_parity() {
     // main-expression events, then verify the observed probe still succeeds.
     let events = run(true, usize::MAX).2.len() - 2;
     for ordinal in 1..=events {
+        let actual = run(false, ordinal);
+        let expected = run(true, ordinal);
+        assert_result_parity(actual.0, expected.0);
         assert_eq!(
-            run(false, ordinal),
-            run(true, ordinal),
+            (actual.1, actual.2),
+            (expected.1, expected.2),
             "observer event {ordinal}"
         );
     }
@@ -721,10 +709,10 @@ fn bytecode_vm_unwinds_observer_rejections_before_next_expression() {
         fn observe(&mut self, event: ExecutionEvent<'_>) -> EvalResult<()> {
             self.events.push(format!("{event:?}"));
             if self.remaining == 0 {
-                Err(EvaluationFailure::ResourceLimit {
+                Err(EvaluationError::ResourceLimit {
                     capability: CapabilityId::FunctionAdapter,
-                    source: None,
-                    detail: "test observer rejected event".into(),
+                    target: None,
+                    reason: crate::eval::limits::EvaluationReasonError::ObserverRejected,
                 })
             } else {
                 self.remaining -= 1;
@@ -753,16 +741,24 @@ fn bytecode_vm_unwinds_observer_rejections_before_next_expression() {
                 .map(snapshot);
                 session.ports.execution_observer = None;
                 assert_eq!(
-                    ExpressionRunner::new(&mut session)
+                    (ExpressionRunner::new(&mut session)
                         .expr(0, AT, &Expression::Number(17.))
-                        .map(snapshot),
-                    Ok("scalar Number(17.0)".into())
+                        .map(snapshot))
+                    .unwrap(),
+                    "scalar Number(17.0)"
                 );
                 (result, session.state.runtime.budget.usage.clone())
             };
             (result, usage, observer.events)
         };
-        assert_eq!(run(false), run(true), "observer limit {limit}");
+        let actual = run(false);
+        let expected = run(true);
+        assert_result_parity(actual.0, expected.0);
+        assert_eq!(
+            (actual.1, actual.2),
+            (expected.1, expected.2),
+            "observer limit {limit}"
+        );
     }
 }
 
@@ -822,7 +818,76 @@ fn bytecode_vm_without_execution_observer_preserves_budget_and_unwind_parity() {
                     session.state.runtime.budget.usage.clone(),
                 )
             };
-            assert_eq!(run(false), run(true), "{source}, {limits:?}");
+            let actual = run(false);
+            let expected = run(true);
+            assert_result_parity(actual.0, expected.0);
+            assert_result_parity(actual.2, expected.2);
+            assert_eq!(
+                (actual.1, actual.3),
+                (expected.1, expected.3),
+                "{source}, {limits:?}"
+            );
         }
+    }
+}
+
+/// Compare execution results without imposing equality on arbitrary dependency causes.
+fn assert_result_parity<T: std::fmt::Debug + PartialEq>(
+    actual: Result<T, EvaluationError>,
+    expected: Result<T, EvaluationError>,
+) {
+    use crate::eval::limits::EvaluationReasonError;
+    match (actual, expected) {
+        (Ok(actual), Ok(expected)) => assert_eq!(actual, expected),
+        (Err(EvaluationError::Budget(actual)), Err(EvaluationError::Budget(expected))) => {
+            assert_eq!(actual, expected)
+        }
+        (Err(EvaluationError::StalePlan), Err(EvaluationError::StalePlan)) => {}
+        (
+            Err(EvaluationError::UnsupportedCapability {
+                capability,
+                target,
+                reason: EvaluationReasonError::ObserverRejected,
+            }),
+            Err(EvaluationError::UnsupportedCapability {
+                capability: expected_capability,
+                target: expected_target,
+                reason: EvaluationReasonError::ObserverRejected,
+            }),
+        ) => {
+            assert_eq!(capability, expected_capability);
+            assert_eq!(target, expected_target);
+        }
+        (
+            Err(EvaluationError::ResourceLimit {
+                capability,
+                target,
+                reason: EvaluationReasonError::ExecutionEvidenceRetentionCapacityExhausted,
+            }),
+            Err(EvaluationError::ResourceLimit {
+                capability: expected_capability,
+                target: expected_target,
+                reason: EvaluationReasonError::ExecutionEvidenceRetentionCapacityExhausted,
+            }),
+        ) => {
+            assert_eq!(capability, expected_capability);
+            assert_eq!(target, expected_target);
+        }
+        (
+            Err(EvaluationError::ResourceLimit {
+                capability,
+                target,
+                reason: EvaluationReasonError::ObserverRejected,
+            }),
+            Err(EvaluationError::ResourceLimit {
+                capability: expected_capability,
+                target: expected_target,
+                reason: EvaluationReasonError::ObserverRejected,
+            }),
+        ) => {
+            assert_eq!(capability, expected_capability);
+            assert_eq!(target, expected_target);
+        }
+        (actual, expected) => panic!("execution outcome differs: {actual:?}, {expected:?}"),
     }
 }

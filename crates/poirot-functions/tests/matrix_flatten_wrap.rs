@@ -2,7 +2,7 @@
 //! https://support.microsoft.com/en-us/excel/functions/tocol-function
 //! https://support.microsoft.com/en-us/excel/functions/wraprows-function
 use poirot_functions::matrix::{
-    Axis, Budget, Error, Ignore, Matrix, MemberKind, ScanOrder, Transform, flatten,
+    Axis, Budget, Ignore, Matrix, MatrixError, MemberKind, ScanOrder, Transform, flatten,
 };
 use poirot_functions::scalar::CellError;
 const B: Budget = Budget {
@@ -49,7 +49,7 @@ fn flatten_filters_original_values_in_each_scan_order() {
             classify,
             B
         ),
-        Err(Error::Formula(CellError::Calc))
+        Err(MatrixError::Formula(CellError::Calc))
     );
     assert_eq!(
         flatten(
@@ -60,7 +60,7 @@ fn flatten_filters_original_values_in_each_scan_order() {
             classify,
             Budget { max_cells: 5, ..B }
         ),
-        Err(Error::BudgetExceeded)
+        Err(MatrixError::BudgetExceeded)
     );
     assert_eq!(
         flatten(
@@ -71,7 +71,7 @@ fn flatten_filters_original_values_in_each_scan_order() {
             classify,
             Budget { max_work: 11, ..B }
         ),
-        Err(Error::BudgetExceeded)
+        Err(MatrixError::BudgetExceeded)
     );
 }
 #[test]
@@ -101,7 +101,7 @@ fn wraps_vectors_with_bounded_geometry_and_padding() {
             count: 0
         }
         .shape(std::slice::from_ref(&input)),
-        Err(Error::Formula(CellError::Num))
+        Err(MatrixError::Formula(CellError::Num))
     );
     let rectangle = Matrix::new(2, 2, vec![1, 2, 3, 4]).unwrap();
     assert_eq!(
@@ -110,7 +110,7 @@ fn wraps_vectors_with_bounded_geometry_and_padding() {
             count: 2
         }
         .shape(&[rectangle]),
-        Err(Error::Formula(CellError::Value))
+        Err(MatrixError::Formula(CellError::Value))
     );
     assert_eq!(
         Transform::Wrap {
@@ -118,6 +118,6 @@ fn wraps_vectors_with_bounded_geometry_and_padding() {
             count: 2
         }
         .apply(&[input], &0, Budget { max_cells: 5, ..B }),
-        Err(Error::BudgetExceeded)
+        Err(MatrixError::BudgetExceeded)
     );
 }

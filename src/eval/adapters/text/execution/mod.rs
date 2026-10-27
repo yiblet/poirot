@@ -1,7 +1,6 @@
 //! Family-owned evaluation; generic argument coercion remains in the execution core.
 //!
-//! Depends on: host (CallHost), session (coercion), vm (deferred arguments), config (text
-//! and formatting policies), functions (identities and failures), limits (budgets) and
+//! Depends on: host (CallHost), session (coercion), vm (deferred arguments), functions (identities and failures), limits (budgets) and
 //! values (value channels).
 
 /// Text family dispatch.

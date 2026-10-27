@@ -2,7 +2,7 @@
 use super::overlay_evaluation;
 use super::source::Source;
 use crate::eval::config::EvaluationContext;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::reuse::Key;
 use crate::model::{Workbook, WorkbookChange};
 use std::borrow::Borrow;
@@ -66,7 +66,6 @@ impl Continuation {
         &self,
         source: crate::eval::inputs::EffectiveWorkbook<'_>,
         key: Key,
-        policy: crate::eval::materialization::FormulaCacheMaterializationPolicy,
     ) -> Option<WorkbookChange> {
         let value = self.runtime.memo.cache.get(&key)?;
         // Direct changes selects only earlier successful-call keys. A later failed
@@ -76,12 +75,11 @@ impl Continuation {
             key,
             value,
             self.runtime.preparation.admitted_role(key),
-            policy,
         )
     }
 
     /// Finish this evaluation with actual-work budget information.
-    pub fn finish(self, failure: Option<EvaluationFailure>) -> crate::eval::run::RunReport<()> {
+    pub fn finish(self, failure: Option<EvaluationError>) -> crate::eval::run::RunReport<()> {
         crate::eval::run::RunReport {
             execution: self.runtime.run_usage,
             outcome: self.runtime.budget.outcome(failure.map_or(Ok(()), Err)),

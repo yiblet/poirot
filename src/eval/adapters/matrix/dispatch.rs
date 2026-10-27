@@ -2,10 +2,10 @@ use super::modern;
 use crate::eval::adapters::elementwise::{ArgumentRole, WholeCollection, collections, matrices};
 use crate::eval::functions::registry::MatrixFunction;
 use crate::eval::host::{CallHost, OperandReader, SelectionAccess};
-use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::limits::{EvalResult, EvaluationError};
 use crate::eval::session::Session;
 use crate::eval::values::{
-    FunctionFailure, FunctionResult, VALUE_ERROR, Value, err, numeric_outcome,
+    FunctionError, FunctionResult, VALUE_ERROR, Value, err, numeric_outcome,
 };
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellAddress;
@@ -140,8 +140,8 @@ pub(in crate::eval) fn execute(
     let mut host = CallHost::new_array(session, sheet, address, args, args.len());
     match algebra(&mut host, function, address) {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }
 
@@ -166,12 +166,12 @@ pub(in crate::eval) fn sequence(
         .scalars(&mut host, 0)
     {
         Ok(arguments) => arguments,
-        Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => return Err(error),
+        Err(FunctionError::Spreadsheet(error)) => return Ok(err(error)),
+        Err(FunctionError::Operational(error)) => return Err(error),
     };
     let [rows, columns, start, step] = match arguments.as_slice() {
         &[rows, columns, start, step] => [rows, columns, start, step],
-        _ => return Err(EvaluationFailure::StalePlan),
+        _ => return Err(EvaluationError::StalePlan),
     };
     // Excel's documented grid is also the maximum admissible footprint here.
     // Fractional positive dimensions follow the existing integer coercion convention.
@@ -188,18 +188,18 @@ pub(in crate::eval) fn sequence(
     let columns = columns.trunc() as usize;
     let budget = match matrices::admit(&mut host, rows, columns) {
         Ok(budget) => budget,
-        Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => return Err(error),
+        Err(FunctionError::Spreadsheet(error)) => return Ok(err(error)),
+        Err(FunctionError::Operational(error)) => return Err(error),
     };
     match poirot_functions::matrix::sequence(rows, columns, start, step, budget) {
         Ok(matrix) => match matrices::publish(&mut host, matrix, address, Number) {
             Ok(value) => Ok(value),
-            Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-            Err(FunctionFailure::Operational(error)) => Err(error),
+            Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+            Err(FunctionError::Operational(error)) => Err(error),
         },
         Err(error) => match matrices::failure(&mut host, error) {
-            FunctionFailure::Spreadsheet(error) => Ok(err(error)),
-            FunctionFailure::Operational(failure) => Err(failure),
+            FunctionError::Spreadsheet(error) => Ok(err(error)),
+            FunctionError::Operational(failure) => Err(failure),
         },
     }
 }

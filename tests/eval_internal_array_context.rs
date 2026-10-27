@@ -200,7 +200,7 @@ fn array_output_is_admitted_before_reference_member_reads_and_limits_are_operati
     .with_dependency_sink(&mut reads);
     assert!(matches!(
         run.evaluate_formula(target("F2"), &formula),
-        Err(EvaluationFailure::Budget(_))
+        Err(EvaluationError::Budget(_))
     ));
     run.finish(Ok(()));
     assert!(

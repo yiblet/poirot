@@ -15,10 +15,9 @@ fn book(bits: u64, cache: bool) -> Workbook {
     let s = w.add_sheet("Data").unwrap();
     let value = CellValue::Number(f64::from_bits(bits));
     if cache {
-        s.set_formula_with_cached_value("B2".parse().unwrap(), "1", value)
-            .unwrap();
+        s.set_formula_with_cached_value("B2", "1", value).unwrap();
     } else {
-        s.set_value("B2".parse().unwrap(), value).unwrap();
+        s.set_value("B2", value).unwrap();
     }
     w
 }
@@ -104,12 +103,8 @@ fn finite_literal_and_cache_public_backend_roundtrip_preserves_bits() {
             );
             for bytes in [plan.execute().unwrap(), buffer(&w).unwrap()] {
                 let decoded = read::<Workbook>(&bytes).unwrap();
-                let CellValue::Number(number) = &decoded
-                    .sheet(0)
-                    .unwrap()
-                    .get("B2".parse().unwrap())
-                    .unwrap()
-                    .value
+                let CellValue::Number(number) =
+                    &decoded.sheet(0).unwrap().get("B2").unwrap().unwrap().value
                 else {
                     panic!("numeric type lost")
                 };

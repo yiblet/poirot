@@ -5,11 +5,11 @@ use super::search_mode::SearchMode;
 use super::{plan, selection};
 use crate::eval::adapters::search::execution::session_search::SessionSearch;
 use crate::eval::config::ArrayResultPolicy;
-use crate::eval::limits::{EvaluationFailure, WorkKind};
+use crate::eval::limits::{EvaluationError, WorkKind};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::{ReadRecorder, Session};
 use crate::eval::spill::SpillDemand;
-use crate::eval::values::{Area, FunctionFailure, FunctionResult};
+use crate::eval::values::{Area, FunctionError, FunctionResult};
 use crate::model::{CellAddress, CellValue};
 use plan::{LookupTable, LookupVector};
 use selection::CandidateReader;
@@ -117,7 +117,7 @@ impl LookupReader<'_, '_> {
             col: area.c1,
         };
         let membership = crate::model::query::RangeMembership::new(area.sheet, first, last)
-            .map_err(|_| EvaluationFailure::StalePlan)?;
+            .map_err(|_| EvaluationError::StalePlan)?;
         let view = crate::eval::inputs::EffectiveWorkbook::new(
             self.session.sources.workbook,
             self.session.sources.inputs,
@@ -147,7 +147,7 @@ impl LookupReader<'_, '_> {
                         end,
                         cells: view
                             .stored(membership)
-                            .map_err(|_| EvaluationFailure::StalePlan)?,
+                            .map_err(|_| EvaluationError::StalePlan)?,
                         charged: crate::model::query::QueryCounters::default(),
                     });
                 }
@@ -169,13 +169,13 @@ impl LookupReader<'_, '_> {
             } else if reverse {
                 let mut cells = view
                     .stored_reverse(membership)
-                    .map_err(|_| EvaluationFailure::StalePlan)?;
+                    .map_err(|_| EvaluationError::StalePlan)?;
                 let address = cells.next().map(|(address, _)| *address);
                 (address, cells.counters())
             } else {
                 let mut cells = view
                     .stored(membership)
-                    .map_err(|_| EvaluationFailure::StalePlan)?;
+                    .map_err(|_| EvaluationError::StalePlan)?;
                 let address = cells.next().map(|(address, _)| *address);
                 (address, cells.counters())
             };
@@ -244,7 +244,7 @@ impl CandidateReader for LookupReader<'_, '_> {
 }
 
 impl poirot_functions::lookup::MatchCandidateReader for LookupReader<'_, '_> {
-    type Error = FunctionFailure;
+    type Error = FunctionError;
 
     fn next(&mut self, first: usize, end: usize) -> FunctionResult<Option<usize>> {
         CandidateReader::next(self, first, end)

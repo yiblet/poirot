@@ -1,6 +1,6 @@
 //! Expected results follow exact small least-squares systems, not spreadsheet outputs.
 use super::*;
-use crate::matrix::{TrendFitPolicy, trend_with_policy};
+use crate::matrix::trend;
 const B: Budget = Budget {
     max_cells: 100000,
     max_work: 1000000,
@@ -97,7 +97,7 @@ fn rank_zero_and_determined_models_keep_coefficients_when_stats_unavailable() {
 fn rank_admission_and_bad_shapes_remain_fallible() {
     assert_eq!(
         regression_budget(usize::MAX, 2, 1, true),
-        Err(Error::SizeOverflow)
+        Err(MatrixError::SizeOverflow)
     );
     assert!(matches!(
         least_squares(
@@ -109,11 +109,11 @@ fn rank_admission_and_bad_shapes_remain_fallible() {
                 max_work: 1
             }
         ),
-        Err(Error::BudgetExceeded)
+        Err(MatrixError::BudgetExceeded)
     ));
     assert!(matches!(
         least_squares(&m(2, 1, &[0., 1.]), &[1.], Intercept::Estimate, B),
-        Err(Error::Formula(CellError::Ref))
+        Err(MatrixError::Formula(CellError::Ref))
     ));
 }
 
@@ -128,34 +128,32 @@ fn finite_coefficients_do_not_require_an_overflowing_projection_product() {
 
 #[test]
 fn modern_pure_trend_uses_the_same_rank_and_axis_policy() {
-    let result = trend_with_policy(
+    let result = trend(
         &m(1, 4, &[1., 3., 4., 6.]),
         Some(&m(2, 4, &[0., 1., 0., 1., 0., 0., 1., 1.])),
         Some(&m(2, 2, &[2., 4., 3., 5.])),
         true,
         B,
-        TrendFitPolicy::Determined,
     )
     .unwrap();
     assert_eq!((result.rows(), result.cols()), (1, 2));
     near(result.values()[0], 14.);
     near(result.values()[1], 24.);
     assert_eq!(
-        trend_with_policy(
+        trend(
             &m(1, 1, &[3.]),
             Some(&m(1, 1, &[1.])),
             Some(&m(1, 1, &[3.])),
             true,
             B,
-            TrendFitPolicy::Determined
         ),
-        Err(Error::Formula(CellError::Value))
+        Err(MatrixError::Formula(CellError::Value))
     );
     let fit = least_squares(&m(1, 1, &[1.]), &[3.], Intercept::Estimate, B).unwrap();
     assert_eq!(fit.predict(&m(1, 1, &[3.]), B).unwrap().values(), &[3.]);
     assert_eq!(
         fit.predict_trend(&m(1, 1, &[3.]), B),
-        Err(Error::Formula(CellError::Value))
+        Err(MatrixError::Formula(CellError::Value))
     );
 }
 

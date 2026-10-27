@@ -3,7 +3,7 @@ use super::computed_cell::ComputedCell;
 use super::spill_preparation::SpillPreparation;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{
-    BudgetMeter, CapabilityId, EvalResult, EvaluationFailure, MemoRetentionLimits,
+    BudgetMeter, CapabilityId, EvalResult, EvaluationError, MemoRetentionLimits,
     MemoRetentionUsage, WorkKind,
 };
 use crate::eval::reuse::SpillRole;
@@ -36,25 +36,25 @@ impl Admission<'_> {
         let extent = rows
             .as_ref()
             .map(|rows| {
-                let height = u32::try_from(rows.len()).map_err(|_| EvaluationFailure::StalePlan)?;
+                let height = u32::try_from(rows.len()).map_err(|_| EvaluationError::StalePlan)?;
                 let width = rows.first().map_or(0, Vec::len);
                 if height == 0 || width == 0 || rows.iter().any(|row| row.len() != width) {
-                    return Err(EvaluationFailure::StalePlan);
+                    return Err(EvaluationError::StalePlan);
                 }
-                let width = u32::try_from(width).map_err(|_| EvaluationFailure::StalePlan)?;
-                let row_offset = height.checked_sub(1).ok_or(EvaluationFailure::StalePlan)?;
-                let col_offset = width.checked_sub(1).ok_or(EvaluationFailure::StalePlan)?;
+                let width = u32::try_from(width).map_err(|_| EvaluationError::StalePlan)?;
+                let row_offset = height.checked_sub(1).ok_or(EvaluationError::StalePlan)?;
+                let col_offset = width.checked_sub(1).ok_or(EvaluationError::StalePlan)?;
                 let last = CellAddress {
                     row: at
                         .row
                         .checked_add(row_offset)
-                        .ok_or(EvaluationFailure::StalePlan)?,
+                        .ok_or(EvaluationError::StalePlan)?,
                     col: at
                         .col
                         .checked_add(col_offset)
-                        .ok_or(EvaluationFailure::StalePlan)?,
+                        .ok_or(EvaluationError::StalePlan)?,
                 };
-                last.validate().map_err(|_| EvaluationFailure::StalePlan)?;
+                last.validate().map_err(|_| EvaluationError::StalePlan)?;
                 Ok(last)
             })
             .transpose()?;
@@ -62,7 +62,7 @@ impl Admission<'_> {
             rows.iter().try_fold(0usize, |count, row| {
                 count
                     .checked_add(row.len())
-                    .ok_or(EvaluationFailure::StalePlan)
+                    .ok_or(EvaluationError::StalePlan)
             })
         })?;
         self.budget
@@ -128,11 +128,11 @@ impl Admission<'_> {
         if let Some(limits) = self.limits
             && (overflow || next.cells > limits.cells || next.bytes > limits.bytes)
         {
-            return Err(EvaluationFailure::MemoRetentionLimit {
+            return Err(EvaluationError::MemoRetentionLimit {
                 limits,
                 consumed: *self.memo_usage,
                 requested,
-                source: Some(EvaluationTarget { sheet, address: at }),
+                target: Some(EvaluationTarget { sheet, address: at }),
             });
         }
         if rows.is_some() {
@@ -141,61 +141,67 @@ impl Admission<'_> {
             self.preparation
                 .roles
                 .try_reserve(count)
-                .map_err(|_| EvaluationFailure::Resource {
+                .map_err(|reservation_source| EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: self.consumer,
-                    detail: "spill role allocation failed".into(),
+                    target: self.consumer,
+                    reason: (crate::eval::limits::EvaluationReasonError::SpillRoleAllocationFailed)
+                        .with_reservation_source(reservation_source),
                 })?;
             if self.journal {
                 self.budget
                     .check_allocation(self.preparation.journal.len().saturating_add(count))?;
-                self.preparation.journal.try_reserve(count).map_err(|_| {
-                    EvaluationFailure::Resource {
+                self.preparation.journal.try_reserve(count).map_err(|reservation_source| {
+                    EvaluationError::Resource {
                         kind: crate::eval::limits::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
-                        source: self.consumer,
-                        detail: "spill journal allocation failed".into(),
+                        target: self.consumer,
+                        reason: (crate::eval::limits::EvaluationReasonError::SpillJournalAllocationFailed).with_reservation_source(reservation_source),
                     }
                 })?;
             }
         }
         self.cache
             .try_reserve(count)
-            .map_err(|_| self.allocation_failure("cell memo allocation failed"))?;
+            .map_err(|reservation_source| {
+                self.allocation_failure(
+                    crate::eval::limits::EvaluationReasonError::CellMemoAllocationFailed
+                        .with_reservation_source(reservation_source),
+                )
+            })?;
         if let Some(admitted) = self.admitted.as_mut() {
             admitted
                 .try_reserve(count)
-                .map_err(|_| EvaluationFailure::Resource {
+                .map_err(|reservation_source| EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: self.consumer,
-                    detail: "admitted cell journal allocation failed".into(),
+                    target: self.consumer,
+                    reason: (crate::eval::limits::EvaluationReasonError::AdmittedCellJournalAllocationFailed).with_reservation_source(reservation_source),
                 })?;
         }
         if let Some(active) = self.preparation.settlement.active_mut() {
             active
                 .admitted
                 .try_reserve(count)
-                .map_err(|_| EvaluationFailure::Resource {
+                .map_err(|reservation_source| EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: self.consumer,
-                    detail: "spill admission rollback allocation failed".into(),
+                    target: self.consumer,
+                    reason: (crate::eval::limits::EvaluationReasonError::SpillAdmissionRollbackAllocationFailed).with_reservation_source(reservation_source),
                 })?;
             active
                 .consumers
                 .try_reserve(count)
-                .map_err(|_| EvaluationFailure::Resource {
+                .map_err(|reservation_source| EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: self.consumer,
-                    detail: "spill admission consumer allocation failed".into(),
+                    target: self.consumer,
+                    reason: (crate::eval::limits::EvaluationReasonError::SpillAdmissionConsumerAllocationFailed).with_reservation_source(reservation_source),
                 })?;
         }
         *self.memo_usage = next;
         if let Some(rows) = rows {
-            let last = extent.ok_or(EvaluationFailure::StalePlan)?;
+            let last = extent.ok_or(EvaluationError::StalePlan)?;
             for (r, row) in rows.into_iter().enumerate() {
                 for (c, value) in row.into_iter().enumerate() {
                     // SAFETY: The local extent validation bounds these enumeration
@@ -254,25 +260,25 @@ impl Admission<'_> {
     fn journal_spill_admission(&mut self, key: (usize, CellAddress)) -> EvalResult<()> {
         if let Some(active) = self.preparation.settlement.active_mut() {
             if self.cache.contains_key(&key) && !active.admitted.contains(&key) {
-                return Err(EvaluationFailure::StalePlan);
+                return Err(EvaluationError::StalePlan);
             }
             active
                 .admitted
                 .try_reserve(1)
-                .map_err(|_| EvaluationFailure::Resource {
+                .map_err(|reservation_source| EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: self.consumer,
-                    detail: "spill rollback journal allocation failed".into(),
+                    target: self.consumer,
+                    reason: (crate::eval::limits::EvaluationReasonError::SpillRollbackJournalAllocationFailed).with_reservation_source(reservation_source),
                 })?;
             active
                 .consumers
                 .try_reserve(1)
-                .map_err(|_| EvaluationFailure::Resource {
+                .map_err(|reservation_source| EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: self.consumer,
-                    detail: "spill consumer journal allocation failed".into(),
+                    target: self.consumer,
+                    reason: (crate::eval::limits::EvaluationReasonError::SpillConsumerJournalAllocationFailed).with_reservation_source(reservation_source),
                 })?;
             // SAFETY: One slot was reserved locally; integer keys cannot panic while hashing.
             active.admitted.insert(key);
@@ -283,12 +289,15 @@ impl Admission<'_> {
     }
 
     /// Attribute fallible publication storage to the currently executing consumer.
-    fn allocation_failure(&self, detail: &str) -> EvaluationFailure {
-        EvaluationFailure::Resource {
+    fn allocation_failure(
+        &self,
+        reason: crate::eval::limits::EvaluationReasonError,
+    ) -> EvaluationError {
+        EvaluationError::Resource {
             kind: crate::eval::limits::ResourceFailureKind::Allocation,
             capability: CapabilityId::FunctionAdapter,
-            source: self.consumer,
-            detail: detail.into(),
+            target: self.consumer,
+            reason,
         }
     }
 }

@@ -6,8 +6,7 @@ use crate::eval::config::EvaluationContext;
 use crate::eval::config::{ArrayResultPolicy, RunConfiguration};
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{
-    BudgetFailure, BudgetKind, EvaluationBudgets, EvaluationFailure, EvaluationOutcome,
-    EvaluationUsage,
+    BudgetError, BudgetKind, EvaluationBudgets, EvaluationError, EvaluationOutcome, EvaluationUsage,
 };
 use crate::eval::overlay;
 use crate::eval::ports::{CachedCellReader, CellCompletion, CellObserver, CellProvenance};
@@ -27,9 +26,7 @@ fn direct_cleanup_export_is_ordered_and_survives_cache_clears() {
     let mut workbook = Workbook::new();
     let worksheet = workbook.add_sheet("Sheet1").unwrap();
     for address in ["B1", "A2", "Z20"] {
-        worksheet
-            .set_formula(address.parse().unwrap(), "1+1")
-            .unwrap();
+        worksheet.set_formula(address, "1+1").unwrap();
     }
     let mut evaluation = overlay::Evaluation::with_workbook(&workbook)
         .build(Default::default())
@@ -65,12 +62,12 @@ struct Completions(
     Vec<(
         EvaluationTarget,
         CellProvenance,
-        Result<CellValue, EvaluationFailure>,
+        Result<CellValue, EvaluationError>,
     )>,
 );
 
 impl CellObserver for Completions {
-    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationError> {
         self.0.push((
             event.target,
             event.provenance,
@@ -187,8 +184,8 @@ fn memoized_text_failure_retains_target_provenance_usage_and_frame_unwinding() {
     // preparation needs no sparse inspection (14 units total). A memo read costs one more; its six
     // text bytes exceed twenty. The rejected charge is atomic.
     assert_eq!(
-        failure,
-        EvaluationFailure::Budget(BudgetFailure {
+        failure.budget(),
+        Some(&BudgetError {
             kind: BudgetKind::RunWork,
             limit: 20,
             consumed: 15,
@@ -197,7 +194,10 @@ fn memoized_text_failure_retains_target_provenance_usage_and_frame_unwinding() {
         })
     );
     // A refused cycle stays failed; no new read or observer event is performed.
-    assert_eq!(run.evaluate_cell(target("B1")).unwrap_err(), failure);
+    assert_eq!(
+        run.evaluate_cell(target("B1")).unwrap_err().budget(),
+        failure.budget()
+    );
     let report = run.finish(Err::<(), _>(failure.clone()));
     assert_eq!(report.execution.session_memo_hits, 1);
     assert!(matches!(
@@ -215,7 +215,10 @@ fn memoized_text_failure_retains_target_provenance_usage_and_frame_unwinding() {
     assert!(
         completions
             .0
-            .contains(&(target("A1"), CellProvenance::SessionMemo, Err(failure)))
+            .iter()
+            .any(|(at, provenance, result)| *at == target("A1")
+                && *provenance == CellProvenance::SessionMemo
+                && matches!(result, Err(error) if error.budget() == failure.budget()))
     );
 }
 
@@ -226,7 +229,7 @@ impl CachedCellReader for TextCache {
     fn cached_cell(
         &mut self,
         _: EvaluationTarget,
-    ) -> Result<Option<Arc<CellValue>>, EvaluationFailure> {
+    ) -> Result<Option<Arc<CellValue>>, EvaluationError> {
         Ok(Some(Arc::new(CellValue::from("abcdef"))))
     }
 }
@@ -252,8 +255,8 @@ fn external_cached_text_is_checked_before_copy_and_observed_on_abort() {
     .with_cell_observer(&mut completions);
     let failure = run.evaluate_cell(target("A1")).unwrap_err();
     assert_eq!(
-        failure,
-        EvaluationFailure::Budget(BudgetFailure {
+        failure.budget(),
+        Some(&BudgetError {
             kind: BudgetKind::TextBytes,
             limit: 5,
             consumed: 0,
@@ -263,10 +266,11 @@ fn external_cached_text_is_checked_before_copy_and_observed_on_abort() {
     );
     let report = run.finish(Err::<(), _>(failure.clone()));
     assert_eq!(report.execution.external_cache_hits, 1);
-    assert_eq!(
-        completions.0,
-        vec![(target("A1"), CellProvenance::ExternalCache, Err(failure))]
-    );
+    assert_eq!(completions.0.len(), 1);
+    let (at, provenance, observed) = &completions.0[0];
+    assert_eq!(*at, target("A1"));
+    assert_eq!(*provenance, CellProvenance::ExternalCache);
+    assert_eq!(observed.as_ref().unwrap_err().budget(), failure.budget());
 }
 
 /// Record the observable order shared by dependency and completion callbacks.
@@ -282,7 +286,7 @@ impl DependencyReadSink for OrderedReads {
 }
 
 impl CellObserver for OrderedReads {
-    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationError> {
         self.0.borrow_mut().push(format!(
             "completed:{}:{:?}",
             event.target.address, event.provenance
@@ -336,7 +340,7 @@ fn overlay_cached_changes_keep_sheet_and_row_order_after_snapshot_restore() {
     for name in ["First", "Second"] {
         let sheet = workbook.add_sheet(name).unwrap();
         for address in ["Z20", "A2", "B1"] {
-            sheet.set_formula(address.parse().unwrap(), "2+3").unwrap();
+            sheet.set_formula(address, "2+3").unwrap();
         }
     }
     let mut overlay = overlay::Overlay::with_workbook(&workbook).build().unwrap();

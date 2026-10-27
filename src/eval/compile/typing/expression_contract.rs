@@ -63,9 +63,7 @@ impl ExpressionContract {
     pub(super) fn function(name: &FunctionName, target: &CallTarget) -> Self {
         let handler = match target {
             CallTarget::Builtin(handler) => Some(*handler),
-            CallTarget::Unresolved => {
-                crate::eval::functions::registry::resolve_excel_function(name)
-            }
+            CallTarget::Unresolved => crate::eval::functions::registry::resolve_handler(name),
             CallTarget::Extension(_) => None,
         };
         let Some(handler) = handler else {

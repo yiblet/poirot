@@ -12,7 +12,7 @@ fn modern_ets_spellings_roundtrip() {
         ("D1", "FORECAST.ETS.STAT({1;2;3},{1;2;3},8)"),
     ];
     for (c, f) in cases {
-        s.set_formula(c.parse().unwrap(), f).unwrap();
+        s.set_formula(c, f).unwrap();
     }
     let bytes = write_xlsx_to_buffer(&b).unwrap();
     let reopened = read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
@@ -21,7 +21,8 @@ fn modern_ets_spellings_roundtrip() {
             reopened
                 .sheet(0)
                 .unwrap()
-                .get(c.parse().unwrap())
+                .get(c)
+                .unwrap()
                 .unwrap()
                 .formula
                 .as_deref(),

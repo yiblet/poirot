@@ -1,50 +1,5 @@
-/// Lookup failure preserving spreadsheet errors, operational aborts, and unsupported capabilities.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Failure {
-    /// Catchable error returned as a spreadsheet value.
-    Spreadsheet(Error),
-    /// Host execution failure that formula error handlers cannot catch.
-    Operational(OperationalFailure),
-    /// Required lookup/reference capability is unavailable.
-    Unsupported(Unsupported),
-}
-/// Host execution failures kept outside spreadsheet error handling.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OperationalFailure {
-    /// Host refused the requested work reservation.
-    BudgetExceeded,
-    /// Resource-size arithmetic overflowed before allocation.
-    ResourceOverflow,
-    /// Host cancelled evaluation.
-    Cancelled,
-    /// Required host service is unavailable.
-    HostUnavailable,
-}
-/// Explicit capability gaps reported without silently changing reference semantics.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Unsupported {
-    /// Operation needs workbook or sheet metadata absent from the host.
-    WorkbookMetadata,
-    /// Host cannot resolve the computed reference.
-    DynamicReference,
-    /// Host cannot supply arguments lazily.
-    DeferredArguments,
-    /// Lookup geometry is outside the supported vector contract.
-    LookupNonVector,
-    /// Result vector is too short for the selected lookup behavior.
-    LookupShortResult,
-    /// Reference dimensions cannot represent the pinned source behavior.
-    SourceDimension,
-    /// Scalar selection from this array has no supported coordinate contract.
-    ScalarArrayIntersection,
-    /// Sheet-name control characters cannot be rendered with supported ADDRESS fidelity.
-    AddressSheetNameControlCharacter,
-}
-impl From<Error> for Failure {
-    fn from(error: Error) -> Self {
-        Self::Spreadsheet(error)
-    }
-}
+use crate::lookup::LookupError;
+
 /// Lookup-specific work reservations mapped onto the evaluator's resource meter.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Work {
@@ -69,7 +24,7 @@ pub struct BudgetRequest {
     /// Number of units requested before execution.
     pub units: usize,
 }
-pub use crate::coercion::lookup::{Error, Scalar};
+pub use crate::coercion::lookup::{LookupValueError, Scalar};
 /// Inclusive workbook/sheet/row/column bounds for a logical lookup reference.
 /// Coordinates and sheet indices are zero-based; cell versus area identity is retained
 /// even for a one-cell rectangle. Geometry is validated at construction.
@@ -118,27 +73,27 @@ impl Reference {
         sheets: std::ops::RangeInclusive<u32>,
         rows: std::ops::RangeInclusive<u32>,
         cols: std::ops::RangeInclusive<u32>,
-    ) -> Result<Self, Failure> {
+    ) -> Result<Self, LookupError> {
         if sheets.is_empty()
             || rows.is_empty()
             || cols.is_empty()
             || *rows.end() >= 1_048_576
             || *cols.end() >= 16_384
         {
-            return Err(Error::Ref.into());
+            return Err(LookupValueError::Ref.into());
         }
         let height = rows
             .end()
             .checked_sub(*rows.start())
             .and_then(|n| n.checked_add(1))
             .and_then(std::num::NonZeroU32::new)
-            .ok_or(Error::Ref)?;
+            .ok_or(LookupValueError::Ref)?;
         let width = cols
             .end()
             .checked_sub(*cols.start())
             .and_then(|n| n.checked_add(1))
             .and_then(std::num::NonZeroU32::new)
-            .ok_or(Error::Ref)?;
+            .ok_or(LookupValueError::Ref)?;
         Ok(Self {
             kind,
             workbook,
@@ -210,9 +165,9 @@ pub struct Array {
 }
 impl Array {
     /// Reject empty, overflowing, or inconsistent rectangular storage.
-    pub fn new(rows: usize, cols: usize, values: Vec<Scalar>) -> Result<Self, Failure> {
+    pub fn new(rows: usize, cols: usize, values: Vec<Scalar>) -> Result<Self, LookupError> {
         if rows == 0 || cols == 0 || rows.checked_mul(cols) != Some(values.len()) {
-            return Err(Error::Value.into());
+            return Err(LookupValueError::Value.into());
         }
         Ok(Self { rows, cols, values })
     }
@@ -237,17 +192,17 @@ impl Array {
         self.values
     }
     /// Read one member, rejecting coordinates outside the rectangle.
-    pub(super) fn get(&self, row: usize, col: usize) -> Result<&Scalar, Failure> {
+    pub(super) fn get(&self, row: usize, col: usize) -> Result<&Scalar, LookupError> {
         if row >= self.rows || col >= self.cols {
-            return Err(Error::Ref.into());
+            return Err(LookupValueError::Ref.into());
         }
         let index = row
             .checked_mul(self.cols)
             .and_then(|n| n.checked_add(col))
-            .ok_or(Failure::Spreadsheet(Error::Value))?;
+            .ok_or(LookupError::Spreadsheet(LookupValueError::Value))?;
         self.values
             .get(index)
-            .ok_or(Failure::Spreadsheet(Error::Value))
+            .ok_or(LookupError::Spreadsheet(LookupValueError::Value))
     }
 }
 /// Lookup argument channels; references retain geometry until a consumer selects values.
@@ -317,7 +272,7 @@ impl SignedReference {
         row: i32,
         col: i32,
         w: &mut impl crate::lookup::Workbook,
-    ) -> Result<Scalar, Failure> {
+    ) -> Result<Scalar, LookupError> {
         if !(0..1_048_576).contains(&row) || !(0..16_384).contains(&col) {
             return Ok(Scalar::Blank);
         }
@@ -327,7 +282,7 @@ impl SignedReference {
     pub(crate) fn scalar_coordinates(
         &self,
         c: crate::lookup::Context,
-    ) -> Result<(i32, i32), Failure> {
+    ) -> Result<(i32, i32), LookupError> {
         let (row, col) = (c.row as i32, c.col as i32);
         let contains_row = (self.first_row..=self.last_row).contains(&row);
         let contains_col = (self.first_col..=self.last_col).contains(&col);
@@ -340,7 +295,7 @@ impl SignedReference {
         } else if contains_row && contains_col {
             Ok((row, col))
         } else {
-            Err(Error::Value.into())
+            Err(LookupValueError::Value.into())
         }
     }
 }

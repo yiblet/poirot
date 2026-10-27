@@ -2,7 +2,7 @@
 use super::interface::{CallContext, FunctionAdapter, FunctionParameters, FunctionValue};
 use crate::eval::compile::bytecode::Compiled;
 use crate::eval::functions::registry::{FunctionDescriptor, FunctionId, FunctionNames};
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use poirot_parsing::formula::FunctionName;
 use std::sync::Arc;
 
@@ -11,7 +11,7 @@ type Executor = dyn Fn(
         &mut CallContext<'_, '_>,
         FunctionId,
         FunctionParameters<'_>,
-    ) -> Option<Result<FunctionValue, EvaluationFailure>>
+    ) -> Option<Result<FunctionValue, EvaluationError>>
     + Send
     + Sync;
 
@@ -21,7 +21,6 @@ type Executor = dyn Fn(
 struct Registration {
     descriptor: &'static FunctionDescriptor,
     executor: usize,
-    profile: bool,
 }
 
 /// Immutable parent registry. Child adapters report registrations once; each
@@ -43,13 +42,7 @@ impl AdapterRegistry {
             .map(|descriptor| Registration {
                 descriptor,
                 executor: 0,
-                profile: false,
             })
-            .chain(adapter.profile_functions().map(|descriptor| Registration {
-                descriptor,
-                executor: 0,
-                profile: true,
-            }))
             .collect();
         let adapter = Arc::new(adapter);
         let executor: Arc<Executor> = Arc::new(move |context, function, parameters| {
@@ -85,25 +78,14 @@ impl AdapterRegistry {
             if let Some(slot) = self.handlers.get_mut(entry.descriptor.handler.index()) {
                 slot.get_or_insert(entry.executor);
             }
-            self.names
-                .insert(entry.descriptor.name, entry.profile, index);
+            self.names.insert(entry.descriptor.name, index);
         }
     }
 }
 
 impl FunctionAdapter for AdapterRegistry {
     fn functions(&self) -> impl Iterator<Item = &'static FunctionDescriptor> {
-        self.registrations
-            .iter()
-            .filter(|entry| !entry.profile)
-            .map(|entry| entry.descriptor)
-    }
-
-    fn profile_functions(&self) -> impl Iterator<Item = &'static FunctionDescriptor> {
-        self.registrations
-            .iter()
-            .filter(|entry| entry.profile)
-            .map(|entry| entry.descriptor)
+        self.registrations.iter().map(|entry| entry.descriptor)
     }
 
     fn resolve(&self, name: &FunctionName) -> Option<&'static FunctionDescriptor> {
@@ -112,30 +94,18 @@ impl FunctionAdapter for AdapterRegistry {
             .and_then(|index| self.registrations.get(index).map(|entry| entry.descriptor))
     }
 
-    fn resolve_profile(&self, name: &FunctionName) -> Option<&'static FunctionDescriptor> {
-        self.names
-            .resolve_profile(name)
-            .and_then(|index| self.registrations.get(index).map(|entry| entry.descriptor))
-    }
-
     fn call(
         &self,
         context: &mut CallContext<'_, '_>,
         name: &FunctionName,
         parameters: poirot_functions::scalar::ParamVec<Compiled>,
-    ) -> Result<FunctionValue, EvaluationFailure> {
-        let builtin = self.names.resolve(name);
-        let registration = builtin
-            .or_else(|| {
-                (context.session.policies.builtin_policy
-                    == crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation)
-                    .then(|| self.names.resolve_profile(name))
-                    .flatten()
-            })
+    ) -> Result<FunctionValue, EvaluationError> {
+        let registration = self
+            .names
+            .resolve(name)
             .and_then(|index| self.registrations.get(index).copied());
         context.invoke_registration(
             name,
-            builtin.is_some(),
             registration.map(|entry| entry.descriptor),
             parameters,
             |context, function, parameters| {
@@ -156,7 +126,7 @@ impl FunctionAdapter for AdapterRegistry {
         context: &mut CallContext<'_, '_>,
         function: FunctionId,
         parameters: FunctionParameters<'_>,
-    ) -> Option<Result<FunctionValue, EvaluationFailure>> {
+    ) -> Option<Result<FunctionValue, EvaluationError>> {
         let executor = self.handlers.get(function.index()).copied().flatten()?;
         self.executors.get(executor)?(context, function, parameters)
     }
@@ -210,7 +180,7 @@ mod tests {
             _context: &mut CallContext<'_, '_>,
             function: FunctionId,
             _parameters: FunctionParameters<'_>,
-        ) -> Option<Result<FunctionValue, EvaluationFailure>> {
+        ) -> Option<Result<FunctionValue, EvaluationError>> {
             if function != self.descriptor.handler {
                 return None;
             }
@@ -298,12 +268,9 @@ mod tests {
     }
 
     #[test]
-    fn all_advertised_names_have_numeric_slots_and_profile_names_remain_separate() {
+    fn all_advertised_names_have_numeric_slots() {
         let registry = super::super::builtin_adapters::builtin_registry();
-        for descriptor in crate::eval::functions::registry::FUNCTION_DESCRIPTORS
-            .iter()
-            .chain(crate::eval::functions::registry::EXCEL_DESCRIPTORS)
-        {
+        for descriptor in crate::eval::functions::registry::FUNCTION_DESCRIPTORS.iter() {
             let name = FunctionName::from(descriptor.name);
             assert!(
                 name.index().is_some(),
@@ -315,12 +282,11 @@ mod tests {
         assert_eq!(
             CommonFunction::COUNT,
             crate::eval::functions::registry::FUNCTION_DESCRIPTORS.len()
-                + crate::eval::functions::registry::EXCEL_DESCRIPTORS.len()
         );
         let name = FunctionName::Known(CommonFunction::RankEq);
-        assert!(registry.resolve(&name).is_none());
-        assert!(registry.resolve_profile(&name).is_some());
-        assert!(registry.resolve_profile(&"_xlfn.RANK.EQ".into()).is_some());
-        assert!(registry.resolve_profile(&"_XLFN.RANK.EQ".into()).is_none());
+        assert!(registry.resolve(&name).is_some());
+        assert!(registry.resolve(&name).is_some());
+        assert!(registry.resolve(&"_xlfn.RANK.EQ".into()).is_some());
+        assert!(registry.resolve(&"_XLFN.RANK.EQ".into()).is_none());
     }
 }

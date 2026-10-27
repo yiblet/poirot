@@ -1,13 +1,11 @@
 //! Typed lookup into an immutable generated Unicode15 asset, format revision 1.
 //! Copyright © 1991-2022 Unicode, Inc. See root LICENSES/ACKNOWLEDGEMENTS.
+use crate::text::case_asset_error::CaseAssetError;
 const DATA: &[u8] = include_bytes!("java_case_unicode15.bin");
 const HEADER: usize = 12;
 const RECORD: usize = 30;
 const MAGIC: &[u8] = b"ROIUC15\0";
 
-/// Integrity/layout failure while reading the pinned full-case mapping tables.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct InvalidAsset;
 /// Decoded lower- and uppercase expansions for one code point in the pinned mapping asset.
 /// Fixed arrays hold up to three code points each, with lengths selecting the valid prefixes.
 #[derive(Clone, Copy, Debug)]
@@ -21,42 +19,42 @@ pub(super) struct Mapping {
     /// Number of uppercase expansion entries in use.
     pub upper_len: usize,
 }
-fn integer(data: &[u8], offset: usize) -> Result<u32, InvalidAsset> {
+fn integer(data: &[u8], offset: usize) -> Result<u32, CaseAssetError> {
     let bytes: [u8; 4] = data
-        .get(offset..offset.checked_add(4).ok_or(InvalidAsset)?)
-        .ok_or(InvalidAsset)?
+        .get(offset..offset.checked_add(4).ok_or(CaseAssetError)?)
+        .ok_or(CaseAssetError)?
         .try_into()
-        .map_err(|_| InvalidAsset)?;
+        .map_err(|_| CaseAssetError)?;
     Ok(u32::from_le_bytes(bytes))
 }
-fn count(data: &[u8]) -> Result<usize, InvalidAsset> {
+fn count(data: &[u8]) -> Result<usize, CaseAssetError> {
     if data.get(..MAGIC.len()) != Some(MAGIC) {
-        return Err(InvalidAsset);
+        return Err(CaseAssetError);
     }
     let count = integer(data, 8)? as usize;
     let length = count
         .checked_mul(RECORD)
         .and_then(|size| size.checked_add(HEADER))
-        .ok_or(InvalidAsset)?;
+        .ok_or(CaseAssetError)?;
     if length != data.len() {
-        return Err(InvalidAsset);
+        return Err(CaseAssetError);
     }
     Ok(count)
 }
-fn record(data: &[u8], index: usize) -> Result<(u32, Mapping), InvalidAsset> {
+fn record(data: &[u8], index: usize) -> Result<(u32, Mapping), CaseAssetError> {
     let offset = index
         .checked_mul(RECORD)
         .and_then(|size| size.checked_add(HEADER))
-        .ok_or(InvalidAsset)?;
+        .ok_or(CaseAssetError)?;
     let bytes = data
-        .get(offset..offset.checked_add(RECORD).ok_or(InvalidAsset)?)
-        .ok_or(InvalidAsset)?;
+        .get(offset..offset.checked_add(RECORD).ok_or(CaseAssetError)?)
+        .ok_or(CaseAssetError)?;
     // SAFETY: get above requires a full RECORD-byte slice (30 bytes); the local arrays each have three entries and index is in 0..3.
     let lower_len = usize::from(bytes[4]);
     // SAFETY: get above requires a full RECORD-byte slice (30 bytes); the local arrays each have three entries and index is in 0..3.
     let upper_len = usize::from(bytes[5]);
     if !(1..=3).contains(&lower_len) || !(1..=3).contains(&upper_len) {
-        return Err(InvalidAsset);
+        return Err(CaseAssetError);
     }
     let mut lower = [0; 3];
     let mut upper = [0; 3];
@@ -76,7 +74,7 @@ fn record(data: &[u8], index: usize) -> Result<(u32, Mapping), InvalidAsset> {
         },
     ))
 }
-fn lookup_in(data: &[u8], code_point: u32) -> Result<Option<Mapping>, InvalidAsset> {
+fn lookup_in(data: &[u8], code_point: u32) -> Result<Option<Mapping>, CaseAssetError> {
     let mut low = 0;
     let mut high = count(data)?;
     while low < high {
@@ -91,7 +89,7 @@ fn lookup_in(data: &[u8], code_point: u32) -> Result<Option<Mapping>, InvalidAss
     Ok(None)
 }
 /// Read the pinned full-case expansion for one code point.
-pub(super) fn lookup(code_point: u32) -> Result<Option<Mapping>, InvalidAsset> {
+pub(super) fn lookup(code_point: u32) -> Result<Option<Mapping>, CaseAssetError> {
     lookup_in(DATA, code_point)
 }
 #[cfg(test)]

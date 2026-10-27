@@ -100,10 +100,7 @@ fn blank_conditions_and_get_termination_preserve_laziness() {
         ("F1", 2147483648.0.into()),
         ("F2", V::Blank),
     ] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(address.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(address, value).unwrap();
     }
     for (formula, expected) in [
         ("DGET(A1:A4,1,C1:D3)", V::Error(E::Num)),

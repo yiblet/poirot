@@ -1,11 +1,12 @@
 //! Validate source inputs and baseline bindings before evaluating any formula.
+use super::workbook_preparation_error::WorkbookPreparationError;
 use crate::fods::{
-    Error,
+    FodsError,
     corpus::{BaselineCase, BaselineStatus, Corpus, FixtureEntry, load_fixture},
     report::{CaseFailure, FailureKind, NameDiagnostic, NameDisposition},
     xml::model::{FodsWorkbook, FormulaCase, InputValue, Omission},
 };
-use poirot::model::{CellAddress, CellValue, Workbook};
+use poirot::model::{CellAddress, CellValue, ModelError, Workbook};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     num::NonZeroUsize,
@@ -89,13 +90,16 @@ fn value(input: &InputValue) -> CellValue {
 fn workbook(
     data: &FodsWorkbook,
     diagnostics: &mut Vec<NameDiagnostic>,
-) -> Result<Workbook, String> {
+) -> Result<Workbook, WorkbookPreparationError> {
     let mut book = Workbook::new();
     for sheet in &data.sheets {
-        book.add_sheet(&sheet.name).map_err(|e| e.to_string())?;
+        book.add_sheet(&sheet.name)
+            .map_err(WorkbookPreparationError::Model)?;
     }
     for (index, sheet) in data.sheets.iter().enumerate() {
-        let dest = book.sheet_mut(index).ok_or("missing worksheet")?;
+        let dest = book
+            .sheet_mut(index)
+            .ok_or(WorkbookPreparationError::MissingWorksheet { index })?;
         for cell in &sheet.cells {
             let address = CellAddress {
                 row: cell.row,
@@ -103,10 +107,10 @@ fn workbook(
             };
             if let Some(formula) = &cell.formula {
                 dest.set_formula(address, formula)
-                    .map_err(|e| e.to_string())?;
+                    .map_err(|source| WorkbookPreparationError::Model(source.into()))?;
             } else {
                 dest.set_value(address, value(&cell.value))
-                    .map_err(|e| e.to_string())?;
+                    .map_err(|source| WorkbookPreparationError::Model(source.into()))?;
             }
         }
     }
@@ -116,8 +120,8 @@ fn workbook(
             let rejection = error.to_string();
             // Only lexical name rejection is eligible. Duplicate, formula and scope
             // errors retain their existing preparation failure without quarantine.
-            if rejection != "invalid defined name" {
-                blocked.get_or_insert(rejection);
+            if !matches!(error, ModelError::InvalidDefinedName { .. }) {
+                blocked.get_or_insert(WorkbookPreparationError::Model(error));
                 continue;
             }
             let proof = super::name_admission::prove_unused(data, &name.name);
@@ -125,9 +129,9 @@ fn workbook(
                 Ok(()) => (NameDisposition::QuarantinedUnused,
                     "bounded inspection of every original cell, matrix anchor and name definition found no potential use or runtime resolver".to_owned()),
                 Err(reason) => {
-                    blocked.get_or_insert_with(|| format!(
-                        "rejected declaration {:?}: {rejection}; non-use not proved: {reason}", name.name));
-                    (NameDisposition::BlocksPreparation, reason)
+                    let message = crate::report::error_message(&reason);
+                    blocked.get_or_insert(WorkbookPreparationError::RejectedName { name: name.name.clone(), source: reason });
+                    (NameDisposition::BlocksPreparation, message)
                 }
             };
             diagnostics.push(NameDiagnostic {
@@ -155,16 +159,15 @@ pub(crate) fn prepare_fixture(
     entry: FixtureEntry,
     data: FodsWorkbook,
     baseline: &HashMap<String, BaselineCase>,
-) -> Result<FixturePlan, Error> {
+) -> Result<FixturePlan, FodsError> {
     if data
         .sheets
         .iter()
         .flat_map(|sheet| &sheet.cells)
         .any(|cell| (cell.formula.is_some() || cell.matrix.is_some()) && !cell.value.is_blank())
     {
-        return Err(Error::Workbook {
+        return Err(FodsError::ComputedSourceCache {
             fixture: entry.fixture.clone(),
-            message: "computed source caches must be blank before planning".into(),
         });
     }
     let mut preparation_diagnostics = Vec::new();
@@ -174,7 +177,7 @@ pub(crate) fn prepare_fixture(
             kind: FailureKind::WorkbookContext,
             gap_type: crate::fods::gaps::GapKind::UnsupportedWorkbookContext,
             missing_functions: Vec::new(),
-            message,
+            message: crate::report::error_message(&message),
         }),
     };
     let evaluation_plan = match &book {
@@ -186,9 +189,11 @@ pub(crate) fn prepare_fixture(
     };
     let mut cases = Vec::with_capacity(data.cases.len());
     for (index, source) in data.cases.into_iter().enumerate() {
-        let bound = baseline.get(&source.id).ok_or_else(|| {
-            Error::InvalidPlan(format!("case {} missing from baseline", source.id))
-        })?;
+        let bound = baseline
+            .get(&source.id)
+            .ok_or_else(|| FodsError::MissingBaselineCase {
+                case: source.id.clone(),
+            })?;
         if bound.fixture != entry.fixture
             || bound.index != index
             || bound
@@ -200,10 +205,9 @@ pub(crate) fn prepare_fixture(
                 .as_deref()
                 .is_some_and(|cell| cell != source.cell)
         {
-            return Err(Error::InvalidPlan(format!(
-                "baseline identity differs from native source case {}",
-                source.id
-            )));
+            return Err(FodsError::BaselineIdentityMismatch {
+                case: source.id.clone(),
+            });
         }
         if data
             .sheets
@@ -214,10 +218,9 @@ pub(crate) fn prepare_fixture(
             || source.correct_row >= poirot::model::MAX_ROWS
             || source.correct_col >= poirot::model::MAX_COLUMNS
         {
-            return Err(Error::InvalidPlan(format!(
-                "invalid sheet or coordinates in case {}",
-                source.id
-            )));
+            return Err(FodsError::InvalidCaseCoordinates {
+                case: source.id.clone(),
+            });
         }
         let parsed = poirot_parsing::formula::parse_formula(&source.formula);
         let missing_functions = parsed
@@ -225,7 +228,7 @@ pub(crate) fn prepare_fixture(
             .map(crate::fods::gaps::missing_root_function)
             .unwrap_or_default();
         let preparation_failure = parsed.err().map(|error| {
-            let (kind, gap_type) = match error.kind {
+            let (kind, gap_type) = match error.kind() {
                 poirot_parsing::formula::ParseErrorKind::Syntax => (
                     FailureKind::SourceSyntax,
                     crate::fods::gaps::GapKind::UnsupportedFormulaSyntax,
@@ -286,7 +289,7 @@ pub(crate) fn prepare_fixture(
 }
 
 /// Load the corpus and prepare selected fixtures before evaluation begins.
-pub fn build(options: &RunOptions) -> Result<RunPlan, Error> {
+pub fn build(options: &RunOptions) -> Result<RunPlan, FodsError> {
     let corpus = Corpus::open(&options.corpus)?;
     let selected: Vec<_> = corpus
         .manifest
@@ -300,7 +303,7 @@ pub fn build(options: &RunOptions) -> Result<RunPlan, Error> {
         })
         .collect();
     if selected.is_empty() {
-        return Err(Error::InvalidPlan("no fixtures match the selection".into()));
+        return Err(FodsError::EmptySelection);
     }
     let mut fixtures = Vec::with_capacity(selected.len());
     for entry in selected {

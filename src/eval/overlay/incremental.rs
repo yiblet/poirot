@@ -87,13 +87,10 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
     pub(super) fn policy_changed(&mut self, previous: &EvaluationPolicy) {
         let policy = &self.source.policy;
         if previous.parse != policy.parse
-            || previous.builtin != policy.builtin
             || previous.arrays != policy.arrays
             || previous.producers != policy.producers
         {
             self.clear_cache();
-        } else if previous.text != policy.text {
-            self.cache.get_mut().invalidate_text_policy();
         }
     }
 
@@ -184,7 +181,6 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
                 key,
                 &entry.value,
                 entry.dependencies.spill,
-                self.source.policy.materialization,
             ) {
                 changes.push(change);
             }
@@ -243,7 +239,7 @@ impl<W: Borrow<Workbook> + std::borrow::BorrowMut<Workbook>> Overlay<'_, W> {
                 crate::eval::inputs::CellEdit::StyleOnly(cell) => {
                     address.validate()?;
                     if self.source.workbook.borrow().sheet(sheet).is_none() {
-                        return Err(ModelError("worksheet index out of bounds".into()));
+                        return Err(ModelError::InvalidWorksheetIndex { index: sheet });
                     }
                     styles.push((sheet, address, cell.style.clone()));
                 }
@@ -260,7 +256,7 @@ impl<W: Borrow<Workbook> + std::borrow::BorrowMut<Workbook>> Overlay<'_, W> {
                 .workbook
                 .borrow_mut()
                 .sheet_mut(sheet)
-                .ok_or_else(|| ModelError("worksheet index out of bounds".into()))?
+                .ok_or(ModelError::InvalidWorksheetIndex { index: sheet })?
                 .set_style(address, style)?;
         }
         // The baseline now contains the effective formulas, so dropping the diff

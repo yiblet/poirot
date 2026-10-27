@@ -4,7 +4,7 @@ use super::super::evaluation_run::EvaluationRun;
 use super::super::workbook_view::WorkbookView;
 use super::support::{A1, B1, Reads, context, target, value, workbook};
 use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
-use crate::eval::limits::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::limits::{EvaluationBudgets, EvaluationError, EvaluationOutcome};
 use crate::eval::ports::{ContextRead, DependencyRead, ReadEvent};
 use crate::model::{CellError, CellValue};
 
@@ -76,7 +76,7 @@ fn formatting_is_consumed_only_when_selected_and_is_not_captured_by_plans() {
         run.evaluate_probes(&[EvaluationProbe::Cell(target(A1))])
             .outcome,
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability {
+            failure: EvaluationError::UnsupportedCapability {
                 capability: crate::eval::limits::CapabilityId::Formatting,
                 ..
             },
@@ -219,10 +219,10 @@ fn provider_identity_rebinds_unknown_names_and_only_selected_calls_are_consumed(
         &registry,
     )
     .unwrap();
-    assert_eq!(
+    assert!(matches!(
         run.evaluate_formula(target(B1), &invalid),
-        Err(EvaluationFailure::StalePlan)
-    );
+        Err(EvaluationError::StalePlan)
+    ));
 }
 
 #[test]

@@ -2,7 +2,7 @@
 use poirot::calculation::EvaluationContext;
 use poirot::eval::overlay::Overlay;
 use poirot::eval::{
-    self as eval, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    self as eval, EvaluationBudgets, EvaluationError, EvaluationInputs, EvaluationOutcome,
     EvaluationTarget,
 };
 use poirot::{CellValue, Workbook};
@@ -15,7 +15,7 @@ fn target(address: &str) -> EvaluationTarget {
 }
 fn run(book: &Workbook, formula: &str, budgets: EvaluationBudgets) -> EvaluationOutcome<CellValue> {
     eval::run_formula(
-        book.model(),
+        book,
         0,
         target("Z1").address,
         formula,
@@ -32,10 +32,10 @@ fn complete(outcome: EvaluationOutcome<CellValue>) -> CellValue {
 fn book() -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Data").unwrap();
-    sheet.set_value("A1".parse().unwrap(), "first").unwrap();
-    sheet.set_value("A1000".parse().unwrap(), "last").unwrap();
-    sheet.set_value("B1".parse().unwrap(), 7.).unwrap();
-    sheet.set_value("B1000".parse().unwrap(), 11.).unwrap();
+    sheet.set_value("A1", "first").unwrap();
+    sheet.set_value("A1000", "last").unwrap();
+    sheet.set_value("B1", 7.).unwrap();
+    sheet.set_value("B1000", 11.).unwrap();
     book
 }
 #[test]
@@ -76,7 +76,7 @@ fn whole_columns_preserve_order_and_enforce_work_limits() {
                 }
             ),
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::Budget(_),
+                failure: EvaluationError::Budget(_),
                 ..
             }
         ));
@@ -107,7 +107,7 @@ fn sparse_membership_invalidates_overlay_cache_after_insertions_and_deletions() 
         .unwrap()
         .set_formula(target("C2").address, "MAXIFS(B:B,A:A,\"last\")")
         .unwrap();
-    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
         overlay
@@ -164,7 +164,7 @@ fn database_finalization_is_linear_and_keeps_sample_admission() {
         ("A4", CellValue::Number(3.)),
         ("C1", CellValue::Text("N".into())),
     ] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     for (function, expected) in [
         ("DSUM", 6.),
@@ -182,9 +182,7 @@ fn database_finalization_is_linear_and_keeps_sample_admission() {
 fn wildcard_limits_count_visited_states_not_cross_product_guesses() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Data").unwrap();
-    sheet
-        .set_value("A1".parse().unwrap(), "x".repeat(1000))
-        .unwrap();
+    sheet.set_value("A1", "x".repeat(1000)).unwrap();
     let budgets = EvaluationBudgets {
         wildcard_states: 8,
         ..Default::default()
@@ -198,7 +196,7 @@ fn wildcard_limits_count_visited_states_not_cross_product_guesses() {
     assert!(matches!(
         run(&book, "IFERROR(COUNTIF(A1,\"*a\"),42)", budgets),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -214,7 +212,7 @@ fn wildcard_limits_count_visited_states_not_cross_product_guesses() {
         },
     ) {
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(error),
+            failure: EvaluationError::Budget(error),
             ..
         } => {
             assert_eq!(error.kind, eval::BudgetKind::WildcardStates);
@@ -278,7 +276,7 @@ fn scalar_rendering_obeys_actual_buffer_size_and_combina_charges_iterations() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -302,7 +300,7 @@ fn direct_work_is_cumulative_until_begin_and_overlay_borrows_start_fresh() {
         .into(),
         ..Default::default()
     };
-    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(book.model())
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(&book)
         .build(context.clone())
         .unwrap();
     let mut exhausted = false;
@@ -319,7 +317,7 @@ fn direct_work_is_cumulative_until_begin_and_overlay_borrows_start_fresh() {
         direct.cell(target("C1")).unwrap(),
         CellValue::Text("firstlast".into())
     );
-    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     for _ in 0..3 {
         // Invalidating source forces recomputation, not merely a cached read.
         overlay.set_value(target("A1"), "first").unwrap();
@@ -382,7 +380,7 @@ fn text_handlers_preserve_scalar_array_and_operational_contracts() {
             matches!(
                 run(&book, formula, budgets),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::Budget(_),
+                    failure: EvaluationError::Budget(_),
                     ..
                 }
             ),

@@ -1,5 +1,5 @@
 //! Public opt-in quota, cycle, cache-admission, and profiling contracts.
-use poirot::calculation::{EvaluationContext, EvaluationFailure, EvaluationLimits};
+use poirot::calculation::{EvaluationContext, EvaluationError, EvaluationLimits};
 use poirot::eval::overlay::Evaluation;
 use poirot::eval::overlay::Overlay;
 use poirot::eval::{BudgetKind, EvaluationBudgets, ResourceFailureKind};
@@ -8,7 +8,7 @@ use poirot::{CellValue, Workbook};
 fn book() -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Data").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 2.).unwrap();
+    sheet.set_value("A1", 2.).unwrap();
     for (address, formula) in [
         ("B1", "A1+1"),
         ("C1", "B1+1"),
@@ -16,9 +16,7 @@ fn book() -> Workbook {
         ("F1", "SEQUENCE(3)"),
         ("H1", "IFERROR(SUM(SEQUENCE(20)),42)"),
     ] {
-        sheet
-            .set_formula(address.parse().unwrap(), formula)
-            .unwrap();
+        sheet.set_formula(address, formula).unwrap();
     }
     book
 }
@@ -113,7 +111,7 @@ fn source_byte_quotas_have_exact_zero_and_cleared_boundaries() {
             .from_bytes(&bytes)
             .unwrap_err();
         match error {
-            poirot::files::WorkbookError::ImportOrXlsx(poirot_io::IoError::Quota(failure)) => {
+            poirot::files::IoError::Quota(failure) => {
                 assert_eq!(failure.limit, limit);
                 assert_eq!(failure.requested, bytes.len() as u64);
                 assert_eq!(failure.resource, poirot_io::IoResource::InputBytes);
@@ -137,7 +135,7 @@ fn ordinary_profiled_and_bounded_modes_agree_and_reports_are_honest() {
         (true, EvaluationLimits::default()),
         (false, EvaluationLimits::default().max_work(100_000)),
     ] {
-        let mut calculation = Evaluation::with_workbook(book.model())
+        let mut calculation = Evaluation::with_workbook(&book)
             .build_calculation_with_profiling(
                 EvaluationContext::default().limits(limits),
                 profiling,
@@ -153,7 +151,7 @@ fn ordinary_profiled_and_bounded_modes_agree_and_reports_are_honest() {
             assert!(usage.work_units > 0);
         }
     }
-    let mut legacy = Evaluation::with_workbook(book.model())
+    let mut legacy = Evaluation::with_workbook(&book)
         .build(EvaluationContext::default())
         .unwrap();
     let target = legacy.target("Data!C1").unwrap();
@@ -163,7 +161,7 @@ fn ordinary_profiled_and_bounded_modes_agree_and_reports_are_honest() {
 #[test]
 fn work_is_shared_and_refusal_requires_explicit_begin_preserving_edits() {
     let book = book();
-    let mut measured = Evaluation::with_workbook(book.model())
+    let mut measured = Evaluation::with_workbook(&book)
         .build(EvaluationContext::default())
         .unwrap();
     let b = measured.target("Data!B1").unwrap();
@@ -171,7 +169,7 @@ fn work_is_shared_and_refusal_requires_explicit_begin_preserving_edits() {
     measured.cell(b).unwrap();
     let work = measured.finish().outcome.usage().work_units;
     let context = EvaluationContext::default().limits(EvaluationLimits::default().max_work(work));
-    let mut calculation = Evaluation::with_workbook(book.model())
+    let mut calculation = Evaluation::with_workbook(&book)
         .build_calculation(context)
         .unwrap();
     assert_eq!(calculation.cell(b).unwrap(), CellValue::Number(3.));
@@ -180,10 +178,13 @@ fn work_is_shared_and_refusal_requires_explicit_begin_preserving_edits() {
     calculation.clear_cache();
     let input = calculation.target("Data!A1").unwrap();
     calculation.set_value(input, 9.).unwrap();
-    assert_eq!(calculation.cell(b).unwrap_err(), failure);
+    assert_eq!(
+        (calculation.cell(b).unwrap_err()).budget().unwrap(),
+        failure.budget().unwrap()
+    );
     calculation.begin(EvaluationContext::default()).unwrap();
     assert_eq!(calculation.cell(b).unwrap(), CellValue::Number(10.));
-    let mut zero = Evaluation::with_workbook(book.model())
+    let mut zero = Evaluation::with_workbook(&book)
         .build_calculation(
             EvaluationContext::default().limits(EvaluationLimits::default().max_work(0)),
         )
@@ -193,7 +194,7 @@ fn work_is_shared_and_refusal_requires_explicit_begin_preserving_edits() {
 #[test]
 fn cached_text_and_spill_footprints_obey_tighter_result_admission() {
     let book = book();
-    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let text = overlay.target("Data!D1").unwrap();
     let child = overlay.target("Data!F3").unwrap();
     let context = EvaluationContext::default();
@@ -238,7 +239,7 @@ fn cached_text_and_spill_footprints_obey_tighter_result_admission() {
 #[test]
 fn tighter_retention_refuses_before_altering_valid_overlay_state() {
     let book = book();
-    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let output = overlay.target("Data!C1").unwrap();
     let context = EvaluationContext::default();
     overlay.calculation(&context).unwrap().cell(output).unwrap();
@@ -249,7 +250,7 @@ fn tighter_retention_refuses_before_altering_valid_overlay_state() {
     assert!(matches!(
         overlay.calculation(&tighter),
         Err(poirot::calculation::OverlayError::Evaluation(
-            EvaluationFailure::MemoRetentionLimit { .. }
+            EvaluationError::MemoRetentionLimit { .. }
         ))
     ));
     assert_eq!(overlay.cached_cells(), retained);
@@ -262,7 +263,7 @@ fn iferror_cannot_swallow_caller_refusals_or_native_regex_guards() {
     let book = book();
     let context =
         EvaluationContext::default().limits(EvaluationLimits::default().max_collection_values(5));
-    let mut calculation = Evaluation::with_workbook(book.model())
+    let mut calculation = Evaluation::with_workbook(&book)
         .build_calculation(context)
         .unwrap();
     let target = calculation.target("Data!H1").unwrap();
@@ -272,7 +273,7 @@ fn iferror_cannot_swallow_caller_refusals_or_native_regex_guards() {
     );
     let context = EvaluationContext::default()
         .regex_settings(poirot::calculation::RegexSettings::default().max_match_steps(0));
-    let mut calculation = Evaluation::with_workbook(book.model())
+    let mut calculation = Evaluation::with_workbook(&book)
         .build_calculation(context)
         .unwrap();
     calculation
@@ -280,7 +281,7 @@ fn iferror_cannot_swallow_caller_refusals_or_native_regex_guards() {
         .unwrap();
     assert!(matches!(
         calculation.cell(target),
-        Err(EvaluationFailure::Resource {
+        Err(EvaluationError::Resource {
             kind: ResourceFailureKind::BackendGuard,
             ..
         })
@@ -313,7 +314,7 @@ fn native_random_effects_agree_without_retaining_profiling_traces() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("J1".parse().unwrap(), "RAND()+RAND()")
+        .set_formula("J1", "RAND()+RAND()")
         .unwrap();
     let context = EvaluationContext {
         randomness_seed: 77,
@@ -321,7 +322,7 @@ fn native_random_effects_agree_without_retaining_profiling_traces() {
     };
     let mut results = Vec::new();
     for profiling in [false, true] {
-        let mut calculation = Evaluation::with_workbook(book.model())
+        let mut calculation = Evaluation::with_workbook(&book)
             .build_calculation_with_profiling(context.clone(), profiling)
             .unwrap();
         let output = calculation.target("Data!J1").unwrap();
@@ -368,7 +369,7 @@ fn configured_zip_quotas_have_exact_admission_and_independent_diagnostics() {
             .from_bytes(&bytes)
             .unwrap_err();
         assert!(
-            matches!(error, poirot::files::WorkbookError::ImportOrXlsx(poirot_io::IoError::Quota(failure)) if failure.resource == resource && failure.requested > failure.limit.saturating_sub(failure.consumed))
+            matches!(error, poirot::files::IoError::Quota(failure) if failure.resource == resource && failure.requested > failure.limit.saturating_sub(failure.consumed))
         );
     }
 }
@@ -377,11 +378,11 @@ fn invalid_nesting_configuration_fails_before_work_and_low_level_refusals_remain
     let book = book();
     let invalid = EvaluationContext::default().limits(EvaluationLimits::default().max_depth(129));
     assert!(
-        matches!(Evaluation::with_workbook(book.model()).build_calculation(invalid), Err(poirot::calculation::OverlayError::Evaluation(EvaluationFailure::Budget(failure))) if failure.kind == BudgetKind::Configuration)
+        matches!(Evaluation::with_workbook(&book).build_calculation(invalid), Err(poirot::calculation::OverlayError::Evaluation(EvaluationError::Budget(failure))) if failure.kind == BudgetKind::Configuration)
     );
     let policy = poirot::eval::PreparationPolicy::default();
-    let plan = poirot::eval::FormulaCompiler::new().compile_workbook(book.model(), &policy);
-    let view = poirot::eval::WorkbookView::new(book.model(), &plan, &policy).unwrap();
+    let plan = poirot::eval::FormulaCompiler::new().compile_workbook(&book, &policy);
+    let view = poirot::eval::WorkbookView::new(&book, &plan, &policy).unwrap();
     let mut run = poirot::eval::EvaluationRun::new(
         view,
         Default::default(),
@@ -400,7 +401,10 @@ fn invalid_nesting_configuration_fails_before_work_and_low_level_refusals_remain
         address: "A1".parse().unwrap(),
     };
     let failure = run.evaluate_cell(text).unwrap_err();
-    assert_eq!(run.evaluate_cell(literal).unwrap_err(), failure);
+    assert_eq!(
+        (run.evaluate_cell(literal).unwrap_err()).budget().unwrap(),
+        failure.budget().unwrap()
+    );
     assert!(matches!(
         run.finish(Ok(())).outcome,
         poirot::eval::EvaluationOutcome::Aborted { .. }

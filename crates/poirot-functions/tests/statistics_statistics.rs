@@ -27,14 +27,8 @@ fn aggregates_and_source_empty_singleton_contracts() {
         0.,
     );
     assert_eq!(aggregate(Aggregate::Average, &[]), Err(CellError::Div0));
-    assert_eq!(
-        aggregate(Aggregate::VariancePopulation, &[2.]),
-        Err(CellError::Num)
-    );
-    assert_eq!(
-        aggregate(Aggregate::StdevPopulation, &[2.]),
-        Err(CellError::Num)
-    );
+    assert_eq!(aggregate(Aggregate::VariancePopulation, &[2.]), Ok(0.));
+    assert_eq!(aggregate(Aggregate::StdevPopulation, &[2.]), Ok(0.));
     assert_eq!(
         aggregate(Aggregate::GeoMean, &[1., 0.]),
         Err(CellError::Num)
@@ -191,7 +185,7 @@ fn covariance_correlation_regression_and_pair_sums() {
     );
     assert_eq!(
         paired(PairOperation::CovariancePopulation, &[1.], &[2.]),
-        Err(CellError::NA)
+        Ok(0.)
     );
     assert_eq!(
         regression(&x, &y, 3).unwrap(),
@@ -325,58 +319,34 @@ fn extrema_a_blank_and_text_observations_are_distinct() {
 
 #[test]
 fn explicit_sample_requirements_distinguish_population_and_sample() {
-    use SamplePolicy::{ExcelDocumentation as Excel, PinnedPoi as Pinned};
     for operation in [Aggregate::VarianceSample, Aggregate::StdevSample] {
         for values in [&[][..], &[0.][..], &[2.][..]] {
-            assert_eq!(
-                aggregate_with_policy(operation, values, Excel),
-                Err(CellError::Div0)
-            );
+            assert_eq!(aggregate(operation, values), Err(CellError::Div0));
         }
-        assert_eq!(
-            aggregate_with_policy(operation, &[0.], Pinned),
-            Err(CellError::Num)
-        );
-        assert_eq!(aggregate_with_policy(operation, &[0., 0.], Excel), Ok(0.));
+
+        assert_eq!(aggregate(operation, &[0., 0.]), Ok(0.));
     }
     for operation in [Aggregate::VariancePopulation, Aggregate::StdevPopulation] {
-        assert_eq!(
-            aggregate_with_policy(operation, &[], Excel),
-            Err(CellError::Div0)
-        );
-        assert_eq!(aggregate_with_policy(operation, &[0.], Excel), Ok(0.));
-        assert_eq!(
-            aggregate_with_policy(operation, &[2.], Pinned),
-            Err(CellError::Num)
-        );
+        assert_eq!(aggregate(operation, &[]), Err(CellError::Div0));
+        assert_eq!(aggregate(operation, &[0.]), Ok(0.));
     }
     for operation in [
         PairOperation::CovariancePopulation,
         PairOperation::CovarianceSample,
     ] {
-        assert_eq!(
-            paired_with_policy(operation, &[], &[], Excel),
-            Err(CellError::Div0)
-        );
-        assert_eq!(
-            paired_with_policy(operation, &[2.], &[5., 7.], Excel),
-            Err(CellError::NA)
-        );
-        assert_eq!(
-            paired_with_policy(operation, &[2.], &[5.], Pinned),
-            Err(CellError::NA)
-        );
+        assert_eq!(paired(operation, &[], &[]), Err(CellError::Div0));
+        assert_eq!(paired(operation, &[2.], &[5., 7.]), Err(CellError::NA));
     }
     assert_eq!(
-        paired_with_policy(PairOperation::CovariancePopulation, &[2.], &[5.], Excel),
+        paired(PairOperation::CovariancePopulation, &[2.], &[5.]),
         Ok(0.)
     );
     assert_eq!(
-        paired_with_policy(PairOperation::CovarianceSample, &[2.], &[5.], Excel),
+        paired(PairOperation::CovarianceSample, &[2.], &[5.]),
         Err(CellError::Div0)
     );
     assert_eq!(
-        paired_with_policy(PairOperation::Correlation, &[2.], &[5.], Excel),
+        paired(PairOperation::Correlation, &[2.], &[5.]),
         Err(CellError::Div0)
     );
 }
@@ -394,11 +364,7 @@ fn variance_is_invariant_under_exact_large_translations() {
             (Aggregate::StdevPopulation, 1.25_f64.sqrt()),
             (Aggregate::StdevSample, (5_f64 / 3.).sqrt()),
         ] {
-            near(
-                aggregate_with_policy(operation, &values, SamplePolicy::ExcelDocumentation),
-                expected,
-                2e-15,
-            );
+            near(aggregate(operation, &values), expected, 2e-15);
         }
         // [0,0,1] has exact squared-deviation sum2/3; its fractional
         // mean exposes unshifted running-mean rounding at the same offset.
@@ -410,11 +376,7 @@ fn variance_is_invariant_under_exact_large_translations() {
             (Aggregate::StdevPopulation, (2_f64 / 9.).sqrt()),
             (Aggregate::StdevSample, (1_f64 / 3.).sqrt()),
         ] {
-            near(
-                aggregate_with_policy(operation, &values, SamplePolicy::ExcelDocumentation),
-                expected,
-                2e-15,
-            );
+            near(aggregate(operation, &values), expected, 2e-15);
         }
     }
 }
@@ -422,7 +384,6 @@ fn variance_is_invariant_under_exact_large_translations() {
 #[test]
 fn variance_scaling_preserves_finite_standard_deviations_without_overflowing_means() {
     use Aggregate::*;
-    use SamplePolicy::ExcelDocumentation as Excel;
     for operation in [
         VarianceSample,
         VariancePopulation,
@@ -430,45 +391,25 @@ fn variance_scaling_preserves_finite_standard_deviations_without_overflowing_mea
         StdevPopulation,
         DevSq,
     ] {
-        assert_eq!(
-            aggregate_with_policy(operation, &[f64::MAX, f64::MAX], Excel),
-            Ok(0.)
-        );
-        assert_eq!(
-            aggregate_with_policy(operation, &[f64::NAN, 1.], Excel),
-            Err(CellError::Num)
-        );
+        assert_eq!(aggregate(operation, &[f64::MAX, f64::MAX]), Ok(0.));
+        assert_eq!(aggregate(operation, &[f64::NAN, 1.]), Err(CellError::Num));
     }
     assert_eq!(
-        aggregate_with_policy(StdevPopulation, &[f64::MAX, -f64::MAX], Excel),
+        aggregate(StdevPopulation, &[f64::MAX, -f64::MAX]),
         Ok(f64::MAX)
     );
     assert_eq!(
-        aggregate_with_policy(VariancePopulation, &[f64::MAX, -f64::MAX], Excel),
+        aggregate(VariancePopulation, &[f64::MAX, -f64::MAX]),
         Err(CellError::Num)
     );
     assert_eq!(
-        aggregate_with_policy(StdevSample, &[f64::MAX, -f64::MAX], Excel),
+        aggregate(StdevSample, &[f64::MAX, -f64::MAX]),
         Err(CellError::Num)
     );
-    assert_eq!(
-        aggregate_with_policy(StdevPopulation, &[f64::MAX], Excel),
-        Ok(0.)
-    );
-    assert_eq!(
-        aggregate_with_policy(StdevSample, &[f64::MAX], Excel),
-        Err(CellError::Div0)
-    );
+    assert_eq!(aggregate(StdevPopulation, &[f64::MAX]), Ok(0.));
+    assert_eq!(aggregate(StdevSample, &[f64::MAX]), Err(CellError::Div0));
     // Two observations [0,2e154] have population variance1e308, which is finite
     // even though squaring the unnormalized difference would overflow.
-    near(
-        aggregate_with_policy(VariancePopulation, &[0., 2e154], Excel),
-        1e308,
-        2e292,
-    );
-    near(
-        aggregate_with_policy(StdevPopulation, &[0., 2e-200], Excel),
-        1e-200,
-        0.,
-    );
+    near(aggregate(VariancePopulation, &[0., 2e154]), 1e308, 2e292);
+    near(aggregate(StdevPopulation, &[0., 2e-200]), 1e-200, 0.);
 }

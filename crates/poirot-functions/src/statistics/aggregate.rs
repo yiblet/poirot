@@ -1,15 +1,10 @@
 use crate::scalar::CellError;
-use crate::statistics::{Aggregate, Result, SamplePolicy, SampleRequirement, checked, finite};
+use crate::statistics::{Aggregate, Result, SampleRequirement, checked, finite};
 use std::collections::HashMap;
 
 /// The slice must already contain values admitted by the function's coercion policy.
 /// A variants use the same calculation after their distinct collection policy.
 pub fn aggregate(operation: Aggregate, values: &[f64]) -> Result {
-    aggregate_with_policy(operation, values, SamplePolicy::PinnedPoi)
-}
-
-/// Reduce admitted values under an explicit minimum-observation contract.
-pub fn aggregate_with_policy(operation: Aggregate, values: &[f64], policy: SamplePolicy) -> Result {
     finite(values)?;
     let n = values.len();
     if operation == Aggregate::Maximum || operation == Aggregate::Minimum {
@@ -81,16 +76,8 @@ pub fn aggregate_with_policy(operation: Aggregate, values: &[f64], policy: Sampl
                 Aggregate::VarianceSample | Aggregate::StdevSample
             );
             SampleRequirement {
-                minimum: if policy == SamplePolicy::PinnedPoi || sample {
-                    2
-                } else {
-                    1
-                },
-                insufficient: if policy == SamplePolicy::PinnedPoi {
-                    CellError::Num
-                } else {
-                    CellError::Div0
-                },
+                minimum: if sample { 2 } else { 1 },
+                insufficient: { CellError::Div0 },
             }
             .validate(n)?;
             let (scale, deviation) = scaled_deviation(values);

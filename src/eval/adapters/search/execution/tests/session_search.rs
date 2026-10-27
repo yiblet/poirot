@@ -3,11 +3,11 @@ use super::super::search_mode::SearchMode;
 use super::super::search_selection::SearchSelection;
 use super::super::selection::select_index;
 use crate::eval::compile;
-use crate::eval::config::{ArrayResultPolicy, BuiltinSemanticsPolicy, EvaluationInputs};
+use crate::eval::config::{ArrayResultPolicy, EvaluationInputs};
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::entry::run_formula;
 use crate::eval::limits::{
-    BudgetKind, BudgetMeter, EvaluationBudgets, EvaluationFailure, EvaluationOutcome,
+    BudgetKind, BudgetMeter, EvaluationBudgets, EvaluationError, EvaluationOutcome,
 };
 use crate::eval::ports::{DependencyRead, DependencyReadSink, ReadEvent};
 use crate::eval::session::{ResultProjection, Session};
@@ -28,8 +28,8 @@ fn boolean_match_modes_follow_numeric_modes_and_source_read_order() {
         }
     }
     for (mode, expected, candidates) in [
-        ("TRUE", Number(3.), vec!["B4", "B3"]),
-        ("1", Number(3.), vec!["B4", "B3"]),
+        ("TRUE", Number(3.), vec!["B2", "B3", "B4"]),
+        ("1", Number(3.), vec!["B2", "B3", "B4"]),
         ("FALSE", Number(2.), vec!["B1", "B2"]),
         ("0", Number(2.), vec!["B1", "B2"]),
         ("1/0", Number(99.), vec![]),
@@ -38,20 +38,20 @@ fn boolean_match_modes_follow_numeric_modes_and_source_read_order() {
         w.add_sheet("Sheet1").unwrap();
         let sheet = w.sheet_mut(0).unwrap();
         sheet
-            .set_formula_with_cached_value("C1".parse().unwrap(), mode, Number(-999.))
+            .set_formula_with_cached_value("C1", mode, Number(-999.))
             .unwrap();
         sheet
-            .set_formula_with_cached_value("A1".parse().unwrap(), "1+1", Number(-999.))
+            .set_formula_with_cached_value("A1", "1+1", Number(-999.))
             .unwrap();
         for (cell, value) in [("B1", 1.), ("B2", 2.), ("B3", 2.), ("B4", 3.)] {
-            sheet.set_value(cell.parse().unwrap(), value).unwrap();
+            sheet.set_value(cell, value).unwrap();
         }
         let syntax =
             poirot_parsing::formula::parse_formula("IFERROR(MATCH(A1,B1:B4,C1),99)").unwrap();
         let selected = compile::bound::FormulaPlan::bind(&syntax).unwrap();
         let mut reads = Reads::default();
         let mut session = Session::with_context(&w, EvaluationInputs::default());
-        session.policies.builtin_policy = BuiltinSemanticsPolicy::PinnedPoi;
+
         session.policies.array_result_policy = ArrayResultPolicy::ScalarIntersection;
         session.ports.dependency_sink = Some(&mut reads);
         let at = "Z20".parse().unwrap();
@@ -126,18 +126,9 @@ fn sheet_spans_use_source_specific_vector_geometry() {
     for name in ["First", "Last"] {
         w.add_sheet(name).unwrap();
     }
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A1".parse().unwrap(), 7.)
-        .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("B1".parse().unwrap(), 42.)
-        .unwrap();
-    w.sheet_mut(1)
-        .unwrap()
-        .set_value("A1".parse().unwrap(), 9.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("A1", 7.).unwrap();
+    w.sheet_mut(0).unwrap().set_value("B1", 42.).unwrap();
+    w.sheet_mut(1).unwrap().set_value("A1", 9.).unwrap();
     for (formula, expected) in [
         ("MATCH(9,First:Last!A1,0)", Number(2.)),
         ("VLOOKUP(7,First:Last!A:B,2,FALSE)", Number(42.)),
@@ -170,9 +161,9 @@ fn whole_columns_read_only_selected_prefix_and_result() {
     let mut w = Workbook::new();
     w.add_sheet("Sheet1").unwrap();
     let sheet = w.sheet_mut(0).unwrap();
-    sheet.set_value("A1".parse().unwrap(), 7.).unwrap();
+    sheet.set_value("A1", 7.).unwrap();
     sheet
-        .set_formula_with_cached_value("B1".parse().unwrap(), "6*7", Number(-99.))
+        .set_formula_with_cached_value("B1", "6*7", Number(-99.))
         .unwrap();
     for (formula, expected) in [
         ("MATCH(7,A:A,0)", Number(1.)),
@@ -201,13 +192,13 @@ fn exact_reads_do_not_consume_unused_formulas_or_errors() {
     let mut w = Workbook::new();
     w.add_sheet("Sheet1").unwrap();
     let sheet = w.sheet_mut(0).unwrap();
-    sheet.set_value("A1".parse().unwrap(), 7.).unwrap();
+    sheet.set_value("A1", 7.).unwrap();
     sheet
-        .set_formula_with_cached_value("B1".parse().unwrap(), "6*7", Number(-99.))
+        .set_formula_with_cached_value("B1", "6*7", Number(-99.))
         .unwrap();
     for (cell, formula) in [("A2", "RAND()"), ("B2", "UNSUPPORTED()"), ("B3", "1/0")] {
         sheet
-            .set_formula_with_cached_value(cell.parse().unwrap(), formula, Number(-99.))
+            .set_formula_with_cached_value(cell, formula, Number(-99.))
             .unwrap();
     }
     let mut reads = Reads::default();
@@ -311,7 +302,7 @@ fn real_read_and_array_limits_escape_iferror() {
             assert_eq!(usage.completed_cells, 0);
         }
         let EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(failure),
+            failure: EvaluationError::Budget(failure),
             ..
         } = outcome
         else {
@@ -350,34 +341,35 @@ fn typed_selection_preserves_duplicates_type_filtering_and_wildcards() {
     let key = Number(2.);
     let ascending = vec![Number(1.), Number(2.), Number(2.), Number(3.)];
     assert_eq!(
-        select_match(&key, &ascending, SearchMode::Exact),
-        Ok(Some(SearchSelection { index: 1 }))
+        (select_match(&key, &ascending, SearchMode::Exact)).unwrap(),
+        Some(SearchSelection { index: 1 })
     );
     assert_eq!(
-        select_match(&key, &ascending, SearchMode::Ascending),
-        Ok(Some(SearchSelection { index: 2 }))
+        (select_match(&key, &ascending, SearchMode::Ascending)).unwrap(),
+        Some(SearchSelection { index: 2 })
     );
     let descending = vec![Number(3.), Number(2.), Number(2.), Number(1.)];
     assert_eq!(
-        select_match(&key, &descending, SearchMode::Descending),
-        Ok(Some(SearchSelection { index: 1 }))
+        (select_match(&key, &descending, SearchMode::Descending)).unwrap(),
+        Some(SearchSelection { index: 1 })
     );
     let mixed = vec![Text("2".into()), Error(NA), Number(2.)];
     assert_eq!(
-        select_match(&key, &mixed, SearchMode::Exact),
-        Ok(Some(SearchSelection { index: 2 }))
+        (select_match(&key, &mixed, SearchMode::Exact)).unwrap(),
+        Some(SearchSelection { index: 2 })
     );
     assert_eq!(
-        select_match(
+        (select_match(
             &Text("a*".into()),
             &[Text("ALPHA".into())],
             SearchMode::Exact
-        ),
-        Ok(Some(SearchSelection { index: 0 }))
+        ))
+        .unwrap(),
+        Some(SearchSelection { index: 0 })
     );
     assert_eq!(
-        select_match(&Number(9.), &ascending, SearchMode::Exact),
-        Ok(None)
+        (select_match(&Number(9.), &ascending, SearchMode::Exact)).unwrap(),
+        None
     );
     assert_eq!(SearchMode::from_number(0.5), SearchMode::Ascending);
     assert_eq!(SearchMode::from_number(-0.5), SearchMode::Descending);

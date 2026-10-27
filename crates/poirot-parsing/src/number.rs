@@ -5,9 +5,9 @@
 //! let locale = NumberLocale::new(",", Some("."), Some("EUR"), "%", ":").unwrap();
 //! assert_eq!(parse_formatted_number("1.234,5", &locale), FormattedNumber::Number(Ok(1234.5)));
 //! ```
-/// A recognized numeric spelling whose value cannot be represented.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct NumberError;
+pub use crate::number_error::NumberError;
+pub use crate::number_locale_error::NumberLocaleError;
+pub use crate::number_locale_token::NumberLocaleToken;
 
 /// Complete numeric syntax result, distinguished from calendar fallback.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -33,10 +33,9 @@ use std::borrow::Cow;
 ///
 /// ```
 /// use poirot_parsing::number::{FormattedNumber, NumberLocale, parse_formatted_number};
-/// let locale = NumberLocale::new(",", Some("."), Some("EUR"), "%", ":")
-///     .ok_or("invalid locale")?;
+/// let locale = NumberLocale::new(",", Some("."), Some("EUR"), "%", ":")?;
 /// assert_eq!(parse_formatted_number("1.234,5", &locale), FormattedNumber::Number(Ok(1234.5)));
-/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// # Ok::<(), poirot_parsing::number::NumberLocaleError>(())
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(try_from = "LocaleDataV2")]
@@ -59,7 +58,7 @@ struct LocaleDataV2 {
     time: String,
 }
 impl TryFrom<LocaleDataV2> for NumberLocale {
-    type Error = &'static str;
+    type Error = NumberLocaleError;
     fn try_from(data: LocaleDataV2) -> Result<Self, Self::Error> {
         Self::new(
             &data.decimal,
@@ -68,7 +67,6 @@ impl TryFrom<LocaleDataV2> for NumberLocale {
             &data.percent,
             &data.time,
         )
-        .ok_or("numeric locale tokens are empty, overlap, or contain numeric syntax")
     }
 }
 impl NumberLocale {
@@ -96,32 +94,57 @@ impl NumberLocale {
         currency: Option<&str>,
         percent: &str,
         time: &str,
-    ) -> Option<Self> {
-        let tokens = [Some(decimal), grouping, currency, Some(percent), Some(time)];
-        for (i, token) in tokens.iter().enumerate() {
+    ) -> Result<Self, NumberLocaleError> {
+        let tokens = [
+            (NumberLocaleToken::Decimal, Some(decimal)),
+            (NumberLocaleToken::Grouping, grouping),
+            (NumberLocaleToken::Currency, currency),
+            (NumberLocaleToken::Percent, Some(percent)),
+            (NumberLocaleToken::Time, Some(time)),
+        ];
+        for (i, (kind, token)) in tokens.iter().enumerate() {
             let Some(token) = token else { continue };
+            if token.is_empty() {
+                return Err(NumberLocaleError::EmptyToken { token: *kind });
+            }
+            if let Some(character) = token.chars().find(|c| c.is_control()) {
+                return Err(NumberLocaleError::ControlCharacter {
+                    token: *kind,
+                    character,
+                });
+            }
             // Currency tokens are literals (for example EUR), not fragments of
             // the decimal grammar. A grouping token may itself be a space.
-            if token.is_empty()
-                || token.chars().any(|c| c.is_control())
-                || (i != 2
-                    && token.chars().any(|c| {
-                        c.is_ascii_digit() || matches!(c, '+' | '-' | '(' | ')' | '/' | 'e' | 'E')
-                    }))
-                || (i != 1 && token.chars().any(char::is_whitespace))
+            if *kind != NumberLocaleToken::Currency
+                && let Some(character) = token.chars().find(|c| {
+                    c.is_ascii_digit() || matches!(c, '+' | '-' | '(' | ')' | '/' | 'e' | 'E')
+                })
             {
-                return None;
+                return Err(NumberLocaleError::NumericSyntax {
+                    token: *kind,
+                    character,
+                });
             }
-            if tokens
-                .iter()
-                .skip(i + 1)
-                .flatten()
-                .any(|other| token.starts_with(other) || other.starts_with(token))
+            if *kind != NumberLocaleToken::Grouping
+                && let Some(character) = token.chars().find(|c| c.is_whitespace())
             {
-                return None;
+                return Err(NumberLocaleError::Whitespace {
+                    token: *kind,
+                    character,
+                });
+            }
+            for (other_kind, other) in tokens.iter().skip(i + 1) {
+                if let Some(other) = other
+                    && (token.starts_with(other) || other.starts_with(token))
+                {
+                    return Err(NumberLocaleError::OverlappingTokens {
+                        first: *kind,
+                        second: *other_kind,
+                    });
+                }
             }
         }
-        Some(Self {
+        Ok(Self {
             decimal: decimal.to_owned().into(),
             grouping: grouping.map(|s| s.to_owned().into()),
             currency: currency.map(|s| s.to_owned().into()),
@@ -594,4 +617,58 @@ pub fn parse_rust_float(text: &str) -> Option<f64> {
 /// Source decimal/scientific prefix grammar, distinct from the narrow decimal primitive.
 pub fn source_float(input: &str) -> IResult<&str, &str> {
     nom::number::complete::recognize_float(input)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::number::NumberLocale;
+    use crate::number_locale_error::NumberLocaleError;
+    use crate::number_locale_token::NumberLocaleToken;
+
+    #[test]
+    fn locale_validation_reports_rejected_token_and_condition() {
+        assert_eq!(
+            NumberLocale::new("", None, None, "%", ":"),
+            Err(NumberLocaleError::EmptyToken {
+                token: NumberLocaleToken::Decimal
+            })
+        );
+        assert_eq!(
+            NumberLocale::new("\t", None, None, "%", ":"),
+            Err(NumberLocaleError::ControlCharacter {
+                token: NumberLocaleToken::Decimal,
+                character: '\t'
+            })
+        );
+        assert_eq!(
+            NumberLocale::new("e", None, None, "%", ":"),
+            Err(NumberLocaleError::NumericSyntax {
+                token: NumberLocaleToken::Decimal,
+                character: 'e'
+            })
+        );
+        assert_eq!(
+            NumberLocale::new(" ", None, None, "%", ":"),
+            Err(NumberLocaleError::Whitespace {
+                token: NumberLocaleToken::Decimal,
+                character: ' '
+            })
+        );
+        assert_eq!(
+            NumberLocale::new("::", None, None, "%", ":"),
+            Err(NumberLocaleError::OverlappingTokens {
+                first: NumberLocaleToken::Decimal,
+                second: NumberLocaleToken::Time
+            })
+        );
+        assert!(NumberLocale::new(",", Some(" "), Some("EUR"), "%", ":").is_ok());
+    }
+
+    #[test]
+    fn public_errors_support_thread_boundaries() {
+        fn assert_error<T: std::error::Error + Send + Sync + 'static>() {}
+        assert_error::<NumberLocaleError>();
+        assert_error::<crate::number_error::NumberError>();
+        assert_error::<crate::date_syntax_error::DateSyntaxError>();
+    }
 }

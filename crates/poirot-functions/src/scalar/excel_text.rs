@@ -1,23 +1,12 @@
 //! Lossless spreadsheet text. Indices and lengths are UTF-16 code units.
 //! Case mapping and formula argument coercion belong to explicit source policies.
+use super::text_units_error::TextUnitsError;
 use std::ops::Range;
 
 /// Lossless spreadsheet text stored as UTF-16 code units, including unpaired surrogates.
 /// Text algorithms can use Excel code-unit positions without requiring conversion to a Rust string.
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ExcelText(Box<[u16]>);
-
-/// Invalid unit range, one-based start, or encoded byte length in a text operation.
-/// Malformed UTF-16 is allowed in [`ExcelText`]; converting it to UTF-8 can fail separately.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TextUnitsError {
-    /// Requested UTF-16 unit interval lies outside the stored text.
-    InvalidRange,
-    /// Starting UTF-16 unit position is outside the text.
-    InvalidStart,
-    /// UTF-16 byte input contains an incomplete code unit.
-    OddByteLength,
-}
 
 impl ExcelText {
     /// Own exact UTF-16 units, preserving unpaired surrogates.

@@ -3,7 +3,7 @@
 #[cfg(test)]
 use crate::eval::compile::bound::Expression;
 use crate::eval::compile::bytecode::{Compiled, Opcode};
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::observe::ArgumentOrigin;
 
 /// Borrowed expression block in an immutable compiled program.
@@ -124,7 +124,7 @@ impl<'a> ExecutableRef<'a> {
                     .template
                     .code
                     .get(start..)
-                    .ok_or(EvaluationFailure::StalePlan)?
+                    .ok_or(EvaluationError::StalePlan)?
                     .iter()
                     .enumerate()
                 {
@@ -140,9 +140,9 @@ impl<'a> ExecutableRef<'a> {
                                         start
                                             .checked_add(offset)
                                             .and_then(|index| index.checked_add(1))
-                                            .ok_or(EvaluationFailure::StalePlan)?,
+                                            .ok_or(EvaluationError::StalePlan)?,
                                     )
-                                    .ok_or(EvaluationFailure::StalePlan)?
+                                    .ok_or(EvaluationError::StalePlan)?
                                     .opcode
                                     == Opcode::Missing,
                             )?;
@@ -181,18 +181,18 @@ impl<'a> ExecutableRef<'a> {
         }
         if let Some((rows, columns)) = self.array_shape() {
             if columns == 0 {
-                return Err(EvaluationFailure::StalePlan);
+                return Err(EvaluationError::StalePlan);
             }
             budget.allocation(
                 rows.checked_mul(columns)
-                    .ok_or(EvaluationFailure::StalePlan)?,
+                    .ok_or(EvaluationError::StalePlan)?,
             )?;
             let mut result = vec![vec![false; columns]; rows];
             self.visit_array_missing(|index, missing| {
                 let entry = result
                     .get_mut(index / columns)
                     .and_then(|row| row.get_mut(index % columns))
-                    .ok_or(EvaluationFailure::StalePlan)?;
+                    .ok_or(EvaluationError::StalePlan)?;
                 *entry = missing;
                 Ok(())
             })?;

@@ -5,7 +5,7 @@ use crate::eval::values::{Value, err};
 use crate::model::{MAX_COLUMNS, MAX_ROWS};
 use poirot_functions::lookup as helper;
 
-pub(super) fn r1c1(text: &str, context: helper::Context) -> Result<String, helper::Failure> {
+pub(super) fn r1c1(text: &str, context: helper::Context) -> Result<String, helper::LookupError> {
     fn coordinate(text: &str, current: u32) -> Option<u32> {
         if text.is_empty() {
             Some(current)
@@ -21,21 +21,29 @@ pub(super) fn r1c1(text: &str, context: helper::Context) -> Result<String, helpe
         && let Some(body) = upper.strip_prefix('R')
     {
         if body.is_empty() {
-            return Err(helper::Failure::Spreadsheet(helper::Error::Ref));
+            return Err(helper::LookupError::Spreadsheet(
+                helper::LookupValueError::Ref,
+            ));
         }
         let row = coordinate(body, context.row)
             .filter(|n| *n < MAX_ROWS)
-            .ok_or(helper::Failure::Spreadsheet(helper::Error::Ref))?
+            .ok_or(helper::LookupError::Spreadsheet(
+                helper::LookupValueError::Ref,
+            ))?
             + 1;
         return Ok(format!("{row}:{row}"));
     }
     if let Some(body) = upper.strip_prefix('C') {
         if body.is_empty() {
-            return Err(helper::Failure::Spreadsheet(helper::Error::Ref));
+            return Err(helper::LookupError::Spreadsheet(
+                helper::LookupValueError::Ref,
+            ));
         }
         let col = coordinate(body, context.col)
             .filter(|n| *n < MAX_COLUMNS)
-            .ok_or(helper::Failure::Spreadsheet(helper::Error::Ref))?;
+            .ok_or(helper::LookupError::Spreadsheet(
+                helper::LookupValueError::Ref,
+            ))?;
         let mut letters = String::new();
         let mut n = col + 1;
         while n > 0 {
@@ -48,16 +56,24 @@ pub(super) fn r1c1(text: &str, context: helper::Context) -> Result<String, helpe
     }
     let body = upper
         .strip_prefix('R')
-        .ok_or(helper::Failure::Spreadsheet(helper::Error::Ref))?;
+        .ok_or(helper::LookupError::Spreadsheet(
+            helper::LookupValueError::Ref,
+        ))?;
     let (row, col) = body
         .split_once('C')
-        .ok_or(helper::Failure::Spreadsheet(helper::Error::Ref))?;
+        .ok_or(helper::LookupError::Spreadsheet(
+            helper::LookupValueError::Ref,
+        ))?;
     let row = coordinate(row, context.row)
         .filter(|n| *n < MAX_ROWS)
-        .ok_or(helper::Failure::Spreadsheet(helper::Error::Ref))?;
+        .ok_or(helper::LookupError::Spreadsheet(
+            helper::LookupValueError::Ref,
+        ))?;
     let col = coordinate(col, context.col)
         .filter(|n| *n < MAX_COLUMNS)
-        .ok_or(helper::Failure::Spreadsheet(helper::Error::Ref))?;
+        .ok_or(helper::LookupError::Spreadsheet(
+            helper::LookupValueError::Ref,
+        ))?;
     let mut letters = String::new();
     let mut n = col + 1;
     while n > 0 {
@@ -89,10 +105,11 @@ pub(in crate::eval) fn execute_host(
         .and_then(|plan| plan.execute(context, &mut port))
     {
         Ok(value) => port.output(value),
-        Err(helper::Failure::Spreadsheet(e)) => Ok(err(cell_error(e))),
-        Err(failure) => Err(port
-            .failure
-            .take()
-            .unwrap_or_else(|| port.unsupported(format!("pinned lookup boundary: {failure:?}")))),
+        Err(helper::LookupError::Spreadsheet(e)) => Ok(err(cell_error(e))),
+        Err(failure) => Err(port.failure.take().unwrap_or_else(|| {
+            port.unsupported(crate::eval::limits::EvaluationReasonError::Lookup(
+                std::sync::Arc::new(failure),
+            ))
+        })),
     }
 }

@@ -89,7 +89,7 @@ fn constructor(
     } else if registry.and_then(|r| r.resolve(lookup)).is_some() {
         None
     } else {
-        crate::eval::functions::registry::resolve_excel_function(&spelling)
+        crate::eval::functions::registry::resolve_handler(&spelling)
     };
     match selected {
         Some(crate::eval::functions::registry::FunctionId::Matrix(

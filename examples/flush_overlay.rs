@@ -4,7 +4,7 @@ use poirot::calculation::EvaluationContext;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut book = Workbook::new();
-    book.add_sheet("S")?.set_formula("B1".parse()?, "A1*2")?;
+    book.add_sheet("S")?.set_formula("B1", "A1*2")?;
     // Moving the source permits explicitly applying authored edits.
     let mut overlay = book.into_overlay().build()?;
     let input = overlay.target("S!A1")?;

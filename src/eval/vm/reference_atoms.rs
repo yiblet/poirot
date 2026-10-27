@@ -2,7 +2,7 @@
 
 use super::reference_ref::ReferenceRef;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::{NameResolver, ReadRecorder, Session};
 use crate::eval::values::{Area, AreaKind, ReferenceAreas, Value, err};
@@ -50,26 +50,28 @@ impl<'s, 'a> ReferenceAtoms<'s, 'a> {
                     // native probe observes SUM(#REF!A1) evaluating its first sheet.
                     (None, Some(_)) => (0, 0),
                     (first, None) => {
-                        return Err(EvaluationFailure::UnsupportedCapability {
+                        return Err(EvaluationError::UnsupportedCapability {
                             capability: CapabilityId::FunctionAdapter,
-                            source: Some(EvaluationTarget { sheet: s, address: at }),
-                            detail: if first.is_some() {
-                                "pinned HSSF missing last sheet endpoint throws java.lang.IllegalArgumentException during formula authoring"
+                            target: Some(EvaluationTarget {
+                                sheet: s,
+                                address: at,
+                            }),
+                            reason: if first.is_some() {
+                                crate::eval::limits::EvaluationReasonError::PinnedHssfMissingLastSheetEndpointThrowsJavaLangIllegalArgumentExceptionDuringFormulaAuthoring
                             } else {
-                                "both sheet-span endpoints unresolved; native classification unavailable"
-                            }.into(),
+                                crate::eval::limits::EvaluationReasonError::BothSheetSpanEndpointsUnresolvedNativeClassificationUnavailable
+                            },
                         });
                     }
                 };
                 if last < first {
-                    return Err(EvaluationFailure::UnsupportedCapability {
+                    return Err(EvaluationError::UnsupportedCapability {
                         capability: CapabilityId::FunctionAdapter,
-                        source: Some(EvaluationTarget {
+                        target: Some(EvaluationTarget {
                             sheet: s,
                             address: at,
                         }),
-                        detail: "pinned HSSF reversed sheet endpoints throw java.lang.NegativeArraySizeException during evaluation"
-                            .into(),
+                        reason: crate::eval::limits::EvaluationReasonError::PinnedHssfReversedSheetEndpointsThrowJavaLangNegativeArraySizeExceptionDuringEvaluation,
                     });
                 }
                 let count = last - first + 1;

@@ -1,17 +1,14 @@
 //! Modern grid/default contracts follow Microsoft's OFFSET and worksheet-limit docs:
 //! https://support.microsoft.com/en-us/excel/functions/offset-function
 //! https://support.microsoft.com/en-gb/excel/excel-specifications-and-limits
-use poirot::eval::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome, run_formula};
+use poirot::eval::{EvaluationBudgets, EvaluationError, EvaluationOutcome, run_formula};
 use poirot::model::{CellError, CellValue, Workbook};
 
 fn book() -> Workbook {
     let mut book = Workbook::new();
     book.add_sheet("S").unwrap();
     book.add_sheet("Other").unwrap();
-    book.sheet_mut(1)
-        .unwrap()
-        .set_value("B6".parse().unwrap(), 42.)
-        .unwrap();
+    book.sheet_mut(1).unwrap().set_value("B6", 42.).unwrap();
     book
 }
 
@@ -140,7 +137,7 @@ fn offset_geometry_reads_no_cells_and_operational_failures_escape_masks() {
                     }
                 ),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::Budget(_),
+                    failure: EvaluationError::Budget(_),
                     ..
                 }
             ),
@@ -203,11 +200,9 @@ fn offset_tracks_only_consumed_cells_and_executed_volatility() {
     }
     let mut book = book();
     let sheet = book.sheet_mut(0).unwrap();
-    sheet
-        .set_formula("A1".parse().unwrap(), "UNKNOWN_FUNCTION()")
-        .unwrap();
-    sheet.set_value("B1".parse().unwrap(), 7.).unwrap();
-    sheet.set_value("C1".parse().unwrap(), 1.).unwrap();
+    sheet.set_formula("A1", "UNKNOWN_FUNCTION()").unwrap();
+    sheet.set_value("B1", 7.).unwrap();
+    sheet.set_value("C1", 1.).unwrap();
     let policy = PreparationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&book, &policy);
     for (formula, executed) in [

@@ -222,9 +222,9 @@ fn source_only_and_spilled_rectangles_share_membership_and_collection_limits() {
         .unwrap();
     let mut overlay = Overlay::with_workbook(&limited_book).build().unwrap();
     assert!(
-        matches!(direct.cell(at("D1")), Err(crate::eval::limits::EvaluationFailure::Budget(failure)) if failure.kind == crate::eval::limits::BudgetKind::Materialization)
+        matches!(direct.cell(at("D1")), Err(crate::eval::limits::EvaluationError::Budget(failure)) if failure.kind == crate::eval::limits::BudgetKind::Materialization)
     );
     assert!(
-        matches!(overlay.evaluation(&limited).unwrap().cell(at("D1")), Err(crate::eval::limits::EvaluationFailure::Budget(failure)) if failure.kind == crate::eval::limits::BudgetKind::Materialization)
+        matches!(overlay.evaluation(&limited).unwrap().cell(at("D1")), Err(crate::eval::limits::EvaluationError::Budget(failure)) if failure.kind == crate::eval::limits::BudgetKind::Materialization)
     );
 }

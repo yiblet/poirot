@@ -43,6 +43,8 @@ jobs:
           python3 tools/test_coercion_architecture.py
           python3 tools/test_module_layout.py
           python3 tools/test_eval_dependencies.py
+          python3 tools/test_error_patterns.py --self-test
+          python3 tools/test_error_patterns.py
           python3 crates/poirot-test-excel-specs/tools/maintain.py --check
 
   msrv:

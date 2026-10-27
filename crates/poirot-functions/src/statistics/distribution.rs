@@ -1,5 +1,6 @@
+use super::statistical_kernel_error::StatisticalKernelError;
 use crate::scalar::CellError;
-use crate::statistics::iteration::{KernelFailure, KernelResult, unmetered};
+use crate::statistics::iteration::{KernelResult, unmetered};
 use crate::statistics::{Result, StudentTKind, checked, finite};
 use statrs::distribution::{Continuous, ContinuousCDF, StudentsT};
 
@@ -30,9 +31,9 @@ pub fn normal_dist_metered<O, M: FnMut(u64) -> std::result::Result<(), O>>(
     cumulative: bool,
     meter: &mut M,
 ) -> KernelResult<O> {
-    finite(&[number, mean, stdev]).map_err(KernelFailure::Spreadsheet)?;
+    finite(&[number, mean, stdev]).map_err(StatisticalKernelError::Spreadsheet)?;
     if stdev <= 0.0 {
-        return Err(KernelFailure::Spreadsheet(CellError::Num));
+        return Err(StatisticalKernelError::Spreadsheet(CellError::Num));
     }
     checked(if cumulative {
         let dev = number - mean;
@@ -51,7 +52,7 @@ pub fn normal_dist_metered<O, M: FnMut(u64) -> std::result::Result<(), O>>(
         let z = (number - mean) / stdev;
         ((-0.5 * z) * z - (stdev.ln() + 0.5 * std::f64::consts::TAU.ln())).exp()
     })
-    .map_err(KernelFailure::Spreadsheet)
+    .map_err(StatisticalKernelError::Spreadsheet)
 }
 
 /// Selected NormDist direct NumberEval contract; keep source intermediates raw.
@@ -62,9 +63,9 @@ pub fn normal_dist_source_metered<O, M: FnMut(u64) -> std::result::Result<(), O>
     cumulative: bool,
     meter: &mut M,
 ) -> KernelResult<O> {
-    finite(&[number, mean, stdev]).map_err(KernelFailure::Spreadsheet)?;
+    finite(&[number, mean, stdev]).map_err(StatisticalKernelError::Spreadsheet)?;
     if stdev <= 0.0 {
-        return Err(KernelFailure::Spreadsheet(CellError::Num));
+        return Err(StatisticalKernelError::Spreadsheet(CellError::Num));
     }
     Ok(if cumulative {
         let dev = number - mean;
@@ -129,9 +130,9 @@ pub fn poisson_metered<O, M: FnMut(u64) -> std::result::Result<(), O>>(
     cumulative: bool,
     meter: &mut M,
 ) -> KernelResult<O> {
-    finite(&[number, mean]).map_err(KernelFailure::Spreadsheet)?;
+    finite(&[number, mean]).map_err(StatisticalKernelError::Spreadsheet)?;
     if number < 0.0 || mean < 0.0 {
-        return Err(KernelFailure::Spreadsheet(CellError::Num));
+        return Err(StatisticalKernelError::Spreadsheet(CellError::Num));
     }
     // POI coerceDoubleToInt clamps to Java's signed integer range.
     let count = number.trunc().min(i32::MAX as f64) as u64;
@@ -153,7 +154,7 @@ pub fn poisson_metered<O, M: FnMut(u64) -> std::result::Result<(), O>>(
     } else {
         crate::statistics::poisson_mass::probability(count, mean, meter)?
     })
-    .map_err(KernelFailure::Spreadsheet)
+    .map_err(StatisticalKernelError::Spreadsheet)
 }
 /// Compute Student-t density or a selected probability tail.
 pub fn student_t(number: f64, degrees: f64, kind: StudentTKind) -> Result {

@@ -164,7 +164,7 @@ fn quasi_counts_and_numeric_scales_remain_bounded() {
             Basis::Actual
         )
         .yield_rate(50., |_| Err("budget")),
-        Err(super::modern::Failure::Operational("budget"))
+        Err(super::financial_calculation_error::FinancialCalculationError::Operational("budget"))
     ));
 }
 #[test]
@@ -181,7 +181,11 @@ fn security_errors_and_required_schedule_are_explicit() {
             Basis::Nasd,
             |_| Ok::<_, ()>(())
         ),
-        Err(super::modern::Failure::Spreadsheet(FinancialError::Num))
+        Err(
+            super::financial_calculation_error::FinancialCalculationError::Spreadsheet(
+                FinancialError::Num
+            )
+        )
     ));
     let last = OddLast::new(
         day(2024, 4, 1),
@@ -288,7 +292,11 @@ fn declining_periods_round_balance_and_stop_after_the_terminal_crossing() {
                 Amortization::Declining,
                 |_| Ok::<_, ()>(())
             ),
-            Err(super::modern::Failure::Spreadsheet(FinancialError::Num))
+            Err(
+                super::financial_calculation_error::FinancialCalculationError::Spreadsheet(
+                    FinancialError::Num
+                )
+            )
         ));
     }
 }

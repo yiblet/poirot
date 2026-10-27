@@ -3,6 +3,7 @@
 use super::call_dto::CallDto;
 use super::compiled_formula::CompiledFormula;
 use super::compiled_workbook::CompiledWorkbook;
+use super::plan_snapshot_error::PlanSnapshotError;
 use super::potential_dependencies::PotentialDependencies;
 use super::preparation_policy::PreparationPolicy;
 use super::prepared_formula::PreparedFormula;
@@ -21,10 +22,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Snapshot validation result carrying a diagnostic for unsupported or inconsistent compiled data.
-type Result<T> = std::result::Result<T, String>;
+type Result<T> = std::result::Result<T, PlanSnapshotError>;
 
 /// Wire version of the plan snapshot layout.
-pub(super) const VERSION: u32 = 21;
+pub(super) const VERSION: u32 = 22;
 
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
 #[derive(Serialize, Deserialize)]
@@ -41,7 +42,7 @@ impl<'a> PlanSnapshot<'a> {
     /// Borrow a supported default-policy plan, rejecting extensions and preparation failures.
     pub fn capture(plan: &'a CompiledWorkbook) -> Result<Self> {
         if plan.policy != PreparationPolicy::default() {
-            return Err("snapshot requires default policy/no extensions".into());
+            return Err(PlanSnapshotError::SnapshotRequiresDefaultPolicyNoExtensions);
         }
         let mut output = Self {
             version: VERSION,
@@ -59,16 +60,16 @@ impl<'a> PlanSnapshot<'a> {
                 return Ok(*id);
             }
             let PreparedFormula::Ready(formula) = prepared.as_ref() else {
-                return Err("snapshot does not support preparation failures".into());
+                return Err(PlanSnapshotError::SnapshotDoesNotSupportPreparationFailures);
             };
             if formula.policy != PreparationPolicy::default()
                 || !formula.potential.extensions.is_empty()
             {
-                return Err("snapshot requires default policy/no extensions".into());
+                return Err(PlanSnapshotError::SnapshotRequiresDefaultPolicyNoExtensions);
             }
             let compiled = &formula.bytecode;
             if compiled.extension_identity.is_some() {
-                return Err("snapshot does not support extensions".into());
+                return Err(PlanSnapshotError::SnapshotDoesNotSupportExtensions);
             }
             let program_key = Arc::as_ptr(&compiled.executable) as usize;
             let program = if let Some(id) = programs.get(&program_key) {
@@ -86,12 +87,14 @@ impl<'a> PlanSnapshot<'a> {
                                     registry::FUNCTION_DESCRIPTORS
                                         .iter()
                                         .find(|d| d.handler == id)
-                                        .ok_or("unknown builtin ID")?
+                                        .ok_or(PlanSnapshotError::UnknownBuiltinID)?
                                         .name,
                                 )),
                                 CallTarget::Unresolved => None,
                                 CallTarget::Extension(_) => {
-                                    return Err("snapshot does not support extensions".into());
+                                    return Err(
+                                        PlanSnapshotError::SnapshotDoesNotSupportExtensions,
+                                    );
                                 }
                             },
                         })
@@ -185,7 +188,7 @@ impl<'a> PlanSnapshot<'a> {
     /// Validate serialized programs and reconstruct a default-policy workbook plan.
     pub fn restore(self) -> Result<CompiledWorkbook> {
         if self.version != VERSION {
-            return Err("unsupported compiled snapshot version".into());
+            return Err(PlanSnapshotError::UnsupportedCompiledSnapshotVersion);
         }
         let programs = self
             .programs
@@ -193,7 +196,7 @@ impl<'a> PlanSnapshot<'a> {
             .map(|p| {
                 validate_template(&p.template, p.calls.len())?;
                 if !p.typing.matches(&p.template) {
-                    return Err("snapshot typing boundaries".into());
+                    return Err(PlanSnapshotError::SnapshotTypingBoundaries);
                 }
                 let calls = p
                     .calls
@@ -203,7 +206,7 @@ impl<'a> PlanSnapshot<'a> {
                             p.template
                                 .operands
                                 .get(c.source_offset as usize..)
-                                .ok_or("call source offset")?,
+                                .ok_or(PlanSnapshotError::CallSourceOffset)?,
                         );
                         reader.string()?;
                         Ok(Call {
@@ -214,7 +217,7 @@ impl<'a> PlanSnapshot<'a> {
                                     registry::resolve_function(
                                         &poirot_parsing::formula::FunctionName::from(&*name),
                                     )
-                                    .ok_or("snapshot builtin unavailable")?
+                                    .ok_or(PlanSnapshotError::SnapshotBuiltinUnavailable)?
                                     .handler,
                                 ),
                                 None => CallTarget::Unresolved,
@@ -231,7 +234,7 @@ impl<'a> PlanSnapshot<'a> {
                                 ))
                         })
                     {
-                        return Err("snapshot conditional binding".into());
+                        return Err(PlanSnapshotError::SnapshotConditionalBinding);
                     }
                 }
                 Ok(Arc::new(Executable {
@@ -248,7 +251,7 @@ impl<'a> PlanSnapshot<'a> {
             .map(|s| {
                 let executable = programs
                     .get(s.program)
-                    .ok_or("snapshot program ID")?
+                    .ok_or(PlanSnapshotError::SnapshotProgramID)?
                     .clone();
                 validate_references(&s.references, executable.template.reference_slots)?;
                 Ok(Arc::new(PreparedFormula::Ready(Arc::new(
@@ -274,15 +277,18 @@ impl<'a> PlanSnapshot<'a> {
             .collect::<Result<Vec<_>>>()?;
         let mut formulas = HashMap::with_capacity(self.formulas.len());
         for (sheet, at, id) in self.formulas {
-            at.validate().map_err(|e| e.to_string())?;
+            at.validate()?;
             if formulas
                 .insert(
                     (sheet, at),
-                    sources.get(id).ok_or("snapshot source ID")?.clone(),
+                    sources
+                        .get(id)
+                        .ok_or(PlanSnapshotError::SnapshotSourceID)?
+                        .clone(),
                 )
                 .is_some()
             {
-                return Err("duplicate formula target".into());
+                return Err(PlanSnapshotError::DuplicateFormulaTarget);
             }
         }
         let names = self
@@ -292,23 +298,23 @@ impl<'a> PlanSnapshot<'a> {
                 sources
                     .get(id)
                     .cloned()
-                    .ok_or_else(|| "snapshot name source ID".into())
+                    .ok_or(PlanSnapshotError::SnapshotNameSourceID)
             })
             .collect::<Result<Vec<_>>>()?;
         // Ensure source-ID assignment agrees with exact source topology, without a parser.
         if formulas.len() != self.identity.formulas.len()
             || names.len() != self.identity.names.len()
         {
-            return Err("snapshot source topology count".into());
+            return Err(PlanSnapshotError::SnapshotSourceTopologyCount);
         }
         for (sheet, at, source) in &self.identity.formulas {
             if formulas.get(&(*sheet, *at)).map(|f| f.source()) != Some(source.as_str()) {
-                return Err("snapshot formula identity".into());
+                return Err(PlanSnapshotError::SnapshotFormulaIdentity);
             }
         }
         for (prepared, (_, source, _)) in names.iter().zip(&self.identity.names) {
             if prepared.source() != source {
-                return Err("snapshot defined-name identity".into());
+                return Err(PlanSnapshotError::SnapshotDefinedNameIdentity);
             }
         }
         Ok(CompiledWorkbook {

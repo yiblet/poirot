@@ -2,18 +2,16 @@
 //! https://support.microsoft.com/en-us/excel/functions/index-function
 //! https://support.microsoft.com/en-us/excel/functions/row-function
 //! https://support.microsoft.com/en-us/excel/functions/column-function
-use poirot::eval::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome, run_formula};
+use poirot::eval::{EvaluationBudgets, EvaluationError, EvaluationOutcome, run_formula};
 use poirot::model::{CellError, CellValue, Workbook};
 
 #[test]
 fn index_metadata_and_sparse_selection_preserve_reference_results() {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
-    sheet
-        .set_formula("A1".parse().unwrap(), "UNKNOWN_FUNCTION()")
-        .unwrap();
-    sheet.set_value("B4".parse().unwrap(), 7.).unwrap();
-    sheet.set_value("B1000000".parse().unwrap(), 11.).unwrap();
+    sheet.set_formula("A1", "UNKNOWN_FUNCTION()").unwrap();
+    sheet.set_value("B4", 7.).unwrap();
+    sheet.set_value("B1000000", 11.).unwrap();
     for (formula, expected) in [
         ("ROW(INDEX(A1:A3,2))", 2.),
         ("COLUMN(INDEX(A1:B3,1,2))", 2.),
@@ -52,7 +50,7 @@ fn index_operational_failures_survive_semantic_errors_and_admission() {
                     Default::default()
                 ),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::UnsupportedCapability { .. },
+                    failure: EvaluationError::UnsupportedCapability { .. },
                     ..
                 }
             ),
@@ -86,7 +84,7 @@ fn index_operational_failures_survive_semantic_errors_and_admission() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));

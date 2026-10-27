@@ -4,7 +4,7 @@ use super::computed_cell::ComputedCell;
 use super::self_read::SelfRead;
 use super::settlement::unsupported;
 use crate::eval::functions::extensions;
-use crate::eval::limits::{EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{EvalResult, EvaluationError, WorkKind};
 use crate::eval::ports::{CellCompletion, DependencyRead};
 use crate::eval::session::ReadRecorder;
 use crate::eval::session::Session;
@@ -45,7 +45,7 @@ impl<'s, 'a> SpillPublisher<'s, 'a> {
             return Err(unsupported(
                 sheet,
                 at,
-                "dynamic array publication requires a source formula cell; ad hoc probes are unsupported",
+                crate::eval::limits::EvaluationReasonError::DynamicArrayPublicationRequiresASourceFormulaCellAdHocProbesAreUnsupported,
             ));
         }
         let width = rows.first().map_or(0, Vec::len);
@@ -64,9 +64,13 @@ impl<'s, 'a> SpillPublisher<'s, 'a> {
         if last.is_none_or(|last| last.validate().is_err()) {
             return Ok(ComputedCell::scalar(Error(CellError::Spill)));
         }
-        let count = height
-            .checked_mul(width)
-            .ok_or_else(|| unsupported(sheet, at, "array shape overflow"))?;
+        let count = height.checked_mul(width).ok_or_else(|| {
+            unsupported(
+                sheet,
+                at,
+                crate::eval::limits::EvaluationReasonError::ArrayShapeOverflow,
+            )
+        })?;
         self.session.state.runtime.budget.check_allocation(count)?;
         // SAFETY: The preceding last.is_none_or guard returns on None before this unwrap; last is not reassigned.
         let last = last.unwrap();
@@ -113,9 +117,9 @@ impl<'s, 'a> SpillPublisher<'s, 'a> {
                         sheet,
                         at,
                         if conflict == SelfRead::Sparse {
-                            "array result reads its own unpublished sparse footprint"
+                            crate::eval::limits::EvaluationReasonError::ArrayResultReadsItsOwnUnpublishedSparseFootprint
                         } else {
-                            "array result reads its own unpublished footprint"
+                            crate::eval::limits::EvaluationReasonError::ArrayResultReadsItsOwnUnpublishedFootprint
                         },
                     ));
                 }
@@ -131,7 +135,7 @@ impl<'s, 'a> SpillPublisher<'s, 'a> {
         let first = rows
             .first()
             .and_then(|row| row.first())
-            .ok_or(EvaluationFailure::StalePlan)?
+            .ok_or(EvaluationError::StalePlan)?
             .clone();
         Ok(ComputedCell {
             value: first,

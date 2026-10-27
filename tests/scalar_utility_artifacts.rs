@@ -7,10 +7,9 @@ use poirot::{CellValue, Workbook};
 fn old_preparation_recovers_utility_source_and_recalculates() {
     let mut book = Workbook::new();
     let s = book.add_sheet("S").unwrap();
-    s.set_value("J1".parse().unwrap(), 2.).unwrap();
-    s.set_formula("A1".parse().unwrap(), "MUNIT(J1)").unwrap();
-    s.set_formula("G1".parse().unwrap(), "MULTINOMIAL(J1,3)")
-        .unwrap();
+    s.set_value("J1", 2.).unwrap();
+    s.set_formula("A1", "MUNIT(J1)").unwrap();
+    s.set_formula("G1", "MULTINOMIAL(J1,3)").unwrap();
     let mut overlay = Overlay::with_workbook(book).build().unwrap();
     let input = overlay.target("S!J1").unwrap();
     let output = overlay.target("S!G1").unwrap();
@@ -42,7 +41,13 @@ fn old_preparation_recovers_utility_source_and_recalculates() {
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedIncompatible);
     assert_eq!(
-        workbook.sheet(0).unwrap().get(input.address).unwrap().value,
+        workbook
+            .sheet(0)
+            .unwrap()
+            .get(input.address)
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Number(3.)
     );
     let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
@@ -67,10 +72,10 @@ fn old_preparation_recovers_utility_source_and_recalculates() {
 fn utility_xlsx_roundtrip_executes_prefixed_functions_and_spills() {
     let mut b = Workbook::new();
     let s = b.add_sheet("S").unwrap();
-    s.set_formula("A1".parse().unwrap(), "MUNIT(2)").unwrap();
-    s.set_formula("D1".parse().unwrap(), "NETWORKDAYS.INTL(45292,45298)")
+    s.set_formula("A1", "MUNIT(2)").unwrap();
+    s.set_formula("D1", "NETWORKDAYS.INTL(45292,45298)")
         .unwrap();
-    s.set_formula("G1".parse().unwrap(), "ACOT(1)").unwrap();
+    s.set_formula("G1", "ACOT(1)").unwrap();
     let bytes = b.save_xlsx().to_buffer().unwrap();
     let reopened = poirot_io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
     let mut e = poirot::eval::overlay::Evaluation::with_workbook(reopened)

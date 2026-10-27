@@ -5,7 +5,7 @@ use super::cell_attempt::CellAttempt;
 use super::completion_context::CompletionContext;
 use crate::eval::config::ArrayResultPolicy;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::limits::{EvalResult, EvaluationError};
 use crate::eval::ports::{CellCompletion, CellProvenance};
 use crate::model::CellValue;
 use crate::model::CellValue::Blank;
@@ -54,7 +54,7 @@ impl CellRead {
                         context.budget,
                     )?;
                 }
-                Ok::<_, EvaluationFailure>(())
+                Ok::<_, EvaluationError>(())
             })();
             if let Err(failure) = tracked {
                 result = Err(failure);
@@ -73,18 +73,22 @@ impl CellRead {
                 reads
                     .completed
                     .try_reserve(1)
-                    .map_err(|_| cell_allocation_failure(target))?;
+                    .map_err(|reservation_source| {
+                        cell_allocation_failure(target, reservation_source)
+                    })?;
                 if provenance == CellProvenance::Evaluated {
                     reads
                         .fresh_results
                         .try_reserve(1)
-                        .map_err(|_| cell_allocation_failure(target))?;
+                        .map_err(|reservation_source| {
+                            cell_allocation_failure(target, reservation_source)
+                        })?;
                     // SAFETY: One result slot was reserved above; coordinate hashing cannot panic.
                     reads.fresh_results.insert((sheet, address));
                 }
                 // SAFETY: The completed set reserved one slot above with no intervening insertion.
                 reads.completed.insert((sheet, address));
-                Ok::<_, EvaluationFailure>(())
+                Ok::<_, EvaluationError>(())
             })();
             if let Err(failure) = recorded {
                 result = Err(failure);

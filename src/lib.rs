@@ -18,10 +18,10 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let mut book = Workbook::open("energy.xlsx")?;
 //! let sheet = book.sheet_by_name_mut("Energy").ok_or("missing Energy sheet")?;
-//! sheet.set_value("A1".parse()?, 12.)?;
+//! sheet.set_value("A1", 12)?;
 //! book.recalculate()?;
 //!
-//! let energy = book.stored_cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
+//! let energy = book.stored_cell("Energy", "C1")?.ok_or("missing energy result")?;
 //! println!("Energy (kWh): {:?}", energy.value);
 //! book.save_xlsx().write_file("energy-updated.xlsx")?;
 //! # Ok(())
@@ -63,18 +63,18 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let mut book = Workbook::new();
 //! let sheet = book.add_sheet("Energy")?;
-//! sheet.set_value("A1".parse()?, 12.)?;
-//! sheet.set_value("B1".parse()?, 25.)?;
-//! sheet.set_formula("C1".parse()?, "A1*B1")?;
+//! sheet.set_value("A1", 12)?;
+//! sheet.set_value("B1", 25)?;
+//! sheet.set_formula("C1", "A1*B1")?;
 //! book.recalculate()?;
-//! let energy = book.stored_cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
+//! let energy = book.stored_cell("Energy", "C1")?.ok_or("missing energy result")?;
 //! assert_eq!(energy.value, CellValue::Number(300.));
 //! let bytes = book.save_xlsx().to_buffer()?;
 //! let mut loaded = Workbook::from_bytes(&bytes)?;
 //! loaded.sheet_by_name_mut("Energy").ok_or("missing Energy")?
-//!     .set_value("A1".parse()?, 24.)?;
+//!     .set_value("A1", 24)?;
 //! loaded.recalculate()?;
-//! assert_eq!(loaded.stored_cell("Energy", "C1".parse()?).ok_or("missing result")?.value,
+//! assert_eq!(loaded.stored_cell("Energy", "C1")?.ok_or("missing result")?.value,
 //!     CellValue::Number(600.));
 //! # Ok(())
 //! # }
@@ -88,7 +88,7 @@
 //! | Use case | API | Calculation state |
 //! | --- | --- | --- |
 //! | Edit and save a workbook | [`Workbook::recalculate`] | Updates stored formula results. |
-//! | Query a cell or formula text directly | [direct cell evaluation](crate::eval::run_cell), [direct formula evaluation](crate::eval::run_formula) | Runs against workbook data. |
+//! | Query a cell or formula text directly | [direct cell evaluation](crate::calculation::run_cell), [direct formula evaluation](crate::calculation::run_formula) | Runs against workbook data. |
 //! | Compare scenarios | [`Workbook::evaluation`] | Calculates requested dependencies; edits clear results. |
 //! | Repeatedly change a model | [`Workbook::overlay`] | Retains edits and reuses unaffected results. |
 //!
@@ -119,7 +119,7 @@
 //! ```
 //! # use poirot::Workbook;
 //! # let book = Workbook::new();
-//! if let Some(metadata) = &book.model().file_metadata {
+//! if let Some(metadata) = &book.file_metadata {
 //!     for warning in &metadata.import_warnings {
 //!         eprintln!("{warning}");
 //!     }
@@ -137,9 +137,9 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let mut book = Workbook::new();
 //! let sheet = book.add_sheet("Energy")?;
-//! sheet.set_value("A1".parse()?, 12.)?;
-//! sheet.set_value("B1".parse()?, 25.)?;
-//! sheet.set_formula("C1".parse()?, "A1*B1")?;
+//! sheet.set_value("A1", 12)?;
+//! sheet.set_value("B1", 25)?;
+//! sheet.set_formula("C1", "A1*B1")?;
 //!
 //! let mut evaluation = book.evaluation().build()?;
 //! let hours = evaluation.target("Energy!A1")?;
@@ -150,7 +150,7 @@
 //!     energies.push(evaluation.cell(energy)?);
 //! }
 //! assert_eq!(energies, [CellValue::Number(300.), CellValue::Number(600.)]);
-//! assert_eq!(book.stored_cell("Energy", "A1".parse()?).ok_or("missing operating hours")?.value,
+//! assert_eq!(book.stored_cell("Energy", "A1")?.ok_or("missing operating hours")?.value,
 //!     CellValue::Number(12.));
 //! # Ok(())
 //! # }
@@ -183,9 +183,12 @@
 //!
 //! # Excel compatibility
 //!
-//! Poirot targets modern Excel. Validate the input cases your application uses;
+//! Poirot targets modern Excel, including dynamic arrays, with partial compatibility.
+//! It does not claim complete Excel equivalence or lossless workbook round trips.
+//! Validate the input cases and ordered edits your application uses;
 //! see the [compatibility guide](https://github.com/yiblet/poirot/blob/master/docs/compatibility.md)
-//! for function and file support, known gaps, test evidence, and reporting issues.
+//! for feature status, default policies, observable differences, file losses and
+//! validation steps. Registered functions and passing cases are not proof of full parity.
 //!
 //! # Other APIs
 //!
@@ -199,9 +202,16 @@
 //! - [`editing`] renames sheets and translates formula references atomically.
 //! - [`snapshots`] saves native state and restores source with visible preparation status.
 //!
-//! Advanced integrations depend directly on `poirot::model`, `poirot_io`,
-//! `poirot_parsing`, `poirot_functions::format`, or `poirot::eval`. Use [`Workbook::model`]
-//! and [`Workbook::into_model`] when crossing into those component APIs.
+//! [`model`] exposes sparse storage and queries; its reads never calculate formulas.
+//! [`eval`] exposes public compiler, engine, observation and run contracts for advanced
+//! integrations. Start with [`calculation`] for application [`calculation::Evaluation`]
+//! and [`calculation::Overlay`]; engine types and reporting defaults can differ.
+//! The root [`Workbook`] and [`model::Workbook`] are the same type.
+//!
+//! Component crates work independently: [poirot-parsing](https://docs.rs/poirot-parsing)
+//! supplies formula/text syntax, [poirot-functions](https://docs.rs/poirot-functions)
+//! supplies pure algorithms and display formatting, and
+//! [poirot-io](https://docs.rs/poirot-io) supplies codecs for caller-owned storage.
 //!
 //! # Project direction
 //!
@@ -216,125 +226,28 @@
 //! choices. Contributors are welcome, including AI-written PRs; see
 //! [Contributing](https://github.com/yiblet/poirot/blob/master/CONTRIBUTING.md).
 
-pub use crate::model::{
-    Cell, CellAddress, CellError, CellValue, DateSystem, ModelError, Worksheet,
-};
-pub use crate::workflow::Workbook;
-
-/// Text storage, text units, and shared-formula provenance.
-///
-/// ```
-/// use poirot::{CellAddress, cells::{SharedFormula, SharedFormulaId}};
-/// let origin: CellAddress = "B2".parse()?;
-/// let provenance = SharedFormula { group: SharedFormulaId(1), origin };
-/// assert!(provenance.is_anchor(origin));
-/// # Ok::<(), poirot::ModelError>(())
-/// ```
-pub mod cells {
-    pub use crate::model::{
-        ExcelText, SharedFormula, SharedFormulaId, TextRef, TextUnits, TextUnitsError,
-    };
-}
-
-/// Cell presentation and display formatting.
-///
-/// ```
-/// use poirot::{CellValue, styles::{compile_format, render_value, FormatCompilePolicy, FormatRenderContext}};
-/// let plan = compile_format("0.00", FormatCompilePolicy::default())?;
-/// let display = render_value(&CellValue::Number(12.5), &plan, FormatRenderContext::default())?;
-/// assert_eq!(display.text, "12.50");
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-pub mod styles {
-    pub use crate::model::{
-        Alignment, BorderLine, BorderSide, Borders, CellStyle, ColorSource, FontFamily, FontScheme,
-        FontSize, FontStyle, HorizontalAlignment, IndexedColor, PatternFill, PatternType,
-        ReadingOrder, RotationDegrees, SheetPresentation, SheetVisibility, StyleColor,
-        StyleContext, TextRotation, ThemeColor, Tint, Underline, VerticalAlignment, VisualStyle,
-    };
-    pub use poirot_functions::format::{
-        FormatCompileError, FormatCompilePolicy, FormatError, FormatErrorKind, FormatLocale,
-        FormatPlan, FormatRenderContext, FormattedValue, compile_format, render_value,
-    };
-}
-
 /// Direct and incremental calculation, semantics, contexts, and resource limits.
-///
-/// ```
-/// use poirot::{Workbook, CellValue, calculation::EvaluationContext};
-/// let mut book = Workbook::new();
-/// let sheet = book.add_sheet("Data")?;
-/// sheet.set_value("A1".parse()?, 2.)?;
-/// sheet.set_formula("B1".parse()?, "A1*3")?;
-/// let mut scenario = book.into_overlay().build()?;
-/// let output = scenario.target("Data!B1")?;
-/// let context = EvaluationContext::default();
-/// assert_eq!(scenario.evaluation(&context)?.cell(output)?, CellValue::Number(6.));
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-pub mod calculation {
-    pub use crate::eval::{
-        ArrayResultPolicy, BudgetFailure, BudgetKind, BuiltinSemanticsPolicy, CapabilityId,
-        CurrencyContext, DateOrder, EvaluationLimits, EvaluationUsage, FormattingConfiguration,
-        FormulaCacheMaterializationPolicy, KnownSourceException, Localization, MemoRetentionLimits,
-        MemoRetentionUsage, ProducerPolicy, RandomAccess, RegexSettings, ResourceFailureKind,
-        TextSemanticsPolicy,
-    };
-    pub use crate::workflow::{
-        CalculationError, CellEvaluation, CompilationUsage, Evaluation, EvaluationBuilder,
-        EvaluationContext, EvaluationCycle, EvaluationFailure, EvaluationPolicy, EvaluationReport,
-        EvaluationTarget, NumberLocale, Overlay, OverlayBuilder, OverlayEdits, OverlayError,
-        PreparationPolicy,
-    };
-    pub use poirot_parsing::formula::FormulaParsePolicy;
-}
-
-/// Excel loading, export, source metadata, and import diagnostics.
-///
-/// ```
-/// use poirot::{Workbook, files::ReadOptions};
-/// let mut book = Workbook::new();
-/// book.add_sheet("Data")?.set_value("A1".parse()?, 42.)?;
-/// let bytes = book.save_xlsx().to_buffer()?;
-/// let loaded = Workbook::load().options(ReadOptions::default()).from_bytes(&bytes)?;
-/// assert!(loaded.stored_cell("Data", "A1".parse()?).is_some());
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-pub mod files {
-    pub use crate::model::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
-    pub use crate::workflow::{
-        LoadBuilder, ScenarioSaveError, ScenarioXlsxSaveBuilder, WorkbookError, XlsxSaveBuilder,
-    };
-    pub use poirot_io::opc::OpcImportPolicy;
-    pub use poirot_io::{IoError, ReadOptions, ResourceBudget, WriteOptions};
-}
-
+pub mod calculation;
+/// Text storage, text units, and shared-formula provenance.
+pub mod cells;
 /// Structural edits and source-checked formula reference translations.
-///
-/// ```
-/// use poirot::Workbook;
-/// let mut book = Workbook::new();
-/// book.add_sheet("Data")?.set_formula("A1".parse()?, "Data!B1")?;
-/// book.rename_sheet(0, "Inputs").apply()?;
-/// assert!(book.sheet_by_name("Inputs").is_some());
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-pub mod editing {
-    pub use crate::model::{EditOutcome, FormulaSource, WorkbookChange};
-    pub use crate::workflow::edit::{EditError, RenameSheetBuilder};
-    pub use crate::workflow::translation_edit::{TranslateFormulasBuilder, TranslationRequest};
-    pub use poirot_parsing::formula::{FormulaLocation, TranslationPolicy};
-}
-
-/// Native source and calculation-state persistence with explicit recovery policies.
-#[path = "artifact.rs"]
-pub mod snapshots;
-
-/// Formula compilation and evaluation.
+pub mod editing;
+/// Advanced compiler, engine, observation and run contracts; applications start with [`calculation`].
 pub mod eval;
+/// Excel loading, export, source metadata, and import diagnostics.
+pub mod files;
 /// Editable source storage and workbook queries.
 pub mod model;
-/// Workbook editing and calculation workflows.
-mod workflow;
+/// Native source and calculation-state persistence with explicit recovery policies.
+pub mod snapshots;
+/// Cell presentation and display formatting.
+pub mod styles;
 
+mod calculation_error;
+mod edit_error;
 mod file_adapter;
+mod xlsx_save_error;
+
+pub use crate::model::{
+    Cell, CellAddress, CellError, CellValue, DateSystem, ModelError, Workbook, Worksheet,
+};

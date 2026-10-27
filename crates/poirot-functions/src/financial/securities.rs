@@ -483,8 +483,11 @@ impl Bond {
         self,
         price: f64,
         mut charge: impl FnMut(u64) -> std::result::Result<(), O>,
-    ) -> std::result::Result<f64, crate::financial::modern::Failure<O>> {
-        use crate::financial::modern::Failure::Spreadsheet;
+    ) -> std::result::Result<
+        f64,
+        crate::financial::financial_calculation_error::FinancialCalculationError<O>,
+    > {
+        use crate::financial::financial_calculation_error::FinancialCalculationError::Spreadsheet;
         finite(&[price]).map_err(Spreadsheet)?;
         if price <= 0.0 {
             return Err(Spreadsheet(E::Num));
@@ -515,7 +518,7 @@ impl Bond {
         let mut rate = 0.1_f64;
         let mut prior = f64::INFINITY;
         for _ in 0..100 {
-            charge(32).map_err(crate::financial::modern::Failure::Operational)?;
+            charge(32).map_err(crate::financial::financial_calculation_error::FinancialCalculationError::Operational)?;
             let (value, duration) = match bond.discounted(rate) {
                 Ok(v) => v,
                 Err(error) if rate >= 0.0 => return Err(Spreadsheet(error)),
@@ -607,8 +610,13 @@ pub fn accrued_interest<O>(
     basis: Basis,
     from_issue: bool,
     mut charge: impl FnMut(u64) -> std::result::Result<(), O>,
-) -> std::result::Result<f64, crate::financial::modern::Failure<O>> {
-    use crate::financial::modern::Failure::{ComputationalLimit, Operational, Spreadsheet};
+) -> std::result::Result<
+    f64,
+    crate::financial::financial_calculation_error::FinancialCalculationError<O>,
+> {
+    use crate::financial::financial_calculation_error::FinancialCalculationError::{
+        ComputationalLimit, Operational, Spreadsheet,
+    };
     if basis != Basis::Nasd {
         return fixed_accrual(
             issue, first, settlement, rate, par, frequency, basis, from_issue,
@@ -882,8 +890,13 @@ pub(crate) fn quasi_fraction<O>(
     frequency: Frequency,
     basis: Basis,
     mut charge: impl FnMut(u64) -> std::result::Result<(), O>,
-) -> std::result::Result<f64, crate::financial::modern::Failure<O>> {
-    use crate::financial::modern::Failure::{ComputationalLimit, Operational, Spreadsheet};
+) -> std::result::Result<
+    f64,
+    crate::financial::financial_calculation_error::FinancialCalculationError<O>,
+> {
+    use crate::financial::financial_calculation_error::FinancialCalculationError::{
+        ComputationalLimit, Operational, Spreadsheet,
+    };
     if start > end {
         return Err(Spreadsheet(E::Num));
     }

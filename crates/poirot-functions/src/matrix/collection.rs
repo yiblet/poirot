@@ -1,5 +1,5 @@
 use super::{
-    Budget, Cell, CellError, Error, Input, Matrix, MatrixCollection, Result, finite, value,
+    Budget, Cell, CellError, Input, Matrix, MatrixCollection, MatrixError, Result, finite, value,
 };
 
 /// Admit a numeric matrix without changing coordinates under `SquareNumeric`. Other
@@ -16,12 +16,12 @@ pub(super) fn coerce_matrix_collection(
     for cell in &area.values {
         if let Some(number) = admission
             .coerce_matrix_member(cell.into())
-            .map_err(Error::Formula)?
+            .map_err(MatrixError::Formula)?
         {
             numbers.push(number);
         }
     }
-    admission.coerce_finish().map_err(Error::Formula)?;
+    admission.coerce_finish().map_err(MatrixError::Formula)?;
     if policy != MatrixCollection::SquareNumeric {
         numbers.resize(area.values.len(), 0.0);
     }
@@ -35,17 +35,18 @@ pub(super) fn coerce_trend_collection(area: &Matrix<Cell>, budget: Budget) -> Re
     for cell in &area.values {
         numbers.push(
             crate::coercion::collections::coerce_trend_member(cell.into())
-                .map_err(Error::Formula)?,
+                .map_err(MatrixError::Formula)?,
         );
     }
     Matrix::new(area.rows, area.cols, numbers)
 }
 fn coerce_sumproduct_term(c: &Cell, scalar: bool) -> Result<f64> {
-    crate::coercion::collections::coerce_sumproduct_member(c.into(), scalar).map_err(Error::Formula)
+    crate::coercion::collections::coerce_sumproduct_member(c.into(), scalar)
+        .map_err(MatrixError::Formula)
 }
 /// Multiply corresponding admitted elements and sum their products.
 pub(super) fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
-    let first = args.first().ok_or(Error::Formula(CellError::Value))?;
+    let first = args.first().ok_or(MatrixError::Formula(CellError::Value))?;
     let scalar = match first {
         Input::Scalar(Cell::Number(_) | Cell::Bool(_)) | Input::Reference(_) => true,
         Input::Scalar(_) => return value(),
@@ -90,7 +91,7 @@ pub(super) fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
             if let Input::Area(m) = arg {
                 for cell in &m.values {
                     if let Cell::Error(e) = cell {
-                        return Err(Error::Formula(*e));
+                        return Err(MatrixError::Formula(*e));
                     }
                 }
             }
@@ -103,7 +104,9 @@ pub(super) fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
         for arg in args {
             let Input::Area(m) = arg else { return value() };
             p *= coerce_sumproduct_term(
-                m.values.get(i).ok_or(Error::Formula(CellError::Value))?,
+                m.values
+                    .get(i)
+                    .ok_or(MatrixError::Formula(CellError::Value))?,
                 false,
             )?;
         }

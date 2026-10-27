@@ -1,9 +1,7 @@
 //! Measure direct scenario and incremental Poirot evaluation using the common protocol.
 use benchmark_common::{Address, Case, Edit, Engine, Error, Input};
-// Engine scenarios own their models and expose execution reports for benchmark diagnostics.
-use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::calculation::{Evaluation, EvaluationContext, EvaluationTarget, Overlay};
 use poirot::{CellAddress, CellValue};
-use poirot::calculation::{EvaluationContext, EvaluationTarget};
 
 /// A native scenario mode selected once outside measurement.
 #[derive(Clone, Copy)]
@@ -52,7 +50,7 @@ fn number(value: CellValue) -> Result<f64, Error> {
 }
 
 /// Populate a fresh workbook and select native calculation state inside the build timer.
-fn build(case: &Case, mode: Mode) -> Result<Model, Error> {
+fn build(case: &Case, mode: Mode, profiling: bool) -> Result<Model, Error> {
     let mut book = poirot::model::Workbook::new();
     for index in 0..case.sheet_count {
         // SAFETY: index is below sheet_count, so it cannot equal usize::MAX.
@@ -72,7 +70,12 @@ fn build(case: &Case, mode: Mode) -> Result<Model, Error> {
     Ok(match mode {
         Mode::WorkbookCell => Model::WorkbookCell(Box::new(book)),
         Mode::Evaluation | Mode::EvaluationBatch => Model::Evaluation(
-            Box::new(Evaluation::with_workbook(book).build(context())?),
+            Box::new(
+                Evaluation::with_workbook(book)
+                    .context(context())
+                    .profiling(profiling)
+                    .build()?,
+            ),
             if matches!(mode, Mode::EvaluationBatch) {
                 OutputMode::Batch
             } else {
@@ -107,18 +110,21 @@ impl Engine for Model {
                 .map(|&a| {
                     let a = target(a)?;
                     let context = context();
-                    let configuration = poirot::eval::RunConfiguration::from(context.inputs());
-                    match poirot::eval::run_cell_with_configuration(
+                    let configuration =
+                        poirot::calculation::RunConfiguration::from(context.inputs());
+                    match poirot::calculation::run_cell_with_configuration(
                         book,
                         a.sheet,
                         a.address,
                         &configuration,
                         context.limits.into(),
                     ) {
-                        poirot::eval::EvaluationOutcome::Complete { value, .. } => number(value),
-                        poirot::eval::EvaluationOutcome::Aborted { failure: error, .. } => {
-                            Err(format!("{error:?}").into())
+                        poirot::calculation::EvaluationOutcome::Complete { value, .. } => {
+                            number(value)
                         }
+                        poirot::calculation::EvaluationOutcome::Aborted {
+                            failure: error, ..
+                        } => Err(format!("{error:?}").into()),
                     }
                 })
                 .collect(),
@@ -209,13 +215,32 @@ fn main() -> Result<(), Error> {
         }
     };
     benchmark_common::run("poirot", env!("CARGO_PKG_VERSION"), &name, |case| {
-        build(case, mode)
+        build(case, mode, false)
     })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn timed_evaluation_omits_execution_counters() -> Result<(), Error> {
+        let case: Case = serde_json::from_str(
+            r#"{
+            "name":"unprofiled", "cells":[{"row":0,"col":0,"input":"=2*3"}],
+            "outputs":[{"row":0,"col":0}], "expected":[6], "edits":[]
+        }"#,
+        )?;
+        for mode in [Mode::Evaluation, Mode::EvaluationBatch] {
+            let mut model = build(&case, mode, false)?;
+            assert_eq!(model.read(&case.outputs)?, case.expected);
+            match model {
+                Model::Evaluation(model, _) => assert!(model.finish().execution.is_none()),
+                _ => panic!("expected an evaluation model"),
+            }
+        }
+        Ok(())
+    }
 
     #[test]
     fn paired_workflows_preserve_order_duplicates_and_edits() -> Result<(), Error> {
@@ -234,7 +259,7 @@ mod tests {
             Mode::Overlay,
             Mode::OverlayBatch,
         ] {
-            let mut model = build(&case, mode)?;
+            let mut model = build(&case, mode, true)?;
             assert_eq!(model.read(&case.outputs)?, case.expected);
             for edit in &case.edits {
                 model.edit(edit)?;
@@ -242,7 +267,7 @@ mod tests {
             }
             if let Model::Evaluation(model, _) = model {
                 // Each of two runs executes both formulas; duplicate outputs use the memo.
-                assert_eq!(model.finish().execution.formula_executions, 4);
+                assert_eq!(model.finish().execution.unwrap().formula_executions, 4);
             }
         }
         Ok(())
@@ -268,7 +293,7 @@ mod tests {
             Mode::OverlayBatch,
             Mode::WorkbookCell,
         ] {
-            let mut model = build(&case, mode)?;
+            let mut model = build(&case, mode, true)?;
             assert_eq!(model.read(&case.outputs)?, case.expected);
             assert_eq!(model.read_unchanged(&case.outputs)?, case.expected);
             assert_eq!(model.retains_results(), !matches!(mode, Mode::WorkbookCell));
@@ -287,7 +312,7 @@ mod tests {
             serde_json::from_reader(std::fs::File::open(std::env::var("BENCHMARK_SUITE")?)?)?;
         for case in suite.cases {
             for mode in [Mode::Evaluation, Mode::EvaluationBatch] {
-                let mut model = build(&case, mode)?;
+                let mut model = build(&case, mode, true)?;
                 benchmark_common::validate(
                     &model.read(&case.outputs)?,
                     &case.expected,

@@ -10,6 +10,8 @@ pub const MAX_COLUMNS: u32 = 16_384;
 /// A cell position with zero-based row and column indices.
 ///
 /// Parse A1 notation with `"B3".parse()`, or use [`Self::new`] with `(2, 1)`.
+/// Standard checked conversions also accept A1 strings and zero-based integer tuples,
+/// including `usize` indices from iterator enumeration.
 /// The address is worksheet-local: the containing worksheet or an evaluator target
 /// supplies sheet identity. It carries no formula-copy anchoring such as `$B$3`.
 /// Public fields also allow unchecked construction; [`Self::validate`] checks bounds.
@@ -42,9 +44,10 @@ impl CellAddress {
     /// Check that the row and column fit within Excel worksheet limits.
     pub fn validate(self) -> Result<(), ModelError> {
         if self.row >= MAX_ROWS || self.col >= MAX_COLUMNS {
-            Err(ModelError(
-                "cell address exceeds Excel worksheet limits".into(),
-            ))
+            Err(ModelError::InvalidCellCoordinates {
+                row: self.row,
+                column: self.col,
+            })
         } else {
             Ok(())
         }
@@ -68,7 +71,7 @@ impl FromStr for CellAddress {
     /// Model diagnostic for invalid A1 syntax or worksheet bounds.
     type Err = ModelError;
     fn from_str(s: &str) -> Result<Self, ModelError> {
-        let invalid = || ModelError(format!("invalid A1 cell address: {s}"));
+        let invalid = || ModelError::InvalidCellAddress { input: s.into() };
         let s = s.strip_prefix('$').unwrap_or(s);
         let split = s
             .find(|c: char| !c.is_ascii_alphabetic())
@@ -91,5 +94,50 @@ impl FromStr for CellAddress {
         }
         let row: u32 = row_text.parse().map_err(|_| invalid())?;
         Self::new(row.checked_sub(1).ok_or_else(invalid)?, col - 1)
+    }
+}
+
+impl TryFrom<&str> for CellAddress {
+    type Error = ModelError;
+    /// Parse worksheet-local A1 notation and check worksheet bounds.
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+impl TryFrom<String> for CellAddress {
+    type Error = ModelError;
+    /// Parse owned worksheet-local A1 notation and check worksheet bounds.
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+impl TryFrom<&String> for CellAddress {
+    type Error = ModelError;
+    /// Parse borrowed worksheet-local A1 notation and check worksheet bounds.
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+impl From<&CellAddress> for CellAddress {
+    /// Copy an address; callers accepting unchecked public fields must still validate it.
+    fn from(value: &CellAddress) -> Self {
+        *value
+    }
+}
+impl<R, C> TryFrom<(R, C)> for CellAddress
+where
+    R: TryInto<u32>,
+    C: TryInto<u32>,
+{
+    type Error = ModelError;
+    /// Check zero-based integer axes against representable indices and worksheet bounds.
+    fn try_from((row, col): (R, C)) -> Result<Self, Self::Error> {
+        let row = row
+            .try_into()
+            .map_err(|_| ModelError::InvalidZeroBasedRow)?;
+        let col = col
+            .try_into()
+            .map_err(|_| ModelError::InvalidZeroBasedColumn)?;
+        Self::new(row, col)
     }
 }

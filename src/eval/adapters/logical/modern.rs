@@ -7,7 +7,7 @@ use crate::eval::functions::registry::LogicalFunction;
 use crate::eval::host::{CallHost, ErrorHandler, OperandKind};
 use crate::eval::limits::EvalResult;
 use crate::eval::observe::OperationId;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, core_projection};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, core_projection};
 use crate::model::CellError::NA;
 use crate::model::CellValue::{Blank, Boolean, Error, Number};
 use crate::model::{CellAddress, CellError, CellValue};
@@ -26,7 +26,7 @@ impl Kernel for Unary {
     ) -> FunctionResult<CellValue> {
         let value = match arguments.0.read(context) {
             Ok(operand) => operand.value,
-            Err(FunctionFailure::Spreadsheet(error)) => Error(error),
+            Err(FunctionError::Spreadsheet(error)) => Error(error),
             Err(error) => return Err(error),
         };
         Ok(match self.0 {

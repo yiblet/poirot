@@ -161,9 +161,6 @@ impl ExtensionRegistry {
             &poirot_parsing::formula::FunctionName::from(name),
         )
         .is_some()
-            || crate::eval::functions::atp::PINNED_ATP_FUNCTIONS
-                .iter()
-                .any(|entry| entry.eq_ignore_ascii_case(name))
         {
             return Err(Builtin);
         }

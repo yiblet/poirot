@@ -1,3 +1,4 @@
+use super::lookup_prefix_error::LookupPrefixError;
 use super::prefix_axis::PrefixAxis;
 use super::prefix_interval::PrefixInterval;
 use super::prefix_key::PrefixKey;
@@ -29,18 +30,21 @@ pub(in crate::eval) struct LookupPrefixes {
 
 impl LookupPrefixes {
     /// Validate persisted evaluated search state and rebuild transient admission counts.
-    pub(in crate::eval) fn restore(mut self, workbook: &Workbook) -> Result<Self, String> {
+    pub(in crate::eval) fn restore(
+        mut self,
+        workbook: &Workbook,
+    ) -> Result<Self, LookupPrefixError> {
         let mut total = 0usize;
         for (&partition, ranges) in &mut self.axes {
             if workbook.sheet(partition.0).is_none() || ranges.is_empty() {
-                return Err("lookup prefix worksheet or empty partition".into());
+                return Err(LookupPrefixError::LookupPrefixWorksheetOrEmptyPartition);
             }
             for (&interval, prefix) in ranges {
                 let axis = PrefixAxis::from_location(partition, interval);
-                axis.first.validate().map_err(|e| e.to_string())?;
-                axis.last.validate().map_err(|e| e.to_string())?;
+                axis.first.validate()?;
+                axis.last.validate()?;
                 if interval.0 > interval.1 || axis.location() != (partition, interval) {
-                    return Err("lookup prefix axis geometry".into());
+                    return Err(LookupPrefixError::LookupPrefixAxisGeometry);
                 }
                 // SAFETY: Ordered u32 endpoints were checked above, so subtraction
                 // is nonnegative and adding one remains representable in u64.
@@ -60,7 +64,7 @@ impl LookupPrefixes {
                         PrefixKey::Boolean(_) => false,
                     })
                 {
-                    return Err("lookup prefix selection or numeric key".into());
+                    return Err(LookupPrefixError::LookupPrefixSelectionOrNumericKey);
                 }
                 prefix.text_storage = prefix
                     .text
@@ -68,13 +72,13 @@ impl LookupPrefixes {
                     .try_fold(0usize, |total, query| {
                         total.checked_add(query.len())?.checked_add(1)
                     })
-                    .ok_or("lookup prefix text storage overflow")?;
+                    .ok_or(LookupPrefixError::LookupPrefixTextStorageOverflow)?;
                 total = total
                     .checked_add(1)
                     .and_then(|n| n.checked_add(prefix.first.len()))
                     .and_then(|n| n.checked_add(prefix.text_storage))
                     .filter(|n| *n <= MAX_ENTRIES)
-                    .ok_or("lookup prefix storage limit")?;
+                    .ok_or(LookupPrefixError::LookupPrefixStorageLimit)?;
             }
         }
         self.reserved = total;

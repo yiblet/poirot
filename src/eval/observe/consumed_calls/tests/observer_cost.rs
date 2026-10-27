@@ -2,7 +2,7 @@
 use super::support::{A1, B1, Bounded, names, plan, workbook};
 use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{BudgetKind, EvaluationFailure};
+use crate::eval::limits::{BudgetKind, EvaluationError};
 use crate::eval::observe::execution::{ExecutionEvent, ExecutionObserver};
 use crate::eval::ports::{CellCompletion, CellObserver, DependencyReadSink, ReadEvent};
 use crate::eval::session::{CellEvaluator, FormulaExecution, Session};
@@ -23,7 +23,7 @@ impl DependencyReadSink for Reads {
 struct Cells(usize);
 
 impl CellObserver for Cells {
-    fn completed(&mut self, _: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+    fn completed(&mut self, _: CellCompletion<'_>) -> Result<(), EvaluationError> {
         self.0 += 1;
         Ok(())
     }
@@ -37,7 +37,7 @@ struct Operations {
 }
 
 impl ExecutionObserver for Operations {
-    fn observe(&mut self, event: ExecutionEvent<'_>) -> Result<(), EvaluationFailure> {
+    fn observe(&mut self, event: ExecutionEvent<'_>) -> Result<(), EvaluationError> {
         match event {
             ExecutionEvent::Begin(_) => self.begins += 1,
             ExecutionEvent::Complete { .. } => self.completions += 1,
@@ -55,7 +55,7 @@ impl crate::eval::ports::CachedCellReader for CacheReads {
     fn cached_cell(
         &mut self,
         _: EvaluationTarget,
-    ) -> Result<Option<std::sync::Arc<CellValue>>, EvaluationFailure> {
+    ) -> Result<Option<std::sync::Arc<CellValue>>, EvaluationError> {
         self.0 += 1;
         Ok(None)
     }

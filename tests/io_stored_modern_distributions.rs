@@ -49,6 +49,7 @@ fn stored_modern_distribution_names_roundtrip() {
                     col: 0
                 })
                 .unwrap()
+                .unwrap()
                 .formula
                 .as_deref(),
             Some(format!("{prefix}{name}(1)").as_str())

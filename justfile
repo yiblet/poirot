@@ -37,7 +37,7 @@ release-tools:
     RUSTDOCFLAGS="-D warnings" python3 tools/verify_release.py --offline
 
 # Check crate boundaries, eval module layout, eval dependencies and authored specs.
-architecture: layout
+architecture: layout errors
     python3 tools/test_function_architecture.py
     python3 tools/test_coercion_architecture.py
     python3 crates/poirot-test-excel-specs/tools/maintain.py --check
@@ -46,6 +46,11 @@ architecture: layout
 layout:
     python3 tools/test_module_layout.py
     python3 tools/test_eval_dependencies.py
+
+# Check typed operation errors and the checker's regression fixtures.
+errors:
+    python3 tools/test_error_patterns.py --self-test
+    python3 tools/test_error_patterns.py
 
 # Check the workspace builds with the minimum supported Rust version.
 msrv:

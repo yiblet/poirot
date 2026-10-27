@@ -12,7 +12,7 @@ use std::path::Path;
 /// use poirot::eval::artifact::{SnapshotSaveBuilder, SnapshotLoadBuilder, PreparedStatus};
 /// use poirot::model::Workbook;
 /// let mut source = Workbook::new();
-/// source.add_sheet("Inputs")?.set_value("A1".parse()?, 12.)?;
+/// source.add_sheet("Inputs")?.set_value("A1", 12.)?;
 /// let bytes = SnapshotSaveBuilder::workbook(&source).to_buffer()?;
 /// let restored = SnapshotLoadBuilder::default().from_bytes(&bytes)?;
 /// assert_eq!(restored.prepared_status, PreparedStatus::Absent);

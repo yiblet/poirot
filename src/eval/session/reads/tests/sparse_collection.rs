@@ -6,8 +6,7 @@ use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
 use crate::eval::config::{ArrayResultPolicy, RunConfiguration};
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{
-    BudgetFailure, BudgetKind, EvaluationBudgets, EvaluationFailure, EvaluationOutcome,
-    EvaluationUsage,
+    BudgetError, BudgetKind, EvaluationBudgets, EvaluationError, EvaluationOutcome, EvaluationUsage,
 };
 use crate::eval::ports::{CellCompletion, CellObserver};
 use crate::eval::run::{EvaluationRun, RunReport, WorkbookView};
@@ -25,7 +24,7 @@ fn at(address: &str) -> EvaluationTarget {
 struct Completed(Vec<EvaluationTarget>);
 
 impl CellObserver for Completed {
-    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationError> {
         self.0.push(event.target);
         Ok(())
     }
@@ -119,10 +118,10 @@ fn formula_sources() -> Workbook {
     book
 }
 
-fn aborted(report: RunReport<CellValue>) -> (BudgetFailure, EvaluationUsage) {
+fn aborted(report: RunReport<CellValue>) -> (BudgetError, EvaluationUsage) {
     match report.outcome {
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(failure),
+            failure: EvaluationError::Budget(failure),
             usage,
         } => (failure, usage),
         other => panic!("expected a metered failure, got {other:?}"),
@@ -142,7 +141,7 @@ fn collection_limit_rejects_before_admitting_coordinate_or_executing_cell_bodies
     let (failure, usage) = aborted(report);
     assert_eq!(
         failure,
-        BudgetFailure {
+        BudgetError {
             kind: BudgetKind::Materialization,
             limit: 2,
             consumed: 0,
@@ -190,7 +189,7 @@ fn finite_work_admits_prefetched_page_visits_before_referenced_cell_bodies() {
         let (failure, usage) = aborted(report);
         assert_eq!(
             failure,
-            BudgetFailure {
+            BudgetError {
                 kind: BudgetKind::RunWork,
                 limit,
                 consumed: limit,
@@ -231,7 +230,7 @@ fn finite_work_admits_prefetched_page_visits_before_referenced_cell_bodies() {
     let (failure, usage) = aborted(report);
     assert_eq!(
         failure,
-        BudgetFailure {
+        BudgetError {
             kind: BudgetKind::CellWork,
             limit: 27,
             consumed: 27,
@@ -268,7 +267,7 @@ fn completed_collection_preserves_error_order_and_nested_failure_attribution() {
     let (failure, usage) = aborted(report);
     assert_eq!(
         failure,
-        BudgetFailure {
+        BudgetError {
             kind: BudgetKind::Depth,
             limit: 4,
             consumed: 4,

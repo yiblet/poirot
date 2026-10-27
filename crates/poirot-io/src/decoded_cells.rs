@@ -56,11 +56,15 @@ pub(super) fn xlsx_value(data: calamine::Data) -> Result<CellValue, IoError> {
         Data::String(s) => CellValue::Text(s),
         Data::Bool(b) => CellValue::Boolean(b),
         Data::DateTime(d) => CellValue::Number(d.as_f64()),
-        Data::Error(e) => CellValue::Error(e.to_string().parse::<CellError>()?),
+        Data::Error(e) => CellValue::Error(
+            e.to_string()
+                .parse::<CellError>()
+                .map_err(crate::ModelError::from)?,
+        ),
         Data::DateTimeIso(s) | Data::DurationIso(s) => {
-            return Err(IoError::Unsupported(format!(
-                "ISO date/duration has no typed model representation: {s}"
-            )));
+            return Err(IoError::Unsupported(
+                crate::WorkbookFeatureError::IsoDateOrDuration { input: s },
+            ));
         }
     })
 }

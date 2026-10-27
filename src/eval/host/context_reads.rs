@@ -111,7 +111,7 @@ impl<'h, 'call, 'workbook> ContextReads<'h, 'call, 'workbook> {
         let context = self.host.session.policies.currency.ok_or_else(|| {
             self.host.unsupported(
                 CapabilityId::Formatting,
-                "currency localization is not declared by the captured run configuration",
+                crate::eval::limits::EvaluationReasonError::CurrencyLocalizationIsNotDeclaredByTheCapturedRunConfiguration,
             )
         })?;
         // Both the clone and renderer are bounded before any owned string allocation.

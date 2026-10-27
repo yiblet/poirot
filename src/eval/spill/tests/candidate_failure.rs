@@ -9,7 +9,7 @@ fn parser_resource_refusal_cannot_supply_a_narrow_or_absent_candidate() {
     let mut book = Workbook::new();
     book.add_sheet("S")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "SEQUENCE(3,2)")
+        .set_formula("A1", "SEQUENCE(3,2)")
         .unwrap();
     let policy = PreparationPolicy {
         parse: poirot_parsing::formula::FormulaParsePolicy {
@@ -36,7 +36,7 @@ fn syntax_failure_has_no_successful_spill_and_registry_failure_is_conservative()
     let mut book = Workbook::new();
     book.add_sheet("S")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "SEQUENCE(")
+        .set_formula("A1", "SEQUENCE(")
         .unwrap();
     let mut session = Session::with_context(&book, EvaluationInputs::default());
     assert!(
@@ -48,7 +48,7 @@ fn syntax_failure_has_no_successful_spill_and_registry_failure_is_conservative()
     let mut book = Workbook::new();
     book.add_sheet("S")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "SEQUENCE(3)")
+        .set_formula("A1", "SEQUENCE(3)")
         .unwrap();
     let registry = crate::eval::functions::extensions::ExtensionRegistry::new();
     let policy = PreparationPolicy::with_extensions(Default::default(), &registry);

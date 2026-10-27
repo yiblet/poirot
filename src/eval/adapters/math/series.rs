@@ -2,9 +2,7 @@
 use crate::eval::adapters::elementwise::{
     ArgumentRole, Broadcast, Kernel, MemberContext, WholeCollection, collections,
 };
-use crate::eval::host::{
-    ArgumentCoercion, CallHost, NumericPolicy, OperandKind, OperandReader, ScalarOperand,
-};
+use crate::eval::host::{ArgumentCoercion, CallHost, OperandKind, OperandReader, ScalarOperand};
 use crate::eval::values::FunctionResult;
 use crate::model::CellValue;
 use crate::model::CellValue::Number;
@@ -22,7 +20,7 @@ fn number(host: &mut CallHost<'_, '_>, scalar: ScalarOperand) -> FunctionResult<
     };
     coerce_seriessum_number(value, |text| {
         let text = ArgumentCoercion::new(host).project_text(text)?;
-        ArgumentCoercion::new(host).coerce_number_text(&text, NumericPolicy::PinnedPoi)
+        ArgumentCoercion::new(host).coerce_number_text(&text)
     })
 }
 

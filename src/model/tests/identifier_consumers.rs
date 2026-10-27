@@ -12,7 +12,7 @@ mod consumer_tests {
         assert_eq!(workbook.try_sheet_index_by_name("ä dATA"), Ok(Some(0)));
         assert_eq!(workbook.sheet_by_name("ä data").unwrap().name(), "Ä Data");
         assert!(workbook.add_sheet("ä DATA").is_err());
-        assert!(workbook.rename_sheet(1, "ä data").is_err());
+        assert!(workbook.rename_sheet(1, "ä data").apply().is_err());
         workbook.define_name("ÉRate", "1", None).unwrap();
         workbook.define_name("érate", "2", Some(0)).unwrap();
         assert!(workbook.define_name("ÉRATE", "3", Some(0)).is_err());
@@ -41,11 +41,7 @@ mod consumer_tests {
         workbook.import_sheet("Σ").unwrap();
         assert!(workbook.try_sheet_index_by_name("σ").is_err());
         assert!(
-            workbook
-                .add_sheet("σ")
-                .unwrap_err()
-                .0
-                .contains("unsupported identifier")
+            matches!(workbook.add_sheet("σ"), Err(crate::model::ModelError::Identifier(error)) if error.stored == "Σ" && error.requested == "σ")
         );
         workbook.import_sheet("σ").unwrap();
         workbook
@@ -94,11 +90,7 @@ mod utf16_length_consumer_tests {
             workbook.add_sheet(stored).unwrap();
             assert!(workbook.try_sheet_index_by_name(requested).is_err());
             assert!(
-                workbook
-                    .add_sheet(requested)
-                    .unwrap_err()
-                    .0
-                    .contains("unsupported identifier")
+                matches!(workbook.add_sheet(requested), Err(crate::model::ModelError::Identifier(error)) if error.stored == stored && error.requested == requested)
             );
             assert_eq!(workbook.sheets().len(), 1);
         }

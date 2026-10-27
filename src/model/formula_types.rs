@@ -1,5 +1,6 @@
 //! Finite possible-result types shared by source tooling and formula preparation.
 use crate::model::CellValue;
+use crate::model::model_error::ModelError;
 
 /// A set of scalar spreadsheet kinds; an empty set denotes no possible value.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -7,13 +8,13 @@ use crate::model::CellValue;
 pub struct ScalarKinds(u8);
 impl TryFrom<u8> for ScalarKinds {
     /// Invalid serialized scalar-kind bits.
-    type Error = &'static str;
+    type Error = ModelError;
     /// Reject unknown alternatives instead of admitting invalid abstract types.
     fn try_from(bits: u8) -> Result<Self, Self::Error> {
         if bits & !31 == 0 {
             Ok(Self(bits))
         } else {
-            Err("unknown scalar kind bits")
+            Err(ModelError::InvalidScalarKindBits { bits })
         }
     }
 }

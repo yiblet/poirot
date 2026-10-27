@@ -26,7 +26,7 @@ pub(super) fn serialize_xlsx(
         .any(|s| s.presentation().visibility == crate::SheetVisibility::Visible)
     {
         return Err(IoError::Unsupported(
-            "cannot export workbook without a visible worksheet".into(),
+            crate::WorkbookFeatureError::MissingVisibleWorksheet,
         ));
     }
     serialize_fresh(workbook, options)
@@ -39,16 +39,16 @@ pub(crate) fn serialize_fresh(
 ) -> Result<Vec<u8>, IoError> {
     if workbook.sheets().is_empty() {
         return Err(IoError::Unsupported(
-            "cannot export workbook without worksheets".into(),
+            crate::WorkbookFeatureError::MissingWorksheets,
         ));
     }
     let active = workbook
         .sheets()
         .iter()
         .position(|s| s.presentation().visibility == crate::SheetVisibility::Visible)
-        .ok_or_else(|| {
-            IoError::Unsupported("cannot export workbook without a visible worksheet".into())
-        })?;
+        .ok_or(IoError::Unsupported(
+            crate::WorkbookFeatureError::MissingVisibleWorksheet,
+        ))?;
     let mut styles = ooxml::StyleExport::new(workbook.style_context())?;
     let mut writer = rust_xlsxwriter::Workbook::new();
     // Storage spellings differing from source text, computed once for both
@@ -103,8 +103,9 @@ pub(crate) fn serialize_fresh(
         // only needs the used-range corners to author the worksheet dimension.
         if let Some((first, last)) = bounds {
             for corner in [first, last] {
-                let col = u16::try_from(corner.col)
-                    .map_err(|_| IoError::Unsupported("column exceeds XLSX grid".into()))?;
+                let col = u16::try_from(corner.col).map_err(|_| {
+                    IoError::Unsupported(crate::WorkbookFeatureError::ColumnExceedsXlsxGrid)
+                })?;
                 out.write_number(corner.row, col, 0.)?;
             }
         }

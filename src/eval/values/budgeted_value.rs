@@ -1,6 +1,6 @@
 //! Budget-admitted copying of evaluated values across internal call boundaries.
 use super::value::Value;
-use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationError};
 use crate::model::CellValue;
 
 /// Clone a cell only after admitting its text storage.
@@ -39,7 +39,7 @@ pub(in crate::eval) fn copy_value(budget: &mut BudgetMeter, value: &Value) -> Ev
             let cells = rows.iter().try_fold(0usize, |count, row| {
                 count
                     .checked_add(row.len())
-                    .ok_or(EvaluationFailure::StalePlan)
+                    .ok_or(EvaluationError::StalePlan)
             })?;
             budget.allocation(cells)?;
             Value::Array(super::array_view::ArrayView::anchored(

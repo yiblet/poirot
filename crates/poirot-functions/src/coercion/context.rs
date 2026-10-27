@@ -1,17 +1,4 @@
-use crate::coercion::CellError;
-use std::fmt;
-
-/// A candidate does not accept these inputs; only this failure permits fallback.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Mismatch {
-    /// Wrong number of arguments for a candidate signature.
-    Arity { expected: usize, actual: usize },
-    /// A selected scalar does not meet the requested rule.
-    Input {
-        argument: Option<usize>,
-        expected: &'static str,
-    },
-}
+use crate::coercion::CoercionError;
 
 /// Resource exhausted while attempting a requested conversion.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -22,55 +9,13 @@ pub enum Resource {
     TextBytes,
 }
 
-/// Mismatch, spreadsheet error, and operational failure stay distinguishable.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum CoercionFailure {
-    /// This candidate may be followed by a lower-priority candidate.
-    Mismatch(Mismatch),
-    /// A spreadsheet error is terminal unless explicitly requested as data.
-    Worksheet(CellError),
-    /// An operational failure must never select a different overload.
-    Limit(Resource),
-    /// A Unicode-scalar consumer cannot represent isolated UTF-16 surrogates.
-    UnsupportedText,
-}
-
-impl CoercionFailure {
-    pub(crate) fn mismatch(expected: &'static str) -> Self {
-        Self::Mismatch(Mismatch::Input {
-            argument: None,
-            expected,
-        })
-    }
-
-    pub(crate) fn at_argument(self, index: usize) -> Self {
-        match self {
-            Self::Mismatch(Mismatch::Input { expected, .. }) => Self::Mismatch(Mismatch::Input {
-                argument: Some(index),
-                expected,
-            }),
-            other => other,
-        }
-    }
-}
-
-impl fmt::Display for CoercionFailure {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Mismatch(mismatch) => write!(f, "no matching input: {mismatch:?}"),
-            Self::Worksheet(error) => error.fmt(f),
-            Self::Limit(resource) => write!(f, "conversion resource exhausted: {resource:?}"),
-            Self::UnsupportedText => f.write_str("Unicode scalar conversion requires valid UTF-16"),
-        }
-    }
-}
-
-impl std::error::Error for CoercionFailure {}
-
-/// Caller-supplied resource limits; hosts can supply their remaining allowance.
+/// Cumulative conversion ceilings; hosts can supply their remaining allowance.
+/// The default uses the maximum representable counters, without an application quota.
 #[derive(Clone, Copy, Debug)]
 pub struct Limits {
+    /// Maximum admitted work units, including attempts that later fail.
     pub work: u64,
+    /// Maximum cumulative bytes reserved for owned text conversions.
     pub text_bytes: usize,
 }
 
@@ -86,12 +31,18 @@ impl Default for Limits {
 /// Work actually performed and conservative text-allocation reservations.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Usage {
+    /// Work units admitted so far; rejected charges do not change this counter.
     pub work: u64,
+    /// Admitted text-byte reservations, retained even if an attempt is abandoned.
     pub text_bytes: usize,
 }
 
 /// Conversion limits and accumulated work for a function call.
-/// Failed attempts retain their resource charges. No clock or locale is implicit.
+/// Failed attempts retain their admitted resource charges. No clock or locale is implicit.
+/// Default construction starts at zero with [`Limits::default()`].
+/// Work units are policy estimates, not elapsed time; text bytes are reservations,
+/// not a measurement of live heap use. This context does not bound the function
+/// algorithm itself or native regex execution.
 #[derive(Debug)]
 pub struct CoercionContext {
     limits: Limits,
@@ -105,6 +56,7 @@ impl Default for CoercionContext {
 }
 
 impl CoercionContext {
+    /// Start a conversion budget with zero usage and the supplied cumulative ceilings.
     pub fn new(limits: Limits) -> Self {
         Self {
             limits,
@@ -112,28 +64,29 @@ impl CoercionContext {
         }
     }
 
+    /// Read admitted work and text reservations without resetting the budget.
     pub fn usage(&self) -> Usage {
         self.usage
     }
 
-    pub(crate) fn charge(&mut self, work: u64) -> Result<(), CoercionFailure> {
+    pub(crate) fn charge(&mut self, work: u64) -> Result<(), CoercionError> {
         let used = self
             .usage
             .work
             .checked_add(work)
             .filter(|used| *used <= self.limits.work)
-            .ok_or(CoercionFailure::Limit(Resource::Work))?;
+            .ok_or(CoercionError::Limit(Resource::Work))?;
         self.usage.work = used;
         Ok(())
     }
 
-    pub(crate) fn admit_text(&mut self, bytes: usize) -> Result<(), CoercionFailure> {
+    pub(crate) fn admit_text(&mut self, bytes: usize) -> Result<(), CoercionError> {
         let used = self
             .usage
             .text_bytes
             .checked_add(bytes)
             .filter(|used| *used <= self.limits.text_bytes)
-            .ok_or(CoercionFailure::Limit(Resource::TextBytes))?;
+            .ok_or(CoercionError::Limit(Resource::TextBytes))?;
         self.usage.text_bytes = used;
         Ok(())
     }

@@ -10,6 +10,10 @@ mod classic_match;
 mod comparison;
 mod domain;
 mod geometry;
+mod lookup_error;
+mod lookup_operational_error;
+mod lookup_unsupported_error;
+mod match_selection_error;
 /// Pure reference-axis translation and caller-coordinate intersection.
 pub use geometry::{intersection_offsets, offset_extent};
 mod index;
@@ -22,13 +26,11 @@ mod syntax;
 mod table;
 mod wildcard;
 // Typed classic MATCH selection with fallible, lazy candidate access.
-pub use classic_match::{
-    ClassicMatchMode, MatchCandidateReader, MatchSelectionFailure, classic_match_index,
-};
+pub use classic_match::{ClassicMatchMode, MatchCandidateReader, classic_match_index};
 // Workbook-independent values, reference geometry, failures, and work requests.
 pub use domain::{
-    Array, BudgetRequest, Error, Failure, OperationalFailure, Reference, ReferenceKind, Scalar,
-    SignedReference, Unsupported, Value, Work,
+    Array, BudgetRequest, LookupValueError, Reference, ReferenceKind, Scalar, SignedReference,
+    Value, Work,
 };
 // Approximate and XMATCH position selection over admitted search vectors.
 pub use index::{approximate_index, xmatch_index};
@@ -44,8 +46,9 @@ pub use ports::{Context, DynamicReference, Workbook};
 pub use reference::{AddressAxes, AddressStyle, address_text, index_selection};
 /// Parsing of dynamic A1/R1C1 reference spellings before host resolution.
 pub use syntax::parse_dynamic_reference;
-/// Pinned POI source revision defining compatibility behavior.
-pub const POI_REVISION: &str = "732120980140d5ed64b482c470e0b625cdb1ab15";
+// Algorithms adapted from Apache POI (Apache-2.0), revision
+// 732120980140d5ed64b482c470e0b625cdb1ab15; source URLs and reused portions
+// are recorded beside each lookup implementation.
 /// Evaluate a lookup function with supplied arguments and workbook access.
 /// Preserves deferred reference construction and eager XLOOKUP fallback.
 pub fn evaluate(
@@ -53,7 +56,7 @@ pub fn evaluate(
     args: &[Value],
     context: Context,
     workbook: &mut impl Workbook,
-) -> Result<Value, Failure> {
+) -> Result<Value, LookupError> {
     evaluate_arguments(
         function,
         &Arguments {
@@ -69,7 +72,7 @@ fn evaluate_arguments(
     args: &Arguments<'_>,
     context: Context,
     workbook: &mut impl Workbook,
-) -> Result<Value, Failure> {
+) -> Result<Value, LookupError> {
     match function {
         Function::Search(f) => crate::lookup::search::search(f, args, context, workbook),
         Function::Reference(f) => match f {
@@ -79,3 +82,11 @@ fn evaluate_arguments(
         },
     }
 }
+
+pub use lookup_error::LookupError;
+
+pub use lookup_operational_error::LookupOperationalError;
+
+pub use lookup_unsupported_error::LookupUnsupportedError;
+
+pub use match_selection_error::MatchSelectionError;

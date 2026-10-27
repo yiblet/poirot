@@ -489,7 +489,7 @@ fn classic_math_arity_and_coercion_control_argument_demand() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: poirot::eval::EvaluationFailure::Budget(_),
+            failure: poirot::eval::EvaluationError::Budget(_),
             ..
         }
     ));

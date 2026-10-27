@@ -1,14 +1,6 @@
 //! Unicode15 ROOT case mappings with Unicode contextual final sigma.
 //! Mapping assets retain the Java-pinned Unicode input version, while sigma
 //! follows Unicode15 SpecialCasing/section 3.13 rather than Java word boundaries.
-#[path = "case_properties.rs"]
-mod case_properties;
-#[path = "java_case_data.rs"]
-mod data;
-
-/// Version of the pinned full-case mapping contract and assets.
-pub const POLICY_VERSION: &str = "unicode15-root-final-sigma-v2";
-
 /// Requested Unicode15 full-case mapping direction.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Direction {
@@ -17,12 +9,15 @@ pub enum Direction {
     /// Apply uppercase mapping.
     Upper,
 }
-/// Case-mapping asset or context gaps reported without substituting Rust Unicode rules.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Unsupported {
-    /// Pinned mapping asset failed integrity or layout validation.
-    InvalidMappingAsset,
-}
+
+use super::java_case_error::JavaCaseError;
+#[path = "case_properties.rs"]
+mod case_properties;
+#[path = "java_case_data.rs"]
+mod data;
+
+/// Version of the pinned full-case mapping contract and assets.
+pub const POLICY_VERSION: &str = "unicode15-root-final-sigma-v2";
 
 /// Maximum output length in UTF-16 units (all Unicode 15 expansions <= 3 units
 /// per input unit). Hosts should reserve/check this before invoking conversion.
@@ -31,7 +26,7 @@ pub fn output_bound(input_units: usize) -> Option<usize> {
 }
 
 /// Preserve unpaired surrogates exactly, as Java String does.
-pub fn convert(input: &[u16], direction: Direction) -> Result<Vec<u16>, Unsupported> {
+pub fn convert(input: &[u16], direction: Direction) -> Result<Vec<u16>, JavaCaseError> {
     let points = code_points(input);
     let mut output = Vec::new();
     for (index, &(cp, _)) in points.iter().enumerate() {
@@ -45,17 +40,17 @@ pub fn convert(input: &[u16], direction: Direction) -> Result<Vec<u16>, Unsuppor
                 },
             );
         } else if let Some(mapping) =
-            data::lookup(cp).map_err(|_| Unsupported::InvalidMappingAsset)?
+            data::lookup(cp).map_err(|_| JavaCaseError::InvalidMappingAsset)?
         {
             let mapping = match direction {
                 Direction::Lower => mapping
                     .lower
                     .get(..mapping.lower_len)
-                    .ok_or(Unsupported::InvalidMappingAsset)?,
+                    .ok_or(JavaCaseError::InvalidMappingAsset)?,
                 Direction::Upper => mapping
                     .upper
                     .get(..mapping.upper_len)
-                    .ok_or(Unsupported::InvalidMappingAsset)?,
+                    .ok_or(JavaCaseError::InvalidMappingAsset)?,
             };
             for &mapped in mapping {
                 push_code_point(&mut output, mapped);
@@ -89,7 +84,7 @@ pub fn search(
     haystack: &[u16],
     needle: &[u16],
     from_index: usize,
-) -> Result<Option<usize>, Unsupported> {
+) -> Result<Option<usize>, JavaCaseError> {
     let haystack = convert(haystack, Direction::Upper)?;
     let needle = convert(needle, Direction::Upper)?;
     Ok(index_of(&haystack, &needle, from_index))

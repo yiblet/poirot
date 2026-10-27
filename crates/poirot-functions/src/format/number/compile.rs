@@ -26,7 +26,9 @@ impl NumberPlan {
                 || (exponent && !digits)
                 || (!general && digits && tokens.iter().any(|t| matches!(t, Token::Text)))
             {
-                return Err(error("unsupported tokens in compiled numeric section"));
+                return Err(error(
+                    crate::format::FormatReasonError::UnsupportedTokensInCompiledNumericSection,
+                ));
             }
         }
         if tokens.iter().any(|t| matches!(t, Token::General)) {
@@ -74,7 +76,9 @@ impl NumberPlan {
                     .any(|t| matches!(t, Token::Comma))
             })
         {
-            return Err(error("unsupported numeric placeholder placement"));
+            return Err(error(
+                crate::format::FormatReasonError::UnsupportedNumericPlaceholderPlacement,
+            ));
         }
         let int_end = decimal.or(exponent).unwrap_or(last + 1);
         let numeric_start = first.min(decimal.unwrap_or(first));
@@ -91,7 +95,9 @@ impl NumberPlan {
                 > 1
             || exponent.is_some_and(|e| e < first || decimal.is_some_and(|d| d > e))
         {
-            return Err(error("unsupported numeric token order"));
+            return Err(error(
+                crate::format::FormatReasonError::UnsupportedNumericTokenOrder,
+            ));
         }
         let numeric_tokens = tokens.get(numeric_start..=last).unwrap_or(&[]);
         let embedded_literals = numeric_tokens
@@ -104,7 +110,9 @@ impl NumberPlan {
                 .iter()
                 .any(|t| !matches!(t, Token::Digit(_) | Token::Literal(_)))
             {
-                return Err(error("integer masks require only digits and literals"));
+                return Err(error(
+                    crate::format::FormatReasonError::IntegerMasksRequireOnlyDigitsAndLiterals,
+                ));
             }
             let mut literal = String::new();
             for token in numeric_tokens {
@@ -120,9 +128,7 @@ impl NumberPlan {
                 Token::Padding(_) | Token::Fill(_) | Token::Text | Token::Percent
             )
         }) {
-            return Err(error(
-                "embedded directives among numeric placeholders unsupported",
-            ));
+            return Err(error(crate::format::FormatReasonError::EmbeddedDirectivesAmongNumericPlaceholdersUnsupported));
         }
         let decimals: Vec<_> = if let Some(d) = decimal {
             tokens
@@ -141,7 +147,9 @@ impl NumberPlan {
             vec![]
         };
         if decimals.len() > 15 {
-            return Err(error("more than fifteen decimal placeholders unsupported"));
+            return Err(error(
+                crate::format::FormatReasonError::MoreThanFifteenDecimalPlaceholdersUnsupported,
+            ));
         }
         let mut scaling = 0;
         let mut i = (last + 1).max(decimal.map_or(0, |d| d + 1));
@@ -163,7 +171,9 @@ impl NumberPlan {
             .filter(|t| matches!(t, Token::Percent))
             .count();
         if percentages > 6 || scaling > 100 {
-            return Err(error("scaling exceeds resource limit"));
+            return Err(error(
+                crate::format::FormatReasonError::ScalingExceedsResourceLimit,
+            ));
         }
         let integer: Vec<_> = int_tokens
             .iter()
@@ -191,7 +201,9 @@ impl NumberPlan {
             _ => unreachable!(),
         });
         if exp.is_some_and(|(_, digits)| digits > 15) {
-            return Err(error("exponent width exceeds resource limit"));
+            return Err(error(
+                crate::format::FormatReasonError::ExponentWidthExceedsResourceLimit,
+            ));
         }
         let suffix = if let Some(e) = exponent {
             // SAFETY: positions is nonempty here; first/last and exponent/decimal positions come from this tokens slice, numeric_start <= last, and both scan cursors are bounded locally.

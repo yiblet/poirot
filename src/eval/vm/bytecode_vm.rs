@@ -1,20 +1,16 @@
 //! Stack execution of owned instructions; calls borrow lazy blocks through family hosts.
 //! The unit-test tree oracle remains to check value, read, observation and budget parity.
 
-use super::admission_order::AdmissionOrder;
 use super::arguments_ref::ArgumentsRef;
-use super::call_admission::CallAdmission;
 use super::operators::Operators;
 use super::reference_atoms::ReferenceAtoms;
 use super::reference_ref::ReferenceRef;
-use super::resolved_call::ResolvedCall;
 use crate::eval::compile::bytecode::{
     CallTarget, Compiled, Label, Opcode, OperandCursor, ReferenceKind,
 };
-use crate::eval::config::BuiltinSemanticsPolicy;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::registry::{FunctionId, LogicalFunction};
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::observe::{ConsumedBuiltinInvocation, Operation, OperationKind, observed_value};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::{
@@ -56,10 +52,10 @@ impl<'s, 'a> Vm<'s, 'a> {
                 .extensions
                 .is_none_or(|r| &r.identity() != identity)
         }) {
-            return Err(EvaluationFailure::UnsupportedCapability {
+            return Err(EvaluationError::UnsupportedCapability {
                 capability: CapabilityId::UserDefinedFunction,
-                source: Some(EvaluationTarget { sheet, address: at }),
-                detail: "extension registry identity changed; rebind the formula plan".into(),
+                target: Some(EvaluationTarget { sheet, address: at }),
+                reason: crate::eval::limits::EvaluationReasonError::ExtensionRegistryIdentityChangedRebindTheFormulaPlan,
             });
         }
         self.execute(sheet, at, program, 0)
@@ -84,7 +80,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                     .template
                     .code
                     .get(ip)
-                    .ok_or(EvaluationFailure::StalePlan)?;
+                    .ok_or(EvaluationError::StalePlan)?;
                 match instruction.opcode {
                     Opcode::Enter => {
                         self.session
@@ -114,7 +110,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                         entered += 1;
                     }
                     Opcode::Leave => {
-                        entered = entered.checked_sub(1).ok_or(EvaluationFailure::StalePlan)?;
+                        entered = entered.checked_sub(1).ok_or(EvaluationError::StalePlan)?;
                         let notification = if let Some((operation, previous)) = frames.pop() {
                             let value = self
                                 .session
@@ -123,7 +119,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                                 .vm
                                 .values
                                 .pop()
-                                .ok_or(EvaluationFailure::StalePlan)?;
+                                .ok_or(EvaluationError::StalePlan)?;
                             let notification = ObservationRecorder::new(self.session)
                                 .observation_end(operation, previous, Ok(observed_value(&value)));
                             self.session.state.runtime.vm.values.push(value);
@@ -136,7 +132,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                         if entered == 0 {
                             if self.session.state.runtime.vm.values.len() != base.saturating_add(1)
                             {
-                                return Err(EvaluationFailure::StalePlan);
+                                return Err(EvaluationError::StalePlan);
                             }
                             return self
                                 .session
@@ -145,7 +141,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                                 .vm
                                 .values
                                 .pop()
-                                .ok_or(EvaluationFailure::StalePlan);
+                                .ok_or(EvaluationError::StalePlan);
                         }
                     }
                     Opcode::Number => {
@@ -213,14 +209,14 @@ impl<'s, 'a> Vm<'s, 'a> {
                                         ..instruction
                                             .a
                                             .checked_add(instruction.b)
-                                            .ok_or(EvaluationFailure::StalePlan)?
+                                            .ok_or(EvaluationError::StalePlan)?
                                             as usize,
                                 )
-                                .ok_or(EvaluationFailure::StalePlan)?,
+                                .ok_or(EvaluationError::StalePlan)?,
                         );
                         let name_sheet = bytes.string()?;
-                        let name = std::str::from_utf8(bytes.0)
-                            .map_err(|_| EvaluationFailure::StalePlan)?;
+                        let name =
+                            std::str::from_utf8(bytes.0).map_err(|_| EvaluationError::StalePlan)?;
                         let value = match NameResolver::new(self.session)
                             .sheet_named(sheet, Some(name_sheet))?
                         {
@@ -238,7 +234,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                             .vm
                             .values
                             .pop()
-                            .ok_or(EvaluationFailure::StalePlan)?;
+                            .ok_or(EvaluationError::StalePlan)?;
                         let value = Operators::new(self.session).unary_value(
                             sheet,
                             at,
@@ -267,7 +263,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                             .vm
                             .values
                             .pop()
-                            .ok_or(EvaluationFailure::StalePlan)?;
+                            .ok_or(EvaluationError::StalePlan)?;
                         let left = self
                             .session
                             .state
@@ -275,7 +271,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                             .vm
                             .values
                             .pop()
-                            .ok_or(EvaluationFailure::StalePlan)?;
+                            .ok_or(EvaluationError::StalePlan)?;
                         let value = Operators::new(self.session).binary_values(
                             sheet,
                             at,
@@ -302,7 +298,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                             .vm
                             .values
                             .pop()
-                            .ok_or(EvaluationFailure::StalePlan)?;
+                            .ok_or(EvaluationError::StalePlan)?;
                         let value = ResultProjection::new(self.session)
                             .select_legacy_scalar(at, value)?
                             .into();
@@ -311,7 +307,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                     Opcode::Array => {
                         let count = (instruction.a as usize)
                             .checked_mul(instruction.b as usize)
-                            .ok_or(EvaluationFailure::StalePlan)?;
+                            .ok_or(EvaluationError::StalePlan)?;
                         let offset = self
                             .session
                             .state
@@ -320,7 +316,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                             .values
                             .len()
                             .checked_sub(count)
-                            .ok_or(EvaluationFailure::StalePlan)?;
+                            .ok_or(EvaluationError::StalePlan)?;
                         // SAFETY: offset was obtained by checked subtraction from self.runtime.vm.values.len(); the vector has not changed since that check.
                         let mut elements = self.session.state.runtime.vm.values.drain(offset..);
                         let mut rows = Vec::new();
@@ -328,7 +324,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                             let mut row = Vec::new();
                             for _ in 0..instruction.b {
                                 let Some(Value::Scalar(value)) = elements.next() else {
-                                    return Err(EvaluationFailure::StalePlan);
+                                    return Err(EvaluationError::StalePlan);
                                 };
                                 row.push(value);
                             }
@@ -344,7 +340,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                             && self.handler(program, instruction.a as usize)
                                 != Some(FunctionId::Logical(LogicalFunction::If))
                         {
-                            return Err(EvaluationFailure::StalePlan);
+                            return Err(EvaluationError::StalePlan);
                         }
                         let args = ArgumentsRef::Bytecode {
                             program,
@@ -356,7 +352,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                         ip = program
                             .template
                             .resolve_label(Label(instruction.c))
-                            .ok_or(EvaluationFailure::StalePlan)?
+                            .ok_or(EvaluationError::StalePlan)?
                             .index();
                         continue;
                     }
@@ -364,12 +360,12 @@ impl<'s, 'a> Vm<'s, 'a> {
                         ip = program
                             .template
                             .resolve_label(Label(instruction.c))
-                            .ok_or(EvaluationFailure::StalePlan)?
+                            .ok_or(EvaluationError::StalePlan)?
                             .index();
                         continue;
                     }
                     Opcode::YieldArgument | Opcode::Argument => {
-                        return Err(EvaluationFailure::StalePlan);
+                        return Err(EvaluationError::StalePlan);
                     }
                 }
                 ip += 1;
@@ -395,19 +391,14 @@ impl<'s, 'a> Vm<'s, 'a> {
         result
     }
 
-    /// Builtin selected by a call slot under the active builtin policy.
+    /// Builtin selected by a compiled call slot.
     fn handler(&self, program: &Compiled, index: usize) -> Option<FunctionId> {
         match &program.calls.get(index)?.target {
             CallTarget::Builtin(handler) => Some(*handler),
-            CallTarget::Unresolved
-                if self.session.policies.builtin_policy
-                    == BuiltinSemanticsPolicy::ExcelDocumentation =>
-            {
-                functions::registry::resolve_excel_function(
-                    &poirot_parsing::formula::FunctionName::from(
-                        program.resolved_spelling(index).ok()?,
-                    ),
-                )
+            CallTarget::Unresolved => {
+                functions::registry::resolve_handler(&poirot_parsing::formula::FunctionName::from(
+                    program.resolved_spelling(index).ok()?,
+                ))
             }
             _ => None,
         }
@@ -422,26 +413,19 @@ impl<'s, 'a> Vm<'s, 'a> {
         index: usize,
         args: ArgumentsRef<'_>,
     ) -> EvalResult<Value> {
-        let call = program
-            .calls
-            .get(index)
-            .ok_or(EvaluationFailure::StalePlan)?;
+        let call = program.calls.get(index).ok_or(EvaluationError::StalePlan)?;
         let handler = self.handler(program, index);
         let parsed_spelling = program.source_spelling(index)?;
         let resolved_spelling = program.resolved_spelling(index)?;
-        CallAdmission::new(self.session).admit(
-            ResolvedCall {
-                invocation: handler.map(|handler| ConsumedBuiltinInvocation {
-                    target: EvaluationTarget { sheet, address: at },
-                    handler,
-                    parsed_spelling,
-                    resolved_spelling,
-                    argument_count: args.len(),
-                }),
-                read_builtin_policy: matches!(call.target, CallTarget::Unresolved),
-            },
-            AdmissionOrder::ObserverBeforePolicy,
-        )?;
+        self.session
+            .ports
+            .observe_resolved_call(handler.map(|handler| ConsumedBuiltinInvocation {
+                target: EvaluationTarget { sheet, address: at },
+                handler,
+                parsed_spelling,
+                resolved_spelling,
+                argument_count: args.len(),
+            }))?;
         if let Some(handler) = handler {
             return adapters::execute(
                 self.session,
@@ -474,7 +458,7 @@ impl<'s, 'a> Vm<'s, 'a> {
             .references
             .slots
             .get(slot)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let mut reader = OperandCursor(
             program
                 .references
@@ -484,10 +468,9 @@ impl<'s, 'a> Vm<'s, 'a> {
                         ..binding
                             .offset
                             .checked_add(binding.length)
-                            .ok_or(EvaluationFailure::StalePlan)?
-                            as usize,
+                            .ok_or(EvaluationError::StalePlan)? as usize,
                 )
-                .ok_or(EvaluationFailure::StalePlan)?,
+                .ok_or(EvaluationError::StalePlan)?,
         );
         match binding.kind {
             ReferenceKind::Cell => {
@@ -557,7 +540,7 @@ pub(super) fn decode_unary(code: u32) -> EvalResult<UnaryOp> {
         2 => UnaryOp::Percent,
         3 => UnaryOp::ImplicitIntersection,
         4 => UnaryOp::SpillRange,
-        _ => return Err(EvaluationFailure::StalePlan),
+        _ => return Err(EvaluationError::StalePlan),
     })
 }
 
@@ -579,6 +562,6 @@ pub(super) fn decode_binary(code: u32) -> EvalResult<BinaryOp> {
         12 => BinaryOp::Range,
         13 => BinaryOp::Union,
         14 => BinaryOp::Intersection,
-        _ => return Err(EvaluationFailure::StalePlan),
+        _ => return Err(EvaluationError::StalePlan),
     })
 }

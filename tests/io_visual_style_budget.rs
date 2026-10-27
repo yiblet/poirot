@@ -19,10 +19,7 @@ fn export_source_budget_counts_visual_font_theme_palette_and_default_style() {
     book.style_context = StyleContext::new(Some(vec![1; 17]), vec![[255, 1, 2, 3]])
         .unwrap()
         .with_default_style(style.clone());
-    book.add_sheet("S")
-        .unwrap()
-        .set_style("A1".parse().unwrap(), style)
-        .unwrap();
+    book.add_sheet("S").unwrap().set_style("A1", style).unwrap();
     // Theme, palette, default font, sheet name, row presence, blank scalar, cell font.
     let expected = 17 + 4 + 7 + 1 + 24 + 8 + 7;
     assert_eq!(

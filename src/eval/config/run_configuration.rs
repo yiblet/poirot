@@ -1,13 +1,11 @@
 use super::array_result_policy::ArrayResultPolicy;
-use super::builtin_semantics_policy::BuiltinSemanticsPolicy;
 use super::configuration_fingerprint::ConfigurationFingerprint;
 use super::evaluation_inputs::EvaluationInputs;
 use super::formatting_configuration::FormattingConfiguration;
 use super::producer_policy::ProducerPolicy;
-use poirot_functions::text_units::TextSemanticsPolicy;
 
-/// Immutable choices for one calculation: clock/seed, localization, formatting,
-/// text semantics, builtin behavior, numeric results, and array/cache publication.
+/// Immutable inputs for one calculation: clock, seed, localization, formatting,
+/// numeric input locale, array publication and producer handling.
 /// Changing this configuration does not require reparsing formulas; cache reuse
 /// checks the execution policies and fields relevant to each result.
 /// Compilation never captures this policy.
@@ -33,12 +31,9 @@ pub struct RunConfiguration {
     context: EvaluationInputs,
     formatting: FormattingConfiguration,
     number_locale: poirot_parsing::number::NumberLocale,
-    text_policy: TextSemanticsPolicy,
 
-    builtin_policy: BuiltinSemanticsPolicy,
     array_result_policy: ArrayResultPolicy,
     producer_policy: ProducerPolicy,
-    materialization_policy: crate::eval::materialization::FormulaCacheMaterializationPolicy,
 }
 
 impl RunConfiguration {
@@ -50,12 +45,8 @@ impl RunConfiguration {
             formatting,
             number_locale: Default::default(),
 
-            builtin_policy: BuiltinSemanticsPolicy::default(),
             array_result_policy: ArrayResultPolicy::default(),
             producer_policy: ProducerPolicy::default(),
-            materialization_policy:
-                crate::eval::materialization::FormulaCacheMaterializationPolicy::PreserveComputed,
-            text_policy: TextSemanticsPolicy::default(),
         }
     }
 
@@ -73,10 +64,9 @@ impl RunConfiguration {
     ///
     /// ```
     /// use poirot::eval::{NumberLocale, RunConfiguration};
-    /// let comma = NumberLocale::new(",", Some("."), Some("EUR"), "%", ":")
-    ///     .ok_or("invalid numeric locale")?;
+    /// let comma = NumberLocale::new(",", Some("."), Some("EUR"), "%", ":")?;
     /// let configuration = RunConfiguration::default().with_number_locale(comma);
-    /// # Ok::<(), &str>(())
+    /// # Ok::<(), poirot_parsing::number::NumberLocaleError>(())
     /// ```
     pub fn with_number_locale(mut self, locale: poirot_parsing::number::NumberLocale) -> Self {
         self.number_locale = locale;
@@ -86,28 +76,6 @@ impl RunConfiguration {
     /// Numeric text input profile. No ambient locale is consulted.
     pub fn number_locale(&self) -> &poirot_parsing::number::NumberLocale {
         &self.number_locale
-    }
-
-    /// Select an explicit text source contract.
-    pub fn with_text_policy(mut self, text_policy: TextSemanticsPolicy) -> Self {
-        self.text_policy = text_policy;
-        self
-    }
-
-    /// Return the selected text source semantics.
-    pub fn text_policy(&self) -> TextSemanticsPolicy {
-        self.text_policy
-    }
-
-    /// Select builtin compatibility behavior.
-    pub fn with_builtin_policy(mut self, policy: BuiltinSemanticsPolicy) -> Self {
-        self.builtin_policy = policy;
-        self
-    }
-
-    /// Return the selected builtin compatibility behavior.
-    pub fn builtin_policy(&self) -> BuiltinSemanticsPolicy {
-        self.builtin_policy
     }
 
     /// Select scalar intersection or dynamic spill publication.
@@ -132,35 +100,15 @@ impl RunConfiguration {
         self.producer_policy
     }
 
-    /// Select conversion behavior for saved workbook formula caches.
-    pub fn with_materialization_policy(
-        mut self,
-        policy: crate::eval::materialization::FormulaCacheMaterializationPolicy,
-    ) -> Self {
-        self.materialization_policy = policy;
-        self
-    }
-
-    /// Return the saved-cache conversion policy.
-    pub fn materialization_policy(
-        &self,
-    ) -> crate::eval::materialization::FormulaCacheMaterializationPolicy {
-        self.materialization_policy
-    }
-
     /// Complete exact identity, including text source and every owned currency field.
     pub fn fingerprint(&self) -> ConfigurationFingerprint {
         ConfigurationFingerprint {
             context: self.context.fingerprint(),
             formatting: self.formatting.clone(),
             number_locale: self.number_locale.clone(),
-            text_policy: self.text_policy,
 
-            builtin_policy: self.builtin_policy,
             array_result_policy: self.array_result_policy,
             producer_policy: self.producer_policy,
-            numeric_source: crate::eval::values::numeric_outcome::source_binding(),
-            materialization: self.materialization_policy.identity(),
         }
     }
 }

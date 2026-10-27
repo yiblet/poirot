@@ -54,10 +54,10 @@ mod extension_cacheability;
 mod extension_capabilities;
 /// A provider's accepted arity, evaluation order, capabilities, and reuse contract.
 mod extension_contract;
+/// Provider failure separated into catchable spreadsheet errors and operational aborts.
+mod extension_error;
 /// When the engine resolves argument expressions before calling a provider.
 mod extension_evaluation_strategy;
-/// Provider failure separated into catchable spreadsheet errors and operational aborts.
-mod extension_failure;
 /// A registered formula implementation called through a budgeted [`ExtensionHost`].
 mod extension_function;
 /// Deferred, budgeted workbook access offered to extension providers.
@@ -95,8 +95,8 @@ pub use extension_binding::ExtensionBinding;
 pub use extension_cacheability::ExtensionCacheability;
 pub use extension_capabilities::ExtensionCapabilities;
 pub use extension_contract::ExtensionContract;
+pub use extension_error::ExtensionError;
 pub use extension_evaluation_strategy::ExtensionEvaluationStrategy;
-pub use extension_failure::ExtensionFailure;
 pub use extension_function::ExtensionFunction;
 pub use extension_host::ExtensionHost;
 pub use extension_id::ExtensionId;

@@ -30,7 +30,7 @@ fn stable_intermediate_skips_expensive_consumers_and_keeps_original_dependencies
         &[("A1", 1.1), ("D1", 10.), ("D2", 20.)],
         &[("B1", "ROUND(A1,0)"), ("C1", "B1+SUM(D1:D3)")],
     );
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
         overlay
@@ -75,7 +75,7 @@ fn all_changed_paths_must_settle_before_reusing_a_consumer() {
         &[("A1", 1.1), ("A2", 2.)],
         &[("B1", "ROUND(A1,0)"), ("B2", "A2*2"), ("C1", "B1+B2")],
     );
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     overlay
         .evaluation(&context)
@@ -94,7 +94,7 @@ fn all_changed_paths_must_settle_before_reusing_a_consumer() {
 #[test]
 fn earlier_publication_preserves_the_generation_needed_by_dirty_parents() {
     let source = book(&[("A1", 1.1)], &[("B1", "ROUND(A1,0)"), ("C1", "B1+10")]);
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     overlay
         .evaluation(&context)
@@ -132,7 +132,7 @@ fn range_membership_keeps_missing_cells_and_unchanged_formula_causes() {
         &[("A1", 1.1)],
         &[("B1", "ROUND(A1,0)"), ("C1", "SUM(B1:B3)")],
     );
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     overlay
         .evaluation(&context)
@@ -167,7 +167,7 @@ fn range_membership_keeps_missing_cells_and_unchanged_formula_causes() {
 #[test]
 fn clock_consumers_execute_but_unchanged_days_stop_downstream_work() {
     let source = book(&[], &[("B1", "TODAY()"), ("C1", "B1+1")]);
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let mut context = EvaluationContext {
         as_of_time: UNIX_EPOCH + Duration::from_secs(1_700_000_000),
         ..Default::default()
@@ -194,7 +194,7 @@ fn clock_consumers_execute_but_unchanged_days_stop_downstream_work() {
 #[test]
 fn formula_metadata_changes_do_not_use_scalar_equality_as_a_certificate() {
     let source = book(&[("A1", 2.)], &[("B1", "A1"), ("C1", "SUBTOTAL(9,B1:B2)")]);
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
         overlay
@@ -242,7 +242,7 @@ fn scalar_to_spill_transition_cannot_hide_behind_an_equal_anchor_value() {
         &[("A1", 0.)],
         &[("C1", "IF(A1,SEQUENCE(2),1)"), ("E1", "C1+C2")],
     );
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
         overlay
@@ -282,7 +282,7 @@ fn failed_batches_do_not_publish_successful_revalidations() {
             ("D1", "REPT(\"x\",100)"),
         ],
     );
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     overlay
         .evaluation(&context)
@@ -312,7 +312,7 @@ fn dirty_evidence_is_not_exported_or_restored_as_current_results() {
         &[("A1", 1.1)],
         &[("B1", "ROUND(A1,0)"), ("C1", "B1+1"), ("D1", "9")],
     );
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     overlay
         .evaluation(&context)
@@ -344,7 +344,7 @@ fn dirty_evidence_is_not_exported_or_restored_as_current_results() {
 #[test]
 fn source_literal_coercion_entries_cannot_validate_later_input_edits() {
     let source = book(&[("A1", f64::INFINITY)], &[("B1", "A1"), ("C1", "B1+1")]);
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
         overlay
@@ -380,7 +380,7 @@ fn changed_lazy_branches_and_new_cycles_are_recomputed() {
         &[("A1", 1.1), ("D1", 1.), ("E1", 20.)],
         &[("B1", "ROUND(A1,0)"), ("C1", "IF(D1,B1,E1)")],
     );
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     overlay
         .evaluation(&context)
@@ -417,7 +417,7 @@ fn changed_lazy_branches_and_new_cycles_are_recomputed() {
 #[test]
 fn dirty_storage_and_validation_obey_retention_and_depth_limits() {
     let source = book(&[("A1", 1.1)], &[("B1", "ROUND(A1,0)"), ("C1", "B1+1")]);
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     overlay
         .evaluation(&context)
@@ -458,7 +458,7 @@ fn many_dirty_causes_validate_unchanged_values_without_executing_the_parent() {
             .set_formula(at(&format!("B{row}")).address, format!("ROUND(A{row},0)"))
             .unwrap();
     }
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     overlay
         .evaluation(&context)
@@ -479,7 +479,7 @@ fn many_dirty_causes_validate_unchanged_values_without_executing_the_parent() {
 #[test]
 fn style_edits_force_direct_readers_but_unchanged_values_stop_downstream_work() {
     let source = book(&[("A1", 1.1)], &[("B1", "ROUND(A1,0)"), ("C1", "B1+1")]);
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     overlay
         .evaluation(&context)
@@ -511,7 +511,7 @@ fn previously_blank_child_readers_recalculate_when_a_scalar_producer_grows() {
         &[("A1", 0.)],
         &[("C1", "IF(A1,SEQUENCE(2),1)"), ("F1", "SUM(C2:C3)")],
     );
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
         overlay
@@ -551,7 +551,7 @@ fn changed_condition_does_not_speculatively_evaluate_the_old_branch() {
             ("F1", "IF(B1,D1,\"skip\")"),
         ],
     );
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
         overlay
@@ -578,7 +578,7 @@ fn eager_error_order_precedes_a_later_dependency_refusal() {
         &[("A1", 1.), ("A2", 1.)],
         &[("B1", "A1"), ("D1", "REPT(\"x\",A2)"), ("F1", "SUM(B1,D1)")],
     );
-    let mut overlay = Overlay::with_workbook(source.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&source).build().unwrap();
     let context = EvaluationContext::default();
     assert_eq!(
         overlay

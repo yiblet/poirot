@@ -1,18 +1,13 @@
 //! Actual TEXT uses the explicit deterministic system-format policy.
-use poirot::eval::{
-    EvaluationOutcome, RunConfiguration, TextSemanticsPolicy, TextSourceVersion,
-    run_formula_with_configuration,
-};
+use poirot::eval::{EvaluationOutcome, RunConfiguration, run_formula_with_configuration};
 use poirot::model::{CellAddress, CellValue, Workbook};
 #[test]
 fn text_system_date_and_time_are_configured_display_not_changed_values() {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Date").unwrap();
     let default = RunConfiguration::default();
-    let poi = default.clone().with_text_policy(TextSemanticsPolicy {
-        source: TextSourceVersion::Poi7321209,
-    });
-    for configuration in [&default, &poi] {
+    let configuration = &default;
+    {
         for (formula, expected) in [
             ("TEXT(46082,\"[$-F800]\")", "Sunday, March 1, 2026"),
             (

@@ -3,7 +3,7 @@ use crate::eval::functions::registry::{EngineeringFunction, FunctionId};
 use crate::eval::host::CallHost;
 use crate::eval::limits::EvalResult;
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellAddress;
 
@@ -26,8 +26,10 @@ pub(super) fn run<K: crate::eval::adapters::elementwise::Kernel>(
     let mut host = CallHost::new_array(session, sheet, address, arguments, arguments.len());
     match crate::eval::adapters::elementwise::execute(&mut host, address, kernel) {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(error) => Err(crate::eval::adapters::failure::operational_only(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(error) => Err(crate::eval::adapters::operational_only::operational_only(
+            error,
+        )),
     }
 }
 

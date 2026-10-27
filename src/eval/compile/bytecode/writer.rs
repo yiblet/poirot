@@ -152,7 +152,7 @@ impl<'ast> Sink<'ast> for Writer<'_> {
                 if let Some(role) = self.aggregation_roles.get_mut(label / 2) {
                     *role = !matches!(call_target, CallTarget::Extension(_))
                         && lookup.and_then(|name| {
-                            crate::eval::functions::registry::resolve_excel_function(&name.into())
+                            crate::eval::functions::registry::resolve_handler(&name.into())
                         }) == Some(crate::eval::functions::registry::FunctionId::Matrix(
                             crate::eval::functions::registry::MatrixFunction::Groupby,
                         ));

@@ -5,10 +5,10 @@ use crate::eval::adapters::elementwise::controls::{
 use crate::eval::adapters::elementwise::{Prepared, SourceIdentity, source};
 use crate::eval::compile;
 use crate::eval::functions::registry::{FunctionId, ReferenceFunction};
-use crate::eval::host::{CallHost, ContextReads, PolicyReads};
+use crate::eval::host::{CallHost, ContextReads};
 use crate::eval::limits::EvalResult;
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::model::CellError::Ref;
 use crate::model::{CellAddress, CellError, MAX_COLUMNS, MAX_ROWS};
 
@@ -24,7 +24,7 @@ pub(in crate::eval) fn execute(
     {
         return Ok(err(VALUE_ERROR));
     }
-    PolicyReads::new(host).builtin_policy();
+
     let result = match name {
         ReferenceFunction::Index => source::execute(
             host,
@@ -41,8 +41,8 @@ pub(in crate::eval) fn execute(
     };
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }
 
@@ -62,8 +62,8 @@ pub(in crate::eval) fn intersect(
         Intersection,
     ) {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }
 
@@ -193,7 +193,7 @@ fn index_selection(
 mod tests {
     use super::*;
     use crate::eval::config::EvaluationInputs;
-    use crate::eval::limits::EvaluationFailure;
+    use crate::eval::limits::EvaluationError;
     use crate::eval::vm::ExpressionRunner;
     use crate::model::CellError::{Div0, Num};
     use crate::model::CellValue::{Error, Number};
@@ -220,7 +220,7 @@ mod tests {
                         CellAddress { row: 0, col: 0 },
                         &plan.expression()
                     ),
-                    Err(EvaluationFailure::UnsupportedCapability { .. })
+                    Err(EvaluationError::UnsupportedCapability { .. })
                 ),
                 "later operational failure must survive: {formula}"
             );
@@ -262,7 +262,7 @@ mod tests {
             workbook
                 .sheet_mut(0)
                 .unwrap()
-                .set_value(address.parse().unwrap(), value)
+                .set_value(address, value)
                 .unwrap();
         }
         let at = CellAddress { row: 0, col: 0 };

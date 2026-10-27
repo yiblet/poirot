@@ -1,7 +1,6 @@
 //! Typed rectangle materialization and checked array construction shared by matrix kernels.
 use crate::eval::host::{CallHost, OperandReader, ScalarOperand};
-use crate::eval::limits::CapabilityId;
-use crate::eval::values::{ArrayView, FunctionFailure, FunctionResult, VALUE_ERROR, Value};
+use crate::eval::values::{ArrayView, FunctionError, FunctionResult, VALUE_ERROR, Value};
 use crate::model::CellError::Num;
 use crate::model::CellValue::{Error, Number};
 use crate::model::{CellAddress, CellError, CellValue, MAX_COLUMNS, MAX_ROWS};
@@ -56,7 +55,7 @@ pub(in crate::eval::adapters) fn collect<T>(
     let mut values = Vec::new();
     values
         .try_reserve_exact(capacity)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     for _ in 0..count {
         let row = rows.next().ok_or(VALUE_ERROR)?;
         for column in 0..columns {
@@ -147,11 +146,11 @@ pub(in crate::eval::adapters) fn generate(
     let mut output = Vec::new();
     output
         .try_reserve_exact(rows)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     for _ in 0..rows {
         let mut row = Vec::new();
         row.try_reserve_exact(columns)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: rows slots were reserved and this loop appends exactly rows records.
         output.push(row);
     }
@@ -201,16 +200,15 @@ pub(in crate::eval::adapters) fn publish<T>(
 /// Preserve pure-kernel failure categories at the common matrix service boundary.
 pub(in crate::eval::adapters) fn failure(
     host: &mut CallHost<'_, '_>,
-    error: poirot_functions::matrix::Error,
-) -> FunctionFailure {
+    error: poirot_functions::matrix::MatrixError,
+) -> FunctionError {
     match error {
-        poirot_functions::matrix::Error::Formula(error) => error.into(),
-        poirot_functions::matrix::Error::SizeOverflow => host.size_overflow().into(),
-        poirot_functions::matrix::Error::AllocationFailure => host.allocation_failure().into(),
-        poirot_functions::matrix::Error::BudgetExceeded => host.budget_exceeded().into(),
-        poirot_functions::matrix::Error::SourceUnsupported(detail) => {
-            host.unsupported(CapabilityId::FunctionAdapter, detail)
+        poirot_functions::matrix::MatrixError::Formula(error) => error.into(),
+        poirot_functions::matrix::MatrixError::SizeOverflow => host.size_overflow().into(),
+        poirot_functions::matrix::MatrixError::AllocationFailure => {
+            host.allocation_failure().into()
         }
+        poirot_functions::matrix::MatrixError::BudgetExceeded => host.budget_exceeded().into(),
     }
 }
 
@@ -291,7 +289,7 @@ pub(in crate::eval::adapters) fn convert<T, U>(
     let mut values = Vec::new();
     values
         .try_reserve_exact(source.len())
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     for value in source {
         let value = convert(host, value)?;
         // SAFETY: the exact source length was reserved; conversion appends one value per source member.

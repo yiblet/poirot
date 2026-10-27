@@ -279,7 +279,7 @@ impl CellAttempt {
                 return Err(crate::eval::spill::unsupported(
                     sheet,
                     address,
-                    "dynamic execution encountered a circular unpublished footprint read",
+                    crate::eval::limits::EvaluationReasonError::DynamicExecutionEncounteredACircularUnpublishedFootprintRead,
                 ));
             }
             return Ok(Error(Ref));
@@ -291,7 +291,9 @@ impl CellAttempt {
                 .stack
                 .visiting
                 .try_reserve(1)
-                .map_err(|_| cell_allocation_failure(self.target))?;
+                .map_err(|reservation_source| {
+                    cell_allocation_failure(self.target, reservation_source)
+                })?;
             // SAFETY: One new coordinate slot was reserved above; coordinate hashing cannot panic.
             session
                 .state
@@ -370,7 +372,9 @@ impl CellAttempt {
                 reads
                     .fresh_results
                     .try_reserve(1)
-                    .map_err(|_| cell_allocation_failure(self.target))?;
+                    .map_err(|reservation_source| {
+                        cell_allocation_failure(self.target, reservation_source)
+                    })?;
                 // SAFETY: One result slot was reserved above; numeric coordinate hashing cannot panic.
                 reads.fresh_results.insert((sheet, address));
             }

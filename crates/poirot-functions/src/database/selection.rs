@@ -7,14 +7,14 @@ pub fn coerce_database_number(value: &CellValue) -> Option<f64> {
 }
 /// Convert a cell to owned header/criteria text, refusing unsupported UTF-16 projection.
 pub fn coerce_database_text(value: &CellValue) -> Result<String, DatabaseError> {
-    use crate::coercion::compatibility::TextFailure;
+    use crate::coercion::compatibility::TextCoercionError;
     crate::coercion::compatibility::coerce_text(
         value.into(),
         crate::coercion::compatibility::coerce_number_to_text,
     )
     .map_err(|error| match error {
-        TextFailure::Worksheet(e) => e.into(),
-        TextFailure::UnsupportedText | TextFailure::Missing => {
+        TextCoercionError::Worksheet(e) => e.into(),
+        TextCoercionError::UnsupportedText | TextCoercionError::Missing => {
             DatabaseError::UnsupportedTextProjection
         }
     })

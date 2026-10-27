@@ -1,6 +1,6 @@
 //! Checked-in observations; authored expected values are never rewritten here.
 use crate::{
-    Error, invalid,
+    RunnerError,
     model::{CaseResult, Change, FodsBinding, Observation, Outcome, Source},
 };
 use serde::{Deserialize, Serialize};
@@ -145,14 +145,12 @@ impl<'de> Deserialize<'de> for Baseline {
 }
 
 impl Baseline {
-    pub fn load(path: &Path) -> Result<Self, Error> {
+    pub fn load(path: &Path) -> Result<Self, RunnerError> {
         let baseline: Self = serde_json::from_slice(&std::fs::read(path)?)?;
         if baseline.schema_version != 2
             || baseline.fods_source_commit != crate::fods::xml::SOURCE_COMMIT
         {
-            return Err(invalid(
-                "baseline must use schema 2 and the pinned FODS source revision",
-            ));
+            return Err(RunnerError::BaselineSchemaMismatch);
         }
         for (id, entry) in &baseline.cases {
             if id.is_empty()
@@ -164,7 +162,7 @@ impl Baseline {
                 || (entry.observation.outcome != Outcome::Passed
                     && entry.reason.as_ref().is_none_or(|r| r.trim().is_empty()))
             {
-                return Err(invalid(format!("invalid baseline entry: {id}")));
+                return Err(RunnerError::InvalidBaselineEntry { case: id.clone() });
             }
         }
         Ok(baseline)
@@ -214,7 +212,7 @@ pub fn compare(previous: Option<&Observation>, current: &Observation) -> Change 
 pub fn candidate(
     report: &crate::runner::EvaluationReport,
     reason: &str,
-) -> Result<Baseline, Error> {
+) -> Result<Baseline, RunnerError> {
     if !report.header.complete_inventory
         || !report.header.selection.unrestricted()
         || report.summary.selected == 0
@@ -224,21 +222,17 @@ pub fn candidate(
             .iter()
             .all(|id| !report.header.inventory.iter().any(|case| &case.id == id))
     {
-        return Err(invalid(
-            "baseline updates require a completed, unfiltered run of both default corpora",
-        ));
+        return Err(RunnerError::IncompleteBaselineRun);
     }
     if reason.trim().is_empty() {
-        return Err(invalid("baseline updates need a review reason"));
+        return Err(RunnerError::MissingReviewReason);
     }
     let mut cases = BTreeMap::new();
     for result in &report.cases {
         if result.observation.outcome == Outcome::HarnessError
             || result.observation.category.as_deref() == Some("stale_annotation")
         {
-            return Err(invalid(
-                "harness errors and stale JSON annotations cannot be accepted into a baseline",
-            ));
+            return Err(RunnerError::UnacceptableObservation);
         }
         if cases
             .insert(
@@ -255,7 +249,7 @@ pub fn candidate(
             )
             .is_some()
         {
-            return Err(invalid("duplicate case in report"));
+            return Err(RunnerError::DuplicateReportCase);
         }
     }
     Ok(Baseline {
@@ -266,7 +260,7 @@ pub fn candidate(
 }
 
 /// Publish only after serialization succeeds; refuse to overwrite an existing candidate.
-pub fn write_candidate(path: &Path, value: &Baseline) -> Result<(), Error> {
+pub fn write_candidate(path: &Path, value: &Baseline) -> Result<(), RunnerError> {
     use std::io::Write;
     let mut bytes = serde_json::to_vec_pretty(value)?;
     bytes.push(b'\n');
@@ -275,7 +269,13 @@ pub fn write_candidate(path: &Path, value: &Baseline) -> Result<(), Error> {
         .create_new(true)
         .open(path)?;
     if let Err(error) = file.write_all(&bytes).and_then(|()| file.sync_all()) {
-        let _ = std::fs::remove_file(path);
+        if let Err(cleanup) = std::fs::remove_file(path) {
+            return Err(RunnerError::CandidateCleanup {
+                path: path.to_owned(),
+                source: error,
+                cleanup,
+            });
+        }
         return Err(error.into());
     }
     Ok(())

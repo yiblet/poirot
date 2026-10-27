@@ -37,16 +37,17 @@ fn original_xml_restores_blank_cache_and_normalized_formula_without_backend_arti
     );
     let book = read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
     let sheet = book.sheet(0).unwrap();
+    assert_eq!(sheet.get("A1").unwrap().unwrap().value, CellValue::Blank);
+    let missing = sheet.get("B1").unwrap();
+    assert_eq!(missing.unwrap().value, CellValue::Blank);
     assert_eq!(
-        sheet.get("A1".parse().unwrap()).unwrap().value,
-        CellValue::Blank
+        missing.unwrap().formula.as_deref(),
+        Some("IF(1,\n\"x\",\"y\")")
     );
-    let missing = sheet.get("B1".parse().unwrap()).unwrap();
-    assert_eq!(missing.value, CellValue::Blank);
-    assert_eq!(missing.formula.as_deref(), Some("IF(1,\n\"x\",\"y\")"));
     assert_eq!(
         sheet
-            .get("C1".parse().unwrap())
+            .get("C1")
+            .unwrap()
             .unwrap()
             .value
             .text_ref()
@@ -57,7 +58,8 @@ fn original_xml_restores_blank_cache_and_normalized_formula_without_backend_arti
     );
     assert_eq!(
         sheet
-            .get("D1".parse().unwrap())
+            .get("D1")
+            .unwrap()
             .unwrap()
             .value
             .text_ref()
@@ -91,7 +93,8 @@ fn ordinary_formula_uses_model_source_normalization() {
     assert_eq!(
         book.sheet(0)
             .unwrap()
-            .get("A1".parse().unwrap())
+            .get("A1")
+            .unwrap()
             .unwrap()
             .formula
             .as_deref(),

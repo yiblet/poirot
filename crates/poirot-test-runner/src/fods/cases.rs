@@ -1,4 +1,5 @@
 //! Identify formula checks from the original Function / Expected / Correct layout.
+use super::xml::extraction_error::ExtractionError;
 use crate::fods::xml::model::{CellInput, FormulaCase, Omission, Sheet};
 use std::collections::BTreeMap;
 
@@ -42,7 +43,7 @@ pub(crate) fn source_key(source: &str) -> String {
 pub fn extract(
     sheets: &[Sheet],
     source: &str,
-) -> Result<(Vec<FormulaCase>, Vec<Omission>), String> {
+) -> Result<(Vec<FormulaCase>, Vec<Omission>), ExtractionError> {
     let mut cases = Vec::new();
     let mut omissions = Vec::new();
     for (sheet_index, sheet) in sheets.iter().enumerate() {
@@ -106,7 +107,7 @@ pub fn extract(
                     original_formula: target
                         .original_formula
                         .clone()
-                        .ok_or("source target formula has no original expression")?,
+                        .ok_or(ExtractionError::SourceTargetFormulaHasNoOriginalExpression)?,
                     expected: expected_cell,
                     correct_row: row,
                     correct_col: correct,
@@ -114,7 +115,7 @@ pub fn extract(
                     original_correct_formula: checker
                         .original_formula
                         .clone()
-                        .ok_or("source Correct formula has no original expression")?,
+                        .ok_or(ExtractionError::SourceCorrectFormulaHasNoOriginalExpression)?,
                     matrix: target.matrix.clone(),
                 });
             }

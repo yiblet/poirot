@@ -1,19 +1,8 @@
 use crate::scalar::CellError;
-use crate::statistics::{
-    PairOperation, Regression, Result, SamplePolicy, SampleRequirement, checked, finite,
-};
+use crate::statistics::{PairOperation, Regression, Result, SampleRequirement, checked, finite};
 
 /// Adapters preserve positions while filtering a pair whenever either member is excluded.
 pub fn paired(operation: PairOperation, x: &[f64], y: &[f64]) -> Result {
-    paired_with_policy(operation, x, y, SamplePolicy::PinnedPoi)
-}
-/// Reduce aligned admitted observations under an explicit sample-size contract.
-pub fn paired_with_policy(
-    operation: PairOperation,
-    x: &[f64],
-    y: &[f64],
-    policy: SamplePolicy,
-) -> Result {
     if x.len() != y.len() {
         return Err(CellError::NA);
     }
@@ -38,20 +27,12 @@ pub fn paired_with_policy(
         );
     }
     SampleRequirement {
-        minimum: if policy == SamplePolicy::ExcelDocumentation
-            && operation == PairOperation::CovariancePopulation
-        {
+        minimum: if operation == PairOperation::CovariancePopulation {
             1
         } else {
             2
         },
-        insufficient: if policy == SamplePolicy::ExcelDocumentation
-            || operation == PairOperation::Correlation
-        {
-            CellError::Div0
-        } else {
-            CellError::NA
-        },
+        insufficient: { CellError::Div0 },
     }
     .validate(x.len())?;
     let mx = x.iter().sum::<f64>() / x.len() as f64;

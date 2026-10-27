@@ -2,7 +2,7 @@
 //! Eager signatures admit geometry; selectors bind deferred roles without admission.
 //!
 //! Depends on: host (CallHost), vm (deferred arguments and broadcasting), spill (spill
-//! extents), config (policies), limits (budgets and copying), values (value channels)
+//! extents), limits (budgets and copying), values (value channels)
 //! and observe (error-handler observation); siblings reference and text (shared
 //! kernels).
 

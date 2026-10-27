@@ -1,6 +1,6 @@
 //! Typed corpus metadata and integrity-checked native fixture loading.
 use crate::fods::{
-    Error,
+    FodsError,
     xml::{
         SOURCE_COMMIT,
         model::{FodsWorkbook, Omission},
@@ -103,12 +103,12 @@ pub struct Corpus {
     pub baseline: HashMap<String, BaselineCase>,
 }
 
-fn read_metadata<T: serde::de::DeserializeOwned>(path: PathBuf) -> Result<T, Error> {
-    let bytes = std::fs::read(&path).map_err(|source| Error::Io {
+fn read_metadata<T: serde::de::DeserializeOwned>(path: PathBuf) -> Result<T, FodsError> {
+    let bytes = std::fs::read(&path).map_err(|source| FodsError::Io {
         path: path.clone(),
         source,
     })?;
-    serde_json::from_slice(&bytes).map_err(|source| Error::Metadata { path, source })
+    serde_json::from_slice(&bytes).map_err(|source| FodsError::Metadata { path, source })
 }
 
 fn relative_path(name: &str) -> bool {
@@ -120,7 +120,7 @@ fn relative_path(name: &str) -> bool {
 
 impl Corpus {
     /// Load metadata and reject invalid paths, duplicate identities, or inconsistent provenance.
-    pub fn open(root: &Path) -> Result<Self, Error> {
+    pub fn open(root: &Path) -> Result<Self, FodsError> {
         let manifest: CorpusManifest = read_metadata(root.join("manifest.json"))?;
         let baseline: Baseline = if root.join("classifications.json").exists() {
             // Standalone imported corpora retain their native metadata format.
@@ -128,7 +128,9 @@ impl Corpus {
         } else {
             let shared =
                 crate::baseline::Baseline::load(&crate::package_root().join("baseline.json"))
-                    .map_err(|error| Error::InvalidPlan(error.to_string()))?;
+                    .map_err(|source| FodsError::CombinedBaseline {
+                        source: Box::new(source),
+                    })?;
             if shared.schema_version == 2 {
                 let mut cases = Vec::new();
                 for entry in &manifest.fixtures {
@@ -151,9 +153,7 @@ impl Corpus {
                             },
                             reason: previous.and_then(|entry| entry.reason.clone()),
                             gap_type: observation.and_then(|o| o.category.clone()).and_then(
-                                |category| {
-                                    serde_json::from_value(serde_json::Value::String(category)).ok()
-                                },
+                                |category| crate::fods::gaps::GapKind::from_label(&category),
                             ),
                         });
                     }
@@ -182,9 +182,10 @@ impl Corpus {
                             } else {
                                 BaselineStatus::Gap
                             };
-                        let gap_type = entry.observation.category.and_then(|category| {
-                            serde_json::from_value(serde_json::Value::String(category)).ok()
-                        });
+                        let gap_type = entry
+                            .observation
+                            .category
+                            .and_then(|category| crate::fods::gaps::GapKind::from_label(&category));
                         Some(BaselineCase {
                             id,
                             fixture: entry.suite,
@@ -234,74 +235,59 @@ impl Corpus {
                 .iter()
                 .any(|case| case.sheet.is_none() || case.cell.is_none())
         {
-            return Err(Error::InvalidPlan(
-                "standalone baseline must retain native sheet/cell bindings".into(),
-            ));
+            return Err(FodsError::MissingNativeBindings);
         }
         if manifest.source_commit != baseline.source_commit
             || manifest.source_commit != SOURCE_COMMIT
         {
-            return Err(Error::InvalidPlan(
-                "manifest and baseline must match the pinned source revision".into(),
-            ));
+            return Err(FodsError::RevisionMismatch);
         }
         let mut fixtures = HashMap::new();
         let mut count = 0usize;
         for entry in &manifest.fixtures {
             if !relative_path(&entry.fixture) || !relative_path(&entry.source) {
-                return Err(Error::InvalidPlan(format!(
-                    "invalid fixture/source path: {}",
-                    entry.fixture
-                )));
+                return Err(FodsError::InvalidFixturePath {
+                    fixture: entry.fixture.clone(),
+                });
             }
             if entry.sha256.len() != 64 || !entry.sha256.bytes().all(|b| b.is_ascii_hexdigit()) {
-                return Err(Error::InvalidPlan(format!(
-                    "invalid SHA-256 for {}",
-                    entry.fixture
-                )));
+                return Err(FodsError::InvalidDigest {
+                    fixture: entry.fixture.clone(),
+                });
             }
             if fixtures.insert(entry.fixture.clone(), entry).is_some() {
-                return Err(Error::InvalidPlan(format!(
-                    "duplicate fixture {}",
-                    entry.fixture
-                )));
+                return Err(FodsError::DuplicateFixture {
+                    fixture: entry.fixture.clone(),
+                });
             }
             count = count
                 .checked_add(entry.cases)
-                .ok_or_else(|| Error::InvalidPlan("case count overflow".into()))?;
+                .ok_or(FodsError::CaseCountOverflow)?;
         }
         if count != manifest.case_count {
-            return Err(Error::InvalidPlan(
-                "manifest case count does not equal fixture totals".into(),
-            ));
+            return Err(FodsError::ManifestCountMismatch);
         }
         let mut records = HashMap::new();
         let mut slots = std::collections::HashSet::new();
         for case in baseline.cases {
-            let entry = fixtures.get(&case.fixture).ok_or_else(|| {
-                Error::InvalidPlan(format!(
-                    "baseline references unknown fixture {}",
-                    case.fixture
-                ))
-            })?;
+            let entry = fixtures
+                .get(&case.fixture)
+                .ok_or_else(|| FodsError::UnknownFixture {
+                    fixture: case.fixture.clone(),
+                })?;
             if case.index >= entry.cases || case.id != format!("{}__{:05}", entry.id, case.index) {
-                return Err(Error::InvalidPlan(format!(
-                    "invalid baseline binding {}",
-                    case.id
-                )));
+                return Err(FodsError::InvalidBaselineBinding {
+                    case: case.id.clone(),
+                });
             }
             if !slots.insert((case.fixture.clone(), case.index))
                 || records.insert(case.id.clone(), case).is_some()
             {
-                return Err(Error::InvalidPlan(
-                    "duplicate baseline case or fixture/index binding".into(),
-                ));
+                return Err(FodsError::DuplicateBaselineBinding);
             }
         }
         if records.len() != manifest.case_count {
-            return Err(Error::InvalidPlan(
-                "baseline must bind every declared case exactly once".into(),
-            ));
+            return Err(FodsError::IncompleteBaseline);
         }
         Ok(Self {
             root: root.to_owned(),
@@ -312,30 +298,31 @@ impl Corpus {
 }
 
 /// Read and hash-check a native fixture before extracting its workbook/cases.
-pub fn load_fixture(root: &Path, entry: &FixtureEntry) -> Result<FodsWorkbook, Error> {
+pub fn load_fixture(root: &Path, entry: &FixtureEntry) -> Result<FodsWorkbook, FodsError> {
     if !relative_path(&entry.fixture) {
-        return Err(Error::Integrity {
+        return Err(FodsError::InvalidFixturePath {
             fixture: entry.fixture.clone(),
-            message: "invalid relative fixture path".into(),
         });
     }
     let path = root.join("fixtures").join(&entry.fixture);
-    let bytes = std::fs::read(&path).map_err(|source| Error::Io {
+    let bytes = std::fs::read(&path).map_err(|source| FodsError::Io {
         path: path.clone(),
         source,
     })?;
     if crate::model::digest(&bytes) != entry.sha256 {
-        return Err(Error::Integrity {
+        return Err(FodsError::DigestMismatch {
             fixture: entry.fixture.clone(),
-            message: "SHA-256 differs from pinned manifest".into(),
+            expected: entry.sha256.clone(),
+            actual: crate::model::digest(&bytes),
         });
     }
     let data = crate::fods::xml::extract_bytes(&bytes, &entry.source)
-        .map_err(|message| Error::Fods { path, message })?;
+        .map_err(|source| FodsError::Fods { path, source })?;
     if data.cases.len() != entry.cases {
-        return Err(Error::Integrity {
+        return Err(FodsError::CaseCountMismatch {
             fixture: entry.fixture.clone(),
-            message: "extracted case count differs from manifest".into(),
+            expected: entry.cases,
+            actual: data.cases.len(),
         });
     }
     Ok(data)

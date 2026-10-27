@@ -2,10 +2,10 @@
 //! Numerical and native-compatibility policies are recorded in ETS_SOURCES.md.
 use crate::coercion::{date_time::CalendarEpoch, dates::calendar::civil};
 use crate::scalar::CellError;
-use crate::statistics::modern::Failure;
+use crate::statistics::distribution_error::DistributionError;
 
 /// Kernel value with spreadsheet and caller execution failures kept separate.
-pub type Result<T, O> = std::result::Result<T, Failure<O>>;
+pub type Result<T, O> = std::result::Result<T, DistributionError<O>>;
 /// Duplicate timestamp reduction from the documented XlForecastAggregation enum.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Aggregation {
@@ -89,11 +89,11 @@ pub struct Series {
     step: f64,
     grid: Grid,
 }
-fn num<O>() -> Failure<O> {
-    Failure::Spreadsheet(CellError::Num)
+fn num<O>() -> DistributionError<O> {
+    DistributionError::Spreadsheet(CellError::Num)
 }
-fn allocation<O>() -> Failure<O> {
-    Failure::ComputationalLimit
+fn allocation<O>() -> DistributionError<O> {
+    DistributionError::ComputationalLimit
 }
 /// Reserve before writing any kernel-owned sample/state storage.
 fn buffer<T, O>(len: usize) -> Result<Vec<T>, O> {
@@ -161,7 +161,7 @@ pub fn prepare<O>(
         (points.len() as u64)
             .saturating_mul(8 + u64::from(usize::BITS - points.len().leading_zeros())),
     )
-    .map_err(Failure::Operational)?;
+    .map_err(DistributionError::Operational)?;
     points.sort_unstable_by(|a, b| a.0.total_cmp(&b.0));
     let mut reduced = buffer(points.len())?;
     let mut start = 0;
@@ -245,7 +245,7 @@ pub fn prepare<O>(
         return Err(allocation());
     }
     let length = (intervals as usize).checked_add(1).ok_or_else(allocation)?;
-    meter((length as u64).saturating_mul(8)).map_err(Failure::Operational)?;
+    meter((length as u64).saturating_mul(8)).map_err(DistributionError::Operational)?;
     let mut values = buffer(length)?;
     let mut right = 1;
     for i in 0..length {
@@ -409,7 +409,7 @@ fn run<O>(
     meter: &mut impl FnMut(u64) -> std::result::Result<(), O>,
 ) -> Result<Fit, O> {
     meter((values.len() as u64).saturating_mul(if diagnostics { 24 } else { 12 }))
-        .map_err(Failure::Operational)?;
+        .map_err(DistributionError::Operational)?;
     let (mut level, mut trend, mut seasons) = initial(values, period)?;
     let (mut sse, mut absolute, mut smape, mut naive) = (0.0, 0.0, 0.0, 0.0);
     let lag = period.max(1);
@@ -476,7 +476,7 @@ fn fit_period<O>(
         let mut converged = false;
         let mut small_progress = 0_u8;
         for _ in 0..1024 {
-            meter(1).map_err(Failure::Operational)?;
+            meter(1).map_err(DistributionError::Operational)?;
             let before = score;
             for dimension in 0..if period == 0 { 2 } else { 3 } {
                 for direction in [-1.0, 1.0] {
@@ -517,7 +517,7 @@ fn fit_period<O>(
         }
     }
     if !best_score.is_finite() {
-        return Err(Failure::NonConvergence);
+        return Err(DistributionError::NonConvergence);
     }
     run(
         values,
@@ -536,7 +536,7 @@ fn detect<O>(
     if n < 4 {
         return Ok(0);
     }
-    meter((n as u64).saturating_mul(16)).map_err(Failure::Operational)?;
+    meter((n as u64).saturating_mul(16)).map_err(DistributionError::Operational)?;
     let mean = values.iter().sum::<f64>() / n as f64;
     let center = (n as f64 - 1.0) * 0.5;
     let mut xy = 0.0;
@@ -560,7 +560,7 @@ fn detect<O>(
     let mut best = 0;
     let mut best_score = base;
     for period in 2..=maximum {
-        meter((n as u64).saturating_mul(8)).map_err(Failure::Operational)?;
+        meter((n as u64).saturating_mul(8)).map_err(DistributionError::Operational)?;
         let mut error = 0.0;
         for phase in 0..period {
             let mut sum = 0.0;
@@ -589,7 +589,8 @@ pub fn fit<O>(
     seasonality: Seasonality,
     mut meter: impl FnMut(u64) -> std::result::Result<(), O>,
 ) -> Result<Fit, O> {
-    meter((series.values.len() as u64).saturating_mul(4)).map_err(Failure::Operational)?;
+    meter((series.values.len() as u64).saturating_mul(4))
+        .map_err(DistributionError::Operational)?;
     let (values, scale) = normalized(&series.values)?;
     let period = match seasonality {
         Seasonality::None => 0,
@@ -629,7 +630,7 @@ impl Fit {
             return Err(num());
         }
         if horizon > 1e9 {
-            return Err(Failure::ComputationalLimit);
+            return Err(DistributionError::ComputationalLimit);
         }
         let lower = horizon.floor();
         let fraction = horizon - lower;
@@ -657,7 +658,7 @@ impl Fit {
                 } else if self.mae == 0.0 {
                     0.0
                 } else {
-                    return Err(Failure::Spreadsheet(CellError::Div0));
+                    return Err(DistributionError::Spreadsheet(CellError::Div0));
                 }
             }
             5 => self.smape,
@@ -682,7 +683,7 @@ impl Fit {
             return Err(num());
         }
         if horizon > 1e9 {
-            return Err(Failure::ComputationalLimit);
+            return Err(DistributionError::ComputationalLimit);
         }
         if self.sse == 0.0 {
             return Ok(0.0);

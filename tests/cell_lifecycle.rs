@@ -8,7 +8,7 @@ use poirot::{CellError, CellValue, Workbook};
 fn workbook() -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Model").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 3.).unwrap();
+    sheet.set_value("A1", 3.).unwrap();
     for (address, formula) in [
         ("B1", "A1*2"),
         ("C1", "B1+1"),
@@ -16,11 +16,7 @@ fn workbook() -> Workbook {
         ("E1", "IFERROR(D1,99)"),
     ] {
         sheet
-            .set_formula_with_cached_value(
-                address.parse().unwrap(),
-                formula,
-                CellValue::Number(-1.),
-            )
+            .set_formula_with_cached_value(address, formula, CellValue::Number(-1.))
             .unwrap();
     }
     book
@@ -64,7 +60,10 @@ fn dependent_reads_match_across_modes_warm_reuse_and_input_edits() {
         assert!(execution.external_cache_hits >= 2);
     }
     assert_eq!(
-        book.stored_cell("Model", output.address).unwrap().value,
+        book.stored_cell("Model", output.address)
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Number(-1.)
     );
 }
@@ -74,7 +73,7 @@ fn aborted_output_batch_publishes_no_dependencies_and_next_cycle_recovers() {
     let mut book = workbook();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("F1".parse().unwrap(), "REPT(\"x\",64)")
+        .set_formula("F1", "REPT(\"x\",64)")
         .unwrap();
     let mut overlay = book.overlay().build().unwrap();
     let output = overlay.target("Model!D1").unwrap();
@@ -91,7 +90,10 @@ fn aborted_output_batch_publishes_no_dependencies_and_next_cycle_recovers() {
         let mut cycle = overlay.evaluation(&limited).unwrap();
         let failure = cycle.outputs(&[output, oversized]).unwrap_err();
         // The completed first output cannot escape the failed batch; failures stay sticky.
-        assert_eq!(cycle.cell(output).unwrap_err(), failure);
+        assert_eq!(
+            (cycle.cell(output).unwrap_err()).budget().unwrap(),
+            failure.budget().unwrap()
+        );
     }
     assert_eq!(overlay.cached_cells(), 0);
     assert!(overlay.cached_value(output).is_none());
@@ -119,7 +121,10 @@ fn direct_dependency_depth_failure_restores_the_next_cycle() {
     let mut direct = book.evaluation().context(limited).build().unwrap();
     let output = direct.target("Model!D1").unwrap();
     let failure = direct.cell(output).unwrap_err();
-    assert_eq!(direct.cell(output).unwrap_err(), failure);
+    assert_eq!(
+        (direct.cell(output).unwrap_err()).budget().unwrap(),
+        failure.budget().unwrap()
+    );
     assert!(direct.changes().is_empty());
     direct.start_cycle(EvaluationContext::default()).unwrap();
     assert_eq!(direct.cell(output).unwrap(), CellValue::Number(13.));

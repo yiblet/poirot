@@ -172,6 +172,6 @@ def extend(chosen, add, cell, url, groups, signature):
         for spec in selected:
             i=len(chosen);spec['id']=i
             spec['name']=re.sub('[^a-z0-9]+','_',spec['name'].lower()).strip('_')+f'_{i:04d}'
-            spec['text_policy']='excel_v1'
+
             if spec['category']=='financial' and spec['expected']['type']=='number': spec['tolerance']=1e-8
             chosen.append(spec)

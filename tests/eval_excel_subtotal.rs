@@ -7,7 +7,7 @@ fn target(at: &str) -> EvaluationTarget {
     }
 }
 fn excel() -> RunConfiguration {
-    RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
+    RunConfiguration::default()
 }
 fn workbook() -> Workbook {
     let mut w = Workbook::new();
@@ -138,11 +138,10 @@ fn visibility_changes_invalidate_plans_and_nested_overlay_edits_invalidate_resul
         .unwrap();
     assert!(matches!(
         WorkbookView::new(&w, &plan, &p),
-        Err(EvaluationFailure::StalePlan)
+        Err(EvaluationError::StalePlan)
     ));
     let mut overlay = Overlay::with_workbook(&w)
         .with_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .build()
@@ -185,7 +184,7 @@ fn reference_materialization_and_metadata_text_reads_remain_budgeted() {
             budgets
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -210,7 +209,7 @@ fn reference_materialization_and_metadata_text_reads_remain_budgeted() {
             budgets
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));

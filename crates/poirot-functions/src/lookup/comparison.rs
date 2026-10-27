@@ -1,6 +1,6 @@
 use crate::lookup::operands::charge;
 use crate::lookup::wildcard::wildcard_matches;
-use crate::lookup::{Failure, OperationalFailure, Scalar, Work, Workbook};
+use crate::lookup::{LookupError, LookupOperationalError, Scalar, Work, Workbook};
 use std::cmp::Ordering;
 /// Compare scalar lookup keys under the selected type and text ordering rules.
 pub(super) fn compare(
@@ -9,7 +9,7 @@ pub(super) fn compare(
     tolerant: bool,
     wildcard: bool,
     w: &mut impl Workbook,
-) -> Result<Option<Ordering>, Failure> {
+) -> Result<Option<Ordering>, LookupError> {
     charge(w, Work::SearchSteps, 1)?;
     compare_inner(key, item, tolerant, wildcard, w)
 }
@@ -19,7 +19,7 @@ fn compare_inner(
     tolerant: bool,
     wildcard: bool,
     w: &mut impl Workbook,
-) -> Result<Option<Ordering>, Failure> {
+) -> Result<Option<Ordering>, LookupError> {
     Ok(match (key, item) {
         (Scalar::Number(a), Scalar::Number(b)) if !wildcard => a.partial_cmp(b),
         (Scalar::Bool(a), Scalar::Bool(b)) => Some(a.cmp(b)),
@@ -37,7 +37,9 @@ fn compare_inner(
                         Work::SearchText,
                         a.len()
                             .checked_add(b.len())
-                            .ok_or(Failure::Operational(OperationalFailure::ResourceOverflow))?,
+                            .ok_or(LookupError::Operational(
+                                LookupOperationalError::ResourceOverflow,
+                            ))?,
                     )?;
                     Some(crate::text_units::fold::compare(a, b))
                 }
@@ -60,7 +62,9 @@ fn compare_inner(
                     Work::SearchText,
                     a.len()
                         .checked_add(b.len())
-                        .ok_or(Failure::Operational(OperationalFailure::ResourceOverflow))?,
+                        .ok_or(LookupError::Operational(
+                            LookupOperationalError::ResourceOverflow,
+                        ))?,
                 )?;
                 Some(crate::text_units::fold::compare(&a, b))
             }

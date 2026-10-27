@@ -54,7 +54,7 @@ impl<'a> EffectiveWorkbook<'a> {
         let baseline_sheet = self
             .workbook
             .sheet(area.sheet)
-            .ok_or_else(|| ModelError("query worksheet index out of bounds".into()))?;
+            .ok_or(ModelError::InvalidWorksheetIndex { index: area.sheet })?;
         let baseline = baseline_sheet.cells();
         let overlay = self
             .inputs

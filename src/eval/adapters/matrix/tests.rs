@@ -1,5 +1,5 @@
 use crate::eval::config::EvaluationInputs;
-use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationBudgets, EvaluationError};
 use crate::eval::session::{ResultProjection, Session};
 use crate::eval::vm::ExpressionRunner;
 use crate::model::CellValue::{Number, Text};
@@ -15,7 +15,7 @@ fn evaluate(
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), literal)
+        .set_value("A1", literal)
         .unwrap();
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     session.state.runtime.budget = BudgetMeter::new(budgets).unwrap();
@@ -34,7 +34,7 @@ fn consumed_helper_text_preserves_operational_projection_failure() {
         assert!(
             matches!(
                 evaluate(formula, literal, EvaluationBudgets::default()),
-                Err(EvaluationFailure::UnsupportedCapability { .. })
+                Err(EvaluationError::UnsupportedCapability { .. })
             ),
             "{formula}"
         );
@@ -50,7 +50,7 @@ fn valid_helper_text_projection_matches_utf8_and_obeys_budget() {
             CellValue::TextUtf16(crate::model::ExcelText::from("12")),
             EvaluationBudgets::default(),
         );
-        assert_eq!(plain, projected, "{formula}");
+        assert_eq!(plain.unwrap(), projected.unwrap(), "{formula}");
     }
     let budgets = EvaluationBudgets {
         text_bytes: 1,
@@ -62,7 +62,7 @@ fn valid_helper_text_projection_matches_utf8_and_obeys_budget() {
             CellValue::TextUtf16(crate::model::ExcelText::from("12")),
             budgets,
         ),
-        Err(EvaluationFailure::Budget(_))
+        Err(EvaluationError::Budget(_))
     ));
     assert_eq!(
         evaluate(

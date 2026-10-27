@@ -2,7 +2,7 @@
 use super::argument_role::ArgumentRole;
 use super::fixed_scalar::FixedScalar;
 use super::whole_collection::WholeCollection;
-use crate::eval::host::{ArgumentCoercion, CallHost, NumericPolicy, SelectionAccess};
+use crate::eval::host::{ArgumentCoercion, CallHost, SelectionAccess};
 use crate::eval::values::{FunctionResult, VALUE_ERROR, Value};
 use crate::model::CellError::Ref;
 use crate::model::CellValue::Error;
@@ -33,8 +33,7 @@ pub(super) fn integer(
     mode: IntegerControl,
     error: CellError,
 ) -> FunctionResult<i64> {
-    let number =
-        ArgumentCoercion::new(host).coerce_scalar_number(value, NumericPolicy::PinnedPoi)?;
+    let number = ArgumentCoercion::new(host).coerce_scalar_number(value)?;
     if !number.is_finite()
         || number.abs() >= i64::MAX as f64
         || mode == IntegerControl::Exact && number.fract() != 0.0
@@ -61,7 +60,7 @@ pub(in crate::eval::adapters) fn integer_selectors(
         host.check_values(count)?;
         selectors
             .try_reserve(values.len())
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: values.len additional slots were reserved immediately above.
         selectors.extend(values);
     }

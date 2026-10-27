@@ -11,13 +11,15 @@ fn sector(bytes: &[u8], size: usize, id: u32) -> Result<&[u8], PreflightError> {
     let start = (id as usize)
         .checked_add(1)
         .and_then(|x| x.checked_mul(size))
-        .ok_or(PreflightError::Malformed("sector overflow"))?;
-    let end = start
-        .checked_add(size)
-        .ok_or(PreflightError::Malformed("sector offset overflow"))?;
-    bytes
-        .get(start..end)
-        .ok_or(PreflightError::Malformed("sector beyond input"))
+        .ok_or(PreflightError::Malformed(
+            crate::BiffStructureError::SectorOverflow,
+        ))?;
+    let end = start.checked_add(size).ok_or(PreflightError::Malformed(
+        crate::BiffStructureError::SectorOffsetOverflow,
+    ))?;
+    bytes.get(start..end).ok_or(PreflightError::Malformed(
+        crate::BiffStructureError::SectorBeyondInput,
+    ))
 }
 
 fn chain(
@@ -30,17 +32,23 @@ fn chain(
     regular: bool,
 ) -> Result<Vec<u8>, PreflightError> {
     if let Some(n) = len {
-        check("CFB stream bytes", n as u64, budget.max_stream_bytes as u64)?;
+        check(
+            crate::BiffResource::CfbStreamBytes,
+            n as u64,
+            budget.max_stream_bytes as u64,
+        )?;
     }
     let mut out = Vec::new();
     let mut seen = BTreeSet::new();
     let mut id = start;
     while id != END {
         if seen.contains(&id) {
-            return Err(PreflightError::Malformed("cyclic sector chain"));
+            return Err(PreflightError::Malformed(
+                crate::BiffStructureError::CyclicSectorChain,
+            ));
         }
         check(
-            "CFB chain sectors",
+            crate::BiffResource::CfbChainSectors,
             (seen.len() + 1) as u64,
             budget.max_metadata_entries as u64,
         )?;
@@ -50,32 +58,33 @@ fn chain(
         } else {
             let at = (id as usize)
                 .checked_mul(size)
-                .ok_or(PreflightError::Malformed("mini sector overflow"))?;
-            let end = at
-                .checked_add(size)
-                .ok_or(PreflightError::Malformed("mini sector offset overflow"))?;
-            data.get(at..end)
-                .ok_or(PreflightError::Malformed("mini sector beyond root stream"))?
+                .ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::MiniSectorOverflow,
+                ))?;
+            let end = at.checked_add(size).ok_or(PreflightError::Malformed(
+                crate::BiffStructureError::MiniSectorOffsetOverflow,
+            ))?;
+            data.get(at..end).ok_or(PreflightError::Malformed(
+                crate::BiffStructureError::MiniSectorBeyondRootStream,
+            ))?
         };
         let take = len.map_or(size, |n| n.saturating_sub(out.len()).min(size));
         check(
-            "CFB stream bytes",
+            crate::BiffResource::CfbStreamBytes,
             (out.len() + take) as u64,
             budget.max_stream_bytes as u64,
         )?;
-        out.extend_from_slice(
-            block
-                .get(..take)
-                .ok_or(PreflightError::Malformed("truncated stream block"))?,
-        );
+        out.extend_from_slice(block.get(..take).ok_or(PreflightError::Malformed(
+            crate::BiffStructureError::TruncatedStreamBlock,
+        ))?);
         // Validate the entire chain even when a declared length is shorter.
-        id = *fat
-            .get(id as usize)
-            .ok_or(PreflightError::Malformed("sector has no FAT entry"))?;
+        id = *fat.get(id as usize).ok_or(PreflightError::Malformed(
+            crate::BiffStructureError::SectorHasNoFatEntry,
+        ))?;
     }
     if len.is_some_and(|n| out.len() != n) {
         return Err(PreflightError::Malformed(
-            "stream chain shorter than declared length",
+            crate::BiffStructureError::StreamChainShorterThanDeclaredLength,
         ));
     }
     Ok(out)
@@ -87,21 +96,27 @@ pub(in crate::xls) fn workbook_stream(
     budget: ResourceBudget,
 ) -> Result<Vec<u8>, PreflightError> {
     if bytes.get(..8) != Some(&[0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) {
-        return Err(PreflightError::Malformed("CFB signature"));
+        return Err(PreflightError::Malformed(
+            crate::BiffStructureError::CfbSignature,
+        ));
     }
     let shift = u16at(bytes, 30)?;
     if !matches!(shift, 9 | 12) || u16at(bytes, 32)? != 6 {
-        return Err(PreflightError::Malformed("sector size"));
+        return Err(PreflightError::Malformed(
+            crate::BiffStructureError::SectorSize,
+        ));
     }
     let size = 1usize << shift;
     if bytes.len() < size {
-        return Err(PreflightError::Malformed("CFB header"));
+        return Err(PreflightError::Malformed(
+            crate::BiffStructureError::CfbHeader,
+        ));
     }
     for (at, label) in [
-        (44, "CFB FAT capacity"),
-        (64, "CFB mini FAT sectors"),
-        (72, "CFB DIFAT sectors"),
-        (62, "backend DIFAT capacity"),
+        (44, crate::BiffResource::CfbFatCapacity),
+        (64, crate::BiffResource::CfbMiniFatSectors),
+        (72, crate::BiffResource::CfbDifatSectors),
+        (62, crate::BiffResource::BackendDifatCapacity),
     ] {
         check(
             label,
@@ -115,7 +130,7 @@ pub(in crate::xls) fn workbook_stream(
         let id = u32at(bytes, at)?;
         if id < 0xffff_fffc {
             check(
-                "FAT sectors",
+                crate::BiffResource::FatSectors,
                 (difat.len() + 1) as u64,
                 budget.max_metadata_entries as u64,
             )?;
@@ -126,10 +141,12 @@ pub(in crate::xls) fn workbook_stream(
     let mut seen = BTreeSet::new();
     while id < 0xffff_fffa {
         if seen.contains(&id) {
-            return Err(PreflightError::Malformed("cyclic DIFAT"));
+            return Err(PreflightError::Malformed(
+                crate::BiffStructureError::CyclicDifat,
+            ));
         }
         check(
-            "DIFAT sectors",
+            crate::BiffResource::DifatSectors,
             (seen.len() + 1) as u64,
             budget.max_metadata_entries as u64,
         )?;
@@ -140,7 +157,7 @@ pub(in crate::xls) fn workbook_stream(
             let next = u32at(s, at)?;
             if next < 0xffff_fffc {
                 check(
-                    "FAT sectors",
+                    crate::BiffResource::FatSectors,
                     (difat.len() + 1) as u64,
                     budget.max_metadata_entries as u64,
                 )?;
@@ -153,7 +170,7 @@ pub(in crate::xls) fn workbook_stream(
     for id in difat {
         let s = sector(bytes, size, id)?;
         check(
-            "FAT entries",
+            crate::BiffResource::FatEntries,
             (fat.len() + size / 4) as u64,
             budget.max_metadata_entries as u64,
         )?;
@@ -163,9 +180,9 @@ pub(in crate::xls) fn workbook_stream(
         }
     }
     let dirs = chain(bytes, size, u32at(bytes, 48)?, &fat, None, budget, true)?;
-    let root = dirs
-        .get(..128)
-        .ok_or(PreflightError::Malformed("missing root directory"))?;
+    let root = dirs.get(..128).ok_or(PreflightError::Malformed(
+        crate::BiffStructureError::MissingRootDirectory,
+    ))?;
     let length = |d: &[u8]| -> Result<usize, PreflightError> {
         let low = u32at(d, 120)? as u64;
         let high = if shift == 12 {
@@ -173,8 +190,11 @@ pub(in crate::xls) fn workbook_stream(
         } else {
             0
         };
-        usize::try_from(low | (high << 32))
-            .map_err(|_| PreflightError::Representation("stream length exceeds address space"))
+        usize::try_from(low | (high << 32)).map_err(|_| {
+            PreflightError::Representation(
+                crate::BiffRepresentationError::StreamLengthExceedsAddressSpace,
+            )
+        })
     };
     let (mini, mini_fat) = if u32at(bytes, 64)? != 0 {
         let mini = chain(
@@ -191,17 +211,15 @@ pub(in crate::xls) fn workbook_stream(
             size,
             u32at(bytes, 60)?,
             &fat,
-            Some(
-                (u32at(bytes, 64)? as usize)
-                    .checked_mul(size)
-                    .ok_or(PreflightError::Malformed("mini FAT size overflow"))?,
-            ),
+            Some((u32at(bytes, 64)? as usize).checked_mul(size).ok_or(
+                PreflightError::Malformed(crate::BiffStructureError::MiniFatSizeOverflow),
+            )?),
             budget,
             true,
         )?;
         let mut table = Vec::new();
         check(
-            "mini FAT entries",
+            crate::BiffResource::MiniFatEntries,
             (mf.len() / 4) as u64,
             budget.max_metadata_entries as u64,
         )?;
@@ -244,6 +262,6 @@ pub(in crate::xls) fn workbook_stream(
     Err(if info && package {
         PreflightError::EncryptedXlsx
     } else {
-        PreflightError::Malformed("missing Workbook/Book stream")
+        PreflightError::Malformed(crate::BiffStructureError::MissingWorkbookBookStream)
     })
 }

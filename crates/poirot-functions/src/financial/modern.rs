@@ -1,15 +1,5 @@
 //! Independent cash-flow and depreciation mathematics from the documented equations.
 //! Contract links and deliberately unresolved native details are in FINANCIAL_SOURCES.md.
-use crate::financial::{FinancialError as E, Result, checked, finite};
-
-fn log_ratio(a: f64, b: f64) -> f64 {
-    let relative = (a - b) / b;
-    if relative.abs() < 0.5 {
-        relative.ln_1p()
-    } else {
-        a.ln() - b.ln()
-    }
-}
 /// Convert a positive nominal annual rate to its effective annual rate.
 pub fn effect(rate: f64, periods: f64) -> Result<f64> {
     finite(&[rate, periods])?;
@@ -236,16 +226,19 @@ pub fn ddb(cost: f64, salvage: f64, life: f64, period: f64, factor: f64) -> Resu
     };
     checked((balance * rate).min((balance - salvage).max(0.0)))
 }
-/// Distinguish spreadsheet errors from host work exhaustion and bounded numerical refusal.
-#[derive(Debug, PartialEq)]
-pub enum Failure<F> {
-    /// The mathematical domain or finite result is invalid.
-    Spreadsheet(E),
-    /// The host stopped numerical work.
-    Operational(F),
-    /// The independently bounded algorithm cannot admit this workload.
-    ComputationalLimit,
+
+use super::financial_calculation_error::FinancialCalculationError;
+use crate::financial::{FinancialError as E, Result, checked, finite};
+
+fn log_ratio(a: f64, b: f64) -> f64 {
+    let relative = (a - b) / b;
+    if relative.abs() < 0.5 {
+        relative.ln_1p()
+    } else {
+        a.ln() - b.ln()
+    }
 }
+
 /// Asset amounts and useful life for variable declining-balance depreciation.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Asset {
@@ -264,13 +257,14 @@ pub fn vdb<F>(
     factor: f64,
     no_switch: bool,
     mut charge: impl FnMut(u64) -> std::result::Result<(), F>,
-) -> std::result::Result<f64, Failure<F>> {
+) -> std::result::Result<f64, FinancialCalculationError<F>> {
     let Asset {
         cost,
         salvage,
         life,
     } = asset;
-    finite(&[cost, salvage, life, start, end, factor]).map_err(Failure::Spreadsheet)?;
+    finite(&[cost, salvage, life, start, end, factor])
+        .map_err(FinancialCalculationError::Spreadsheet)?;
     if cost < 0.0
         || salvage < 0.0
         || life <= 0.0
@@ -279,20 +273,20 @@ pub fn vdb<F>(
         || end > life
         || factor <= 0.0
     {
-        return Err(Failure::Spreadsheet(E::Num));
+        return Err(FinancialCalculationError::Spreadsheet(E::Num));
     }
     if cost <= salvage || start == end {
         return Ok(0.0);
     }
     if end.ceil() > 100_000.0 {
-        return Err(Failure::ComputationalLimit);
+        return Err(FinancialCalculationError::ComputationalLimit);
     }
     let rate = (factor / life).min(1.0);
     let mut balance = cost;
     let mut total = 0.0;
     let mut period = 0.0;
     while period < end {
-        charge(1).map_err(Failure::Operational)?;
+        charge(1).map_err(FinancialCalculationError::Operational)?;
         let remaining = (balance - salvage).max(0.0);
         let declining = (balance * rate).min(remaining);
         let remaining_time = life - period;
@@ -311,7 +305,7 @@ pub fn vdb<F>(
         balance = (balance - period_depreciation).max(salvage);
         period += 1.0;
     }
-    checked(total).map_err(Failure::Spreadsheet)
+    checked(total).map_err(FinancialCalculationError::Spreadsheet)
 }
 /// Multiply a complete schedule while preserving recoverable intermediate exponents.
 pub fn fvschedule(principal: f64, schedule: &[f64]) -> Result<f64> {
@@ -493,34 +487,42 @@ pub fn xirr<F>(
     flows: &[DatedFlow],
     guess: f64,
     mut charge: impl FnMut(u64) -> std::result::Result<(), F>,
-) -> std::result::Result<f64, Failure<F>> {
+) -> std::result::Result<f64, FinancialCalculationError<F>> {
     let count = flows.len() as u64;
-    charge(count.checked_mul(4).ok_or(Failure::ComputationalLimit)?)
-        .map_err(Failure::Operational)?;
-    validate_flows(flows).map_err(Failure::Spreadsheet)?;
+    charge(
+        count
+            .checked_mul(4)
+            .ok_or(FinancialCalculationError::ComputationalLimit)?,
+    )
+    .map_err(FinancialCalculationError::Operational)?;
+    validate_flows(flows).map_err(FinancialCalculationError::Spreadsheet)?;
     if !guess.is_finite()
         || guess <= -1.0
         || !flows.iter().any(|f| f.value > 0.0)
         || !flows.iter().any(|f| f.value < 0.0)
         || !flows.iter().any(|f| f.days > 0.0)
     {
-        return Err(Failure::Spreadsheet(E::Num));
+        return Err(FinancialCalculationError::Spreadsheet(E::Num));
     }
     let mut rate = guess;
     for _ in 0..100 {
-        charge(count.checked_mul(2).ok_or(Failure::ComputationalLimit)?)
-            .map_err(Failure::Operational)?;
+        charge(
+            count
+                .checked_mul(2)
+                .ok_or(FinancialCalculationError::ComputationalLimit)?,
+        )
+        .map_err(FinancialCalculationError::Operational)?;
         let Discounted {
             value,
             derivative,
             mass,
             ..
-        } = discounted(flows, rate.ln_1p()).map_err(Failure::Spreadsheet)?;
+        } = discounted(flows, rate.ln_1p()).map_err(FinancialCalculationError::Spreadsheet)?;
         if value == 0.0 {
             return Ok(rate);
         }
         if derivative == 0.0 || !derivative.is_finite() {
-            return Err(Failure::Spreadsheet(E::Num));
+            return Err(FinancialCalculationError::Spreadsheet(E::Num));
         }
         let step = value / derivative * (1.0 + rate);
         if value.abs() <= mass * 1e-14 && step.abs() <= 1e-13 * (1.0 + rate.abs()) {
@@ -528,9 +530,9 @@ pub fn xirr<F>(
         }
         let next = rate - step;
         if !next.is_finite() || next <= -1.0 || next == rate {
-            return Err(Failure::Spreadsheet(E::Num));
+            return Err(FinancialCalculationError::Spreadsheet(E::Num));
         }
         rate = next;
     }
-    Err(Failure::Spreadsheet(E::Num))
+    Err(FinancialCalculationError::Spreadsheet(E::Num))
 }

@@ -1,8 +1,8 @@
 //! Scalar Unicode projections have an operational failure boundary.
 //! UTF16 unit consumers must use text_ref directly rather than this scalar view.
 
-use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationFailure, WorkKind};
-use crate::eval::values::function_failure::FunctionFailure;
+use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError, WorkKind};
+use crate::eval::values::function_error::FunctionError;
 use crate::eval::values::function_result::FunctionResult;
 use crate::eval::values::source_arithmetic;
 use crate::eval::values::value::VALUE_ERROR;
@@ -11,11 +11,11 @@ use crate::model::CellValue::{self, Blank, Boolean, Error, Number, Text};
 use crate::model::TextRef;
 use std::{borrow::Cow, cmp::Ordering};
 
-fn unsupported(detail: &'static str) -> FunctionFailure {
-    EvaluationFailure::UnsupportedCapability {
+fn unsupported(reason: crate::eval::limits::EvaluationReasonError) -> FunctionError {
+    EvaluationError::UnsupportedCapability {
         capability: CapabilityId::FunctionAdapter,
-        source: None,
-        detail: detail.into(),
+        target: None,
+        reason,
     }
     .into()
 }
@@ -35,13 +35,13 @@ pub(in crate::eval) fn checked_text_view<'a>(
         TextRef::Utf16(units) => {
             budget.charge(WorkKind::TextByte, units.len() as u64)?;
             let bytes = TextRef::Utf16(units).utf8_len().map_err(|_| {
-                unsupported("Unicode scalar consumer cannot project isolated UTF16 surrogates")
+                unsupported(crate::eval::limits::EvaluationReasonError::UnicodeScalarConsumerCannotProjectIsolatedUtf16Surrogates)
             })?;
             budget.text(bytes)?;
             budget.allocation(units.len())?;
             budget.charge(WorkKind::TextByte, bytes as u64)?;
             String::from_utf16(units).map(Cow::Owned).map_err(|_| {
-                unsupported("Unicode scalar consumer cannot project isolated UTF16 surrogates")
+                unsupported(crate::eval::limits::EvaluationReasonError::UnicodeScalarConsumerCannotProjectIsolatedUtf16Surrogates)
             })
         }
     }
@@ -61,20 +61,6 @@ pub(in crate::eval) fn source_compare(
     }
     // Type dispatch precedes numeric special-exponent validation.
     if matches!(a, Number(_) | Blank) && matches!(b, Number(_) | Blank) {
-        for (argument, value) in [(0, a), (1, b)] {
-            if let Number(number) = value
-                && !number.is_finite()
-            {
-                return Err(EvaluationFailure::KnownSourceException {
-                    source: None,
-                    exception: crate::model::KnownSourceException::SpecialDoubleComparison {
-                        argument,
-                        bits: crate::model::IeeeNumberBits::from_number(*number),
-                    },
-                }
-                .into());
-            }
-        }
         let (a, b) = (
             coerce_arithmetic_number(a, budget)?,
             coerce_arithmetic_number(b, budget)?,
@@ -154,7 +140,7 @@ pub(in crate::eval) fn coerce_formula_text(
                 poirot_functions::coercion::compatibility::DeferredText::Number(n) => {
                     Ok(poirot_functions::coercion::compatibility::coerce_number_to_text(n))
                 }
-                _ => Err(FunctionFailure::from(VALUE_ERROR)),
+                _ => Err(FunctionError::from(VALUE_ERROR)),
             }
         })?;
     budget.text(rendered.len())?;
@@ -197,7 +183,9 @@ pub(in crate::eval) fn compare(
         let units = a
             .storage_bytes()
             .checked_add(b.storage_bytes())
-            .ok_or_else(|| unsupported("comparison work size overflow"))?;
+            .ok_or_else(|| {
+                unsupported(crate::eval::limits::EvaluationReasonError::ComparisonWorkSizeOverflow)
+            })?;
         budget.charge(WorkKind::Comparison, units as u64)?;
         return Ok(poirot_functions::text_units::fold::compare_utf16(
             a.units(),
@@ -216,31 +204,31 @@ pub(in crate::eval) fn compare(
 pub(in crate::eval) fn semantic<T>(result: FunctionResult<T>) -> EvalResult<Result<T, CellError>> {
     match result {
         Ok(value) => Ok(Ok(value)),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(Err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(Err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }
 
 /// Format syntax is semantic; fidelity and renderer resource causes are typed
-/// operational failures. Renderer errors never invent BudgetFailure amounts.
+/// operational failures. Renderer errors never invent BudgetError amounts.
 pub(in crate::eval) fn format_failure(
     error: poirot_functions::format::FormatError,
-) -> FunctionFailure {
+) -> FunctionError {
     use poirot_functions::format::FormatErrorKind::{
         InvalidFormat, ResourceLimit, UnsupportedFidelity,
     };
     match error.kind {
         InvalidFormat => VALUE_ERROR.into(),
-        UnsupportedFidelity => EvaluationFailure::UnsupportedCapability {
+        UnsupportedFidelity => EvaluationError::UnsupportedCapability {
             capability: CapabilityId::Formatting,
-            source: None,
-            detail: error.to_string(),
+            target: None,
+            reason: crate::eval::limits::EvaluationReasonError::Format(std::sync::Arc::new(error)),
         }
         .into(),
-        ResourceLimit => EvaluationFailure::ResourceLimit {
+        ResourceLimit => EvaluationError::ResourceLimit {
             capability: CapabilityId::Formatting,
-            source: None,
-            detail: error.to_string(),
+            target: None,
+            reason: crate::eval::limits::EvaluationReasonError::Format(std::sync::Arc::new(error)),
         }
         .into(),
     }

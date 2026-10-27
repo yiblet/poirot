@@ -21,7 +21,7 @@ use std::sync::Arc;
 /// Bump when wire layout or execution semantics invalidate prepared snapshots,
 /// including changes that leave Serde field layouts intact. This is separate from
 /// durable workbook-source versioning owned by the public file envelope.
-pub const COMPATIBILITY_REVISION: u64 = 78;
+pub const COMPATIBILITY_REVISION: u64 = 79;
 
 /// Serde view of a baseline workbook and its sparse overlay state.
 pub struct Snapshot<'a> {
@@ -57,14 +57,14 @@ impl<'a> Snapshot<'a> {
                     .cache
                     .map(|c| c.try_borrow())
                     .transpose()
-                    .map_err(|e| OverlayError::Snapshot(e.to_string()))?;
+                    .map_err(|e| OverlayError::Snapshot(e.into()))?;
                 Box::new(
                     SnapshotPayload::capture(
                         &overlay,
                         &*overlay
                             .compiler
                             .try_borrow()
-                            .map_err(|e| OverlayError::Snapshot(e.to_string()))?,
+                            .map_err(|e| OverlayError::Snapshot(e.into()))?,
                         cache.as_deref().unwrap_or(&empty),
                         SnapshotBaseline::Model(overlay.workbook.snapshot()),
                     )?
@@ -149,7 +149,7 @@ impl<'a> Snapshot<'a> {
             std::mem::replace(&mut payload.baseline, SnapshotBaseline::Source)
         else {
             return Err(OverlayError::Snapshot(
-                "snapshot baseline belongs to a checkpoint source section".into(),
+                crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::SnapshotBaselineBelongsToACheckpointSourceSection,
             ));
         };
         let workbook = model.restore()?;
@@ -174,7 +174,7 @@ impl<'a> Snapshot<'a> {
                     || !payload.style_only.is_empty()
                 {
                     return Err(OverlayError::Snapshot(
-                        "edited checkpoint lacks its baseline".into(),
+                        crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::EditedCheckpointLacksItsBaseline,
                     ));
                 }
                 Self::rebuild(payload, source, encoded_source.to_vec())
@@ -188,7 +188,7 @@ impl<'a> Snapshot<'a> {
                     || source.file_metadata != effective.file_metadata
                 {
                     return Err(OverlayError::Snapshot(
-                        "source and prepared state disagree".into(),
+                        crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::SourceAndPreparedStateDisagree,
                     ));
                 }
                 Ok((baseline, state))
@@ -200,17 +200,17 @@ impl<'a> Snapshot<'a> {
     fn into_payload(self) -> Result<SnapshotPayload<'static>, OverlayError> {
         let SnapshotState::Owned(payload) = self.into_owned()?.state else {
             return Err(OverlayError::Snapshot(
-                "snapshot ownership conversion failed".into(),
+                crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::SnapshotOwnershipConversionFailed,
             ));
         };
         let payload = *payload;
         if payload.version != VERSION {
             return Err(OverlayError::Snapshot(
-                "unsupported snapshot version".into(),
+                crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::UnsupportedSnapshotVersion,
             ));
         }
         if payload.preparation.parse != payload.policy.parse {
-            return Err(OverlayError::Snapshot("parser policy mismatch".into()));
+            return Err(OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::ParserPolicyMismatch));
         }
         Ok(payload)
     }
@@ -229,7 +229,7 @@ impl<'a> Snapshot<'a> {
         let compiler = payload
             .compiler
             .restore(&preparation)
-            .map_err(OverlayError::Snapshot)?;
+            .map_err(|error| OverlayError::Snapshot(error.into()))?;
         let mut overlay = Overlay {
             source: Source {
                 workbook,
@@ -250,7 +250,7 @@ impl<'a> Snapshot<'a> {
                         && (address.col <= prior.col || address.row >= prior.row))
             }) {
                 return Err(OverlayError::Snapshot(
-                    "noncanonical source discovery prefixes".into(),
+                    crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::NoncanonicalSourceDiscoveryPrefixes,
                 ));
             }
             previous_prefix = Some((sheet, address));
@@ -269,7 +269,7 @@ impl<'a> Snapshot<'a> {
                 .or_default()
                 .set_cell(address, cell.into_owned(), false)?
             {
-                return Err(OverlayError::Snapshot("duplicate overlay write".into()));
+                return Err(OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::DuplicateOverlayWrite));
             }
         }
         for &(sheet, address) in payload.deleted.as_ref() {
@@ -277,7 +277,7 @@ impl<'a> Snapshot<'a> {
                 .source
                 .validate_target(EvaluationTarget { sheet, address })?;
             if overlay.source.inputs.cell(sheet, address).is_some() {
-                return Err(OverlayError::Snapshot("write and removal overlap".into()));
+                return Err(OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::WriteAndRemovalOverlap));
             }
             overlay
                 .source
@@ -288,8 +288,8 @@ impl<'a> Snapshot<'a> {
                 .set(address, CellEdit::Delete)?;
         }
         for &(sheet, address) in payload.style_only.as_ref() {
-            let cell = overlay.source.inputs.cell(sheet, address).ok_or_else(|| {
-                OverlayError::Snapshot("style-only marker lacks an override".into())
+            let cell = overlay.source.inputs.cell(sheet, address).ok_or( {
+                OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::StyleOnlyMarkerLacksAnOverride)
             })?;
             let baseline = overlay
                 .source
@@ -304,7 +304,7 @@ impl<'a> Snapshot<'a> {
                 None => cell.formula.is_none() && cell.value == CellValue::Blank,
             } {
                 return Err(OverlayError::Snapshot(
-                    "style-only marker changes source content".into(),
+                    crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::StyleOnlyMarkerChangesSourceContent,
                 ));
             }
             if let Some(edit) = overlay
@@ -335,12 +335,12 @@ impl<'a> Snapshot<'a> {
                 .lookup_prefixes
                 .into_owned()
                 .restore(overlay.source.workbook())
-                .map_err(OverlayError::Snapshot)?;
+                .map_err(|error| OverlayError::Snapshot(error.into()))?;
             if (!payload.cached.is_empty() || !cache.lookup_prefixes.is_empty())
                 && cache.context.is_none()
             {
                 return Err(OverlayError::Snapshot(
-                    "cached results lack execution context".into(),
+                    crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::CachedResultsLackExecutionContext,
                 ));
             }
             cache.entries.reserve(payload.cached.len());
@@ -373,7 +373,7 @@ impl<'a> Snapshot<'a> {
                     )?;
                 }
                 if cache.get(entry.key).is_some() {
-                    return Err(OverlayError::Snapshot("duplicate cached cell".into()));
+                    return Err(OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::DuplicateCachedCell));
                 }
                 cache.insert(
                     entry.key,
@@ -395,15 +395,15 @@ impl<'a> Snapshot<'a> {
                         .is_none_or(|cell| cell.formula.is_none())
                     {
                         return Err(OverlayError::Snapshot(
-                            "spill producer lacks source formula".into(),
+                            crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::SpillProducerLacksSourceFormula,
                         ));
                     }
                     let key = (sheet, owner);
-                    let root = cache.get(key).ok_or_else(|| {
-                        OverlayError::Snapshot("spill child lacks its producer".into())
+                    let root = cache.get(key).ok_or( {
+                        OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::SpillChildLacksItsProducer)
                     })?;
-                    let last = root.dependencies.spill.last().ok_or_else(|| {
-                        OverlayError::Snapshot("spill producer lacks footprint bounds".into())
+                    let last = root.dependencies.spill.last().ok_or( {
+                        OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::SpillProducerLacksFootprintBounds)
                     })?;
                     if root.dependencies.spill.owner(owner) != Some(owner)
                         || owner.row > address.row
@@ -412,7 +412,7 @@ impl<'a> Snapshot<'a> {
                         || address.col > last.col
                     {
                         return Err(OverlayError::Snapshot(
-                            "invalid cached spill ownership".into(),
+                            crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::InvalidCachedSpillOwnership,
                         ));
                     }
                     *footprints.entry(key).or_default() += 1;
@@ -422,13 +422,13 @@ impl<'a> Snapshot<'a> {
                 let last = cache
                     .get((sheet, owner))
                     .and_then(|entry| entry.dependencies.spill.last())
-                    .ok_or_else(|| OverlayError::Snapshot("missing cached spill owner".into()))?;
+                    .ok_or( OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::MissingCachedSpillOwner))?;
                 last.validate()?;
                 let expected = (u64::from(last.row) - u64::from(owner.row) + 1)
                     * (u64::from(last.col) - u64::from(owner.col) + 1);
                 if expected != count as u64 {
                     return Err(OverlayError::Snapshot(
-                        "incomplete cached spill footprint".into(),
+                        crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::IncompleteCachedSpillFootprint,
                     ));
                 }
             }

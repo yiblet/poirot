@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 /// Wire version of the serialized payload layout.
-pub(super) const VERSION: u32 = 80;
+pub(super) const VERSION: u32 = 81;
 
 /// Versioned wire payload; runtime providers are reattached during restoration.
 #[derive(Serialize, Deserialize)]
@@ -59,7 +59,7 @@ impl<'a> SnapshotPayload<'a> {
                 compiler,
                 overlay.preparation,
             )
-            .map_err(OverlayError::Snapshot)?,
+            .map_err(|error| OverlayError::Snapshot(error.into()))?,
             // Preserve the existing wire layout while deriving its disjoint views
             // from one runtime collection. Only serialization allocates marker sets.
             writes: overlay
@@ -93,7 +93,7 @@ impl<'a> SnapshotPayload<'a> {
                 &*overlay
                     .spill_candidates
                     .try_borrow()
-                    .map_err(|e| OverlayError::Snapshot(e.to_string()))?,
+                    .map_err(|e| OverlayError::Snapshot(e.into()))?,
             ),
         })
     }

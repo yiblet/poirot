@@ -73,18 +73,14 @@ fn worksheet_namespace_is_exact_and_does_not_admit_unknown_functions() {
         .unwrap();
     let mut direct = Evaluation::with_workbook(&book)
         .with_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::PinnedPoi,
             ..Default::default()
         })
         .build(Default::default())
         .unwrap();
-    assert_eq!(
-        direct.cell(at("A1")).unwrap(),
-        CellValue::Error(CellError::Name)
-    );
+    assert_eq!(direct.cell(at("A1")).unwrap(), CellValue::Number(3.));
 }
 #[test]
-fn explicitly_bound_extensions_keep_precedence_and_source_spelling() {
+fn explicitly_bound_extensions_keep_identity_and_source_spelling() {
     use poirot::eval::{
         compile::bound::FormulaPlan, functions::extensions::*, functions::registry::Arity,
     };
@@ -92,7 +88,7 @@ fn explicitly_bound_extensions_keep_precedence_and_source_spelling() {
     registry
         .register(
             ExtensionNamespace::UserDefined,
-            "_xlfn._xlws.FILTER",
+            "CUSTOM_FILTER",
             "test-v1",
             ExtensionContract {
                 arity: Arity {
@@ -110,7 +106,7 @@ fn explicitly_bound_extensions_keep_precedence_and_source_spelling() {
             |_: &mut dyn ExtensionHost| Ok(ExtensionOutput::Scalar(CellValue::Number(41.))),
         )
         .unwrap();
-    let source = "_xlfn._xlws.FILTER(7)";
+    let source = "CUSTOM_FILTER(7)";
     let syntax = poirot_parsing::formula::parse_formula(source).unwrap();
     let plan = FormulaPlan::bind_with_extensions(&syntax, &registry).unwrap();
     assert_eq!(plan.syntax(), &syntax);
@@ -143,18 +139,13 @@ fn adapter_aliases_share_typed_descriptors_without_advertising_new_names() {
     use poirot::eval::adapters::{FunctionAdapter, builtins};
     let adapter = builtins();
     for name in ["FILTER", "SORT"] {
-        let descriptor = adapter.resolve_profile(&name.into()).unwrap();
+        let descriptor = adapter.resolve(&name.into()).unwrap();
         let stored = format!("_xlfn._xlws.{name}");
         assert!(std::ptr::eq(
             descriptor,
-            adapter.resolve_profile(&stored.as_str().into()).unwrap()
+            adapter.resolve(&stored.as_str().into()).unwrap()
         ));
         assert_eq!(descriptor.name, name);
-        assert!(
-            !adapter
-                .functions()
-                .chain(adapter.profile_functions())
-                .any(|d| d.name == stored)
-        );
+        assert!(!adapter.functions().any(|d| d.name == stored));
     }
 }

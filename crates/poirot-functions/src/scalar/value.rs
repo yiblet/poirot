@@ -114,6 +114,9 @@ impl Hash for TextRef<'_> {
 /// A value carries neither a worksheet address nor formula source: the same type
 /// represents a literal input, a saved formula result, or a newly calculated scalar.
 /// `Blank` alone does not tell whether a source cell exists.
+/// Numeric inputs accept `f64` and exact widening from `f32`, `i8`, `i16`, `i32`,
+/// `u8`, `u16`, and `u32`. Convert wider integers explicitly when precision loss
+/// is acceptable.
 #[derive(Debug, Clone, Default)]
 pub enum CellValue {
     /// Empty cell value, independent of whether a source cell exists.
@@ -131,6 +134,22 @@ pub enum CellValue {
     Error(CellError),
 }
 impl CellValue {
+    /// Return the number only for a numeric value, without coercion or rounding.
+    pub fn as_number(&self) -> Option<f64> {
+        match self {
+            Self::Number(value) => Some(*value),
+            _ => None,
+        }
+    }
+
+    /// Return the boolean only for a boolean value, without coercion.
+    pub fn as_boolean(&self) -> Option<bool> {
+        match self {
+            Self::Boolean(value) => Some(*value),
+            _ => None,
+        }
+    }
+
     /// Text clone payload bytes. Scalar/blank/error variants allocate no text payload.
     pub fn text_storage_bytes(&self) -> usize {
         self.text_ref().map_or(0, TextRef::storage_bytes)
@@ -174,6 +193,18 @@ impl From<f64> for CellValue {
         Self::Number(v)
     }
 }
+// Each accepted primitive widens exactly to binary64 using the standard conversion.
+macro_rules! from_exact_number {
+    ($($number:ty),+ $(,)?) => {
+        $(impl From<$number> for CellValue {
+            fn from(value: $number) -> Self {
+                Self::Number(f64::from(value))
+            }
+        })+
+    };
+}
+from_exact_number!(i8, i16, i32, u8, u16, u32, f32);
+
 impl From<String> for CellValue {
     fn from(v: String) -> Self {
         Self::Text(v)
@@ -199,6 +230,99 @@ mod tests {
         text.hash(&mut h);
         h.finish()
     }
+    #[test]
+    fn strict_scalar_inspectors_preserve_values() {
+        for number in [
+            0.0,
+            -0.0,
+            f64::MIN,
+            f64::MAX,
+            f64::MIN_POSITIVE,
+            f64::from_bits(1),
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::from_bits(0x7ff8_0000_0000_0042),
+            f64::from_bits(0xfff8_0000_0000_0042),
+        ] {
+            let value = CellValue::Number(number);
+            assert_eq!(value.as_number().unwrap().to_bits(), number.to_bits());
+            assert_eq!(value.as_boolean(), None);
+        }
+        for boolean in [false, true] {
+            let value = CellValue::Boolean(boolean);
+            assert_eq!(value.as_boolean(), Some(boolean));
+            assert_eq!(value.as_number(), None);
+        }
+    }
+
+    #[test]
+    fn strict_scalar_inspectors_reject_other_variants() {
+        let mut values = vec![
+            CellValue::Blank,
+            CellValue::Text("42".into()),
+            CellValue::Text("TRUE".into()),
+            CellValue::TextUtf16(ExcelText::from("42")),
+            CellValue::TextUtf16(ExcelText::from_units(vec![0xd800])),
+        ];
+        values.extend(
+            [
+                CellError::Null,
+                CellError::Div0,
+                CellError::Value,
+                CellError::Ref,
+                CellError::Name,
+                CellError::Num,
+                CellError::NA,
+                CellError::GettingData,
+                CellError::Spill,
+                CellError::Calc,
+            ]
+            .map(CellValue::Error),
+        );
+        for value in values {
+            assert_eq!(value.as_number(), None, "{value:?}");
+            assert_eq!(value.as_boolean(), None, "{value:?}");
+        }
+    }
+
+    #[test]
+    fn integer_ingress_preserves_sign_and_exact_boundaries() {
+        for (input, expected) in [
+            (CellValue::from(i32::MIN), -2_147_483_648.),
+            (CellValue::from(i32::MAX), 2_147_483_647.),
+            (CellValue::from(u32::MAX), 4_294_967_295.),
+            (CellValue::from(i16::MIN), -32_768.),
+            (CellValue::from(u16::MAX), 65_535.),
+            (CellValue::from(i8::MIN), -128.),
+            (CellValue::from(u8::MAX), 255.),
+            (CellValue::from(0), 0.),
+        ] {
+            assert_eq!(input, CellValue::Number(expected));
+        }
+    }
+
+    #[test]
+    fn float32_ingress_widens_without_changing_numeric_policy() {
+        for input in [
+            0.0f32,
+            -0.0,
+            0.1,
+            f32::MIN,
+            f32::MAX,
+            f32::MIN_POSITIVE,
+            f32::from_bits(1),
+            f32::INFINITY,
+            f32::NEG_INFINITY,
+        ] {
+            let CellValue::Number(widened) = CellValue::from(input) else {
+                panic!("numeric input must remain numeric");
+            };
+            assert_eq!(widened.to_bits(), f64::from(input).to_bits());
+        }
+        // NaN stays a numeric NaN, as with direct f64 ingress.
+        assert!(matches!(CellValue::from(f32::NAN), CellValue::Number(n) if n.is_nan()));
+    }
+
     #[test]
     fn exact_units_survive_model_and_projection() {
         for units in [vec![0xd83d], vec![0xde00], vec![0xd83d, 0x61], vec![0xfffd]] {

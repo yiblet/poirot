@@ -1,5 +1,5 @@
 use poirot::eval::{
-    BudgetFailure, BudgetKind, EvaluationBudgets, EvaluationFailure, EvaluationInputs,
+    BudgetError, BudgetKind, EvaluationBudgets, EvaluationError, EvaluationInputs,
     EvaluationOutcome, run_formula,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
@@ -10,11 +10,11 @@ fn book(names: &[&str]) -> Workbook {
         book.add_sheet(*name).unwrap();
         book.sheet_mut(i)
             .unwrap()
-            .set_value("A1".parse().unwrap(), (i + 1) as f64)
+            .set_value("A1", (i + 1) as f64)
             .unwrap();
         book.sheet_mut(i)
             .unwrap()
-            .set_value("B2".parse().unwrap(), (i + 1) as f64 * 10.)
+            .set_value("B2", (i + 1) as f64 * 10.)
             .unwrap();
     }
     book
@@ -86,12 +86,9 @@ fn referenced_coercion_and_error_precedence_remain_sheet_then_row_then_column() 
     let mut book = book(&["Sheet1", "Sheet2", "Sheet3"]);
     book.sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), CellValue::Text("99".into()))
+        .set_value("A1", CellValue::Text("99".into()))
         .unwrap();
-    book.sheet_mut(1)
-        .unwrap()
-        .set_value("A1".parse().unwrap(), true)
-        .unwrap();
+    book.sheet_mut(1).unwrap().set_value("A1", true).unwrap();
     assert_eq!(
         match poirot::eval::run_formula(
             &book,
@@ -108,11 +105,11 @@ fn referenced_coercion_and_error_precedence_remain_sheet_then_row_then_column() 
     );
     book.sheet_mut(0)
         .unwrap()
-        .set_value("B1".parse().unwrap(), CellValue::Error(CellError::Div0))
+        .set_value("B1", CellValue::Error(CellError::Div0))
         .unwrap();
     book.sheet_mut(1)
         .unwrap()
-        .set_value("A1".parse().unwrap(), CellValue::Error(CellError::Num))
+        .set_value("A1", CellValue::Error(CellError::Num))
         .unwrap();
     assert_eq!(
         match poirot::eval::run_formula(
@@ -163,7 +160,7 @@ fn native_endpoint_failures_stay_operational() {
                 EvaluationBudgets::default()
             ),
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::UnsupportedCapability { .. },
+                failure: EvaluationError::UnsupportedCapability { .. },
                 ..
             }
         ));
@@ -178,7 +175,7 @@ fn native_endpoint_failures_stay_operational() {
             EvaluationBudgets::default()
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability { .. },
+            failure: EvaluationError::UnsupportedCapability { .. },
             ..
         }
     ));
@@ -236,7 +233,7 @@ fn span_allocation_and_work_limits_are_operational_even_under_iferror() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(BudgetFailure {
+            failure: EvaluationError::Budget(BudgetError {
                 kind: BudgetKind::Materialization,
                 ..
             }),
@@ -256,7 +253,7 @@ fn span_allocation_and_work_limits_are_operational_even_under_iferror() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(BudgetFailure {
+            failure: EvaluationError::Budget(BudgetError {
                 kind: BudgetKind::RunWork,
                 ..
             }),
@@ -269,15 +266,11 @@ fn earlier_sheet_error_prevents_evaluating_later_operational_failure() {
     let mut book = book(&["Sheet1", "Sheet2", "Sheet3"]);
     book.sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), CellValue::Error(CellError::Div0))
+        .set_value("A1", CellValue::Error(CellError::Div0))
         .unwrap();
     book.sheet_mut(2)
         .unwrap()
-        .set_formula_with_cached_value(
-            "A1".parse().unwrap(),
-            "SUM(Sheet3:Sheet1!B1)",
-            CellValue::Number(-999.),
-        )
+        .set_formula_with_cached_value("A1", "SUM(Sheet3:Sheet1!B1)", CellValue::Number(-999.))
         .unwrap();
     assert!(matches!(
         run_formula(

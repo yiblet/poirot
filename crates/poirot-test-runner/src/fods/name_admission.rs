@@ -1,4 +1,6 @@
 //! Conservative original-source proof for quarantining rejected fixture declarations.
+use super::inspection_location::InspectionLocation;
+use super::name_admission_error::NameAdmissionError;
 use super::xml::model::FodsWorkbook;
 use std::collections::BTreeSet;
 
@@ -11,15 +13,15 @@ const MAX_DEPTH: usize = 256;
 const MAX_RECORDS: usize = 65_536;
 
 /// Prove only absence of potential use; never bind or reinterpret a Calc name.
-pub(super) fn prove_unused(data: &FodsWorkbook, name: &str) -> Result<(), String> {
+pub(super) fn prove_unused(data: &FodsWorkbook, name: &str) -> Result<(), NameAdmissionError> {
     if data.names.len() > MAX_NAMES {
-        return Err("defined-name inspection limit exceeded".into());
+        return Err(NameAdmissionError::NameLimit);
     }
     if name.len() > 255
         || name.is_empty()
         || !name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
     {
-        return Err("rejected spelling is outside the ASCII identifier proof".into());
+        return Err(NameAdmissionError::InvalidNameSpelling);
     }
     let initial = data
         .sheets
@@ -29,35 +31,42 @@ pub(super) fn prove_unused(data: &FodsWorkbook, name: &str) -> Result<(), String
         .and_then(|n| n.checked_add(data.omissions.len()))
         .and_then(|n| n.checked_add(data.original_formula_sources.as_ref().map_or(0, Vec::len)))
         .filter(|n| *n <= MAX_RECORDS)
-        .ok_or("source record inspection limit exceeded")?;
+        .ok_or(NameAdmissionError::RecordLimit)?;
     data.sheets.iter().try_fold(initial, |count, sheet| {
         count
             .checked_add(sheet.cells.len())
             .filter(|n| *n <= MAX_RECORDS)
-            .ok_or("source record inspection limit exceeded")
+            .ok_or(NameAdmissionError::RecordLimit)
     })?;
     let sources = data
         .original_formula_sources
         .as_ref()
-        .ok_or("complete original XML formula inspection record is unavailable")?;
+        .ok_or(NameAdmissionError::MissingOriginalSources)?;
     if data.sheets.iter().any(|sheet| sheet.name.len() > 1024) {
-        return Err("worksheet spelling exceeds inspection limit".into());
+        return Err(NameAdmissionError::WorksheetNameLimit);
     }
     let candidate = name.to_ascii_lowercase();
     let mut bytes = 0usize;
-    let mut inspect = |source: &str, location: &str| -> Result<(), String> {
-        bytes = bytes
-            .checked_add(source.len())
-            .ok_or("source inspection limit exceeded")?;
-        if bytes > MAX_SOURCE_BYTES {
-            return Err("whole-fixture source inspection limit exceeded".into());
-        }
-        scan(source, &candidate).map_err(|reason| format!("{location}: {reason}"))
-    };
+    let mut inspect =
+        |source: &str, location: InspectionLocation| -> Result<(), NameAdmissionError> {
+            bytes = bytes
+                .checked_add(source.len())
+                .ok_or(NameAdmissionError::SourceSizeOverflow)?;
+            if bytes > MAX_SOURCE_BYTES {
+                return Err(NameAdmissionError::SourceSizeLimit);
+            }
+            scan(source, &candidate).map_err(|source| NameAdmissionError::Inspection {
+                location,
+                source: Box::new(source),
+            })
+        };
     for (index, source) in sources.iter().enumerate() {
         inspect(
             &source.source,
-            &format!("native XML {:?} attribute {index}", source.attribute),
+            InspectionLocation::Attribute {
+                attribute: source.attribute,
+                index,
+            },
         )?;
     }
     for sheet in &data.sheets {
@@ -68,55 +77,68 @@ pub(super) fn prove_unused(data: &FodsWorkbook, name: &str) -> Result<(), String
             .map(|cell| (cell.row, cell.col))
             .collect();
         for cell in &sheet.cells {
-            let location = format!(
-                "sheet {:?} row {} column {}",
-                sheet.name, cell.row, cell.col
-            );
+            let location = InspectionLocation::Cell {
+                sheet: sheet.name.clone(),
+                row: cell.row,
+                col: cell.col,
+            };
             if cell.formula.is_some() && cell.original_formula.is_none() {
-                return Err(format!(
-                    "{location}: original formula source is unavailable"
-                ));
+                return Err(NameAdmissionError::MissingFormula { location });
             }
             if let Some(source) = &cell.original_formula {
-                inspect(source, &location)?;
+                inspect(source, location.clone())?;
             }
             if let Some(matrix) = &cell.matrix
                 && !anchors.contains(&(matrix.origin_row, matrix.origin_col))
             {
-                return Err(format!(
-                    "{location}: original matrix-anchor source is unavailable"
-                ));
+                return Err(NameAdmissionError::MissingMatrixAnchor { location });
             }
         }
     }
     for definition in &data.names {
         let original = definition.original_definition.as_deref().ok_or_else(|| {
-            format!(
-                "name {:?}: original definition is unavailable",
-                definition.name
-            )
+            NameAdmissionError::MissingDefinition {
+                name: definition.name.clone(),
+            }
         })?;
-        inspect(original, &format!("definition {:?}", definition.name))?;
+        inspect(
+            original,
+            InspectionLocation::Definition {
+                name: definition.name.clone(),
+            },
+        )?;
         if let Some(base) = &definition.base_cell_address {
-            inspect(base, &format!("definition {:?} base", definition.name))?;
+            inspect(
+                base,
+                InspectionLocation::DefinitionBase {
+                    name: definition.name.clone(),
+                },
+            )?;
         }
     }
     for case in &data.cases {
-        inspect(&case.original_formula, &format!("case {} actual", case.id))?;
+        inspect(
+            &case.original_formula,
+            InspectionLocation::Actual {
+                case: case.id.clone(),
+            },
+        )?;
         inspect(
             &case.original_correct_formula,
-            &format!("case {} Correct", case.id),
+            InspectionLocation::Correct {
+                case: case.id.clone(),
+            },
         )?;
     }
     Ok(())
 }
 
-fn scan(source: &str, candidate: &str) -> Result<(), String> {
+fn scan(source: &str, candidate: &str) -> Result<(), NameAdmissionError> {
     if source.len() > MAX_FORMULA_BYTES {
-        return Err("formula inspection limit exceeded".into());
+        return Err(NameAdmissionError::FormulaSizeLimit);
     }
     if !source.is_ascii() {
-        return Err("non-ASCII source cannot establish non-use".into());
+        return Err(NameAdmissionError::NonAsciiSource);
     }
     // Substring comparison deliberately over-blocks longer identifiers and literal
     // strings. Removing dollar signs also catches absolute DAY$1 / $DAY$1 uses.
@@ -127,9 +149,7 @@ fn scan(source: &str, candidate: &str) -> Result<(), String> {
         .map(|b| char::from(b.to_ascii_lowercase()))
         .collect();
     if folded.contains(candidate) {
-        return Err(
-            "potential rejected-name spelling, including address or string ambiguity".into(),
-        );
+        return Err(NameAdmissionError::PotentialUse);
     }
     // Inspect tokens even inside strings: false positives are safe here. Namespace
     // components cover OpenFormula and _xlfn spellings without using translation.
@@ -141,7 +161,7 @@ fn scan(source: &str, candidate: &str) -> Result<(), String> {
             .iter()
             .any(|resolver| part.eq_ignore_ascii_case(resolver))
         }) {
-            return Err("runtime name/formula resolver prevents a static non-use proof".into());
+            return Err(NameAdmissionError::RuntimeResolver);
         }
     }
     let mut delimiters = Vec::new();
@@ -162,7 +182,7 @@ fn scan(source: &str, candidate: &str) -> Result<(), String> {
             '\'' | '"' => quoted = Some(c),
             '(' | '[' | '{' => {
                 if delimiters.len() >= MAX_DEPTH {
-                    return Err("source nesting inspection limit exceeded".into());
+                    return Err(NameAdmissionError::NestingLimit);
                 }
                 delimiters.push(c);
             }
@@ -173,17 +193,17 @@ fn scan(source: &str, candidate: &str) -> Result<(), String> {
                     _ => '{',
                 };
                 if delimiters.pop() != Some(expected) {
-                    return Err("unbalanced source delimiters prevent non-use proof".into());
+                    return Err(NameAdmissionError::UnbalancedDelimiters);
                 }
             }
             c if c.is_ascii_alphanumeric()
                 || c.is_ascii_whitespace()
                 || "_.$!:;,#%^+-*/&=<>|".contains(c) => {}
-            _ => return Err("unrecognized lexical syntax prevents non-use proof".into()),
+            _ => return Err(NameAdmissionError::UnrecognizedSyntax),
         }
     }
     if quoted.is_some() || !delimiters.is_empty() {
-        return Err("unterminated source quotation or delimiter prevents non-use proof".into());
+        return Err(NameAdmissionError::UnterminatedSource);
     }
     Ok(())
 }
@@ -217,18 +237,16 @@ mod tests {
         let mut data = data();
         assert!(prove_unused(&data, "GQ17").is_ok());
         data.original_formula_sources = None;
-        assert!(
-            prove_unused(&data, "GQ17")
-                .unwrap_err()
-                .contains("complete original")
-        );
+        assert!(matches!(
+            prove_unused(&data, "GQ17"),
+            Err(NameAdmissionError::MissingOriginalSources)
+        ));
         data.original_formula_sources = Some(vec![]);
         data.names[0].original_definition = None;
-        assert!(
-            prove_unused(&data, "GQ17")
-                .unwrap_err()
-                .contains("original definition")
-        );
+        assert!(matches!(
+            prove_unused(&data, "GQ17"),
+            Err(NameAdmissionError::MissingDefinition { .. })
+        ));
         data.names[0].original_definition = Some("of:=123".into());
         let mut cell = CellInput::blank(0, 0);
         cell.formula = Some("42".into());
@@ -236,11 +254,10 @@ mod tests {
             name: "Test".into(),
             cells: vec![cell],
         });
-        assert!(
-            prove_unused(&data, "GQ17")
-                .unwrap_err()
-                .contains("original formula")
-        );
+        assert!(matches!(
+            prove_unused(&data, "GQ17"),
+            Err(NameAdmissionError::MissingFormula { .. })
+        ));
         data.sheets[0].cells[0].original_formula = Some("of:=42".into());
         assert!(prove_unused(&data, "GQ17").is_ok());
         data.sheets[0].cells[0].matrix = Some(MatrixSpan {
@@ -252,45 +269,48 @@ mod tests {
             offset_row: 0,
             offset_col: 0,
         });
-        assert!(
-            prove_unused(&data, "GQ17")
-                .unwrap_err()
-                .contains("matrix-anchor")
-        );
+        assert!(matches!(
+            prove_unused(&data, "GQ17"),
+            Err(NameAdmissionError::MissingMatrixAnchor { .. })
+        ));
     }
 
     #[test]
     fn bounded_proof_never_converts_limits_or_unrecognized_names_to_unused() {
         let mut data = data();
         data.names[0].original_definition = Some("1".repeat(MAX_FORMULA_BYTES + 1));
-        assert!(
-            prove_unused(&data, "GQ17")
-                .unwrap_err()
-                .contains("inspection limit")
-        );
+        let NameAdmissionError::Inspection { source, .. } =
+            prove_unused(&data, "GQ17").unwrap_err()
+        else {
+            panic!("wrong proof error category")
+        };
+        assert!(matches!(*source, NameAdmissionError::FormulaSizeLimit));
         data.names[0].original_definition = Some(format!(
             "{}1{}",
             "(".repeat(MAX_DEPTH + 1),
             ")".repeat(MAX_DEPTH + 1)
         ));
-        assert!(prove_unused(&data, "GQ17").unwrap_err().contains("nesting"));
+        let NameAdmissionError::Inspection { source, .. } =
+            prove_unused(&data, "GQ17").unwrap_err()
+        else {
+            panic!("wrong proof error category")
+        };
+        assert!(matches!(*source, NameAdmissionError::NestingLimit));
         data.names[0].original_definition = Some("of:=1".into());
         data.names = vec![data.names[0].clone(); MAX_NAMES + 1];
-        assert!(
-            prove_unused(&data, "GQ17")
-                .unwrap_err()
-                .contains("defined-name")
-        );
+        assert!(matches!(
+            prove_unused(&data, "GQ17"),
+            Err(NameAdmissionError::NameLimit)
+        ));
         let mut many = self::data();
         many.sheets = vec![Sheet {
             name: "Test".into(),
             cells: vec![CellInput::blank(0, 0); MAX_RECORDS],
         }];
-        assert!(
-            prove_unused(&many, "GQ17")
-                .unwrap_err()
-                .contains("source record")
-        );
+        assert!(matches!(
+            prove_unused(&many, "GQ17"),
+            Err(NameAdmissionError::RecordLimit)
+        ));
         assert!(prove_unused(&self::data(), "é17").is_err());
         assert!(prove_unused(&self::data(), "bad name").is_err());
     }

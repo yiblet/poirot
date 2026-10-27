@@ -6,7 +6,7 @@ use super::search_mode::SearchMode;
 use super::{plan, selection, sparse};
 use crate::eval::adapters::search::execution::session_search::SessionSearch;
 use crate::eval::config::ArrayResultPolicy;
-use crate::eval::limits::{EvaluationFailure, WorkKind};
+use crate::eval::limits::{EvaluationError, WorkKind};
 use crate::eval::ports::DependencyRead;
 use crate::eval::reuse::{MAX_ENTRIES, PrefixAxis, PrefixKey, SearchPrefix};
 use crate::eval::session::{ReadRecorder, Session};
@@ -207,7 +207,7 @@ pub(super) fn select(
                     retain = false;
                 }
             }
-            let following = index.checked_add(1).ok_or(EvaluationFailure::StalePlan)?;
+            let following = index.checked_add(1).ok_or(EvaluationError::StalePlan)?;
             prefix.next = prefix.next.max(following);
             if lookup_compare(
                 key,
@@ -298,11 +298,9 @@ mod interval_tests {
         for suffix in [Error(NA), Number(f64::INFINITY), Number(2.)] {
             let mut book = Workbook::new();
             let sheet = book.add_sheet("S").unwrap();
-            sheet.set_value("A1".parse().unwrap(), 1.).unwrap();
-            sheet
-                .set_value("A2".parse().unwrap(), suffix.clone())
-                .unwrap();
-            sheet.set_value("A3".parse().unwrap(), 3.).unwrap();
+            sheet.set_value("A1", 1.).unwrap();
+            sheet.set_value("A2", suffix.clone()).unwrap();
+            sheet.set_value("A3", 3.).unwrap();
             let mut run = Session::with_context(&book, EvaluationInputs::default());
             run.policies.array_result_policy = ArrayResultPolicy::ScalarIntersection;
             run.state.runtime.lookup_prefixes.enable();
@@ -326,13 +324,11 @@ mod interval_tests {
     }
 
     #[test]
-    fn budget_failure_discards_the_extended_prefix() {
+    fn budget_error_discards_the_extended_prefix() {
         let mut book = Workbook::new();
         let sheet = book.add_sheet("S").unwrap();
-        sheet.set_value("A1".parse().unwrap(), 1.).unwrap();
-        sheet
-            .set_value("A2".parse().unwrap(), "a long unread literal")
-            .unwrap();
+        sheet.set_value("A1", 1.).unwrap();
+        sheet.set_value("A2", "a long unread literal").unwrap();
         let mut run = Session::with_context(&book, EvaluationInputs::default());
         run.state.runtime.lookup_prefixes.enable();
         assert_eq!(lookup(&mut run, "MATCH(1,A1:A2,0)").unwrap(), Number(1.));

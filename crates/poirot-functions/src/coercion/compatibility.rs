@@ -1,13 +1,28 @@
-//! Explicit compatibility profiles for existing argument consumers.
+//! Function-specific compatibility profiles, not interchangeable numeric parsers.
+//!
+//! These policies retain consumer-specific whitespace, finiteness, origin and
+//! missing-argument rules. They do not consult the process locale or apply display
+//! formats. Choose the profile required by the function rather than using these as
+//! a general VALUE parser; locale-aware input uses [`crate::coercion::coerce_formatted_number`].
+pub use crate::coercion::TextCoercionError;
 use crate::numeric::number_text::render;
 use crate::scalar::{CellError, CellValue, Scalar, TextRef};
+/// Parse a complete finite criteria number after trimming code points through U+0020.
+/// Accepts decimal/scientific syntax; returns `None` for invalid or nonfinite input.
+/// This is the criteria comparison profile, not locale-aware formatted-number input.
 pub fn coerce_criteria_number_text(s: &str) -> Option<f64> {
     poirot_parsing::number::parse_criteria_number(s)
 }
 
+/// Parse finite signed decimal/scientific text using financial argument rounding.
+/// Trims code points through U+0020, requires the entire spelling, and rejects
+/// grouping, currency, percent and nonfinite values with `None`.
 pub fn coerce_financial_decimal_text(text: &str) -> Option<f64> {
     poirot_parsing::number::parse_financial_decimal(text)
 }
+/// Parse finite signed decimal/scientific text using Rust binary64 conversion.
+/// Trims code points through U+0020; only ASCII digits, signs, dot and exponent
+/// markers enter the parser. Invalid syntax and nonfinite results return `None`.
 pub fn coerce_statistics_decimal_text(text: &str) -> Option<f64> {
     poirot_parsing::number::parse_statistics_decimal(text)
 }
@@ -154,22 +169,11 @@ pub fn coerce_logical_test(value: &CellValue) -> Result<bool, CellError> {
 pub fn coerce_number_to_text(number: f64) -> String {
     render(number)
 }
-/// Minimum rank admission for the existing ceiling-based kth selection consumer.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum KthRankPolicy {
-    /// Apache POI rejects ranks below one before rounding upward.
-    PinnedPoi,
-    /// Documented LARGE accepts every positive rank before rounding upward.
-    DocumentedLarge,
-}
 
 /// Admit a finite kth rank before collection acquisition, retaining the source bound.
 /// This policy does not apply to percentile interpolation or other integer arguments.
-pub fn coerce_statistics_kth_rank(number: f64, policy: KthRankPolicy) -> Result<f64, CellError> {
-    let invalid_minimum = match policy {
-        KthRankPolicy::PinnedPoi => number < 1.0,
-        KthRankPolicy::DocumentedLarge => number <= 0.0,
-    };
+pub fn coerce_statistics_kth_rank(number: f64) -> Result<f64, CellError> {
+    let invalid_minimum = number <= 0.0;
     let rank = number.ceil();
     if !number.is_finite() || invalid_minimum || rank > i32::MAX as f64 {
         return Err(CellError::Num);
@@ -194,31 +198,22 @@ pub fn coerce_database_number(value: &CellValue) -> Option<f64> {
         _ => None,
     }
 }
-/// Formula text after host admission. Unicode projection failures remain distinct.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TextFailure {
-    /// Worksheet error propagated by the consumer.
-    Worksheet(CellError),
-    /// Text cannot be projected without replacing isolated UTF16 surrogates.
-    UnsupportedText,
-    /// An omitted argument needs a consumer-specific rule.
-    Missing,
-}
+
 /// Shared scalar text rule. Number spelling is supplied by the selected source profile.
 pub fn coerce_text(
     value: ScalarRef<'_>,
     number: impl FnOnce(f64) -> String,
-) -> Result<String, TextFailure> {
+) -> Result<String, TextCoercionError> {
     match value {
         ScalarRef::Blank => Ok(String::new()),
         ScalarRef::Boolean(b) => Ok(if b { "TRUE" } else { "FALSE" }.into()),
         ScalarRef::Number(n) => Ok(number(n)),
         ScalarRef::Text(TextRef::Utf8(t)) => Ok(t.into()),
         ScalarRef::Text(TextRef::Utf16(t)) => {
-            String::from_utf16(t).map_err(|_| TextFailure::UnsupportedText)
+            String::from_utf16(t).map_err(|_| TextCoercionError::UnsupportedText)
         }
-        ScalarRef::Error(e) => Err(TextFailure::Worksheet(e)),
-        ScalarRef::Missing => Err(TextFailure::Missing),
+        ScalarRef::Error(e) => Err(TextCoercionError::Worksheet(e)),
+        ScalarRef::Missing => Err(TextCoercionError::Missing),
     }
 }
 
@@ -390,32 +385,17 @@ pub fn coerce_concat_member_text<'a, E: From<CellError>>(
     )
 }
 
-/// Numeric text grammar requested by TEXT's value argument.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TextFormatPolicy {
-    /// Preserve the pinned arithmetic grammar and UTF8 fast path.
-    PinnedPoi,
-    /// Defer both text representations to the host's contextual numeric grammar.
-    Contextual,
-}
-
 /// TEXT retains nonnumeric strings, converts blank to zero, and spells booleans directly.
 /// The continuation returns `None` for rejected text, preserving the original value;
 /// operational failures escape. The host supplies the selected contextual grammar
 /// and checked UTF16 projection without duplicating TEXT's value admission rules.
 pub fn coerce_text_format_value<E>(
     value: CellValue,
-    policy: TextFormatPolicy,
+
     project: impl FnOnce(TextRef<'_>) -> Result<Option<f64>, E>,
 ) -> Result<(CellValue, bool), E> {
     match value {
         CellValue::Blank => Ok((CellValue::Number(0.), true)),
-        CellValue::Text(ref text) if policy == TextFormatPolicy::PinnedPoi => {
-            match coerce_arithmetic_text(text) {
-                Ok(n) => Ok((CellValue::Number(n), true)),
-                Err(_) => Ok((value, false)),
-            }
-        }
         CellValue::Text(ref text) => match project(TextRef::Utf8(text))? {
             Some(n) => Ok((CellValue::Number(n), true)),
             None => Ok((value, false)),
@@ -605,31 +585,14 @@ pub fn coerce_owned_text<E: From<CellError>>(
     }
 }
 
-/// Range policy for text indexes/counts before the consumer applies its own sign rules.
-#[derive(Clone, Copy, Debug)]
-pub enum TextIntegerPolicy {
-    /// Validate the truncated integer target; overflow is VALUE.
-    Checked,
-    /// Preserve source floor-before-range admission and NUM on overflow.
-    PinnedPoi,
-}
 /// Admit a signed-32 text integer argument while preserving its fractional value.
 /// Sign/minimum checks and truncation remain ordered by the consuming text algorithm.
 /// In particular, an empty-text shortcut must not bypass this target-range check.
-pub fn coerce_text_integer_number(
-    number: f64,
-    policy: TextIntegerPolicy,
-) -> Result<f64, CellError> {
-    let candidate = match policy {
-        TextIntegerPolicy::Checked => number.trunc(),
-        TextIntegerPolicy::PinnedPoi => number.floor(),
-    };
+pub fn coerce_text_integer_number(number: f64) -> Result<f64, CellError> {
+    let candidate = number.trunc();
     if !candidate.is_finite() || candidate < f64::from(i32::MIN) || candidate > f64::from(i32::MAX)
     {
-        Err(match policy {
-            TextIntegerPolicy::Checked => CellError::Value,
-            TextIntegerPolicy::PinnedPoi => CellError::Num,
-        })
+        Err(CellError::Value)
     } else {
         Ok(number)
     }
@@ -639,7 +602,7 @@ pub fn coerce_text_integer_number(
 /// Fractional starts truncate before the last-character bound. The text source
 /// supplies its own character/unit length; pinned source domains stay separate.
 pub fn coerce_text_search_start(number: f64, length: usize) -> Result<usize, CellError> {
-    let number = coerce_text_integer_number(number, TextIntegerPolicy::Checked)?.trunc();
+    let number = coerce_text_integer_number(number)?.trunc();
     if number < 1. || number > length as f64 {
         return Err(CellError::Value);
     }

@@ -3,7 +3,7 @@ use super::sheet_candidates::SheetCandidates;
 use crate::eval::compile::SourcePreparation;
 use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
 use crate::eval::functions::extensions;
-use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationBudgets, EvaluationError};
 use crate::model::{CellAddress, Workbook};
 
 /// Worksheet source-inspection proofs and possible rectangles under one preparation identity.
@@ -35,7 +35,7 @@ pub(in crate::eval) fn restore_candidates(
     let mut budget = BudgetMeter::configured(EvaluationBudgets::default(), false)?;
     for &(sheet, last) in prefixes {
         if workbook.sheet(sheet).is_none() {
-            return Err(EvaluationFailure::StalePlan);
+            return Err(EvaluationError::StalePlan);
         }
         discovery::Discovery {
             workbook,

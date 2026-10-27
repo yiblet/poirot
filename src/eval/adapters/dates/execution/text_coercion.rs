@@ -1,7 +1,7 @@
 use crate::eval::config::DateOrder;
 use crate::eval::config::calendar::date;
 use crate::eval::host::ContextReads;
-use crate::eval::limits::{CapabilityId, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvaluationError};
 use crate::eval::values::FunctionResult;
 use crate::model::CellError;
 use crate::model::CellError::Num;
@@ -89,17 +89,18 @@ pub(super) fn coerce_time_text(
         input
             .len()
             .checked_add("1/01/2000 ".len())
-            .ok_or_else(|| EvaluationFailure::Resource {
+            .ok_or(EvaluationError::Resource {
                 kind: crate::eval::limits::ResourceFailureKind::SizeOverflow,
                 capability: CapabilityId::DateParsing,
-                source: None,
-                detail: "TIMEVALUE dummy prefix length overflow".into(),
+                target: None,
+                reason:
+                    crate::eval::limits::EvaluationReasonError::TimevalueDummyPrefixLengthOverflow,
             })?;
     host.check_text(dummy_bytes)?;
     let mut dummy = String::new();
     dummy
         .try_reserve_exact(dummy_bytes)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     // SAFETY: dummy_bytes reserves the checked sum of both appended byte lengths.
     dummy.push_str("1/01/2000 ");
     // SAFETY: dummy_bytes reserves the checked sum of both appended byte lengths.

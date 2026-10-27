@@ -2,11 +2,12 @@ use crate::lookup::operands::{
     Arguments, charge, coerce_lookup_boolean, coerce_lookup_text, scalar,
 };
 use crate::lookup::{
-    Context, Error, Failure, Unsupported, Value, Work, Workbook, parse_dynamic_reference,
+    Context, LookupError, LookupUnsupportedError, LookupValueError, Value, Work, Workbook,
+    parse_dynamic_reference,
 };
-fn indirect_failure(failure: Failure) -> Failure {
+fn indirect_failure(failure: LookupError) -> LookupError {
     match failure {
-        Failure::Spreadsheet(_) => Error::Ref.into(),
+        LookupError::Spreadsheet(_) => LookupValueError::Ref.into(),
         other => other,
     }
 }
@@ -37,9 +38,9 @@ pub fn address_text(
     axes: AddressAxes,
     style: AddressStyle,
     sheet: Option<&str>,
-) -> Result<String, Failure> {
+) -> Result<String, LookupError> {
     if !(1..=1_048_576).contains(&row) || !(1..=16_384).contains(&col) {
-        return Err(Error::Value.into());
+        return Err(LookupValueError::Value.into());
     }
     let absolute_row = matches!(axes, AddressAxes::Both | AddressAxes::Row);
     let absolute_column = matches!(axes, AddressAxes::Both | AddressAxes::Column);
@@ -47,17 +48,17 @@ pub fn address_text(
         .map_or(Some(32), |name| {
             name.len().checked_mul(4).and_then(|n| n.checked_add(32))
         })
-        .ok_or(Failure::Operational(
-            crate::lookup::OperationalFailure::ResourceOverflow,
+        .ok_or(LookupError::Operational(
+            crate::lookup::LookupOperationalError::ResourceOverflow,
         ))?;
     let mut result = String::new();
-    result
-        .try_reserve_exact(capacity)
-        .map_err(|_| Failure::Operational(crate::lookup::OperationalFailure::HostUnavailable))?;
+    result.try_reserve_exact(capacity).map_err(|_| {
+        LookupError::Operational(crate::lookup::LookupOperationalError::HostUnavailable)
+    })?;
     if let Some(name) = sheet {
         if name.contains(['\n', '\r', '\t']) {
-            return Err(Failure::Unsupported(
-                Unsupported::AddressSheetNameControlCharacter,
+            return Err(LookupError::Unsupported(
+                LookupUnsupportedError::AddressSheetNameControlCharacter,
             ));
         }
         let quote = crate::lookup::syntax::sheet_name_requires_quote(name);
@@ -93,7 +94,9 @@ pub fn address_text(
             col,
             if !absolute_column { "]" } else { "" }
         )
-        .map_err(|_| Failure::Operational(crate::lookup::OperationalFailure::HostUnavailable))?;
+        .map_err(|_| {
+            LookupError::Operational(crate::lookup::LookupOperationalError::HostUnavailable)
+        })?;
     } else {
         let mut letters = [0u8; 7];
         let mut position = letters.len();
@@ -101,13 +104,13 @@ pub fn address_text(
         while column > 0 {
             // SAFETY: The loop condition proves the column is positive before subtracting one.
             column -= 1;
-            position = position.checked_sub(1).ok_or(Error::Value)?;
+            position = position.checked_sub(1).ok_or(LookupValueError::Value)?;
             // SAFETY: The remainder is at most 25, so adding ASCII A cannot exceed 90.
-            *letters.get_mut(position).ok_or(Error::Value)? = b'A' + (column % 26) as u8;
+            *letters.get_mut(position).ok_or(LookupValueError::Value)? = b'A' + (column % 26) as u8;
             column /= 26;
         }
-        let letters = std::str::from_utf8(letters.get(position..).ok_or(Error::Value)?)
-            .map_err(|_| Error::Value)?;
+        let letters = std::str::from_utf8(letters.get(position..).ok_or(LookupValueError::Value)?)
+            .map_err(|_| LookupValueError::Value)?;
         // SAFETY: The local reservation includes 32 bytes for at most two u32 spellings, brackets and axis labels.
         write!(
             result,
@@ -117,7 +120,9 @@ pub fn address_text(
             if absolute_row { "$" } else { "" },
             row
         )
-        .map_err(|_| Failure::Operational(crate::lookup::OperationalFailure::HostUnavailable))?;
+        .map_err(|_| {
+            LookupError::Operational(crate::lookup::LookupOperationalError::HostUnavailable)
+        })?;
     }
     Ok(result)
 }
@@ -127,15 +132,15 @@ pub(super) fn indirect(
     args: &Arguments<'_>,
     c: Context,
     w: &mut impl Workbook,
-) -> Result<Value, Failure> {
+) -> Result<Value, LookupError> {
     if args.is_empty() {
-        return Err(Error::Value.into());
+        return Err(LookupValueError::Value.into());
     }
     let text = coerce_lookup_text(&scalar(&args.get(0, c, w)?, c, w)?, w)?;
     let a1 = match args.len() {
         1 => true,
         2 => coerce_lookup_boolean(scalar(&args.get(1, c, w)?, c, w)?)?,
-        _ => return Err(Error::Value.into()),
+        _ => return Err(LookupValueError::Value.into()),
     };
     let query = parse_dynamic_reference(&text, a1, w)?;
     charge(w, Work::QueryReturn, 1)?;

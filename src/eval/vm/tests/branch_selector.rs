@@ -3,7 +3,7 @@ use super::super::selection::Selection;
 use super::super::shape::Shape;
 use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{BudgetMeter, CapabilityId, EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, CapabilityId, EvaluationBudgets, EvaluationError};
 use crate::eval::session::Session;
 use crate::model::Workbook;
 
@@ -35,10 +35,10 @@ fn selection_capacity_overflow_is_an_attributed_resource_failure() {
             columns: 1,
         },
     );
-    assert!(matches!(result, Err(EvaluationFailure::Resource {
+    assert!(matches!(result, Err(EvaluationError::Resource {
         kind: crate::eval::limits::ResourceFailureKind::SizeOverflow,
         capability: CapabilityId::FunctionAdapter,
-        source: Some(source), ..
+        target: Some(source), ..
     }) if source == target));
     assert_eq!(
         session.state.runtime.budget.usage.materialized_values,

@@ -1,6 +1,6 @@
 use crate::lookup::comparison::compare;
 use crate::lookup::operands::charge;
-use crate::lookup::{Error, Failure, MatchMode, Scalar, SearchMode, Work, Workbook};
+use crate::lookup::{LookupError, LookupValueError, MatchMode, Scalar, SearchMode, Work, Workbook};
 use std::cmp::Ordering;
 // Mirror handleMidValueTypeMismatch's separate bounds and comparison flags.
 // The workbook port keeps each repeated comparison fallible and budgeted.
@@ -15,12 +15,12 @@ fn mismatch_step(
     wild: bool,
     reverse: bool,
     w: &mut impl Workbook,
-) -> Result<Option<usize>, Failure> {
+) -> Result<Option<usize>, LookupError> {
     let mut next = mid + 1;
     while next < *high {
         let cmp = compare(
             key,
-            vector.get(next as usize).ok_or(Error::Value)?,
+            vector.get(next as usize).ok_or(LookupValueError::Value)?,
             tolerant,
             wild,
             w,
@@ -56,7 +56,7 @@ pub fn approximate_index(
     key: &Scalar,
     vector: &[Scalar],
     w: &mut impl Workbook,
-) -> Result<usize, Failure> {
+) -> Result<usize, LookupError> {
     if let Scalar::Error(e) = key {
         return Err((*e).into());
     }
@@ -65,7 +65,7 @@ pub fn approximate_index(
         let mid = low + (high - low) / 2;
         match compare(
             key,
-            vector.get(mid as usize).ok_or(Error::Value)?,
+            vector.get(mid as usize).ok_or(LookupValueError::Value)?,
             false,
             false,
             w,
@@ -82,7 +82,7 @@ pub fn approximate_index(
                 while index + 1 < high as usize
                     && compare(
                         key,
-                        vector.get(index + 1).ok_or(Error::Value)?,
+                        vector.get(index + 1).ok_or(LookupValueError::Value)?,
                         false,
                         false,
                         w,
@@ -97,7 +97,7 @@ pub fn approximate_index(
         }
     }
     if low < 0 {
-        Err(Error::Na.into())
+        Err(LookupValueError::Na.into())
     } else {
         Ok(low as usize)
     }
@@ -109,7 +109,7 @@ pub fn xmatch_index(
     mode: MatchMode,
     direction: SearchMode,
     w: &mut impl Workbook,
-) -> Result<usize, Failure> {
+) -> Result<usize, LookupError> {
     if let Scalar::Error(e) = key {
         return Err((*e).into());
     }
@@ -139,8 +139,13 @@ pub fn xmatch_index(
             } else {
                 step
             };
-            if let Some(cmp) = compare(key, vector.get(index).ok_or(Error::Value)?, true, wild, w)?
-            {
+            if let Some(cmp) = compare(
+                key,
+                vector.get(index).ok_or(LookupValueError::Value)?,
+                true,
+                wild,
+                w,
+            )? {
                 if cmp == Ordering::Equal {
                     return Ok(index);
                 }
@@ -158,7 +163,7 @@ pub fn xmatch_index(
             }
             match compare(
                 key,
-                vector.get(mid as usize).ok_or(Error::Value)?,
+                vector.get(mid as usize).ok_or(LookupValueError::Value)?,
                 true,
                 wild,
                 w,
@@ -188,7 +193,7 @@ pub fn xmatch_index(
             }
         }
     }
-    best.ok_or(Failure::Spreadsheet(Error::Na))
+    best.ok_or(LookupError::Spreadsheet(LookupValueError::Na))
 }
 
 fn update_best(
@@ -198,14 +203,14 @@ fn update_best(
     mode: MatchMode,
     vector: &[Scalar],
     w: &mut impl Workbook,
-) -> Result<(), Failure> {
+) -> Result<(), LookupError> {
     let eligible = mode == MatchMode::Smaller && cmp == Ordering::Greater
         || mode == MatchMode::Larger && cmp == Ordering::Less;
     if eligible {
         let improves = if let Some(old) = *best {
             compare(
-                vector.get(index).ok_or(Error::Value)?,
-                vector.get(old).ok_or(Error::Value)?,
+                vector.get(index).ok_or(LookupValueError::Value)?,
+                vector.get(old).ok_or(LookupValueError::Value)?,
                 true,
                 matches!(vector.get(index), Some(Scalar::Text(_))),
                 w,

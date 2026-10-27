@@ -38,27 +38,27 @@ fn sheet_names_and_lookup() {
         assert!(w.add_sheet(name).is_err());
     }
     assert!(w.add_sheet("😀".repeat(16)).is_err());
-    w.rename_sheet(0, "Results").unwrap();
+    w.rename_sheet(0, "Results").apply().unwrap();
     assert_eq!(w.sheet(0).unwrap().name(), "Results");
-    assert!(w.rename_sheet(4, "Other").is_err());
+    assert!(w.rename_sheet(4, "Other").apply().is_err());
 }
 
 #[test]
 fn formulas_preserve_cache_and_style() {
     let mut s = Worksheet::new("Sheet1").unwrap();
-    let a = "A1".parse().unwrap();
+    let a: CellAddress = "A1".parse().unwrap();
     s.set_formula_with_cached_value(a, " = SUM(B1:B2) ", CellValue::Number(3.0))
         .unwrap();
-    let c = s.get(a).unwrap();
+    let c = s.get(a).unwrap().unwrap();
     assert_eq!(c.formula.as_deref(), Some("SUM(B1:B2)"));
     assert_eq!(c.value, CellValue::Number(3.0));
     assert!(s.set_formula(a, "=").is_err());
-    assert_eq!(s.get(a).unwrap().value, CellValue::Number(3.0));
-    s.get_mut(a).unwrap().style.number_format = Some("0.00".into());
+    assert_eq!(s.get(a).unwrap().unwrap().value, CellValue::Number(3.0));
+    s.get_mut(a).unwrap().unwrap().style.number_format = Some("0.00".into());
     s.set_value(a, true).unwrap();
-    assert_eq!(s.get(a).unwrap().formula, None);
+    assert_eq!(s.get(a).unwrap().unwrap().formula, None);
     assert_eq!(
-        s.get(a).unwrap().style.number_format.as_deref(),
+        s.get(a).unwrap().unwrap().style.number_format.as_deref(),
         Some("0.00")
     );
     assert!(

@@ -9,7 +9,7 @@ use super::range_purpose::RangePurpose;
 use super::validity::Validity;
 use crate::eval::config::ContextKey;
 use crate::eval::coordinates::{CellMap, CellSet, EvaluationTarget};
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use std::collections::BTreeSet;
 
 /// Inline retained entries keyed directly by full worksheet coordinates.
@@ -44,7 +44,7 @@ impl Cache {
         retention: crate::eval::limits::MemoRetentionLimits,
         consumer: Option<EvaluationTarget>,
         spill_resets: impl IntoIterator<Item = Key>,
-    ) -> Result<(), EvaluationFailure> {
+    ) -> Result<(), EvaluationError> {
         let mut cells = self.len();
         let mut bytes = self.retained_bytes;
         let mut overflow = false;
@@ -63,7 +63,7 @@ impl Cache {
             bytes = next.unwrap_or(usize::MAX);
         }
         if overflow || cells > retention.cells || bytes > retention.bytes {
-            return Err(EvaluationFailure::MemoRetentionLimit {
+            return Err(EvaluationError::MemoRetentionLimit {
                 limits: retention,
                 consumed: crate::eval::limits::MemoRetentionUsage {
                     cells: self.len(),
@@ -73,18 +73,18 @@ impl Cache {
                     cells: cells.saturating_sub(self.len()),
                     bytes: bytes.saturating_sub(self.retained_bytes),
                 },
-                source: consumer,
+                target: consumer,
             });
         }
         self.next_version
             .checked_add(staged.len() as u64)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         for (key, _) in &staged {
-            key.1.validate().map_err(|_| EvaluationFailure::StalePlan)?;
+            key.1.validate().map_err(|_| EvaluationError::StalePlan)?;
         }
         for (key, entry) in staged {
             self.insert(key, entry)
-                .map_err(|_| EvaluationFailure::StalePlan)?;
+                .map_err(|_| EvaluationError::StalePlan)?;
         }
         self.spill_resets.extend(spill_resets);
         Ok(())
@@ -133,7 +133,11 @@ impl Cache {
     }
 
     /// Replace a result and register its point edges and always-dirty status.
-    pub fn insert(&mut self, key: Key, mut entry: Cached) -> Result<(), crate::model::ModelError> {
+    pub fn insert(
+        &mut self,
+        key: Key,
+        mut entry: Cached,
+    ) -> Result<(), super::cache_error::CacheError> {
         key.1.validate()?;
         let previous = self.retained(key);
         let version = match previous {
@@ -143,7 +147,7 @@ impl Cache {
             _ => self
                 .next_version
                 .checked_add(1)
-                .ok_or_else(|| crate::model::ModelError("cache generation overflow".into()))?,
+                .ok_or(super::cache_error::CacheError::GenerationOverflow)?,
         };
         entry.version = version;
         entry.validity = Validity::Clean;
@@ -151,7 +155,7 @@ impl Cache {
             .retained_bytes
             .checked_sub(previous.map_or(0, Cached::retained_bytes))
             .and_then(|bytes| bytes.checked_add(entry.retained_bytes()))
-            .ok_or_else(|| crate::model::ModelError("cache retention size overflow".into()))?;
+            .ok_or(super::cache_error::CacheError::RetentionOverflow)?;
         let same_dependencies = previous.is_some_and(|old| old.dependencies == entry.dependencies);
         self.next_version = self.next_version.max(version);
         // Value edits commonly leave the consumed graph unchanged. Keep its
@@ -160,7 +164,7 @@ impl Cache {
             let retained = self
                 .entries
                 .get_mut(&key)
-                .ok_or_else(|| crate::model::ModelError("retained result disappeared".into()))?;
+                .ok_or(super::cache_error::CacheError::MissingRetainedResult)?;
             *retained = entry;
             self.retained_bytes = retained_bytes;
             return Ok(());
@@ -178,29 +182,6 @@ impl Cache {
         }
         self.entries.insert(key, entry);
         Ok(())
-    }
-
-    /// Iterative traversal handles arbitrary chain lengths and cycles without stack recursion.
-    pub fn invalidate(&mut self, seeds: impl IntoIterator<Item = Key>) {
-        // Publication only marks rectangle changes; build once when an edit
-        // actually needs the index rather than after every output request.
-        let mut pending: Vec<_> = seeds.into_iter().collect();
-        if self.ranges_dirty && !pending.is_empty() {
-            self.rebuild_ranges();
-        }
-        let mut seen = CellSet::default();
-        while let Some(key) = pending.pop() {
-            if !seen.insert(key) {
-                continue;
-            }
-            if let Some(readers) = self.reverse.remove(&key) {
-                pending.extend(readers);
-            }
-            self.ranges.take_readers(key, &mut pending);
-            self.spill_ranges.take_readers(key, &mut pending);
-            self.remove(key);
-        }
-        self.lookup_prefixes.invalidate(&seen);
     }
 
     /// Force spatial membership consumers after an authored occupancy/formula edit.
@@ -365,17 +346,6 @@ impl Cache {
             .collect::<Vec<_>>();
         self.invalidate_context(seeds);
         self.context = Some(context);
-    }
-
-    /// Invalidate cells that consumed text policy and all their dependents.
-    pub fn invalidate_text_policy(&mut self) {
-        let seeds = self
-            .entries
-            .iter()
-            .filter(|(_, entry)| entry.dependencies.text_policy)
-            .map(|(key, _)| *key)
-            .collect::<Vec<_>>();
-        self.invalidate(seeds);
     }
 
     /// Rebuild the rectangle lookup after dependency traces have changed.

@@ -3,7 +3,7 @@
 use super::evaluation_report::EvaluationReport;
 use super::overlay_evaluation::OverlayEvaluation;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::model::{CellValue, WorkbookChange};
 
 /// An overlay cycle whose valid results persist, with optional detailed profiling.
@@ -13,7 +13,7 @@ use crate::model::{CellValue, WorkbookChange};
 /// use poirot::eval::{EvaluationContext, overlay::Overlay};
 /// use poirot::model::{CellValue, Workbook};
 /// let mut book = Workbook::new();
-/// book.add_sheet("Data")?.set_formula("A1".parse()?, "2*3")?;
+/// book.add_sheet("Data")?.set_formula("A1", "2*3")?;
 /// let mut scenario = Overlay::with_workbook(&book).build()?;
 /// let output = scenario.target("Data!A1")?;
 /// let context = EvaluationContext::default();
@@ -30,7 +30,7 @@ pub struct EvaluationCycle<'a> {
 
 impl EvaluationCycle<'_> {
     /// Calculate one cell using this cycle's remaining work and the overlay's valid cache.
-    pub fn cell(&mut self, target: EvaluationTarget) -> Result<CellValue, EvaluationFailure> {
+    pub fn cell(&mut self, target: EvaluationTarget) -> Result<CellValue, EvaluationError> {
         self.inner.cell(target)
     }
 
@@ -38,17 +38,17 @@ impl EvaluationCycle<'_> {
     pub fn outputs(
         &mut self,
         targets: &[EvaluationTarget],
-    ) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationFailure> {
+    ) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationError> {
         self.inner.outputs(targets)
     }
 
     /// Explicitly calculate all effective stored cells and spill children.
-    pub fn all(&mut self) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationFailure> {
+    pub fn all(&mut self) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationError> {
         self.inner.all()
     }
 
     /// Export this cycle's completed result changes without calculating.
-    pub fn result_changes(&self) -> Result<Vec<WorkbookChange>, EvaluationFailure> {
+    pub fn result_changes(&self) -> Result<Vec<WorkbookChange>, EvaluationError> {
         self.inner.result_changes()
     }
 

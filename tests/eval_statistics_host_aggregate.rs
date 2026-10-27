@@ -3,7 +3,7 @@
 //! https://support.microsoft.com/en-us/excel/functions/var-function
 //! https://support.microsoft.com/en-us/excel/statistical-functions-reference
 //! https://support.microsoft.com/en-us/excel/calculate-the-median-of-a-group-of-numbers
-use poirot::eval::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome, run_formula};
+use poirot::eval::{EvaluationBudgets, EvaluationError, EvaluationOutcome, run_formula};
 use poirot::model::{CellError, CellValue, Workbook};
 
 fn outcome(book: &Workbook, formula: &str) -> EvaluationOutcome<CellValue> {
@@ -21,9 +21,9 @@ fn outcome(book: &Workbook, formula: &str) -> EvaluationOutcome<CellValue> {
 fn numeric_samples_keep_direct_and_reference_admission() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 1.).unwrap();
-    sheet.set_value("A2".parse().unwrap(), "ignored").unwrap();
-    sheet.set_value("A3".parse().unwrap(), 3.).unwrap();
+    sheet.set_value("A1", 1.).unwrap();
+    sheet.set_value("A2", "ignored").unwrap();
+    sheet.set_value("A3", 3.).unwrap();
     for (formula, expected) in [
         ("MEDIAN(A1:A3)", 2.),
         ("VAR(A1:A3)", 2.),
@@ -44,23 +44,21 @@ fn eager_reference_reads_abort_before_reporting_earlier_spreadsheet_error() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     sheet
-        .set_value("A1".parse().unwrap(), CellValue::Error(CellError::Ref))
+        .set_value("A1", CellValue::Error(CellError::Ref))
         .unwrap();
-    sheet
-        .set_formula("A2".parse().unwrap(), "SUM(T:S!B1)")
-        .unwrap();
+    sheet.set_formula("A2", "SUM(T:S!B1)").unwrap();
     book.add_sheet("T").unwrap();
     assert!(matches!(
         outcome(&book, "MEDIAN(A1:A2)"),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability { .. },
+            failure: EvaluationError::UnsupportedCapability { .. },
             ..
         }
     ));
     assert!(matches!(
         outcome(&book, "COUNT(A1:A2)"),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability { .. },
+            failure: EvaluationError::UnsupportedCapability { .. },
             ..
         }
     ));
@@ -71,11 +69,11 @@ fn ordered_sheet_span_stops_at_the_first_spreadsheet_error() {
     let mut book = Workbook::new();
     book.add_sheet("S")
         .unwrap()
-        .set_value("A1".parse().unwrap(), CellValue::Error(CellError::Div0))
+        .set_value("A1", CellValue::Error(CellError::Div0))
         .unwrap();
     book.add_sheet("T")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "SUM(T:S!B1)")
+        .set_formula("A1", "SUM(T:S!B1)")
         .unwrap();
     assert!(matches!(
         outcome(&book, "MEDIAN(S:T!A1)"),

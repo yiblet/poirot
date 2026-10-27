@@ -1,3 +1,4 @@
+use super::json_error::JsonError;
 use poirot::CellValue;
 use poirot::cells::ExcelText;
 use serde::{Deserialize, Serialize};
@@ -12,9 +13,7 @@ pub struct Suite {
     /// Optional display family; the suite filename is the default.
     #[serde(default)]
     pub group: Option<String>,
-    /// Explicit suite builtin contract; omitted metadata uses modern Excel defaults.
-    #[serde(default)]
-    pub builtin_policy: poirot::eval::BuiltinSemanticsPolicy,
+
     /// Array publication contract independently established by the fixture evidence.
     #[serde(default)]
     pub array_result_policy: poirot::eval::ArrayResultPolicy,
@@ -118,18 +117,24 @@ pub enum Scalar {
 }
 
 impl Scalar {
-    pub fn cell_value(&self) -> Result<CellValue, String> {
+    /// Convert a validated literal into the shared spreadsheet value representation.
+    pub fn cell_value(&self) -> Result<CellValue, JsonError> {
         Ok(match self {
             Self::Blank => CellValue::Blank,
             Self::Number(n) if n.is_finite() => CellValue::Number(*n),
-            Self::Number(_) => return Err("numbers must be finite".into()),
+            Self::Number(_) => return Err(JsonError::NonfiniteNumber),
             Self::Text(s) => CellValue::Text(s.clone()),
             Self::Utf16(units) => ExcelText::from_units(units.clone()).into(),
             Self::Boolean(b) => CellValue::Boolean(*b),
-            Self::Error(s) => CellValue::Error(s.parse().map_err(|e| format!("{e}"))?),
+            Self::Error(s) => {
+                CellValue::Error(s.parse::<poirot::model::CellError>().map_err(|source| {
+                    JsonError::Model(poirot::model::ModelError::Io(source.into()))
+                })?)
+            }
         })
     }
 
+    /// Retain an observed spreadsheet value in the JSON scenario representation.
     pub fn from_cell(value: &CellValue) -> Self {
         match value {
             CellValue::Blank => Self::Blank,

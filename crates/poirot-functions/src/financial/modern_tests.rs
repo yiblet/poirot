@@ -1,6 +1,6 @@
 //! Expected values follow independent amortization tables and defining equations.
-use crate::financial::FinancialError;
 use crate::financial::modern::*;
+use crate::financial::{FinancialCalculationError, FinancialError};
 fn near(actual: f64, expected: f64) {
     assert!(
         (actual - expected).abs() <= expected.abs() * 2e-12,
@@ -112,7 +112,7 @@ fn independent_loan_and_depreciation_tables() {
             false,
             |_| Err("stop")
         ),
-        Err(Failure::Operational("stop"))
+        Err(FinancialCalculationError::Operational("stop"))
     );
 }
 #[test]
@@ -208,11 +208,11 @@ fn irregular_equations_multiple_roots_and_failure() {
     ];
     assert_eq!(
         xirr(&no_root, 0.1, |_| Ok::<_, ()>(())),
-        Err(Failure::Spreadsheet(FinancialError::Num))
+        Err(FinancialCalculationError::Spreadsheet(FinancialError::Num))
     );
     assert_eq!(
         xirr(&pair, 0.2, |_| Err("stop")),
-        Err(Failure::Operational("stop"))
+        Err(FinancialCalculationError::Operational("stop"))
     );
 }
 

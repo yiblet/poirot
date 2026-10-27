@@ -1,12 +1,12 @@
 use super::super::value::VALUE_ERROR;
 use super::scalar::format_failure;
-use crate::eval::config::{BuiltinSemanticsPolicy, DateOrder, EvaluationInputs, Localization};
+use crate::eval::config::{DateOrder, EvaluationInputs, Localization};
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{
-    BudgetMeter, CapabilityId, EvalResult, EvaluationBudgets, EvaluationFailure,
+    BudgetMeter, CapabilityId, EvalResult, EvaluationBudgets, EvaluationError,
 };
 use crate::eval::session::{Coercer, ResultProjection, Session};
-use crate::eval::values::function_failure::FunctionFailure;
+use crate::eval::values::function_error::FunctionError;
 use crate::eval::vm::ExpressionRunner;
 use crate::model::CellValue::{Boolean, Error, Number, Text};
 use crate::model::{CellError, CellValue, Workbook};
@@ -18,7 +18,7 @@ fn eval(formula: &str, literal: CellValue, budgets: EvaluationBudgets) -> EvalRe
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), literal)
+        .set_value("A1", literal)
         .unwrap();
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     session.state.runtime.budget = BudgetMeter::new(budgets).unwrap();
@@ -37,7 +37,7 @@ fn malformed_scalar_projection_is_operational_and_uncatchable() {
         assert!(
             matches!(
                 eval(formula, lone(), EvaluationBudgets::default()),
-                Err(EvaluationFailure::UnsupportedCapability { .. })
+                Err(EvaluationError::UnsupportedCapability { .. })
             ),
             "{formula}"
         );
@@ -68,7 +68,7 @@ fn valid_manual_utf16_has_identical_scalar_semantics() {
                 CellValue::TextUtf16(crate::model::ExcelText::from(text)),
                 EvaluationBudgets::default(),
             );
-            assert_eq!(plain, units, "{formula}: {text}");
+            assert_eq!(plain.unwrap(), units.unwrap(), "{formula}: {text}");
         }
     }
     // Semantically invalid numeric text still produces VALUE and is catchable.
@@ -92,30 +92,36 @@ fn exact_projection_admission_precedes_allocation() {
     };
     assert!(matches!(
         eval("IFERROR(A1+1,7)", value, budgets),
-        Err(EvaluationFailure::Budget(_))
+        Err(EvaluationError::Budget(_))
     ));
 }
 
 #[test]
 fn formatter_failure_causes_remain_distinct() {
-    use poirot_functions::format::{FormatError, FormatErrorKind};
+    use poirot_functions::format::{FormatError, FormatErrorKind, FormatReasonError};
     let format_error = |kind| FormatError {
         kind,
         position: 17,
-        message: "retained source resource ceiling".into(),
+        reason: match kind {
+            FormatErrorKind::InvalidFormat => FormatReasonError::FormatHasNoSections,
+            FormatErrorKind::UnsupportedFidelity => {
+                FormatReasonError::DateSerialOutsideSupportedNonnegativeCalendarRange
+            }
+            FormatErrorKind::ResourceLimit => FormatReasonError::FormatExceedsResourceLimit,
+        },
     };
     assert!(matches!(
         format_failure(format_error(FormatErrorKind::InvalidFormat)),
-        FunctionFailure::Spreadsheet(VALUE_ERROR)
+        FunctionError::Spreadsheet(VALUE_ERROR)
     ));
     assert!(matches!(
         format_failure(format_error(FormatErrorKind::UnsupportedFidelity)),
-        FunctionFailure::Operational(EvaluationFailure::UnsupportedCapability {
+        FunctionError::Operational(EvaluationError::UnsupportedCapability {
             capability: CapabilityId::Formatting,
             ..
         })
     ));
-    let FunctionFailure::Operational(mut failure) =
+    let FunctionError::Operational(mut failure) =
         format_failure(format_error(FormatErrorKind::ResourceLimit))
     else {
         panic!("resource errors must be operational");
@@ -127,12 +133,12 @@ fn formatter_failure_causes_remain_distinct() {
     };
     failure.set_target(target);
     assert!(
-        matches!(&failure, EvaluationFailure::ResourceLimit { source: Some(at), detail, .. } if *at == target && detail.contains("at byte 17"))
+        matches!(&failure, EvaluationError::ResourceLimit { target: Some(at), reason, .. } if *at == target && matches!(reason, crate::eval::limits::EvaluationReasonError::Format(error) if error.position == 17 && error.reason == FormatReasonError::FormatExceedsResourceLimit))
     );
     assert!(
-        failure
-            .to_string()
-            .contains("retained source resource ceiling")
+        std::error::Error::source(&failure)
+            .unwrap()
+            .is::<crate::eval::limits::EvaluationReasonError>()
     );
 }
 
@@ -151,7 +157,7 @@ fn formatted_number_work_admission_is_operational_and_utf16_equivalent() {
         assert!(
             matches!(
                 eval(formula, Text("1,234.50%".into()), limits),
-                Err(EvaluationFailure::Budget(_))
+                Err(EvaluationError::Budget(_))
             ),
             "{formula}"
         );
@@ -205,7 +211,7 @@ fn modern_calendar_continuation_tracks_only_consumed_context() {
             ..Default::default()
         };
         let mut session = Session::with_context(&w, context);
-        session.policies.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
+
         session.ports.dependency_sink = Some(&mut reads);
         assert_eq!(
             Coercer::new(&mut session)
@@ -242,12 +248,12 @@ fn impossible_calendar_text_rejects_before_acquiring_default_year() {
             ..Default::default()
         },
     );
-    session.policies.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
+
     for input in ["hello-world", "2/30", "13/1"] {
         assert!(
             matches!(
                 Coercer::new(&mut session).coerce_numeric_date_time(input),
-                Err(FunctionFailure::Spreadsheet(CellError::Value))
+                Err(FunctionError::Spreadsheet(CellError::Value))
             ),
             "{input}"
         );
@@ -255,8 +261,8 @@ fn impossible_calendar_text_rejects_before_acquiring_default_year() {
     // February 29 can be valid, so this request really needs the unavailable year.
     assert!(matches!(
         Coercer::new(&mut session).coerce_numeric_date_time("2/29"),
-        Err(FunctionFailure::Operational(
-            EvaluationFailure::UnsupportedCapability { .. }
+        Err(FunctionError::Operational(
+            EvaluationError::UnsupportedCapability { .. }
         ))
     ));
 }

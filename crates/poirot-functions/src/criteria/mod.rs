@@ -16,7 +16,7 @@ pub mod subtotal;
 #[cfg(test)]
 mod tests;
 
-pub use crate::coercion::criteria::{Cell, Error};
+pub use crate::coercion::criteria::{Cell, CriteriaError};
 use poirot_parsing::criteria::Comparison;
 fn test_comparison(op: Comparison, c: Ordering) -> bool {
     match op {
@@ -53,13 +53,13 @@ impl Criterion {
                 Operand::Number(n) => Cell::Number(n),
                 Operand::Text(s) => Cell::Text(s.into()),
                 Operand::Error(e) => Cell::Error(match e {
-                    ErrorLiteral::Null => Error::Null,
-                    ErrorLiteral::DivZero => Error::DivZero,
-                    ErrorLiteral::Value => Error::Value,
-                    ErrorLiteral::Ref => Error::Ref,
-                    ErrorLiteral::Name => Error::Name,
-                    ErrorLiteral::Num => Error::Num,
-                    ErrorLiteral::Na => Error::Na,
+                    ErrorLiteral::Null => CriteriaError::Null,
+                    ErrorLiteral::DivZero => CriteriaError::DivZero,
+                    ErrorLiteral::Value => CriteriaError::Value,
+                    ErrorLiteral::Ref => CriteriaError::Ref,
+                    ErrorLiteral::Name => CriteriaError::Name,
+                    ErrorLiteral::Num => CriteriaError::Num,
+                    ErrorLiteral::Na => CriteriaError::Na,
                 }),
             };
             Self { comparison, value }
@@ -121,15 +121,15 @@ impl Criterion {
         })
     }
 }
-fn error_code(e: Error) -> u8 {
+fn error_code(e: CriteriaError) -> u8 {
     match e {
-        Error::Null => 0,
-        Error::DivZero => 7,
-        Error::Value => 15,
-        Error::Ref => 23,
-        Error::Name => 29,
-        Error::Num => 36,
-        Error::Na => 42,
+        CriteriaError::Null => 0,
+        CriteriaError::DivZero => 7,
+        CriteriaError::Value => 15,
+        CriteriaError::Ref => 23,
+        CriteriaError::Name => 29,
+        CriteriaError::Num => 36,
+        CriteriaError::Na => 42,
     }
 }
 
@@ -264,13 +264,13 @@ impl<'a> CriteriaPlan<'a> {
         criteria: Vec<Criterion>,
         target: Option<Range<'a>>,
         ifs: bool,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, CriteriaError> {
         if ranges.is_empty()
             || ranges.len() != criteria.len()
             || (!ifs && ranges.len() != 1)
             || (kind != AggregateKind::Count && target.is_none())
         {
-            return Err(Error::Value);
+            return Err(CriteriaError::Value);
         }
         // SAFETY: The guard above rejects an empty ranges vector before selecting its first element.
         let shape = (ranges[0].rows, ranges[0].columns);
@@ -279,7 +279,7 @@ impl<'a> CriteriaPlan<'a> {
             .chain(target.iter())
             .any(|r| !r.valid() || (r.rows, r.columns) != shape)
         {
-            return Err(Error::Value);
+            return Err(CriteriaError::Value);
         }
         if ifs || kind == AggregateKind::AverageIf {
             for c in &criteria {
@@ -304,14 +304,14 @@ impl<'a> CriteriaPlan<'a> {
             .checked_mul(self.ranges.len() + usize::from(self.target.is_some()))
     }
     /// Execute the prevalidated criteria selection and aggregate its admitted values.
-    pub fn evaluate(&self) -> Result<f64, Error> {
-        let first = self.ranges.first().ok_or(Error::Value)?;
+    pub fn evaluate(&self) -> Result<f64, CriteriaError> {
+        let first = self.ranges.first().ok_or(CriteriaError::Value)?;
         if self
             .ranges
             .iter()
             .any(|range| range.cells.len() != first.cells.len())
         {
-            return Err(Error::Value);
+            return Err(CriteriaError::Value);
         }
         let (mut sum, mut count, mut extremum) = (0.0, 0usize, None::<f64>);
         for i in 0..first.cells.len() {
@@ -338,7 +338,7 @@ impl<'a> CriteriaPlan<'a> {
                 .target
                 .as_ref()
                 .and_then(|target| target.cells.get(i))
-                .ok_or(Error::Value)?;
+                .ok_or(CriteriaError::Value)?;
             if let Cell::Error(e) = cell
                 && self.kind != AggregateKind::AverageIf
             {
@@ -360,7 +360,7 @@ impl<'a> CriteriaPlan<'a> {
             AggregateKind::Count => count as f64,
             AggregateKind::Sum => sum,
             AggregateKind::Average | AggregateKind::AverageIf if count == 0 => {
-                return Err(Error::DivZero);
+                return Err(CriteriaError::DivZero);
             }
             AggregateKind::Average | AggregateKind::AverageIf => sum / count as f64,
             AggregateKind::Max | AggregateKind::Min => extremum.unwrap_or(0.0),
@@ -368,7 +368,7 @@ impl<'a> CriteriaPlan<'a> {
         if n.is_finite() {
             Ok(n)
         } else {
-            Err(Error::Num)
+            Err(CriteriaError::Num)
         }
     }
 }

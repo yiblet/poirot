@@ -5,7 +5,7 @@ use crate::eval::host::{CallHost, OperandKind, OperandReader, RandomDraws};
 use crate::eval::limits::{CapabilityId, EvalResult};
 use crate::eval::session::Session;
 use crate::eval::values::{
-    Area, AreaKind, FunctionFailure, FunctionResult, ReferenceAreas, VALUE_ERROR, Value, err,
+    Area, AreaKind, FunctionError, FunctionResult, ReferenceAreas, VALUE_ERROR, Value, err,
 };
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::Ref;
@@ -52,7 +52,7 @@ fn random(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<V
             crate::eval::config::random::Interval::new(bottom, top).ok_or_else(|| {
                 host.unsupported(
                     CapabilityId::FunctionAdapter,
-                    "RANDARRAY integer bounds exceed the exactly representable integer envelope",
+                    crate::eval::limits::EvaluationReasonError::RandarrayIntegerBoundsExceedTheExactlyRepresentableIntegerEnvelope,
                 )
             })?,
         )
@@ -190,7 +190,7 @@ fn crop_reference(
             host.check_values(1)?;
             areas
                 .try_reserve_exact(1)
-                .map_err(|_| host.allocation_failure())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             // SAFETY: One element was reserved locally before this single push.
             areas.push(crop);
             Ok(Value::SignedRefs(areas))
@@ -229,7 +229,7 @@ pub(in crate::eval) fn execute(
     };
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }

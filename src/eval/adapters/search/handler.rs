@@ -6,7 +6,7 @@ use crate::eval::host;
 use crate::eval::host::{LookupService, SelectionAccess};
 use crate::eval::limits::EvalResult;
 use crate::eval::values::core_projection::{coerce_logical_boolean, semantic};
-use crate::eval::values::{FunctionFailure, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, VALUE_ERROR, Value, err};
 use crate::model::CellError::{NA, Ref};
 use crate::model::CellValue::{Blank, Error, Number};
 
@@ -91,8 +91,8 @@ pub(in crate::eval) fn execute(
     let index = match found {
         Ok(Some(i)) => i,
         Ok(None) => return Ok(err(NA)),
-        Err(FunctionFailure::Spreadsheet(e)) => return Ok(err(e)),
-        Err(FunctionFailure::Operational(e)) => return Err(e),
+        Err(FunctionError::Spreadsheet(e)) => return Ok(err(e)),
+        Err(FunctionError::Operational(e)) => return Err(e),
     };
     if is_match {
         return Ok(Number((index + 1) as f64).into());
@@ -106,8 +106,8 @@ pub(in crate::eval) fn execute(
     };
     let value = match LookupService::new(host).lookup_result(&table, axis, result_index, index) {
         Ok(value) => value,
-        Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
-        Err(FunctionFailure::Operational(failure)) => return Err(failure),
+        Err(FunctionError::Spreadsheet(error)) => return Ok(err(error)),
+        Err(FunctionError::Operational(failure)) => return Err(failure),
     };
     let origin = match &table {
         LookupTable::Array(_) => crate::eval::values::OperandOrigin::ArrayElement,

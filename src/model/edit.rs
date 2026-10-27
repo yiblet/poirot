@@ -33,10 +33,10 @@ pub(crate) struct FormulaReplacement {
 /// Application rejects a changed source snapshot before mutating the workbook.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct RenameSheetPlan {
-    expected: Workbook,
-    sheet: usize,
-    name: String,
-    replacements: Vec<FormulaReplacement>,
+    pub(super) expected: Workbook,
+    pub(super) sheet: usize,
+    pub(super) name: String,
+    pub(super) replacements: Vec<FormulaReplacement>,
 }
 /// The renamed sheet and formula sources changed by a successful rename transaction.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -59,20 +59,20 @@ impl RenameSheetPlan {
         replacements: Vec<FormulaReplacement>,
     ) -> Result<Self, ModelError> {
         let mut validation = workbook.clone();
-        validation.rename_sheet(sheet, &name)?;
+        validation.rename_sheet_metadata(sheet, &name)?;
         let mut seen = std::collections::BTreeSet::new();
         for edit in &replacements {
             if !seen.insert(edit.source.clone())
                 || formula(workbook, &edit.source) != Some(edit.expected.as_str())
             {
-                return Err(ModelError(
-                    "invalid or duplicate formula replacement".into(),
-                ));
+                return Err(ModelError::InvalidFormulaReplacement {
+                    target: edit.source.clone(),
+                });
             }
             if normalize_formula(edit.replacement.clone())? != edit.replacement {
-                return Err(ModelError(
-                    "replacement must be normalized formula source".into(),
-                ));
+                return Err(ModelError::UnnormalizedFormulaReplacement {
+                    target: edit.source.clone(),
+                });
             }
         }
         Ok(Self {
@@ -90,9 +90,11 @@ impl RenameSheetPlan {
 }
 fn formula<'a>(workbook: &'a Workbook, source: &FormulaSource) -> Option<&'a str> {
     match source {
-        FormulaSource::Cell { sheet, address } => {
-            workbook.sheet(*sheet)?.get(*address)?.formula.as_deref()
-        }
+        FormulaSource::Cell { sheet, address } => workbook
+            .sheet(*sheet)?
+            .get_validated(*address)?
+            .formula
+            .as_deref(),
         FormulaSource::DefinedName { index } => Some(&workbook.named_ranges.get(*index)?.formula),
     }
 }
@@ -104,7 +106,7 @@ fn same_value(a: &CellValue, b: &CellValue) -> bool {
 }
 // Direct mutable access can bypass revision tracking, so compare the formula
 // inputs themselves. Stored formula results and styles do not affect a rename.
-fn same_source(a: &Workbook, b: &Workbook) -> bool {
+pub(super) fn same_source(a: &Workbook, b: &Workbook) -> bool {
     a.date_system == b.date_system
         && a.named_ranges == b.named_ranges
         && a.sheets.len() == b.sheets.len()
@@ -118,60 +120,6 @@ fn same_source(a: &Workbook, b: &Workbook) -> bool {
                         && (ac.formula.is_some() || same_value(&ac.value, &bc.value))
                 })
         })
-}
-impl Workbook {
-    /// Apply a sheet rename and its formula replacements.
-    ///
-    /// Rejects a stale plan before changing the workbook. Stored results and styles
-    /// are preserved.
-    pub(crate) fn apply_rename_sheet_plan(
-        &mut self,
-        plan: &RenameSheetPlan,
-    ) -> Result<EditOutcome, ModelError> {
-        if !same_source(self, &plan.expected) {
-            return Err(ModelError(
-                "stale sheet rename plan: workbook source changed".into(),
-            ));
-        }
-        let previous_name = self
-            .sheets
-            .get(plan.sheet)
-            .ok_or_else(|| ModelError("sheet rename index out of bounds".into()))?
-            .name
-            .clone();
-        // The source comparison above ensures that the indices and formula text
-        // checked when the plan was built still refer to the same content.
-        self.sheets
-            .get_mut(plan.sheet)
-            .ok_or_else(|| ModelError("sheet rename index out of bounds".into()))?
-            .name
-            .clone_from(&plan.name);
-        for edit in &plan.replacements {
-            match edit.source {
-                FormulaSource::Cell { sheet, address } => {
-                    let cell = self
-                        .sheets
-                        .get_mut(sheet)
-                        .and_then(|worksheet| worksheet.cells.get_mut(&address))
-                        .ok_or_else(|| ModelError("sheet rename cell missing".into()))?;
-                    cell.formula = Some(edit.replacement.clone());
-                    cell.shared_formula = None;
-                }
-                FormulaSource::DefinedName { index } => self
-                    .named_ranges
-                    .get_mut(index)
-                    .ok_or_else(|| ModelError("sheet rename name missing".into()))?
-                    .formula
-                    .clone_from(&edit.replacement),
-            }
-        }
-        Ok(EditOutcome {
-            renamed_sheet: plan.sheet,
-            previous_name,
-            new_name: plan.name.clone(),
-            changed_sources: plan.replacements.iter().map(|e| e.source.clone()).collect(),
-        })
-    }
 }
 
 #[cfg(test)]
@@ -215,17 +163,28 @@ mod tests {
             .unwrap()
             .get_mut(at("B2"))
             .unwrap()
+            .unwrap()
             .shared_formula = None;
         let before = stale.clone();
         assert!(stale.apply_rename_sheet_plan(&plan).is_err());
         assert_eq!(stale, before);
         book.apply_rename_sheet_plan(&plan).unwrap();
         assert_eq!(
-            book.sheet(0).unwrap().get(at("B1")).unwrap().shared_formula,
+            book.sheet(0)
+                .unwrap()
+                .get(at("B1"))
+                .unwrap()
+                .unwrap()
+                .shared_formula,
             None
         );
         assert_eq!(
-            book.sheet(0).unwrap().get(at("B2")).unwrap().shared_formula,
+            book.sheet(0)
+                .unwrap()
+                .get(at("B2"))
+                .unwrap()
+                .unwrap()
+                .shared_formula,
             Some(shared())
         );
     }

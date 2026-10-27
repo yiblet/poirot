@@ -1,10 +1,10 @@
 use super::{execution, metadata};
 use crate::eval::adapters;
 use crate::eval::functions::registry::{FunctionId, ReferenceFunction};
-use crate::eval::host::{CallHost, ContextReads, PolicyReads};
+use crate::eval::host::{CallHost, ContextReads};
 use crate::eval::limits::EvalResult;
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellAddress;
 
@@ -35,16 +35,16 @@ pub(in crate::eval) fn execute(
             return Ok(err(VALUE_ERROR));
         }
         let mut host = CallHost::new(session, sheet, address, arguments);
-        PolicyReads::new(&mut host).builtin_policy();
+
         return match metadata::execute(&mut host, function) {
             Ok(value) => Ok(value),
-            Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-            Err(FunctionFailure::Operational(failure)) => Err(failure),
+            Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+            Err(FunctionError::Operational(failure)) => Err(failure),
         };
     }
     if let Some(helper) = function.helper() {
         let mut host = CallHost::new(session, sheet, address, arguments);
-        PolicyReads::new(&mut host).builtin_policy();
+
         if helper.policy().volatile {
             ContextReads::new(&mut host).record_volatile(FunctionId::Reference(function));
         }

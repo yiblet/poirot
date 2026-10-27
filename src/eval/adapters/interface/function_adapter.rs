@@ -3,7 +3,7 @@ use super::function_parameters::FunctionParameters;
 use super::function_value::FunctionValue;
 use crate::eval::compile::bytecode::Compiled;
 use crate::eval::functions::registry::{FunctionDescriptor, FunctionId};
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use poirot_functions::scalar::ParamVec;
 use poirot_parsing::formula::FunctionName;
 
@@ -25,22 +25,12 @@ pub trait FunctionAdapter: Send + Sync {
         context: &mut CallContext<'_, '_>,
         function: FunctionId,
         parameters: FunctionParameters<'_>,
-    ) -> Option<Result<FunctionValue, EvaluationFailure>>;
+    ) -> Option<Result<FunctionValue, EvaluationError>>;
 
     /// Resolve a default-catalog spelling under builtin prefix and case rules.
     fn resolve(&self, name: &FunctionName) -> Option<&'static FunctionDescriptor> {
         let name = name.as_str();
-        let name = if let Some(name) = name.strip_prefix("_xlfn.") {
-            if !crate::eval::functions::registry::PINNED_ATP_FUNCTIONS
-                .iter()
-                .any(|entry| entry.eq_ignore_ascii_case(name))
-            {
-                return None;
-            }
-            name
-        } else {
-            name
-        };
+        let name = name.strip_prefix("_xlfn.").unwrap_or(name);
         self.functions()
             .find(|entry| entry.name.eq_ignore_ascii_case(name))
     }
@@ -50,52 +40,20 @@ pub trait FunctionAdapter: Send + Sync {
         self.functions().any(|entry| entry.handler == function)
     }
 
-    /// Resolve a handler, allowing profile-only registrations when policy selects them.
-    fn resolve_with_policy(
-        &self,
-        name: &FunctionName,
-        policy: crate::eval::config::BuiltinSemanticsPolicy,
-    ) -> Option<FunctionId> {
-        self.resolve(name).map(|entry| entry.handler).or_else(|| {
-            (policy == crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation)
-                .then(|| self.resolve_profile(name))
-                .flatten()
-                .map(|entry| entry.handler)
-        })
-    }
-
     /// Resolve, admit, and execute a named call with deferred arguments.
     fn call(
         &self,
         context: &mut CallContext<'_, '_>,
         name: &FunctionName,
         parameters: ParamVec<Compiled>,
-    ) -> Result<FunctionValue, EvaluationFailure> {
-        let builtin = self.resolve(name);
-        let descriptor = builtin.or_else(|| {
-            (context.session.policies.builtin_policy
-                == crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation)
-                .then(|| self.resolve_profile(name))
-                .flatten()
-        });
+    ) -> Result<FunctionValue, EvaluationError> {
+        let descriptor = self.resolve(name);
         context.invoke_registration(
             name,
-            builtin.is_some(),
             descriptor,
             parameters,
             |context, function, parameters| self.execute(context, function, parameters),
         )
-    }
-
-    /// Profile-only registrations are separate from the default function catalog.
-    fn profile_functions(&self) -> impl Iterator<Item = &'static FunctionDescriptor> {
-        std::iter::empty()
-    }
-
-    /// Resolve a profile-only spelling supported by this adapter.
-    fn resolve_profile(&self, name: &FunctionName) -> Option<&'static FunctionDescriptor> {
-        super::super::builtin_adapters::profile_descriptor(name)
-            .filter(|entry| self.supports(entry.handler))
     }
 
     /// Build lookup tables once, keeping this adapter as the owning executor.

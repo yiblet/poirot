@@ -1,10 +1,10 @@
 use poirot::eval::{
-    BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationFailure, EvaluationOutcome,
-    RunConfiguration, run_formula_with_configuration,
+    EvaluationBudgets, EvaluationError, EvaluationOutcome, RunConfiguration,
+    run_formula_with_configuration,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
-fn run(formula: &str, excel: bool, budgets: EvaluationBudgets) -> EvaluationOutcome<CellValue> {
+fn run(formula: &str, _excel: bool, budgets: EvaluationBudgets) -> EvaluationOutcome<CellValue> {
     let mut w = Workbook::new();
     w.add_sheet("Sheet1").unwrap();
     for (address, value) in [
@@ -16,16 +16,9 @@ fn run(formula: &str, excel: bool, budgets: EvaluationBudgets) -> EvaluationOutc
         ("A6", CellValue::Error(CellError::NA)),
         ("A7", CellValue::Error(CellError::Ref)),
     ] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(address.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(address, value).unwrap();
     }
-    let config = RunConfiguration::default().with_builtin_policy(if excel {
-        BuiltinSemanticsPolicy::ExcelDocumentation
-    } else {
-        BuiltinSemanticsPolicy::PinnedPoi
-    });
+    let config = RunConfiguration::default();
     run_formula_with_configuration(
         &w,
         0,
@@ -168,7 +161,7 @@ fn finance_source_error_priority_is_member_local_and_operational_failures_escape
                     }
                 ),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::Budget(_),
+                    failure: EvaluationError::Budget(_),
                     ..
                 }
             ));
@@ -253,7 +246,7 @@ fn operational_budgets_remain_visible_through_iferror() {
                     }
                 ),
                 EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::Budget(_),
+                    failure: EvaluationError::Budget(_),
                     ..
                 }
             ),
@@ -279,7 +272,7 @@ fn operational_budgets_remain_visible_through_iferror() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -293,7 +286,7 @@ fn operational_budgets_remain_visible_through_iferror() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));

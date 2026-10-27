@@ -1,29 +1,28 @@
 //! Date-aware rectangular lifting for documented security calculations.
 use crate::eval::adapters::{
     elementwise::{self, Broadcast, Kernel, MemberContext, NumericParameter, Variadic},
-    failure::operational_only,
+    operational_only::operational_only,
 };
 use crate::eval::functions::registry::{FinancialFunction, FunctionId};
 use crate::eval::host::CallHost;
 use crate::eval::limits::{CapabilityId, EvalResult};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::{ReadRecorder, Session};
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::{Div0, Num};
 use crate::model::CellValue::Number;
 use crate::model::{CellAddress, CellValue};
 use poirot_functions::coercion::date_time::CalendarEpoch;
 use poirot_functions::financial::{
-    FinancialError,
-    modern::Failure,
+    FinancialCalculationError, FinancialError,
     securities::{
         self as kernel, Basis, Bond, Day, DiscountOperation as Discount, Frequency,
         MaturityOperation as Maturity, TreasuryOperation as Treasury,
     },
 };
 
-fn spreadsheet(error: FinancialError) -> FunctionFailure {
+fn spreadsheet(error: FinancialError) -> FunctionError {
     match error {
         FinancialError::Num => Num,
         FinancialError::Value => VALUE_ERROR,
@@ -189,11 +188,11 @@ impl Kernel for SecurityKernel {
                     _ => bond
                         .yield_rate(value, |work| host.charge_work(work))
                         .map_err(|error| match error {
-                            Failure::Spreadsheet(error) => spreadsheet(error),
-                            Failure::Operational(error) => error.into(),
-                            Failure::ComputationalLimit => host.unsupported(
+                            FinancialCalculationError::Spreadsheet(error) => spreadsheet(error),
+                            FinancialCalculationError::Operational(error) => error.into(),
+                            FinancialCalculationError::ComputationalLimit => host.unsupported(
                                 CapabilityId::FunctionAdapter,
-                                "bond yield exceeds its numerical envelope",
+                                crate::eval::limits::EvaluationReasonError::BondYieldExceedsItsNumericalEnvelope,
                             ),
                         })?,
                 }
@@ -217,11 +216,11 @@ impl Kernel for SecurityKernel {
                     |work| host.charge_work(work),
                 )
                 .map_err(|error| match error {
-                    Failure::Spreadsheet(error) => spreadsheet(error),
-                    Failure::Operational(error) => error.into(),
-                    Failure::ComputationalLimit => host.unsupported(
+                    FinancialCalculationError::Spreadsheet(error) => spreadsheet(error),
+                    FinancialCalculationError::Operational(error) => error.into(),
+                    FinancialCalculationError::ComputationalLimit => host.unsupported(
                         CapabilityId::FunctionAdapter,
-                        "accrued interest exceeds its quasi-coupon envelope",
+                        crate::eval::limits::EvaluationReasonError::AccruedInterestExceedsItsQuasiCouponEnvelope,
                     ),
                 })?
             }
@@ -310,7 +309,7 @@ pub(super) fn execute(
     let result = elementwise::execute(&mut host, address, SecurityKernel { function, epoch });
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
         Err(error) => Err(operational_only(error)),
     }
 }

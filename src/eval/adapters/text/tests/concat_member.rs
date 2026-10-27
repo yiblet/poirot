@@ -1,7 +1,7 @@
 use crate::eval::compile;
 use crate::eval::compile::bound::Expression;
 use crate::eval::config::EvaluationInputs;
-use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationBudgets, EvaluationError};
 use crate::eval::ports::{DependencyRead, DependencyReadSink, ReadEvent};
 use crate::eval::session::{ResultProjection, Session};
 use crate::eval::values::VALUE_ERROR;
@@ -26,10 +26,7 @@ fn book() -> Workbook {
         ("A3", Error(NA)),
         ("B3", Error(VALUE_ERROR)),
     ] {
-        book.sheet_mut(0)
-            .unwrap()
-            .set_value(at.parse().unwrap(), value)
-            .unwrap();
+        book.sheet_mut(0).unwrap().set_value(at, value).unwrap();
     }
     book
 }
@@ -90,7 +87,7 @@ fn sparse_references_keep_row_major_order_and_blank_separators() {
     for (at, text) in [("D1", "x"), ("E1", "y"), ("D5", "z")] {
         book.sheet_mut(0)
             .unwrap()
-            .set_value(at.parse().unwrap(), Text(text.into()))
+            .set_value(at, Text(text.into()))
             .unwrap();
     }
     // Microsoft TEXTJOIN: FALSE keeps empty cells, delimiter ranges repeat,
@@ -243,7 +240,7 @@ fn concat_keeps_semantic_limits_and_operational_budgets_separate() {
                     "Z100".parse().unwrap(),
                     &expression(formula)
                 ),
-                Err(EvaluationFailure::Budget(_))
+                Err(EvaluationError::Budget(_))
             ),
             "{formula}"
         );

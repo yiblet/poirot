@@ -4,15 +4,13 @@ use crate::eval::adapters::{
         self, Broadcast, Kernel, MemberContext, NumericParameter, Variadic, WholeCollection,
         collections::{self, CollectionKernel},
     },
-    failure::operational_only,
+    operational_only::operational_only,
 };
 use crate::eval::functions::registry::{FunctionId, MathFunction};
-use crate::eval::host::{ArgumentCoercion, CallHost, NumericPolicy, RandomDraws};
+use crate::eval::host::{ArgumentCoercion, CallHost, RandomDraws};
 use crate::eval::limits::{CapabilityId, EvalResult};
 use crate::eval::session::Session;
-use crate::eval::values::{
-    FunctionFailure, FunctionResult, OperandOrigin, VALUE_ERROR, Value, err,
-};
+use crate::eval::values::{FunctionError, FunctionResult, OperandOrigin, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::Num;
 use crate::model::CellValue::{Blank, Boolean, Number, Text};
@@ -76,7 +74,7 @@ impl Kernel for Numeric {
                     crate::eval::config::random::Interval::new(bottom, top).ok_or_else(|| {
                         context.host.unsupported(
                             CapabilityId::FunctionAdapter,
-                            "random integer interval exceeds the calculation stream's exact domain",
+                            crate::eval::limits::EvaluationReasonError::RandomIntegerIntervalExceedsTheCalculationStreamSExactDomain,
                         )
                     })?;
                 Number(RandomDraws::new(context.host).draw(Some(interval))?)
@@ -84,7 +82,7 @@ impl Kernel for Numeric {
             Combina => Number(poirot_functions::math::combina_metered(
                 values.get(0)?,
                 values.get(1)?,
-                &mut || context.host.charge_work(1).map_err(FunctionFailure::from),
+                &mut || context.host.charge_work(1).map_err(FunctionError::from),
             )?),
             function => {
                 match function {
@@ -137,16 +135,15 @@ impl CollectionKernel for Reduction {
                     {
                         return Ok(());
                     }
-                    let number = ArgumentCoercion::new(host)
-                        .coerce_scalar_number(&member.value, NumericPolicy::PinnedPoi)?;
+                    let number = ArgumentCoercion::new(host).coerce_scalar_number(&member.value)?;
                     if number < 0.0 || (self.0 == MathFunction::Gcd && number >= 9007199254740992.0)
                     {
                         return Err(Num.into());
                     }
                     host.check_values(values.len().saturating_add(1))?;
-                    values
-                        .try_reserve(1)
-                        .map_err(|_| host.allocation_failure())?;
+                    values.try_reserve(1).map_err(|reservation_source| {
+                        host.reservation_failure(reservation_source)
+                    })?;
                     // SAFETY: one extra slot was reserved immediately above.
                     values.push(number);
                     Ok(())
@@ -181,11 +178,8 @@ impl CollectionKernel for Reduction {
                 {
                     return Ok(());
                 }
-                let number = ArgumentCoercion::new(host)
-                    .coerce_scalar_number(&member.value, NumericPolicy::PinnedPoi)?;
-                result.push(number, || {
-                    host.charge_work(1).map_err(FunctionFailure::from)
-                })
+                let number = ArgumentCoercion::new(host).coerce_scalar_number(&member.value)?;
+                result.push(number, || host.charge_work(1).map_err(FunctionError::from))
             },
         )?;
         Ok(Number(result.finish()).into())
@@ -220,7 +214,7 @@ pub(super) fn execute(
     };
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
         Err(error) => Err(operational_only(error)),
     }
 }

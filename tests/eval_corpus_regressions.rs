@@ -8,7 +8,7 @@ fn book() -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     for (at, value) in [("A1", -2.), ("A2", 2.), ("A3", 3.)] {
-        sheet.set_value(at.parse().unwrap(), value).unwrap();
+        sheet.set_value(at, value).unwrap();
     }
     book
 }

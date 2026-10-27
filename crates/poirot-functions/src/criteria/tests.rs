@@ -30,7 +30,7 @@ fn wildcard_escape_and_metacharacters() {
 #[test]
 fn aggregation_shape_and_selected_error() {
     let criteria = [Cell::Number(1.0), Cell::Number(0.0)];
-    let target = [Cell::Number(4.0), Cell::Error(Error::Na)];
+    let target = [Cell::Number(4.0), Cell::Error(CriteriaError::Na)];
     let r = Range {
         rows: 2,
         columns: 1,
@@ -96,7 +96,7 @@ fn nonnumeric_extrema_and_empty_average() {
         true,
     )
     .unwrap();
-    assert_eq!(p.evaluate(), Err(Error::DivZero));
+    assert_eq!(p.evaluate(), Err(CriteriaError::DivZero));
 }
 #[test]
 fn subtotal_visibility_and_nested_metadata() {

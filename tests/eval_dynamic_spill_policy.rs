@@ -124,9 +124,8 @@ fn child_discovery_records_anchor_and_selected_source_dependencies() {
         .unwrap();
     let policy = PreparationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&w, &policy);
-    let configuration = RunConfiguration::default()
-        .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
-        .with_array_result_policy(ArrayResultPolicy::DynamicSpill);
+    let configuration =
+        RunConfiguration::default().with_array_result_policy(ArrayResultPolicy::DynamicSpill);
     let mut sink = Sink::default();
     let mut run = EvaluationRun::new_with_configuration(
         WorkbookView::new(&w, &plan, &policy).unwrap(),
@@ -172,11 +171,21 @@ fn mutable_recalculation_publishes_dynamic_children_with_source_ownership() {
         EvaluationOutcome::Complete { value: 1, .. }
     ));
     assert_eq!(
-        w.sheet(0).unwrap().get(target("F1").address).unwrap().value,
+        w.sheet(0)
+            .unwrap()
+            .get(target("F1").address)
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Number(1.)
     );
     assert_eq!(
-        w.sheet(0).unwrap().get(target("G1").address).unwrap().value,
+        w.sheet(0)
+            .unwrap()
+            .get(target("G1").address)
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Number(2.)
     );
     assert_eq!(
@@ -197,7 +206,7 @@ fn scalar_external_cache_refuses_dynamic_spills_before_reader_invocation() {
         fn cached_cell(
             &mut self,
             _: EvaluationTarget,
-        ) -> Result<Option<Arc<CellValue>>, EvaluationFailure> {
+        ) -> Result<Option<Arc<CellValue>>, EvaluationError> {
             self.calls += 1;
             Ok(Some(Arc::new(CellValue::Number(1.))))
         }
@@ -222,7 +231,7 @@ fn scalar_external_cache_refuses_dynamic_spills_before_reader_invocation() {
         let result = run.evaluate_cell(target(first));
         assert!(matches!(
             result,
-            Err(EvaluationFailure::UnsupportedCapability { .. })
+            Err(EvaluationError::UnsupportedCapability { .. })
         ));
         let retained = run.finish_retaining_cells(result);
         assert!(retained.cells.is_empty());
@@ -248,7 +257,7 @@ fn scalar_external_cache_refuses_dynamic_spills_before_reader_invocation() {
         .with_cell_reader(&mut reader);
         assert!(matches!(
             run.evaluate_cell(target(first)),
-            Err(EvaluationFailure::UnsupportedCapability { .. })
+            Err(EvaluationError::UnsupportedCapability { .. })
         ));
         run.finish(Ok(()));
         assert_eq!(reader.calls, 0);

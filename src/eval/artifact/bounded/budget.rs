@@ -42,7 +42,7 @@ impl Budget {
     ) -> E {
         if let Ok(mut failure) = self.failure.try_borrow_mut() {
             *failure = Some(super::super::snapshot_error::SnapshotError::Quota(
-                super::super::snapshot_quota_failure::SnapshotQuotaFailure {
+                super::super::snapshot_quota_error::SnapshotQuotaError {
                     resource,
                     limit,
                     consumed,
@@ -74,7 +74,7 @@ impl Budget {
                 if let Ok(mut failure) = self.failure.try_borrow_mut() {
                     *failure = Some(
                         super::super::snapshot_error::SnapshotError::EngineConstraint(
-                            "recursive decoder nesting ceiling is 256",
+                            crate::eval::artifact::snapshot_constraint_error::SnapshotConstraintError::RecursiveDecoderNestingCeilingIs256,
                         ),
                     );
                 }

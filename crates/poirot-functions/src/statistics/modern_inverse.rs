@@ -1,12 +1,13 @@
 //! Bounded inverse distributions and confidence margins; see INVERSE_SOURCES.md.
-use super::modern::{self, Failure, Result};
+use super::distribution_error::DistributionError;
+use super::modern::{self, Result};
 use super::modern_tails::{self as tails, BetaCoordinate, Tail};
 use crate::scalar::CellError;
 
-fn num<O>() -> Failure<O> {
-    Failure::Spreadsheet(CellError::Num)
+fn num<O>() -> DistributionError<O> {
+    DistributionError::Spreadsheet(CellError::Num)
 }
-fn admit<O>(values: &[f64]) -> std::result::Result<(), Failure<O>> {
+fn admit<O>(values: &[f64]) -> std::result::Result<(), DistributionError<O>> {
     if values.iter().all(|x| x.is_finite()) {
         Ok(())
     } else {
@@ -76,7 +77,7 @@ fn beta_point<O>(
     a: f64,
     b: f64,
     meter: impl FnMut(u64) -> std::result::Result<(), O>,
-) -> std::result::Result<BetaPoint, Failure<O>> {
+) -> std::result::Result<BetaPoint, DistributionError<O>> {
     beta_point_bounded(p, a, b, 64, meter)
 }
 /// Refine within the worksheet's finite search allowance, including bracketing.
@@ -86,11 +87,11 @@ fn beta_point_bounded<O>(
     b: f64,
     max_iterations: usize,
     mut meter: impl FnMut(u64) -> std::result::Result<(), O>,
-) -> std::result::Result<BetaPoint, Failure<O>> {
+) -> std::result::Result<BetaPoint, DistributionError<O>> {
     if a > 1e12 || b > 1e12 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
-    meter(1).map_err(Failure::Operational)?;
+    meter(1).map_err(DistributionError::Operational)?;
     if p > 0.5 {
         return Ok(beta_point_bounded(1.0 - p, b, a, max_iterations, meter)?.reflect());
     }
@@ -126,13 +127,13 @@ fn beta_point_bounded<O>(
         (a / b).ln()
     };
     if !t.is_finite() {
-        return Err(Failure::NonConvergence);
+        return Err(DistributionError::NonConvergence);
     }
     let mut low = None;
     let mut high = None;
     let mut span = 1.0;
     for _ in 0..max_iterations {
-        meter(1).map_err(Failure::Operational)?;
+        meter(1).map_err(DistributionError::Operational)?;
         let point = BetaPoint::from_odds(t);
         let value = tails::beta(a, b, point.coordinate(), Tail::Lower, &mut meter)?;
         let centered = a == b && a <= 1.0 && t.abs() <= 1.0;
@@ -178,13 +179,13 @@ fn beta_point_bounded<O>(
                 span *= 2.0;
                 next
             }
-            _ => return Err(Failure::NonConvergence),
+            _ => return Err(DistributionError::NonConvergence),
         };
         if !t.is_finite() {
-            return Err(Failure::NonConvergence);
+            return Err(DistributionError::NonConvergence);
         }
     }
-    Err(Failure::NonConvergence)
+    Err(DistributionError::NonConvergence)
 }
 /// Multiply a finite value by a retained endpoint distance, recovering scale if needed.
 fn scaled(value: f64, log_distance: f64) -> f64 {
@@ -255,11 +256,11 @@ fn gamma_log<O>(
     a: f64,
     tail: Tail,
     mut meter: impl FnMut(u64) -> std::result::Result<(), O>,
-) -> std::result::Result<GammaPoint, Failure<O>> {
+) -> std::result::Result<GammaPoint, DistributionError<O>> {
     if a > 1e12 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
-    meter(1).map_err(Failure::Operational)?;
+    meter(1).map_err(DistributionError::Operational)?;
     if a == 1.0 {
         return Ok(GammaPoint::value(if tail == Tail::Lower {
             -(-p).ln_1p()
@@ -306,14 +307,14 @@ fn gamma_log<O>(
         a.max(-p.ln())
     };
     if !x.is_finite() || x <= 0.0 {
-        return Err(Failure::NonConvergence);
+        return Err(DistributionError::NonConvergence);
     }
     let mut low = 0.0;
     let mut high = f64::INFINITY;
     let mut low_error = if tail == Tail::Lower { p } else { 1.0 - p };
     let mut high_error = f64::INFINITY;
     for _ in 0..64 {
-        meter(1).map_err(Failure::Operational)?;
+        meter(1).map_err(DistributionError::Operational)?;
         let value = tails::gamma(a, x, tail, &mut meter)?;
         let error = value - p;
         let density = if a >= 128.0 {
@@ -354,10 +355,10 @@ fn gamma_log<O>(
             x * 2.0
         };
         if !x.is_finite() || x <= 0.0 {
-            return Err(Failure::NonConvergence);
+            return Err(DistributionError::NonConvergence);
         }
     }
-    Err(Failure::NonConvergence)
+    Err(DistributionError::NonConvergence)
 }
 /// Gamma inverse with a positive scale and a selected probability tail.
 pub fn gamma<O>(
@@ -438,11 +439,11 @@ pub fn binomial<O>(
     }
     let n = n.trunc();
     if n > 1e12 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
     let (mut low, mut high) = (0.0, n);
     for _ in 0..41 {
-        meter(1).map_err(Failure::Operational)?;
+        meter(1).map_err(DistributionError::Operational)?;
         if low == high {
             return Ok(low);
         }
@@ -453,7 +454,7 @@ pub fn binomial<O>(
             low = middle + 1.0;
         }
     }
-    Err(Failure::NonConvergence)
+    Err(DistributionError::NonConvergence)
 }
 /// Student t inverse, using beta endpoint logs for finite extreme quantiles.
 pub fn student_t<O>(
@@ -516,7 +517,7 @@ pub fn confidence<O>(
         return Err(num());
     }
     if kind == ConfidenceKind::Student && n == 1.0 {
-        return Err(Failure::Spreadsheet(CellError::Div0));
+        return Err(DistributionError::Spreadsheet(CellError::Div0));
     }
     let log_critical = if kind == ConfidenceKind::Student {
         student_log(alpha, n - 1.0, meter)?

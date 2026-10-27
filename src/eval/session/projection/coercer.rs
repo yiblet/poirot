@@ -1,12 +1,12 @@
 //! Context-dependent scalar coercion: locale numbers, numeric dates and their dependencies.
 
-use crate::eval::config::{BuiltinSemanticsPolicy, DateOrder};
-use crate::eval::limits::{CapabilityId, EvaluationFailure, WorkKind};
+use crate::eval::config::DateOrder;
+use crate::eval::limits::{CapabilityId, EvaluationError, WorkKind};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::composition::Session;
 use crate::eval::session::reads::ReadRecorder;
 use crate::eval::values::core_projection::checked_text_view;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR};
 use crate::model::CellValue::Number;
 use crate::model::{CellAddress, CellValue};
 
@@ -38,7 +38,7 @@ impl<'s, 'a> Coercer<'s, 'a> {
                     .runtime
                     .budget
                     .charge(WorkKind::TextByte, work)?;
-                Ok::<_, FunctionFailure>(())
+                Ok::<_, FunctionError>(())
             },
         )
     }
@@ -67,7 +67,7 @@ impl<'s, 'a> Coercer<'s, 'a> {
         )
     }
 
-    /// Existing numeric operator inputs retain their bits under the pinned policy.
+    /// Preserve numeric operand bits before the operator evaluates them.
     pub(in crate::eval) fn coerce_operator_number(
         &mut self,
         value: &CellValue,
@@ -122,7 +122,7 @@ impl<'s, 'a> Coercer<'s, 'a> {
                     .ok_or_else(|| {
                         unsupported_numeric_date(
                             CapabilityId::DateParsing,
-                            "numeric date dependency size overflow",
+                            crate::eval::limits::EvaluationReasonError::NumericDateDependencySizeOverflow,
                         )
                     })?,
             )?;
@@ -168,7 +168,7 @@ impl<'s, 'a> Coercer<'s, 'a> {
         use poirot_functions::coercion::date_time::{
             Context, LocalePolicy, Outcome, TimezonePolicy,
         };
-        if self.session.policies.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation {
+        {
             use poirot_functions::coercion::date_time::{
                 CalendarTextPlan, Effects, coerce_calendar_text_plan,
             };
@@ -240,7 +240,9 @@ impl<'s, 'a> Coercer<'s, 'a> {
         self.record_numeric_date_effects(effects, key)?;
         if matches!(
             outcome,
-            Outcome::Unsupported("default year outside proven calendar range")
+            Outcome::Unsupported(
+                poirot_functions::coercion::DateTimeError::DefaultYearOutOfRange { .. }
+            )
         ) {
             context.default_year = self.numeric_default_year()?;
             self.session
@@ -256,9 +258,10 @@ impl<'s, 'a> Coercer<'s, 'a> {
         match outcome {
             Outcome::Valid { value, .. } => Ok(value),
             Outcome::Rejected => Err(VALUE_ERROR.into()),
-            Outcome::Unsupported(detail) => {
-                Err(unsupported_numeric_date(CapabilityId::DateParsing, detail))
-            }
+            Outcome::Unsupported(reason) => Err(unsupported_numeric_date(
+                CapabilityId::DateParsing,
+                crate::eval::limits::EvaluationReasonError::DateTime(std::sync::Arc::new(reason)),
+            )),
         }
     }
 
@@ -273,7 +276,7 @@ impl<'s, 'a> Coercer<'s, 'a> {
         if !(-719162.0..2933263.0).contains(&days) {
             return Err(unsupported_numeric_date(
                 CapabilityId::DateParsing,
-                "numeric date default year requires a supported frozen clock",
+                crate::eval::limits::EvaluationReasonError::NumericDateDefaultYearRequiresASupportedFrozenClock,
             ));
         }
         // Gregorian conversion adapts Howard Hinnant's days_from_civil/civil_from_days.
@@ -290,7 +293,7 @@ impl<'s, 'a> Coercer<'s, 'a> {
         if !(1..=10000).contains(&year) {
             return Err(unsupported_numeric_date(
                 CapabilityId::DateParsing,
-                "numeric date default year outside supported calendar",
+                crate::eval::limits::EvaluationReasonError::NumericDateDefaultYearOutsideSupportedCalendar,
             ));
         }
         Ok(year as i32)
@@ -298,11 +301,14 @@ impl<'s, 'a> Coercer<'s, 'a> {
 }
 
 /// An unsupported numeric date capability failure.
-fn unsupported_numeric_date(capability: CapabilityId, detail: &'static str) -> FunctionFailure {
-    EvaluationFailure::UnsupportedCapability {
+fn unsupported_numeric_date(
+    capability: CapabilityId,
+    reason: crate::eval::limits::EvaluationReasonError,
+) -> FunctionError {
+    EvaluationError::UnsupportedCapability {
         capability,
-        source: None,
-        detail: detail.into(),
+        target: None,
+        reason,
     }
     .into()
 }

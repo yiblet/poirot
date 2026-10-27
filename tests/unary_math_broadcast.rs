@@ -10,7 +10,7 @@
 use poirot::CellError;
 use poirot::calculation::{EvaluationContext, EvaluationTarget};
 use poirot::eval::{
-    ArrayResultPolicy, EvaluationBudgets, EvaluationFailure, EvaluationOutcome, RunConfiguration,
+    ArrayResultPolicy, EvaluationBudgets, EvaluationError, EvaluationOutcome, RunConfiguration,
     run_formula_with_configuration,
 };
 use poirot::model::{CellValue, Workbook};
@@ -45,9 +45,7 @@ fn book() -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Data").unwrap();
     for (address, number) in [("A1", 1.), ("B1", 4.), ("A2", 9.), ("B2", 16.)] {
-        sheet
-            .set_value(address.parse().unwrap(), CellValue::Number(number))
-            .unwrap();
+        sheet.set_value(address, CellValue::Number(number)).unwrap();
     }
     book
 }
@@ -205,16 +203,16 @@ fn reference_output_spills_in_direct_and_overlay_evaluations() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("D1".parse().unwrap(), "SQRT(A1:B2)")
+        .set_formula("D1", "SQRT(A1:B2)")
         .unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("F1".parse().unwrap(), "COSH({0,0;0,0})")
+        .set_formula("F1", "COSH({0,0;0,0})")
         .unwrap();
     for (address, formula) in [("H1", "EVEN(A1:B2)"), ("K1", "ODD(A1:B2)")] {
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(address.parse().unwrap(), formula)
+            .set_formula(address, formula)
             .unwrap();
     }
     let mut direct = poirot::eval::overlay::Evaluation::with_workbook(&book)
@@ -282,7 +280,7 @@ fn broadcast_resource_failures_cannot_be_caught_as_spreadsheet_errors() {
         assert!(matches!(
             run(&book, formula, &Default::default(), budgets),
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::Budget(_),
+                failure: EvaluationError::Budget(_),
                 ..
             }
         ));
@@ -331,7 +329,7 @@ fn parity_rounding_broadcasts_away_from_zero_and_preserves_scalar_controls() {
                 }
             ),
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::Budget(_),
+                failure: EvaluationError::Budget(_),
                 ..
             }
         ));

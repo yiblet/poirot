@@ -2,12 +2,15 @@ use poirot_functions::coercion::compatibility::*;
 use poirot_functions::coercion::{CellError, CellValue, Origin, TextRef};
 use poirot_functions::scalar::Scalar;
 
-#[derive(Debug, PartialEq)]
-enum Failure {
+/// Typed coercion test failure retaining worksheet and host categories.
+#[derive(Debug, PartialEq, thiserror::Error)]
+enum TestCoercionError {
+    #[error("worksheet error {0}")]
     Worksheet(CellError),
+    #[error("test operation refused")]
     Operational,
 }
-impl From<CellError> for Failure {
+impl From<CellError> for TestCoercionError {
     fn from(value: CellError) -> Self {
         Self::Worksheet(value)
     }
@@ -16,11 +19,12 @@ impl From<CellError> for Failure {
 #[test]
 fn finite_consumers_reject_nonfinite_numbers_without_entering_text_fallback() {
     for number in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-        let result =
-            coerce_number::<Failure>(ScalarRef::Number(number), NumberPolicy::Finite, |_| {
-                panic!("numeric input must not parse text")
-            });
-        assert_eq!(result, Err(Failure::Worksheet(CellError::Num)));
+        let result = coerce_number::<TestCoercionError>(
+            ScalarRef::Number(number),
+            NumberPolicy::Finite,
+            |_| panic!("numeric input must not parse text"),
+        );
+        assert_eq!(result, Err(TestCoercionError::Worksheet(CellError::Num)));
     }
 }
 
@@ -61,16 +65,18 @@ fn text_overflow_and_existing_numeric_infinity_keep_different_errors() {
 fn host_failures_are_terminal_and_worksheet_errors_do_not_enter_fallback() {
     let text = ScalarRef::Text(TextRef::Utf8("1"));
     assert_eq!(
-        coerce_number::<Failure>(text, NumberPolicy::Finite, |_| Err(Failure::Operational)),
-        Err(Failure::Operational)
+        coerce_number::<TestCoercionError>(text, NumberPolicy::Finite, |_| Err(
+            TestCoercionError::Operational
+        )),
+        Err(TestCoercionError::Operational)
     );
     assert_eq!(
-        coerce_number::<Failure>(
+        coerce_number::<TestCoercionError>(
             ScalarRef::Error(CellError::NA),
             NumberPolicy::Finite,
             |_| panic!("errors propagate immediately")
         ),
-        Err(Failure::Worksheet(CellError::NA))
+        Err(TestCoercionError::Worksheet(CellError::NA))
     );
 }
 
@@ -222,67 +228,33 @@ fn matrix_member_rules_keep_error_remapping_and_area_defaults_separate() {
 
 #[test]
 fn text_formatting_preserves_nonnumeric_types_until_requested() {
-    let result = coerce_text_format_value::<CellError>(
-        CellValue::Blank,
-        TextFormatPolicy::PinnedPoi,
-        |_| panic!(),
-    )
-    .unwrap();
+    let result = coerce_text_format_value::<CellError>(CellValue::Blank, |_| panic!()).unwrap();
     assert_eq!(result, (CellValue::Number(0.), true));
-    let result = coerce_text_format_value::<CellError>(
-        CellValue::Text("NaN".into()),
-        TextFormatPolicy::PinnedPoi,
-        |_| panic!(),
-    )
-    .unwrap();
+    let result =
+        coerce_text_format_value::<CellError>(CellValue::Text("NaN".into()), |_| Ok(None)).unwrap();
     assert_eq!(result, (CellValue::Text("NaN".into()), false));
-    let result = coerce_text_format_value::<CellError>(
-        CellValue::Boolean(true),
-        TextFormatPolicy::PinnedPoi,
-        |_| panic!(),
-    )
-    .unwrap();
+    let result =
+        coerce_text_format_value::<CellError>(CellValue::Boolean(true), |_| panic!()).unwrap();
     assert_eq!(result, (CellValue::Text("TRUE".into()), false));
 }
 
 #[test]
 fn text_integer_target_checks_truncated_range_and_preserves_sign_checks() {
     let maximum = f64::from(i32::MAX);
-    assert_eq!(
-        coerce_text_integer_number(maximum, TextIntegerPolicy::Checked),
-        Ok(maximum)
-    );
-    assert_eq!(
-        coerce_text_integer_number(maximum + 0.5, TextIntegerPolicy::Checked),
-        Ok(maximum + 0.5)
-    );
-    assert_eq!(
-        coerce_text_integer_number(maximum + 0.5, TextIntegerPolicy::PinnedPoi),
-        Ok(maximum + 0.5)
-    );
-    assert_eq!(
-        coerce_text_integer_number(maximum + 1., TextIntegerPolicy::PinnedPoi),
-        Err(CellError::Num)
-    );
-    assert_eq!(
-        coerce_text_integer_number(-0.25, TextIntegerPolicy::Checked),
-        Ok(-0.25)
-    );
+    assert_eq!(coerce_text_integer_number(maximum), Ok(maximum));
+    assert_eq!(coerce_text_integer_number(maximum + 0.5), Ok(maximum + 0.5));
+
+    assert_eq!(coerce_text_integer_number(-0.25), Ok(-0.25));
     for n in [
         f64::NAN,
         f64::INFINITY,
         f64::NEG_INFINITY,
         f64::from(i32::MIN) - 1.,
     ] {
-        assert_eq!(
-            coerce_text_integer_number(n, TextIntegerPolicy::Checked),
-            Err(CellError::Value)
-        );
+        assert_eq!(coerce_text_integer_number(n), Err(CellError::Value));
     }
     assert_eq!(
-        coerce_text_integer_number(-0., TextIntegerPolicy::Checked)
-            .unwrap()
-            .to_bits(),
+        coerce_text_integer_number(-0.).unwrap().to_bits(),
         (-0_f64).to_bits()
     );
 }
@@ -313,41 +285,29 @@ fn aggregate_blank_admission_depends_on_origin_without_rewriting_other_types() {
 
 #[test]
 fn kth_rank_admission_handles_fractional_boundaries() {
-    for policy in [KthRankPolicy::PinnedPoi, KthRankPolicy::DocumentedLarge] {
-        for number in [
-            0.,
-            -0.,
-            -0.1,
-            -1.,
-            f64::NAN,
-            f64::INFINITY,
-            f64::NEG_INFINITY,
-            i32::MAX as f64 + 0.1,
-        ] {
-            assert_eq!(
-                coerce_statistics_kth_rank(number, policy),
-                Err(CellError::Num)
-            );
-        }
-        for (number, expected) in [
-            (1., 1.),
-            (1.000001, 2.),
-            (2.999999, 3.),
-            (3., 3.),
-            (i32::MAX as f64, i32::MAX as f64),
-        ] {
-            assert_eq!(coerce_statistics_kth_rank(number, policy), Ok(expected));
-        }
-        for number in [f64::MIN_POSITIVE, f64::from_bits(1), 0.1, 0.999999] {
-            assert_eq!(
-                coerce_statistics_kth_rank(number, policy),
-                if policy == KthRankPolicy::DocumentedLarge {
-                    Ok(1.)
-                } else {
-                    Err(CellError::Num)
-                }
-            );
-        }
+    for number in [
+        0.,
+        -0.,
+        -0.1,
+        -1.,
+        f64::NAN,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        i32::MAX as f64 + 0.1,
+    ] {
+        assert_eq!(coerce_statistics_kth_rank(number), Err(CellError::Num));
+    }
+    for (number, expected) in [
+        (1., 1.),
+        (1.000001, 2.),
+        (2.999999, 3.),
+        (3., 3.),
+        (i32::MAX as f64, i32::MAX as f64),
+    ] {
+        assert_eq!(coerce_statistics_kth_rank(number), Ok(expected));
+    }
+    for number in [f64::MIN_POSITIVE, f64::from_bits(1), 0.1, 0.999999] {
+        assert_eq!(coerce_statistics_kth_rank(number), Ok(1.));
     }
 }
 
@@ -380,26 +340,18 @@ fn contextual_text_format_admission_delegates_both_encodings_and_preserves_failu
         )),
     ] {
         assert_eq!(
-            coerce_text_format_value::<Failure>(
-                value.clone(),
-                TextFormatPolicy::Contextual,
-                |_| Ok(Some(0.5))
-            ),
+            coerce_text_format_value::<TestCoercionError>(value.clone(), |_| Ok(Some(0.5))),
             Ok((CellValue::Number(0.5), true))
         );
         assert_eq!(
-            coerce_text_format_value::<Failure>(
-                value.clone(),
-                TextFormatPolicy::Contextual,
-                |_| Ok(None)
-            ),
+            coerce_text_format_value::<TestCoercionError>(value.clone(), |_| Ok(None)),
             Ok((value.clone(), false))
         );
         assert_eq!(
-            coerce_text_format_value::<Failure>(value, TextFormatPolicy::Contextual, |_| Err(
-                Failure::Operational
+            coerce_text_format_value::<TestCoercionError>(value, |_| Err(
+                TestCoercionError::Operational
             )),
-            Err(Failure::Operational)
+            Err(TestCoercionError::Operational)
         );
     }
 }

@@ -30,17 +30,13 @@ fn book() -> Workbook {
     }
     book
 }
-fn result(
-    formula: &str,
-    policy: BuiltinSemanticsPolicy,
-    budgets: EvaluationBudgets,
-) -> EvaluationOutcome<CellValue> {
+fn result(formula: &str, budgets: EvaluationBudgets) -> EvaluationOutcome<CellValue> {
     run_formula_with_configuration(
         &book(),
         0,
         target("Z100").address,
         formula,
-        &RunConfiguration::default().with_builtin_policy(policy),
+        &RunConfiguration::default(),
         budgets,
     )
 }
@@ -63,11 +59,7 @@ fn singleton_text_and_blank_admission_is_independent_of_argument_origin_and_orde
             format!("SUMPRODUCT(B1:B1,{argument})"),
         ] {
             assert_eq!(
-                value(result(
-                    &formula,
-                    BuiltinSemanticsPolicy::ExcelDocumentation,
-                    EvaluationBudgets::default()
-                )),
+                value(result(&formula, EvaluationBudgets::default())),
                 CellValue::Number(0.),
                 "{formula}"
             );
@@ -82,11 +74,7 @@ fn singleton_text_and_blank_admission_is_independent_of_argument_origin_and_orde
         ("SUMPRODUCT(B1:B1,4)", 8.),
     ] {
         assert_eq!(
-            value(result(
-                formula,
-                BuiltinSemanticsPolicy::ExcelDocumentation,
-                EvaluationBudgets::default()
-            )),
+            value(result(formula, EvaluationBudgets::default())),
             CellValue::Number(expected),
             "{formula}"
         );
@@ -107,28 +95,19 @@ fn conformability_and_errors_remain_explicit_and_operational_failures_escape() {
         ("SUMPRODUCT(2,)", CellError::Value),
     ] {
         assert_eq!(
-            value(result(
-                formula,
-                BuiltinSemanticsPolicy::ExcelDocumentation,
-                EvaluationBudgets::default()
-            )),
+            value(result(formula, EvaluationBudgets::default())),
             CellValue::Error(expected),
             "{formula}"
         );
     }
     // Excluded text requires no UTF-16 projection, including malformed units.
     assert_eq!(
-        value(result(
-            "SUMPRODUCT(A4)",
-            BuiltinSemanticsPolicy::ExcelDocumentation,
-            EvaluationBudgets::default()
-        )),
+        value(result("SUMPRODUCT(A4)", EvaluationBudgets::default())),
         CellValue::Number(0.)
     );
     assert!(matches!(
         result(
             "IFERROR(SUMPRODUCT(A1:A2,B1:B2),99)",
-            BuiltinSemanticsPolicy::ExcelDocumentation,
             EvaluationBudgets {
                 run_work: 0,
                 ..Default::default()
@@ -146,7 +125,6 @@ fn singleton_source_edits_invalidate_results_after_snapshot() {
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
         .with_policy(poirot::eval::EvaluationPolicy {
-            builtin: poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })
         .build()

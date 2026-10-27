@@ -159,17 +159,16 @@ enum FractionDenominator {
 }
 
 impl FractionPlan {
-    /// Compile a fraction layout using the default source contract.
+    /// Compile a fraction layout with compact fractional output.
     pub(super) fn compile(tokens: &[Token]) -> Result<Self, FormatError> {
-        Self::compile_fraction(tokens)
+        let mut plan = Self::compile_fraction(tokens)?;
+        plan.compact = false;
+        Ok(plan)
     }
-    /// Validate fraction tokens under an explicit compatibility contract.
-    pub(super) fn compile_with_source(
-        tokens: &[Token],
-        source: crate::format::FormatSourcePolicy,
-    ) -> Result<Self, FormatError> {
+    /// Compile compact fractional output for the reusable format program.
+    pub(super) fn compile_compact(tokens: &[Token]) -> Result<Self, FormatError> {
         let mut plan = Self::compile(tokens)?;
-        plan.compact = source == crate::format::FormatSourcePolicy::Poi7321209DataFormatter;
+        plan.compact = true;
         Ok(plan)
     }
     /// Render a fraction value with literal-span metadata.

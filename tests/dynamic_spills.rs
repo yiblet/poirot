@@ -8,7 +8,6 @@ fn target(address: &str) -> eval::EvaluationTarget {
 }
 fn policy() -> poirot::eval::EvaluationPolicy {
     poirot::eval::EvaluationPolicy {
-        builtin: eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         arrays: eval::ArrayResultPolicy::DynamicSpill,
         ..Default::default()
     }
@@ -250,7 +249,7 @@ fn self_footprint_reads_are_explicitly_unsupported() {
             matches!(
                 report.outcome,
                 eval::EvaluationOutcome::Aborted {
-                    failure: eval::EvaluationFailure::UnsupportedCapability { .. },
+                    failure: eval::EvaluationError::UnsupportedCapability { .. },
                     ..
                 }
             ),
@@ -284,7 +283,7 @@ fn retention_admits_the_whole_spill_or_none() {
         assert!(matches!(
             report.outcome,
             eval::EvaluationOutcome::Aborted {
-                failure: eval::EvaluationFailure::MemoRetentionLimit { .. },
+                failure: eval::EvaluationError::MemoRetentionLimit { .. },
                 ..
             }
         ));
@@ -323,7 +322,7 @@ fn work_and_materialization_abort_before_any_spill_publication() {
         assert!(matches!(
             report.outcome,
             eval::EvaluationOutcome::Aborted {
-                failure: eval::EvaluationFailure::Budget(_),
+                failure: eval::EvaluationError::Budget(_),
                 ..
             }
         ));
@@ -388,7 +387,7 @@ fn dynamically_sized_producers_publish_in_both_read_orders_and_preserve_lazy_bra
     assert!(matches!(
         report.outcome,
         eval::EvaluationOutcome::Aborted {
-            failure: eval::EvaluationFailure::Budget(_),
+            failure: eval::EvaluationError::Budget(_),
             ..
         }
     ));
@@ -418,7 +417,7 @@ fn transitive_reads_of_the_unpublished_footprint_refuse() {
         assert!(matches!(
             report.outcome,
             eval::EvaluationOutcome::Aborted {
-                failure: eval::EvaluationFailure::UnsupportedCapability { .. },
+                failure: eval::EvaluationError::UnsupportedCapability { .. },
                 ..
             }
         ));
@@ -528,7 +527,7 @@ fn priority_ownership_with_a_direct_self_footprint_refuses_a_supplier_first_answ
         assert!(matches!(
             report.outcome,
             eval::EvaluationOutcome::Aborted {
-                failure: eval::EvaluationFailure::UnsupportedCapability { .. },
+                failure: eval::EvaluationError::UnsupportedCapability { .. },
                 ..
             }
         ));
@@ -735,7 +734,7 @@ fn operator_snapshot_reuses_bytecode_and_retains_blank_input_dependencies() {
 }
 
 #[test]
-fn operator_budget_failures_are_atomic_and_cannot_be_masked_by_iferror() {
+fn operator_budget_errors_are_atomic_and_cannot_be_masked_by_iferror() {
     let w = model(&[("D1", "IFERROR({1,2}+{10;20},99)")]);
     let mut good = context(&w);
     let report = good.run(&[target("D1")]).unwrap();
@@ -760,7 +759,7 @@ fn operator_budget_failures_are_atomic_and_cannot_be_masked_by_iferror() {
             matches!(
                 report.outcome,
                 eval::EvaluationOutcome::Aborted {
-                    failure: eval::EvaluationFailure::Budget(_),
+                    failure: eval::EvaluationError::Budget(_),
                     ..
                 }
             ),
@@ -872,7 +871,11 @@ fn retained_operator_results_match_fresh_evaluation_through_interleaved_edits() 
             3 | 7 => {
                 let at = if step % 8 == 3 { "E2" } else { "B2" };
                 retained.overlay.remove_cell(target(at)).unwrap();
-                oracle.sheet_mut(0).unwrap().remove(target(at).address);
+                oracle
+                    .sheet_mut(0)
+                    .unwrap()
+                    .remove(target(at).address)
+                    .unwrap();
             }
             4..=6 => {
                 let formula = match step % 8 {
@@ -930,9 +933,9 @@ fn authored_scalar_blockers_survive_reads_and_become_spill_children_after_remova
         let mut w = model(&[("A1", "SEQUENCE(2,2)"), ("D1", "B2*2")]);
         let sheet = w.sheet_mut(0).unwrap();
         if formula_blocker {
-            sheet.set_formula("B2".parse().unwrap(), "40+2").unwrap();
+            sheet.set_formula("B2", "40+2").unwrap();
         } else {
-            sheet.set_value("B2".parse().unwrap(), 42.).unwrap();
+            sheet.set_value("B2", 42.).unwrap();
         }
         let mut direct = poirot::eval::overlay::Evaluation::with_workbook(&w)
             .with_policy(policy())
@@ -966,16 +969,14 @@ fn sparse_text_collections_read_generated_spill_cells() {
     let mut book = poirot::Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     // Excel spills an array constant from its anchor: D1:D3 hold a, b, c.
-    sheet
-        .set_formula("D1".parse().unwrap(), "{\"a\";\"b\";\"c\"}")
-        .unwrap();
+    sheet.set_formula("D1", "{\"a\";\"b\";\"c\"}").unwrap();
     for (at, formula) in [
         ("F1", "CONCAT(D:D)"),
         ("F2", "CONCAT(D2:D5)"),
         ("F3", "TEXTJOIN(\"-\",TRUE,D:D)"),
         ("F4", "TEXTJOIN(\"-\",FALSE,D2:D5)"),
     ] {
-        sheet.set_formula(at.parse().unwrap(), formula).unwrap();
+        sheet.set_formula(at, formula).unwrap();
     }
     let mut evaluation = book.evaluation().build().unwrap();
     for (at, expected) in [

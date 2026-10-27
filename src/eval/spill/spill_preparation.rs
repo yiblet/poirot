@@ -7,7 +7,7 @@ use super::publication::Publication;
 use super::settled_area::SettledArea;
 use super::settlement_slot::SettlementSlot;
 use crate::eval::coordinates::{CellMap, CellSet, EvaluationTarget};
-use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::ports::{CellCompletion, CellObserver};
 use crate::eval::reuse::SpillRole;
 use crate::eval::values::Area;
@@ -18,7 +18,7 @@ use crate::model::CellAddress;
 /// and published without exposing a partially resolved component.
 #[derive(Default)]
 pub(in crate::eval) struct SpillPreparation {
-    pub(super) failure: Option<EvaluationFailure>,
+    pub(super) failure: Option<EvaluationError>,
     pub(super) candidates: CandidateIndex,
     pub(super) settled: CellSet,
     pub(super) settlement: SettlementSlot,
@@ -54,11 +54,11 @@ impl SpillPreparation {
             active
                 .notifications
                 .try_reserve(1)
-                .map_err(|_| EvaluationFailure::Resource {
+                .map_err(|reservation_source| EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: consumer,
-                    detail: "spill notification allocation failed".into(),
+                    target: consumer,
+                    reason: (crate::eval::limits::EvaluationReasonError::SpillNotificationAllocationFailed).with_reservation_source(reservation_source),
                 })?;
             // SAFETY: The successful reservation above provides one completion slot.
             active.notifications.push(Completion {
@@ -113,7 +113,7 @@ impl SpillPreparation {
             return Err(failure.clone());
         }
         if self.settlement.running || !self.held.is_empty() || !self.computing.is_empty() {
-            return Err(EvaluationFailure::StalePlan);
+            return Err(EvaluationError::StalePlan);
         }
         Ok(Publication { preparation: self })
     }
@@ -132,11 +132,13 @@ impl SpillPreparation {
         let mut accepted = Vec::new();
         accepted
             .try_reserve(capacity)
-            .map_err(|_| EvaluationFailure::Resource {
+            .map_err(|reservation_source| EvaluationError::Resource {
                 kind: crate::eval::limits::ResourceFailureKind::Allocation,
                 capability: CapabilityId::FunctionAdapter,
-                source: consumer,
-                detail: "spill arbitration allocation failed".into(),
+                target: consumer,
+                reason:
+                    (crate::eval::limits::EvaluationReasonError::SpillArbitrationAllocationFailed)
+                        .with_reservation_source(reservation_source),
             })?;
         let mut blocked = CellSet::default();
         for key in &active.selected {
@@ -162,11 +164,11 @@ impl SpillPreparation {
             {
                 blocked
                     .try_reserve(1)
-                    .map_err(|_| EvaluationFailure::Resource {
+                    .map_err(|reservation_source| EvaluationError::Resource {
                         kind: crate::eval::limits::ResourceFailureKind::Allocation,
                         capability: CapabilityId::FunctionAdapter,
-                        source: consumer,
-                        detail: "spill blocked-owner allocation failed".into(),
+                        target: consumer,
+                        reason: (crate::eval::limits::EvaluationReasonError::SpillBlockedOwnerAllocationFailed).with_reservation_source(reservation_source),
                     })?;
                 // SAFETY: One slot was reserved locally; coordinate hashing is integer-only.
                 blocked.insert(*key);

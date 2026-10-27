@@ -1,5 +1,5 @@
 //! Workbook adapters supply real visibility and nested-formula metadata.
-use crate::criteria::{Cell, Error};
+use crate::criteria::{Cell, CriteriaError};
 /// A value plus adapter-supplied visibility, nested-SUBTOTAL, and reference-origin metadata.
 /// The SUBTOTAL code decides which eligible values contribute; metadata cannot be
 /// inferred from the numeric value alone.
@@ -15,11 +15,11 @@ pub struct SubtotalCell<'a> {
     pub referenced: bool,
 }
 /// Aggregate admitted cells while respecting hidden rows and nested subtotals.
-pub fn subtotal(code: i32, cells: &[SubtotalCell<'_>]) -> Result<f64, Error> {
+pub fn subtotal(code: i32, cells: &[SubtotalCell<'_>]) -> Result<f64, CriteriaError> {
     let hidden = code > 100;
     let kind = if hidden { code - 100 } else { code };
     if !(1..=11).contains(&kind) {
-        return Err(Error::Value);
+        return Err(CriteriaError::Value);
     }
     let mut nums = Vec::new();
     let mut nonblank = 0usize;
@@ -39,7 +39,7 @@ pub fn subtotal(code: i32, cells: &[SubtotalCell<'_>]) -> Result<f64, Error> {
     let result = match kind {
         1 => {
             if n == 0 {
-                return Err(Error::DivZero);
+                return Err(CriteriaError::DivZero);
             }
             sum / n as f64
         }
@@ -58,7 +58,7 @@ pub fn subtotal(code: i32, cells: &[SubtotalCell<'_>]) -> Result<f64, Error> {
         7 | 8 | 10 | 11 => {
             let sample = kind == 7 || kind == 10;
             if n == 0 || (sample && n < 2) {
-                return Err(Error::DivZero);
+                return Err(CriteriaError::DivZero);
             }
             let mean = sum / n as f64;
             let variance = nums.iter().map(|x| (x - mean).powi(2)).sum::<f64>()
@@ -75,11 +75,14 @@ pub fn subtotal(code: i32, cells: &[SubtotalCell<'_>]) -> Result<f64, Error> {
     if result.is_finite() {
         Ok(result)
     } else {
-        Err(Error::Num)
+        Err(CriteriaError::Num)
     }
 }
 
 /// Origin-sensitive admission and conversion for one eligible SUBTOTAL member.
-fn coerce_subtotal_member(cell: &SubtotalCell<'_>, kind: i32) -> Result<Option<f64>, Error> {
+fn coerce_subtotal_member(
+    cell: &SubtotalCell<'_>,
+    kind: i32,
+) -> Result<Option<f64>, CriteriaError> {
     crate::coercion::criteria::coerce_subtotal_member(cell.value, cell.referenced, kind)
 }

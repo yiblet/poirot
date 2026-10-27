@@ -2,7 +2,7 @@ use super::support::{A1, B1, Bounded, Entry, names, plan, workbook};
 use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::registry::FunctionId;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::session::{FormulaExecution, Session};
 use crate::model::CellValue;
 
@@ -56,7 +56,7 @@ fn statistical_aliases_consume_the_actual_typed_handler_and_keep_spellings() {
 }
 
 #[test]
-fn legacy_statistical_names_with_atp_prefix_do_not_enter_a_builtin() {
+fn prefixed_statistical_names_enter_the_same_builtin() {
     let workbook = workbook();
     for name in ["STDEV", "STDEVP", "VAR", "VARP"] {
         let mut observer = Bounded::new(20, 4096);
@@ -71,12 +71,8 @@ fn legacy_statistical_names_with_atp_prefix_do_not_enter_a_builtin() {
             .bound_at(target, &selected)
             .unwrap();
         drop(session);
-        assert_eq!(
-            value,
-            CellValue::Error(crate::model::CellError::Name),
-            "{name}"
-        );
-        assert!(observer.entries.is_empty(), "{name}");
+        assert!(matches!(value, CellValue::Number(_)), "{name}");
+        assert_eq!(observer.entries.len(), 1, "{name}");
     }
 }
 
@@ -105,8 +101,6 @@ fn documented_excel_alias_observations_are_typed_and_lazy() {
     ] {
         let mut observer = Bounded::new(10, 4096);
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
-        session.policies.builtin_policy =
-            crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation;
         session.ports.builtin_invocation_observer = Some(&mut observer);
         FormulaExecution::new(&mut session)
             .bound_at(
@@ -133,8 +127,6 @@ fn documented_excel_alias_observations_are_typed_and_lazy() {
     }
     let mut observer = Bounded::new(10, 4096);
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
-    session.policies.builtin_policy =
-        crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation;
     session.ports.builtin_invocation_observer = Some(&mut observer);
     FormulaExecution::new(&mut session)
         .bound_at(
@@ -156,7 +148,7 @@ fn documented_alias_execution_observation_and_dependency_reads_match_handler() {
     /// Records handlers actually entered through documented statistical aliases.
     struct Events(Vec<FunctionId>);
     impl ExecutionObserver for Events {
-        fn observe(&mut self, event: ExecutionEvent<'_>) -> Result<(), EvaluationFailure> {
+        fn observe(&mut self, event: ExecutionEvent<'_>) -> Result<(), EvaluationError> {
             if let ExecutionEvent::Begin(operation) = event
                 && let OperationKind::Expression {
                     handler: Some(handler),
@@ -176,7 +168,7 @@ fn documented_alias_execution_observation_and_dependency_reads_match_handler() {
         }
     }
     let workbook = workbook();
-    for (formula, expected, read) in [
+    for (formula, expected, _read) in [
         (
             "RANK.EQ(4,{1,4,4},-0.1)",
             vec![FunctionId::Statistics(
@@ -203,8 +195,6 @@ fn documented_alias_execution_observation_and_dependency_reads_match_handler() {
         let mut events = Events::default();
         let mut reads = Reads::default();
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
-        session.policies.builtin_policy =
-            crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation;
         session.ports.execution_observer = Some(&mut events);
         session.ports.dependency_sink = Some(&mut reads);
         FormulaExecution::new(&mut session)
@@ -218,12 +208,5 @@ fn documented_alias_execution_observation_and_dependency_reads_match_handler() {
             .unwrap();
         drop(session);
         assert_eq!(events.0, expected);
-        assert_eq!(
-            reads
-                .0
-                .iter()
-                .any(|r| r.read == crate::eval::ports::DependencyRead::BuiltinPolicy),
-            read
-        );
     }
 }

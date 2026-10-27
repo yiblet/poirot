@@ -1,5 +1,5 @@
 //! Pure admission decisions; the meter owns attribution snapshots and mutation.
-use super::budget_failure::BudgetFailure;
+use super::budget_error::BudgetError;
 use super::budget_kind::BudgetKind;
 use super::charge_request::ChargeRequest;
 use super::evaluation_budgets::EvaluationBudgets;
@@ -8,9 +8,9 @@ use super::work_snapshot::WorkSnapshot;
 use crate::eval::coordinates::EvaluationTarget;
 
 /// Reject configured limits beyond supported engine ceilings.
-pub(super) fn validate_limits(limits: EvaluationBudgets) -> Result<(), BudgetFailure> {
+pub(super) fn validate_limits(limits: EvaluationBudgets) -> Result<(), BudgetError> {
     if limits.depth > 128 {
-        return Err(BudgetFailure {
+        return Err(BudgetError {
             kind: BudgetKind::Configuration,
             limit: 128,
             consumed: 0,
@@ -26,11 +26,11 @@ pub(super) fn admit_work(
     limits: EvaluationBudgets,
     snapshot: WorkSnapshot,
     request: ChargeRequest,
-) -> Result<ChargeRequest, BudgetFailure> {
+) -> Result<ChargeRequest, BudgetError> {
     // Every category has the same admission rule; its counter is committed by the meter.
     let amount = request.amount;
     if snapshot.run_limited && amount > limits.run_work.saturating_sub(snapshot.run_consumed) {
-        return Err(BudgetFailure {
+        return Err(BudgetError {
             kind: BudgetKind::RunWork,
             limit: limits.run_work,
             consumed: snapshot.run_consumed,
@@ -42,7 +42,7 @@ pub(super) fn admit_work(
         && snapshot.cell_limited
         && amount > limits.cell_work.saturating_sub(consumed)
     {
-        return Err(BudgetFailure {
+        return Err(BudgetError {
             kind: BudgetKind::CellWork,
             limit: limits.cell_work,
             consumed,
@@ -58,7 +58,7 @@ pub(super) fn admit_reservation(
     limits: EvaluationBudgets,
     target: Option<EvaluationTarget>,
     reservation: Reservation,
-) -> Result<(), BudgetFailure> {
+) -> Result<(), BudgetError> {
     let (kind, limit, requested, exceeded) = match reservation {
         Reservation::Values(count) => (
             BudgetKind::Materialization,
@@ -80,7 +80,7 @@ pub(super) fn admit_reservation(
         ),
     };
     if exceeded {
-        return Err(BudgetFailure {
+        return Err(BudgetError {
             kind,
             limit,
             consumed: 0,

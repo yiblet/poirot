@@ -1,8 +1,8 @@
-use crate::fods::{Error, cli::RunArgs, execute, plan, report};
+use crate::fods::{FodsError, cli::RunArgs, execute, plan, report};
 use std::io::Write;
 
 /// Prepare and execute the selected corpus, then return its process exit status.
-pub fn run(args: &RunArgs) -> Result<bool, Error> {
+pub fn run(args: &RunArgs) -> Result<bool, FodsError> {
     if args.format == crate::fods::cli::OutputFormat::Text {
         eprintln!("Preparing FODS fixtures...");
     }
@@ -24,13 +24,13 @@ pub fn run(args: &RunArgs) -> Result<bool, Error> {
     let result = execute::execute_with_observer(&plan, &|case| {
         let mut writer = output
             .lock()
-            .map_err(|_| Error::Output(std::io::Error::other("progress writer poisoned")))?;
+            .map_err(|_| FodsError::PoisonedProgressWriter)?;
         report::render_case(case, &mut *writer, args.format, args.strict)
     })?;
     let mut output = output
         .lock()
-        .map_err(|_| Error::Output(std::io::Error::other("progress writer poisoned")))?;
+        .map_err(|_| FodsError::PoisonedProgressWriter)?;
     report::render_summary(&result, &mut *output, args.format, args.strict)?;
-    output.flush().map_err(Error::Output)?;
+    output.flush().map_err(FodsError::Output)?;
     Ok(result.successful(args.strict))
 }

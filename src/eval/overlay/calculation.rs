@@ -4,7 +4,7 @@ use super::evaluation_report::EvaluationReport;
 use super::overlay_error::OverlayError;
 use crate::eval::config::{EvaluationContext, EvaluationPolicy};
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::model::{CellValue, ModelError, Workbook, WorkbookChange};
 use std::borrow::Borrow;
 
@@ -17,13 +17,13 @@ use std::borrow::Borrow;
 /// use poirot::model::{CellValue, Workbook};
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let mut book = Workbook::new();
-/// book.add_sheet("Data")?.set_formula("A1".parse()?, "2*3")?;
+/// book.add_sheet("Data")?.set_formula("A1", "2*3")?;
 /// let mut calculation = Evaluation::with_workbook(book)
 ///     .build_calculation(EvaluationContext::default())?;
 /// let output = calculation.target("Data!A1")?;
 /// assert_eq!(calculation.cell(output)?, CellValue::Number(6.));
 /// let book = calculation.into_workbook();
-/// assert_eq!(book.sheet(0).and_then(|sheet| sheet.get("A1".parse().ok()?))
+/// assert_eq!(book.stored_cell("Data", "A1")?
 ///     .and_then(|cell| cell.formula.as_deref()), Some("2*3"));
 /// # Ok(())
 /// # }
@@ -35,12 +35,16 @@ pub struct Calculation<'a, W = &'a Workbook> {
 
 impl<'a, W: Borrow<Workbook>> Calculation<'a, W> {
     /// Resolve a reusable target against this workbook's sheet topology.
-    pub fn target(&self, reference: &str) -> Result<EvaluationTarget, ModelError> {
+    pub fn target(
+        &self,
+        reference: &str,
+    ) -> Result<EvaluationTarget, crate::eval::overlay::overlay_target_error::OverlayTargetError>
+    {
         self.inner.target(reference)
     }
 
     /// Calculate a cell; all reads share this cycle's work allowance.
-    pub fn cell(&mut self, target: EvaluationTarget) -> Result<CellValue, EvaluationFailure> {
+    pub fn cell(&mut self, target: EvaluationTarget) -> Result<CellValue, EvaluationError> {
         self.inner.cell(target)
     }
 
@@ -48,12 +52,12 @@ impl<'a, W: Borrow<Workbook>> Calculation<'a, W> {
     pub fn outputs(
         &mut self,
         targets: &[EvaluationTarget],
-    ) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationFailure> {
+    ) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationError> {
         self.inner.outputs(targets)
     }
 
     /// Explicitly calculate all effective stored cells and produced spills.
-    pub fn all(&mut self) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationFailure> {
+    pub fn all(&mut self) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationError> {
         self.inner.all()
     }
 
@@ -73,6 +77,15 @@ impl<'a, W: Borrow<Workbook>> Calculation<'a, W> {
         formula: impl Into<String>,
     ) -> Result<(), ModelError> {
         self.inner.set_formula(target, formula)
+    }
+
+    /// Replace authored style, clearing results but preserving edits, work, and failure.
+    pub fn set_style(
+        &mut self,
+        target: EvaluationTarget,
+        style: crate::model::CellStyle,
+    ) -> Result<(), ModelError> {
+        self.inner.set_style(target, style)
     }
 
     /// Clear calculated values while preserving edits, work, and any refusal.

@@ -3,7 +3,7 @@ use super::extension_evaluation::ExtensionEvaluation;
 use super::extension_execution::ExtensionExecution;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::extensions::ExtensionTrace;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::session::{CellEvaluator, FormulaExecution};
 use crate::model::{CellAddress, CellValue};
 
@@ -73,7 +73,7 @@ pub fn run_formula_with_extensions(
             session
                 .sources
                 .extensions
-                .ok_or(EvaluationFailure::StalePlan)?,
+                .ok_or(EvaluationError::StalePlan)?,
         );
         let prepared = crate::eval::compile::compiler::FormulaCompiler::new()
             .compile_formula_with_extensions(
@@ -82,7 +82,7 @@ pub fn run_formula_with_extensions(
                 session
                     .sources
                     .extensions
-                    .ok_or(EvaluationFailure::StalePlan)?,
+                    .ok_or(EvaluationError::StalePlan)?,
             );
         FormulaExecution::new(session).prepared_at(EvaluationTarget { sheet, address }, &prepared)
     })
@@ -102,10 +102,10 @@ pub fn run_plan_with_extensions(
         .is_none_or(|identity| identity == &execution.registry.identity());
     run(workbook, execution, |session| {
         if !identity_matches {
-            return Err(EvaluationFailure::UnsupportedCapability {
+            return Err(EvaluationError::UnsupportedCapability {
                 capability: crate::eval::limits::CapabilityId::UserDefinedFunction,
-                source: Some(EvaluationTarget { sheet, address }),
-                detail: "extension registry identity changed; rebind the formula plan".into(),
+                target: Some(EvaluationTarget { sheet, address }),
+                reason: crate::eval::limits::EvaluationReasonError::ExtensionRegistryIdentityChangedRebindTheFormulaPlan,
             });
         }
         FormulaExecution::new(session).bound_at(EvaluationTarget { sheet, address }, plan)

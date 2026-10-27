@@ -1,5 +1,5 @@
 //! Independently written array geometry; Microsoft function contracts are linked in tests.
-use crate::matrix::{Budget, Error, Matrix, Result};
+use crate::matrix::{Budget, Matrix, MatrixError, Result};
 use crate::scalar::CellError;
 
 /// The coordinate direction selected or concatenated by an array operation.
@@ -16,24 +16,44 @@ pub enum Transform {
     /// Append matrices, padding the shorter perpendicular extent.
     Stack(Axis),
     /// Wrap a vector into rows or columns with a maximum extent.
-    Wrap { axis: Axis, count: usize },
+    Wrap {
+        /// Whether to fill each row or each column before starting the next.
+        axis: Axis,
+        /// Maximum elements in each filled row or column; zero returns NUM.
+        count: usize,
+    },
     /// Retain signed counts from either end; omitted axes remain unchanged.
     Take {
+        /// Rows retained from the start (positive) or end (negative); `None` keeps all.
         rows: Option<i64>,
+        /// Columns retained from the start (positive) or end (negative); `None` keeps all.
         columns: Option<i64>,
     },
     /// Remove signed counts from either end; omitted axes remain unchanged.
     Drop {
+        /// Rows removed from the start (positive) or end (negative); `None` removes none.
         rows: Option<i64>,
+        /// Columns removed from the start (positive) or end (negative); `None` removes none.
         columns: Option<i64>,
     },
     /// Select signed one-based coordinates, preserving order and repetitions.
-    Choose { axis: Axis, indices: Vec<i64> },
+    Choose {
+        /// Whether each index selects a row or a column.
+        axis: Axis,
+        /// One-based positions from the start (positive) or end (negative).
+        /// Empty lists, zero and out-of-bounds positions return VALUE.
+        indices: Vec<i64>,
+    },
     /// Retain the original rectangle and pad to the supplied dimensions.
-    Expand { rows: usize, columns: usize },
+    Expand {
+        /// Output row count, at least the input row count.
+        rows: usize,
+        /// Output column count, at least the input column count.
+        columns: usize,
+    },
 }
 fn formula<T>(error: CellError) -> Result<T> {
-    Err(Error::Formula(error))
+    Err(MatrixError::Formula(error))
 }
 fn window(length: usize, count: Option<i64>, drop: bool) -> Result<(usize, usize)> {
     let Some(count) = count else {
@@ -57,8 +77,8 @@ fn window(length: usize, count: Option<i64>, drop: bool) -> Result<(usize, usize
     Ok((start, size))
 }
 fn selected(length: usize, index: i64) -> Result<usize> {
-    let amount =
-        usize::try_from(index.unsigned_abs()).map_err(|_| Error::Formula(CellError::Value))?;
+    let amount = usize::try_from(index.unsigned_abs())
+        .map_err(|_| MatrixError::Formula(CellError::Value))?;
     if amount == 0 || amount > length {
         return formula(CellError::Value);
     }
@@ -71,20 +91,24 @@ fn selected(length: usize, index: i64) -> Result<usize> {
 impl Transform {
     /// Validate the operands and return the output dimensions before allocation.
     pub fn shape<T>(&self, inputs: &[Matrix<T>]) -> Result<(usize, usize)> {
-        let first = inputs.first().ok_or(Error::Formula(CellError::Value))?;
+        let first = inputs
+            .first()
+            .ok_or(MatrixError::Formula(CellError::Value))?;
         if let Self::Stack(axis) = self {
             let mut rows = 0usize;
             let mut columns = 0usize;
             for input in inputs {
                 match axis {
                     Axis::Rows => {
-                        rows = rows.checked_add(input.rows()).ok_or(Error::SizeOverflow)?;
+                        rows = rows
+                            .checked_add(input.rows())
+                            .ok_or(MatrixError::SizeOverflow)?;
                         columns = columns.max(input.cols());
                     }
                     Axis::Columns => {
                         columns = columns
                             .checked_add(input.cols())
-                            .ok_or(Error::SizeOverflow)?;
+                            .ok_or(MatrixError::SizeOverflow)?;
                         rows = rows.max(input.rows());
                     }
                 }
@@ -135,7 +159,7 @@ impl Transform {
                             first.values().len().checked_rem(extent)? != 0,
                         ))
                     })
-                    .ok_or(Error::Formula(CellError::Value))?;
+                    .ok_or(MatrixError::Formula(CellError::Value))?;
                 Ok(match axis {
                     Axis::Rows => (groups, extent),
                     Axis::Columns => (extent, groups),
@@ -158,12 +182,12 @@ impl Transform {
         budget: Budget,
     ) -> Result<Matrix<T>> {
         let (rows, columns) = self.shape(inputs)?;
-        let count = rows.checked_mul(columns).ok_or(Error::SizeOverflow)?;
+        let count = rows.checked_mul(columns).ok_or(MatrixError::SizeOverflow)?;
         budget.check(Some(count), Some(count))?;
         let mut values = Vec::new();
         values
             .try_reserve_exact(count)
-            .map_err(|_| Error::AllocationFailure)?;
+            .map_err(|_| MatrixError::AllocationFailure)?;
         if let Self::Stack(axis) = self {
             match axis {
                 Axis::Columns => {
@@ -187,7 +211,9 @@ impl Transform {
             }
             return Matrix::new(rows, columns, values);
         }
-        let first = inputs.first().ok_or(Error::Formula(CellError::Value))?;
+        let first = inputs
+            .first()
+            .ok_or(MatrixError::Formula(CellError::Value))?;
         for row in 0..rows {
             for column in 0..columns {
                 let member = match self {
@@ -213,7 +239,7 @@ impl Transform {
                         };
                         let index = *indices
                             .get(offset)
-                            .ok_or(Error::Formula(CellError::Value))?;
+                            .ok_or(MatrixError::Formula(CellError::Value))?;
                         Some(match axis {
                             Axis::Rows => first.get(selected(first.rows(), index)?, column)?,
                             Axis::Columns => first.get(row, selected(first.cols(), index)?)?,
@@ -228,7 +254,7 @@ impl Transform {
                                 column.checked_mul(rows).and_then(|n| n.checked_add(row))
                             }
                         }
-                        .ok_or(Error::SizeOverflow)?;
+                        .ok_or(MatrixError::SizeOverflow)?;
                         first.values().get(index)
                     }
                     Self::Expand { .. } => first.get(row, column).ok(),

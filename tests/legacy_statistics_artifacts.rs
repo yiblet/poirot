@@ -43,8 +43,13 @@ fn book() -> Workbook {
     let mut b = Workbook::new();
     let s = b.add_sheet("S").unwrap();
     for (i, (f, _)) in cases().into_iter().enumerate() {
-        s.set_formula(format!("A{}", i + 1).parse().unwrap(), f)
-            .unwrap();
+        s.set_formula(
+            format!("A{}", i + 1)
+                .parse::<poirot::model::CellAddress>()
+                .unwrap(),
+            f,
+        )
+        .unwrap();
     }
     b
 }
@@ -58,7 +63,12 @@ fn all_legacy_names_survive_actual_xlsx_spelling_and_execution_roundtrip() {
             reopened
                 .sheet(0)
                 .unwrap()
-                .get(format!("A{}", i + 1).parse().unwrap())
+                .get(
+                    format!("A{}", i + 1)
+                        .parse::<poirot::model::CellAddress>()
+                        .unwrap()
+                )
+                .unwrap()
                 .unwrap()
                 .formula
                 .as_deref(),

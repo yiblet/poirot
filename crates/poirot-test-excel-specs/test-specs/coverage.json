@@ -1,28 +1,240 @@
 {
   "summary": {
-    "case_count": 2004,
-    "evaluation_steps": 2064,
-    "assertion_count": 2065,
+    "case_count": 2002,
+    "evaluation_steps": 2060,
+    "assertion_count": 2061,
     "source_count": 262,
     "feature_count": 296,
     "potential_obligation_count": 1658,
     "obligation_status_counts": {
-      "specified_with_evidence": 566,
+      "specified_with_evidence": 563,
       "not_applicable": 8,
-      "missing": 1084
+      "missing": 1087
     },
     "evidence_counts": {
-      "documented_derivation": 2016,
+      "documented_derivation": 2012,
       "documented_example": 49
     },
-    "registered_function_count": 262,
-    "registered_functions_with_specifications": 257,
+    "registered_function_count": 477,
+    "registered_functions_with_specifications": 260,
     "registered_functions_without_specifications": [
+      "ACCRINT",
+      "ACCRINTM",
+      "ACOT",
+      "ACOTH",
+      "AMORDEGRC",
+      "AMORLINC",
+      "ANCHORARRAY",
       "ARABIC",
+      "ARRAYTOTEXT",
       "BASE",
+      "BESSELI",
+      "BESSELK",
+      "BESSELY",
+      "BETA.DIST",
+      "BETA.INV",
+      "BETADIST",
+      "BETAINV",
+      "BIN2HEX",
+      "BIN2OCT",
+      "BINOM.DIST",
+      "BINOM.DIST.RANGE",
+      "BINOM.INV",
+      "BINOMDIST",
+      "BITAND",
+      "BITLSHIFT",
+      "BITOR",
+      "BITRSHIFT",
+      "BITXOR",
+      "CHIDIST",
+      "CHIINV",
+      "CHISQ.DIST",
+      "CHISQ.DIST.RT",
+      "CHISQ.INV",
+      "CHISQ.INV.RT",
+      "CHISQ.TEST",
+      "CHITEST",
+      "CHOOSECOLS",
+      "CHOOSEROWS",
+      "CONFIDENCE",
+      "CONFIDENCE.NORM",
+      "CONFIDENCE.T",
+      "CONVERT",
+      "COT",
+      "COTH",
+      "COUPDAYBS",
+      "COUPDAYS",
+      "COUPDAYSNC",
+      "COUPNCD",
+      "COUPNUM",
+      "COUPPCD",
+      "CRITBINOM",
+      "CSC",
+      "CSCH",
+      "CUMIPMT",
+      "CUMPRINC",
       "DATEDIF",
+      "DB",
+      "DDB",
+      "DEC2OCT",
       "DECIMAL",
-      "SERIESSUM"
+      "DISC",
+      "DROP",
+      "DURATION",
+      "EFFECT",
+      "ERF",
+      "ERF.PRECISE",
+      "ERFC",
+      "ERFC.PRECISE",
+      "EUROCONVERT",
+      "EXPAND",
+      "EXPON.DIST",
+      "EXPONDIST",
+      "F.DIST",
+      "F.DIST.RT",
+      "F.INV",
+      "F.INV.RT",
+      "F.TEST",
+      "FDIST",
+      "FILTER",
+      "FINV",
+      "FISHER",
+      "FISHERINV",
+      "FORECAST.ETS",
+      "FORECAST.ETS.CONFINT",
+      "FORECAST.ETS.SEASONALITY",
+      "FORECAST.ETS.STAT",
+      "FTEST",
+      "FVSCHEDULE",
+      "GAMMA",
+      "GAMMA.DIST",
+      "GAMMA.INV",
+      "GAMMADIST",
+      "GAMMAINV",
+      "GAMMALN",
+      "GAMMALN.PRECISE",
+      "GAUSS",
+      "GESTEP",
+      "GROUPBY",
+      "GROWTH",
+      "HARMEAN",
+      "HEX2BIN",
+      "HEX2OCT",
+      "HSTACK",
+      "HYPGEOM.DIST",
+      "HYPGEOMDIST",
+      "IMABS",
+      "IMARGUMENT",
+      "IMCONJUGATE",
+      "IMCOS",
+      "IMCOSH",
+      "IMCOT",
+      "IMCSC",
+      "IMCSCH",
+      "IMDIV",
+      "IMEXP",
+      "IMLN",
+      "IMLOG10",
+      "IMLOG2",
+      "IMPOWER",
+      "IMPRODUCT",
+      "IMSEC",
+      "IMSECH",
+      "IMSIN",
+      "IMSINH",
+      "IMSQRT",
+      "IMSUB",
+      "IMSUM",
+      "IMTAN",
+      "INTRATE",
+      "ISO.CEILING",
+      "ISOWEEKNUM",
+      "ISPMT",
+      "KURT",
+      "LINEST",
+      "LOGEST",
+      "LOGINV",
+      "LOGNORM.DIST",
+      "LOGNORM.INV",
+      "LOGNORMDIST",
+      "MDURATION",
+      "MODE.MULT",
+      "MODE.SNGL",
+      "MULTINOMIAL",
+      "MUNIT",
+      "NEGBINOM.DIST",
+      "NEGBINOMDIST",
+      "NETWORKDAYS.INTL",
+      "NOMINAL",
+      "OCT2BIN",
+      "OCT2HEX",
+      "ODDFPRICE",
+      "ODDFYIELD",
+      "ODDLPRICE",
+      "ODDLYIELD",
+      "PDURATION",
+      "PERCENTILE.EXC",
+      "PERCENTOF",
+      "PERMUT",
+      "PERMUTATIONA",
+      "PHI",
+      "PRICE",
+      "PRICEDISC",
+      "PRICEMAT",
+      "PROB",
+      "QUARTILE",
+      "QUARTILE.EXC",
+      "RANDARRAY",
+      "RANK.AVG",
+      "RECEIVED",
+      "REGEXEXTRACT",
+      "REGEXREPLACE",
+      "REGEXTEST",
+      "RRI",
+      "RSQ",
+      "SEC",
+      "SECH",
+      "SEQUENCE",
+      "SERIESSUM",
+      "SKEW",
+      "SKEW.P",
+      "SLN",
+      "SORT",
+      "SORTBY",
+      "STEYX",
+      "SYD",
+      "T.INV",
+      "T.INV.2T",
+      "T.TEST",
+      "TAKE",
+      "TBILLEQ",
+      "TBILLPRICE",
+      "TBILLYIELD",
+      "TEXTAFTER",
+      "TEXTBEFORE",
+      "TEXTSPLIT",
+      "TINV",
+      "TOCOL",
+      "TOROW",
+      "TRIMMEAN",
+      "TRIMRANGE",
+      "TTEST",
+      "UNIQUE",
+      "VALUETOTEXT",
+      "VDB",
+      "VSTACK",
+      "WEIBULL",
+      "WEIBULL.DIST",
+      "WRAPCOLS",
+      "WRAPROWS",
+      "XIRR",
+      "XNPV",
+      "XOR",
+      "YIELD",
+      "YIELDDISC",
+      "YIELDMAT",
+      "Z.TEST",
+      "ZTEST"
     ],
     "implementation_status_counts": {
       "registered": 262,
@@ -30,7 +242,7 @@
       "partial": 8,
       "unsupported": 9
     },
-    "multi_step_cases": 46,
+    "multi_step_cases": 44,
     "named_cases": 17,
     "date1904_cases": 6,
     "array_assertions": 16,
@@ -154,13 +366,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1996,
+          "case_id": 1994,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1996,
+          "case_id": 1994,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -539,19 +751,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1941,
+          "case_id": 1939,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1941,
+          "case_id": 1939,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1941,
+          "case_id": 1939,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -1485,7 +1697,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1962,
+          "case_id": 1960,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -1522,7 +1734,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1957,
+          "case_id": 1955,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -1537,7 +1749,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1967,
+          "case_id": 1965,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -1659,13 +1871,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1991,
+          "case_id": 1989,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1991,
+          "case_id": 1989,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -1703,7 +1915,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1893,
+          "case_id": 1892,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -1865,13 +2077,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1946,
+          "case_id": 1944,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1946,
+          "case_id": 1944,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -2033,7 +2245,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1898,
+          "case_id": 1897,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -2226,7 +2438,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1938,
+          "case_id": 1936,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -2363,13 +2575,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1928,
+          "case_id": 1926,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1933,
+          "case_id": 1931,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -2648,19 +2860,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1931,
+          "case_id": 1929,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1931,
+          "case_id": 1929,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1931,
+          "case_id": 1929,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -2698,7 +2910,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1943,
+          "case_id": 1941,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -2767,7 +2979,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1903,
+          "case_id": 1902,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -2867,19 +3079,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1911,
+          "case_id": 1910,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1911,
+          "case_id": 1910,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1911,
+          "case_id": 1910,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -3010,7 +3222,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1965,
+          "case_id": 1963,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -3110,7 +3322,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1923,
+          "case_id": 1921,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -3179,7 +3391,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1918,
+          "case_id": 1916,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -3341,13 +3553,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1906,
+          "case_id": 1905,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1906,
+          "case_id": 1905,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -3726,37 +3938,37 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1896,
+          "case_id": 1895,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1896,
+          "case_id": 1895,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1896,
+          "case_id": 1895,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1916,
+          "case_id": 1914,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1916,
+          "case_id": 1914,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1916,
+          "case_id": 1914,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -4197,13 +4409,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1966,
+          "case_id": 1964,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1966,
+          "case_id": 1964,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -4582,7 +4794,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1955,
+          "case_id": 1953,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -4651,13 +4863,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1971,
+          "case_id": 1969,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1971,
+          "case_id": 1969,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -5067,7 +5279,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1963,
+          "case_id": 1961,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -5384,7 +5596,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1958,
+          "case_id": 1956,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -5515,7 +5727,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1953,
+          "case_id": 1951,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -6080,7 +6292,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1998,
+          "case_id": 1996,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -7145,7 +7357,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1968,
+          "case_id": 1966,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -7400,7 +7612,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1948,
+          "case_id": 1946,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -7717,7 +7929,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1993,
+          "case_id": 1991,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -8374,13 +8586,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1981,
+          "case_id": 1979,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1981,
+          "case_id": 1979,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -8448,25 +8660,25 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1972,
+          "case_id": 1970,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1977,
+          "case_id": 1975,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1982,
+          "case_id": 1980,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1987,
+          "case_id": 1985,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -8534,13 +8746,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1976,
+          "case_id": 1974,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1976,
+          "case_id": 1974,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -10137,19 +10349,19 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1956,
+          "case_id": 1954,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1956,
+          "case_id": 1954,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1956,
+          "case_id": 1954,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -10217,13 +10429,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1995,
+          "case_id": 1993,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1995,
+          "case_id": 1993,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -10291,13 +10503,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1961,
+          "case_id": 1959,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1961,
+          "case_id": 1959,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -11266,7 +11478,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1942,
+          "case_id": 1940,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -11631,13 +11843,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1947,
+          "case_id": 1945,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1952,
+          "case_id": 1950,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -11735,7 +11947,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1983,
+          "case_id": 1981,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -11951,13 +12163,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1921,
+          "case_id": 1919,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1921,
+          "case_id": 1919,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -11995,7 +12207,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1988,
+          "case_id": 1986,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -12219,13 +12431,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1926,
+          "case_id": 1924,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1926,
+          "case_id": 1924,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -12511,7 +12723,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1978,
+          "case_id": 1976,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -12952,13 +13164,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1932,
+          "case_id": 1930,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1937,
+          "case_id": 1935,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -12988,7 +13200,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1973,
+          "case_id": 1971,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -15605,19 +15817,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1900,
+          "case_id": 1899,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1960,
+          "case_id": 1958,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1975,
+          "case_id": 1973,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -15877,7 +16089,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1970,
+          "case_id": 1968,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -16357,13 +16569,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1951,
+          "case_id": 1949,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1951,
+          "case_id": 1949,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -18472,19 +18684,19 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1950,
+          "case_id": 1948,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1990,
+          "case_id": 1988,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1990,
+          "case_id": 1988,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -18755,7 +18967,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 2000,
+          "case_id": 1998,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -18918,7 +19130,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1915,
+          "case_id": 1913,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -18987,13 +19199,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1985,
+          "case_id": 1983,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1985,
+          "case_id": 1983,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -19016,13 +19228,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 2001,
+          "case_id": 1999,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 2001,
+          "case_id": 1999,
           "step": 3,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -19037,7 +19249,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 2001,
+          "case_id": 1999,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -19060,7 +19272,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 2001,
+          "case_id": 1999,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -19148,19 +19360,19 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1936,
+          "case_id": 1934,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1936,
+          "case_id": 1934,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1936,
+          "case_id": 1934,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -19204,13 +19416,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1908,
+          "case_id": 1907,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1913,
+          "case_id": 1911,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -19427,19 +19639,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1940,
+          "case_id": 1938,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1980,
+          "case_id": 1978,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1980,
+          "case_id": 1978,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -20544,13 +20756,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1901,
+          "case_id": 1900,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1901,
+          "case_id": 1900,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21007,25 +21219,61 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 106,
+          "case_id": 456,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 736,
+          "case_id": 566,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 826,
+          "case_id": 696,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 853,
+          "case_id": 806,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 862,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 871,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 880,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 907,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 916,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 979,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21247,6 +21495,12 @@
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 985,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
         }
       ]
     },
@@ -21334,6 +21588,12 @@
           "evidence_kind": "documented_derivation"
         },
         {
+          "case_id": 674,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 824,
           "step": 0,
           "assertion": 0,
@@ -21347,12 +21607,6 @@
         },
         {
           "case_id": 878,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 932,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21395,6 +21649,12 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
+          "case_id": 274,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 344,
           "step": 0,
           "assertion": 0,
@@ -21413,13 +21673,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 674,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 985,
+          "case_id": 932,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21450,7 +21704,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 6,
+          "case_id": 16,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21462,19 +21716,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 26,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
           "case_id": 34,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 36,
+          "case_id": 46,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21493,12 +21741,6 @@
         },
         {
           "case_id": 64,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 66,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21523,6 +21765,18 @@
         },
         {
           "case_id": 96,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 106,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 116,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21600,12 +21854,6 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 216,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
           "case_id": 224,
           "step": 0,
           "assertion": 0,
@@ -21624,7 +21872,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 246,
+          "case_id": 256,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21636,13 +21884,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 274,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 276,
+          "case_id": 286,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21654,13 +21896,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 306,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 326,
+          "case_id": 316,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21678,7 +21914,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 366,
+          "case_id": 356,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21690,7 +21926,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 386,
+          "case_id": 376,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21703,6 +21939,12 @@
         },
         {
           "case_id": 396,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 406,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21726,6 +21968,12 @@
           "evidence_kind": "documented_derivation"
         },
         {
+          "case_id": 436,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 444,
           "step": 0,
           "assertion": 0,
@@ -21738,13 +21986,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 456,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 476,
+          "case_id": 466,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21786,6 +22028,12 @@
           "evidence_kind": "documented_derivation"
         },
         {
+          "case_id": 516,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 526,
           "step": 0,
           "assertion": 0,
@@ -21798,25 +22046,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 576,
+          "case_id": 546,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
           "case_id": 586,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 596,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 606,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21834,7 +22070,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 636,
+          "case_id": 646,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21846,7 +22082,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 666,
+          "case_id": 676,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21858,19 +22094,19 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 686,
+          "case_id": 716,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 706,
+          "case_id": 726,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 746,
+          "case_id": 736,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21882,7 +22118,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 786,
+          "case_id": 756,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 776,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21900,25 +22142,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 806,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
           "case_id": 814,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 816,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 835,
+          "case_id": 826,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -21942,12 +22172,6 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 880,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
           "case_id": 887,
           "step": 0,
           "assertion": 0,
@@ -21966,19 +22190,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 907,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
           "case_id": 914,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 916,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -22020,13 +22232,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 979,
+          "case_id": 987,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 987,
+          "case_id": 995,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -22131,33 +22343,8 @@
       "feature": "function.MID",
       "behavior": "Determine MID relevant compatibility versions, date systems, aliases, and legacy/new forms.",
       "applicability": "requires_research",
-      "specification_status": "specified_with_evidence",
-      "assertions": [
-        {
-          "case_id": 1892,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 1892,
-          "step": 1,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 1912,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 1912,
-          "step": 1,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        }
-      ]
+      "specification_status": "missing",
+      "assertions": []
     },
     {
       "id": "function.LOWER.valid",
@@ -22213,13 +22400,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1907,
+          "case_id": 1906,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1927,
+          "case_id": 1925,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23354,19 +23541,25 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 16,
+          "case_id": 6,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 46,
+          "case_id": 26,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 116,
+          "case_id": 36,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 66,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23384,13 +23577,19 @@
           "evidence_kind": "documented_derivation"
         },
         {
+          "case_id": 216,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 236,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 256,
+          "case_id": 246,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23402,13 +23601,19 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 286,
+          "case_id": 276,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 316,
+          "case_id": 306,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 326,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23420,19 +23625,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 356,
+          "case_id": 366,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 376,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 406,
+          "case_id": 386,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23444,19 +23643,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 436,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 466,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 516,
+          "case_id": 476,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23468,19 +23655,25 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 546,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
           "case_id": 556,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 566,
+          "case_id": 576,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 596,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 606,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23492,7 +23685,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 646,
+          "case_id": 636,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23504,31 +23697,25 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 676,
+          "case_id": 666,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 696,
+          "case_id": 686,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 716,
+          "case_id": 706,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 726,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 756,
+          "case_id": 746,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23540,7 +23727,19 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 776,
+          "case_id": 786,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 816,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 835,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23552,13 +23751,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 862,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 871,
+          "case_id": 853,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23577,12 +23770,6 @@
         },
         {
           "case_id": 952,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 995,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23683,19 +23870,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1902,
+          "case_id": 1901,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1922,
+          "case_id": 1920,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1992,
+          "case_id": 1990,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23780,7 +23967,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 2002,
+          "case_id": 2000,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23803,7 +23990,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 2002,
+          "case_id": 2000,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -23818,7 +24005,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 2002,
+          "case_id": 2000,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24019,19 +24206,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1986,
+          "case_id": 1984,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1986,
+          "case_id": 1984,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1986,
+          "case_id": 1984,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24100,19 +24287,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1897,
+          "case_id": 1896,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1917,
+          "case_id": 1915,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1997,
+          "case_id": 1995,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24167,7 +24354,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1924,
+          "case_id": 1922,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24182,7 +24369,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1939,
+          "case_id": 1937,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24197,13 +24384,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1895,
+          "case_id": 1894,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1934,
+          "case_id": 1932,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24226,19 +24413,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1914,
+          "case_id": 1912,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1919,
+          "case_id": 1917,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1929,
+          "case_id": 1927,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24487,7 +24674,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1954,
+          "case_id": 1952,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24763,31 +24950,31 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1944,
+          "case_id": 1942,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1960,
+          "case_id": 1958,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1965,
+          "case_id": 1963,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1970,
+          "case_id": 1968,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1975,
+          "case_id": 1973,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24810,19 +24997,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1949,
+          "case_id": 1947,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1960,
+          "case_id": 1958,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1970,
+          "case_id": 1968,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24837,19 +25024,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1915,
+          "case_id": 1913,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1950,
+          "case_id": 1948,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1955,
+          "case_id": 1953,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24864,19 +25051,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1935,
+          "case_id": 1933,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1940,
+          "case_id": 1938,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1945,
+          "case_id": 1943,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24903,25 +25090,25 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1894,
+          "case_id": 1893,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1899,
+          "case_id": 1898,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1904,
+          "case_id": 1903,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1909,
+          "case_id": 1908,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24950,19 +25137,19 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1910,
+          "case_id": 1909,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1915,
+          "case_id": 1913,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1964,
+          "case_id": 1962,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -24983,43 +25170,43 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1895,
+          "case_id": 1894,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1900,
+          "case_id": 1899,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1905,
+          "case_id": 1904,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1959,
+          "case_id": 1957,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1975,
+          "case_id": 1973,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1980,
+          "case_id": 1978,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1980,
+          "case_id": 1978,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25050,19 +25237,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1920,
+          "case_id": 1918,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1925,
+          "case_id": 1923,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1974,
+          "case_id": 1972,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25077,19 +25264,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1930,
+          "case_id": 1928,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1935,
+          "case_id": 1933,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1969,
+          "case_id": 1967,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25104,7 +25291,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1979,
+          "case_id": 1977,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25164,287 +25351,44 @@
       "feature": "workbook.utf16_v1",
       "behavior": "Affected text functions count supplementary pairs as two units.",
       "applicability": "applicable",
-      "specification_status": "specified_with_evidence",
-      "assertions": [
-        {
-          "case_id": 26,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 46,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 76,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 86,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 116,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 126,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 146,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 156,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 196,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 206,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 256,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 296,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 306,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 396,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 406,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 416,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 446,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 456,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 466,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 496,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 506,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 536,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 546,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 576,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 586,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 596,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 616,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 626,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 646,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 666,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 696,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 726,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 746,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 756,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 776,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 786,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 796,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 816,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 826,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 835,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 862,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 916,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 934,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 970,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 979,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        }
-      ]
+      "specification_status": "missing",
+      "assertions": []
     },
     {
       "id": "workbook.utf16_v1.isolated",
       "feature": "workbook.utf16_v1",
       "behavior": "Establish exact isolated-surrogate slicing/replacement outputs without lossy replacement.",
       "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "workbook.utf16_v1.search",
+      "feature": "workbook.utf16_v1",
+      "behavior": "Establish FIND/SEARCH offset/start semantics after supplementary characters.",
+      "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "workbook.utf16_v2.pairs",
+      "feature": "workbook.utf16_v2",
+      "behavior": "LEN/MID/FIND/SEARCH/REPLACE count valid surrogate pairs as one character.",
+      "applicability": "applicable",
       "specification_status": "specified_with_evidence",
       "assertions": [
+        {
+          "case_id": 6,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 16,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
         {
           "case_id": 26,
           "step": 0,
@@ -25452,13 +25396,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 36,
+          "case_id": 56,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 46,
+          "case_id": 66,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25476,13 +25420,25 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 116,
+          "case_id": 96,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 106,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
           "case_id": 126,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 136,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25500,13 +25456,25 @@
           "evidence_kind": "documented_derivation"
         },
         {
+          "case_id": 166,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 186,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 196,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 206,
+          "case_id": 216,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25518,19 +25486,49 @@
           "evidence_kind": "documented_derivation"
         },
         {
+          "case_id": 246,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 256,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 296,
+          "case_id": 276,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 286,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
           "case_id": 306,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 316,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 326,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 336,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25548,13 +25546,25 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 396,
+          "case_id": 366,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 406,
+          "case_id": 376,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 386,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 396,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25608,6 +25618,18 @@
           "evidence_kind": "documented_derivation"
         },
         {
+          "case_id": 516,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 526,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 536,
           "step": 0,
           "assertion": 0,
@@ -25620,7 +25642,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 576,
+          "case_id": 556,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 566,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25638,6 +25666,12 @@
           "evidence_kind": "documented_derivation"
         },
         {
+          "case_id": 606,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 616,
           "step": 0,
           "assertion": 0,
@@ -25650,7 +25684,19 @@
           "evidence_kind": "documented_derivation"
         },
         {
+          "case_id": 636,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 646,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 656,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25668,7 +25714,25 @@
           "evidence_kind": "documented_derivation"
         },
         {
+          "case_id": 706,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 716,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 726,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 736,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25681,6 +25745,12 @@
         },
         {
           "case_id": 756,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 766,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25704,270 +25774,25 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 816,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 835,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 862,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 898,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 916,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 934,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 970,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 979,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        }
-      ]
-    },
-    {
-      "id": "workbook.utf16_v1.search",
-      "feature": "workbook.utf16_v1",
-      "behavior": "Establish FIND/SEARCH offset/start semantics after supplementary characters.",
-      "applicability": "requires_research",
-      "specification_status": "missing",
-      "assertions": []
-    },
-    {
-      "id": "workbook.utf16_v2.pairs",
-      "feature": "workbook.utf16_v2",
-      "behavior": "LEN/MID/FIND/SEARCH/REPLACE count valid surrogate pairs as one character.",
-      "applicability": "applicable",
-      "specification_status": "specified_with_evidence",
-      "assertions": [
-        {
-          "case_id": 6,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 16,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 56,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 66,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 96,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 106,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 136,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 166,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 176,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 186,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 216,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 246,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 266,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 276,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 286,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 316,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 336,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 366,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 376,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 476,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 486,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 526,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 566,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 606,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 636,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 656,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 676,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 686,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 706,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 736,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 766,
-          "step": 0,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
           "case_id": 806,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 844,
+          "case_id": 826,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
           "case_id": 853,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 862,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -25991,13 +25816,19 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 907,
+          "case_id": 898,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
           "case_id": 925,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 934,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26021,7 +25852,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 987,
+          "case_id": 970,
+          "step": 0,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 979,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26148,25 +25985,25 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1905,
+          "case_id": 1904,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1936,
+          "case_id": 1934,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1985,
+          "case_id": 1983,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1985,
+          "case_id": 1983,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26181,7 +26018,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1896,
+          "case_id": 1895,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26210,151 +26047,157 @@
           "evidence_kind": "documented_derivation"
         },
         {
+          "case_id": 1895,
+          "step": 1,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
           "case_id": 1896,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1897,
+          "case_id": 1901,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1902,
+          "case_id": 1906,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1907,
+          "case_id": 1915,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1917,
+          "case_id": 1920,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1922,
+          "case_id": 1925,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1927,
+          "case_id": 1934,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1936,
-          "step": 1,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 1936,
+          "case_id": 1934,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1941,
+          "case_id": 1939,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1941,
+          "case_id": 1939,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1946,
+          "case_id": 1944,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1956,
+          "case_id": 1954,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1956,
+          "case_id": 1954,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1957,
+          "case_id": 1955,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1961,
+          "case_id": 1959,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1966,
+          "case_id": 1964,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1971,
+          "case_id": 1969,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1972,
+          "case_id": 1970,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1976,
+          "case_id": 1974,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1977,
+          "case_id": 1975,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1980,
+          "case_id": 1978,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1981,
+          "case_id": 1979,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1984,
+          "case_id": 1982,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1985,
+          "case_id": 1983,
+          "step": 1,
+          "assertion": 0,
+          "evidence_kind": "documented_derivation"
+        },
+        {
+          "case_id": 1987,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26366,7 +26209,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1991,
+          "case_id": 1990,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26378,7 +26221,7 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1994,
+          "case_id": 1993,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26397,30 +26240,24 @@
         },
         {
           "case_id": 1999,
-          "step": 1,
-          "assertion": 0,
-          "evidence_kind": "documented_derivation"
-        },
-        {
-          "case_id": 2001,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 2001,
+          "case_id": 1999,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 2001,
+          "case_id": 1999,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 2001,
+          "case_id": 1999,
           "step": 3,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26435,49 +26272,49 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1906,
+          "case_id": 1905,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1906,
+          "case_id": 1905,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1951,
+          "case_id": 1949,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1972,
+          "case_id": 1970,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1990,
+          "case_id": 1988,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 2002,
+          "case_id": 2000,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 2002,
+          "case_id": 2000,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 2002,
+          "case_id": 2000,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26492,7 +26329,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1896,
+          "case_id": 1895,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26872,25 +26709,25 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1901,
+          "case_id": 1900,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1901,
+          "case_id": 1900,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1931,
+          "case_id": 1929,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1931,
+          "case_id": 1929,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26905,7 +26742,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1931,
+          "case_id": 1929,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26920,19 +26757,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1994,
+          "case_id": 1992,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1994,
+          "case_id": 1992,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 2000,
+          "case_id": 1998,
           "step": 0,
           "assertion": 1,
           "evidence_kind": "documented_derivation"
@@ -26947,43 +26784,43 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1911,
+          "case_id": 1910,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1916,
+          "case_id": 1914,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1984,
+          "case_id": 1982,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1984,
+          "case_id": 1982,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1986,
+          "case_id": 1984,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1999,
+          "case_id": 1997,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1999,
+          "case_id": 1997,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -26998,31 +26835,31 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1911,
+          "case_id": 1910,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1916,
+          "case_id": 1914,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1986,
+          "case_id": 1984,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1989,
+          "case_id": 1987,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1989,
+          "case_id": 1987,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -27069,19 +26906,19 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 1921,
+          "case_id": 1919,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1926,
+          "case_id": 1924,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1996,
+          "case_id": 1994,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -27108,13 +26945,13 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1921,
+          "case_id": 1919,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1926,
+          "case_id": 1924,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -27173,61 +27010,61 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1972,
+          "case_id": 1970,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1972,
+          "case_id": 1970,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1976,
+          "case_id": 1974,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1976,
+          "case_id": 1974,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1977,
+          "case_id": 1975,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1977,
+          "case_id": 1975,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1981,
+          "case_id": 1979,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1981,
+          "case_id": 1979,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1982,
+          "case_id": 1980,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1987,
+          "case_id": 1985,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -27286,61 +27123,61 @@
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1972,
+          "case_id": 1970,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1972,
+          "case_id": 1970,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1976,
+          "case_id": 1974,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1976,
+          "case_id": 1974,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1977,
+          "case_id": 1975,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1977,
+          "case_id": 1975,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1981,
+          "case_id": 1979,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1981,
+          "case_id": 1979,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1982,
+          "case_id": 1980,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 1987,
+          "case_id": 1985,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -27454,7 +27291,7 @@
     {
       "id": "function.PERCENTILE.INC.valid",
       "feature": "function.PERCENTILE.INC",
-      "behavior": "Establish documented valid PERCENTILE.INC semantics under the explicit ExcelDocumentation execution policy.",
+      "behavior": "Establish documented valid PERCENTILE.INC semantics under the documented execution contract.",
       "applicability": "applicable",
       "specification_status": "specified_with_evidence",
       "assertions": [
@@ -27652,7 +27489,7 @@
     {
       "id": "function.QUARTILE.INC.valid",
       "feature": "function.QUARTILE.INC",
-      "behavior": "Establish documented valid QUARTILE.INC semantics under the explicit ExcelDocumentation execution policy.",
+      "behavior": "Establish documented valid QUARTILE.INC semantics under the documented execution contract.",
       "applicability": "applicable",
       "specification_status": "specified_with_evidence",
       "assertions": [
@@ -27832,7 +27669,7 @@
     {
       "id": "function.RANK.EQ.valid",
       "feature": "function.RANK.EQ",
-      "behavior": "Establish documented valid RANK.EQ semantics under the explicit ExcelDocumentation execution policy.",
+      "behavior": "Establish documented valid RANK.EQ semantics under the documented execution contract.",
       "applicability": "applicable",
       "specification_status": "specified_with_evidence",
       "assertions": [
@@ -28148,13 +27985,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 2003,
+          "case_id": 2001,
           "step": 0,
           "assertion": 0,
           "evidence_kind": "documented_example"
         },
         {
-          "case_id": 2003,
+          "case_id": 2001,
           "step": 1,
           "assertion": 0,
           "evidence_kind": "documented_example"
@@ -28169,7 +28006,7 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 2003,
+          "case_id": 2001,
           "step": 2,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -28192,13 +28029,13 @@
       "specification_status": "specified_with_evidence",
       "assertions": [
         {
-          "case_id": 2003,
+          "case_id": 2001,
           "step": 3,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
         },
         {
-          "case_id": 2003,
+          "case_id": 2001,
           "step": 4,
           "assertion": 0,
           "evidence_kind": "documented_derivation"
@@ -28277,9 +28114,6 @@
       "name": "ADDRESS",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Fourth operand selects A1 or absolute/relative R1C1 axes.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28296,9 +28130,6 @@
       "name": "CEILING.MATH",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Every nonzero mode rounds negative values away from zero.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28316,9 +28147,6 @@
       "name": "RANK",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Shared documented RANK.EQ order, ties, absent-number and validated array/reference sample handling.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28336,9 +28164,6 @@
       "name": "COVARIANCE.S",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Positional numeric-pair filtering and #DIV/0 for fewer than two valid pairs.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28355,9 +28180,6 @@
       "name": "NORM.S.DIST",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Cumulative selector chooses the shared CDF or PDF kernel, including negative variates.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28374,9 +28196,6 @@
       "name": "ROMAN",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Omitted or explicitly missing form defaults to classic zero; boolean TRUE selects classic and FALSE simplified style.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28393,9 +28212,6 @@
       "name": "IPMT",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Four-to-six-argument signature with future value, timing and zero-rate interest handling.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28412,9 +28228,6 @@
       "name": "PPMT",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Four-to-six-argument signature with future value, timing and zero-rate principal handling.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28431,9 +28244,6 @@
       "name": "BIN2DEC",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Strict binary digit validation in the documented input domain.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28450,9 +28260,6 @@
       "name": "DELTA",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Omitted second operand defaults to numeric zero.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28469,9 +28276,6 @@
       "name": "IMAGINARY",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Numeric complex imaginary coefficient result.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28488,9 +28292,6 @@
       "name": "IMREAL",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Numeric complex real coefficient result.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28507,9 +28308,6 @@
       "name": "TRANSPOSE",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Typed numbers, exact text/UTF-16, booleans and cell errors retain shape; reference blanks become zero.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established.",
@@ -28529,9 +28327,6 @@
       "name": "SUBTOTAL",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Reference aggregation excludes nested parsed SUBTOTAL formulas; explicit sparse filtered-row flags apply to all codes and manually hidden flags to codes 101..111, with formula/visibility dependency guards.",
         "limitations": [
           "Current file adapters do not retain row visibility; callers must declare relevant visibility through Worksheet::set_row_visibility. Default pinned reference refusal is unchanged."
@@ -28548,9 +28343,6 @@
       "name": "DATE",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Documented negative-year #NUM and 1900 fictitious leap-slot normalization.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28568,9 +28360,6 @@
       "name": "DAYS",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Numeric argument subtraction retains fractional serial differences.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28587,9 +28376,6 @@
       "name": "WEEKNUM",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "ISO return-type 21 handles previous and next week-year boundaries.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28606,9 +28392,6 @@
       "name": "WORKDAY",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Signed fractional day counts truncate toward zero.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28627,9 +28410,6 @@
       "name": "CODE",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Numeric first-character result in the admitted text policies.",
         "limitations": [
           "This is a bounded documented override; default source contracts are preserved and exhaustive Excel/POI parity is not established."
@@ -28646,9 +28426,6 @@
       "name": "Explicit range intersection",
       "implementation_status": "partial",
       "implementation_scope": {
-        "policies": [
-          "Default evaluation"
-        ],
         "supported": "Explicit @ parses as a dedicated implicit-intersection operator: scalar identity, array top-left, and unique horizontal/vertical reference intersection. Pinned SINGLE remains distinct.",
         "limitations": [
           "BIFF8 output cannot encode @ and explicitly rejects it. General array broadcasting and dynamic # reference syntax are not provided by this operator."
@@ -28663,9 +28440,6 @@
       "name": "Version1 UTF16",
       "implementation_status": "partial",
       "implementation_scope": {
-        "policies": [
-          "Poi7321209OpenJdk21Unicode15"
-        ],
         "supported": "Lossless UTF-16 indexing and storage, including LEN/MID/LEFT/RIGHT/REPLACE results containing isolated surrogates.",
         "limitations": [
           "The Version 1 fixture profile uses the explicit POI UTF-16 proxy, not an observed Excel identity. Unicode scalar consumers may refuse isolated surrogates; casing remains source specific."
@@ -28683,9 +28457,6 @@
       "name": "Version2 counting",
       "implementation_status": "partial",
       "implementation_scope": {
-        "policies": [
-          "ExcelCompatibilityV2Documented"
-        ],
         "supported": "Lossless LEN/MID/LEFT/RIGHT/REPLACE count each adjacent valid surrogate pair once; isolated surrogates, combining marks and selectors remain separate units.",
         "limitations": [
           "FIND/SEARCH retain pinned UTF-16 indexing. Case conversion uses the admitted OpenJDK 21 Unicode 15 ROOT table and contextual limits; no general Excel casing parity. The older unverified refusal policy remains unchanged."
@@ -28703,10 +28474,6 @@
       "name": "Array result observability",
       "implementation_status": "partial",
       "implementation_scope": {
-        "policies": [
-          "DynamicSpill",
-          "ExcelDocumentation for typed TRANSPOSE"
-        ],
         "supported": "Typed static rectangular arrays publish anchor and owned neighboring cells in the read-only source-cell runtime; full footprint assertions read the actual retained memo.",
         "limitations": [
           "Default final results retain scalar intersection. General broadcasting/CSE, unbounded producers, incremental execution, mutable cache materialization and spill ownership export are unsupported."
@@ -28722,10 +28489,6 @@
       "name": "Dynamic spilling",
       "implementation_status": "partial",
       "implementation_scope": {
-        "policies": [
-          "DynamicSpill",
-          "ExcelDocumentation for typed TRANSPOSE"
-        ],
         "supported": "Read-only source-cell runtime publication of typed rectangular static producers: array constants, TRANSPOSE, MMULT, MINVERSE, FREQUENCY and bounded IF/IFERROR/CHOOSE branches; ownership, blocking, child discovery and fresh-run edit invalidation.",
         "limitations": [
           "General broadcasting, CSE and # spill-reference syntax are absent. Names, extension arrays, TREND and computed-reference producers without bounded static geometry refuse. Incremental execution, mutable model cache recalculation and spill ownership export are unsupported; ad hoc array probes and external scalar cache readers refuse."
@@ -28747,9 +28510,6 @@
       "name": "PERCENTILE.INC",
       "implementation_status": "partial",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Inclusive percentile endpoints and interpolation through the existing budgeted typed percentile kernel.",
         "limitations": [
           "Profile-conditioned unresolved alias resolution retains the existing percentile kernel/coercion limits; no exhaustive Excel parity claim.",
@@ -28767,9 +28527,6 @@
       "name": "QUARTILE.INC",
       "implementation_status": "partial",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Typed quartile selector truncation into 0..4 and inclusive percentile calculation through the shared budgeted host.",
         "limitations": [
           "Only the documented inclusive form is added; general array broadcasting and exhaustive coercion parity are outside scope.",
@@ -28787,9 +28544,6 @@
       "name": "RANK.EQ",
       "implementation_status": "partial",
       "implementation_scope": {
-        "policies": [
-          "ExcelDocumentation"
-        ],
         "supported": "Typed reference or validated rectangular array sample ranking, shared tie ranks, any nonzero ascending order, and #N/A for absent numeric members.",
         "limitations": [
           "Scalar or missing list operands are invalid; no general function broadcasting or exhaustive coercion parity.",
@@ -28807,13 +28561,9 @@
       "name": "BASE",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "PinnedPoi",
-          "ExcelDocumentation"
-        ],
         "supported": "Unsigned radix 2..36 conversion with documented BASE number/padding bounds and DECIMAL text length/finite-result limits; scalar origins retained until consumer admission.",
         "limitations": [
-          "Newly supported functions use one documented contract under both policies. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
+          "Newly supported functions use one documented contract during evaluation. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
         ]
       },
       "source_urls": [
@@ -28825,13 +28575,9 @@
       "name": "DECIMAL",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "PinnedPoi",
-          "ExcelDocumentation"
-        ],
         "supported": "Unsigned radix 2..36 conversion with documented BASE number/padding bounds and DECIMAL text length/finite-result limits; scalar origins retained until consumer admission.",
         "limitations": [
-          "Newly supported functions use one documented contract under both policies. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
+          "Newly supported functions use one documented contract during evaluation. Additional blank, logical, omission and whitespace rules are independently observed in Calc; native Excel is unavailable. Calc differs from documented invalid-domain errors and some upper bounds."
         ]
       },
       "source_urls": [
@@ -28843,10 +28589,6 @@
       "name": "ARABIC",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "PinnedPoi",
-          "ExcelDocumentation"
-        ],
         "supported": "Bounded case-insensitive Roman text decoding, empty text, ASCII outer spaces and leading minus.",
         "limitations": [
           "Undocumented noncanonical spellings use adjacent-pair arithmetic; native Excel parity is unverified. Calc rejects documented signs, spaces and values above 3999."
@@ -28861,13 +28603,9 @@
       "name": "COMBINA",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "PinnedPoi",
-          "ExcelDocumentation"
-        ],
         "supported": "Nonnegative operands truncated to n>=k; combinations with replacement use bounded exact integer binomial arithmetic before binary64 rounding.",
         "limitations": [
-          "One documented contract under both policies. Zero-zero, blank, omission and scalar coercion are independently observed in Calc; native Excel unavailable. Calc uses VALUE for domain errors where Microsoft documents NUM."
+          "One documented contract during evaluation. Zero-zero, blank, omission and scalar coercion are independently observed in Calc; native Excel unavailable. Calc uses VALUE for domain errors where Microsoft documents NUM."
         ]
       },
       "source_urls": [
@@ -28879,10 +28617,6 @@
       "name": "SERIESSUM",
       "implementation_status": "registered",
       "implementation_scope": {
-        "policies": [
-          "PinnedPoi",
-          "ExcelDocumentation"
-        ],
         "supported": "One explicit direct term-wise power-series contract; contextual scalar numeric text and exact numeric-or-blank collection coefficients, retaining row-major exponent positions.",
         "limitations": [
           "Native Excel boundary behavior is unverified. Calc differs for zero bases, logical and text coefficients, and error mapping. See [the SERIESSUM contract](../../poirot-functions-math/docs/seriessum.md)."

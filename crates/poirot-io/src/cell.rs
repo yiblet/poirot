@@ -112,7 +112,7 @@ impl Cell {
         if let Some(shared) = self.shared_formula {
             shared.origin.validate()?;
             if self.formula.is_none() {
-                return Err(ModelError("shared formula requires formula source".into()));
+                return Err(ModelError::SharedFormulaRequiresSource);
             }
         }
         Ok(())
@@ -126,7 +126,7 @@ pub fn normalize_formula(formula: String) -> Result<String, ModelError> {
         .unwrap_or(formula.trim())
         .trim();
     if text.is_empty() {
-        Err(ModelError("formula must not be empty".into()))
+        Err(ModelError::EmptyFormula)
     } else if text.len() == formula.len() {
         Ok(formula)
     } else {

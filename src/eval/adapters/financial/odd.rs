@@ -3,27 +3,26 @@ use crate::eval::adapters::{
     elementwise::{
         self, Broadcast, Kernel, MemberContext, NumericParameter, NumericSignature, Variadic,
     },
-    failure::operational_only,
+    operational_only::operational_only,
 };
 use crate::eval::functions::registry::{FinancialFunction, FunctionId};
 use crate::eval::host::CallHost;
 use crate::eval::limits::{CapabilityId, EvalResult};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::{ReadRecorder, Session};
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::{Div0, Num};
 use crate::model::CellValue::Number;
 use crate::model::{CellAddress, CellValue};
 use poirot_functions::coercion::date_time::CalendarEpoch;
 use poirot_functions::financial::{
-    FinancialError,
-    modern::Failure,
+    FinancialCalculationError, FinancialError,
     odd::{self as kernel, Amortization, OddFirst, OddLast},
     securities::{Basis, Day, Frequency},
 };
 
-fn spreadsheet(error: FinancialError) -> FunctionFailure {
+fn spreadsheet(error: FinancialError) -> FunctionError {
     match error {
         FinancialError::Num => Num,
         FinancialError::Value => VALUE_ERROR,
@@ -32,16 +31,16 @@ fn spreadsheet(error: FinancialError) -> FunctionFailure {
     .into()
 }
 
-fn failure<E: Into<FunctionFailure>>(
+fn failure<E: Into<FunctionError>>(
     host: &CallHost<'_, '_>,
-    error: Failure<E>,
-) -> FunctionFailure {
+    error: FinancialCalculationError<E>,
+) -> FunctionError {
     match error {
-        Failure::Spreadsheet(e) => spreadsheet(e),
-        Failure::Operational(e) => e.into(),
-        Failure::ComputationalLimit => host.unsupported(
+        FinancialCalculationError::Spreadsheet(e) => spreadsheet(e),
+        FinancialCalculationError::Operational(e) => e.into(),
+        FinancialCalculationError::ComputationalLimit => host.unsupported(
             CapabilityId::FunctionAdapter,
-            "irregular financial calculation exceeds its work envelope",
+            crate::eval::limits::EvaluationReasonError::IrregularFinancialCalculationExceedsItsWorkEnvelope,
         ),
     }
 }
@@ -233,7 +232,7 @@ pub(super) fn execute(
     let result = elementwise::execute(&mut host, address, OddKernel { function, epoch });
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(e)) => Ok(err(e)),
+        Err(FunctionError::Spreadsheet(e)) => Ok(err(e)),
         Err(e) => Err(operational_only(e)),
     }
 }

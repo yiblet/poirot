@@ -1,7 +1,7 @@
 use crate::eval::adapters::elementwise::{Broadcast, Kernel, MemberContext, Optional};
 use crate::eval::host::{ArgumentCoercion, ContextReads};
 use crate::eval::limits::CapabilityId;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR};
 use crate::model::CellError::Num;
 use crate::model::CellValue;
 use crate::model::CellValue::Number;
@@ -58,16 +58,19 @@ impl Kernel for NumberKernel {
             grouping.as_deref(),
         )
         .map_err(|error| match error {
-            poirot_functions::text::numeric::ParseFailure::Spreadsheet(
-                poirot_functions::text::Error::Value,
-            ) => FunctionFailure::Spreadsheet(VALUE_ERROR),
-            poirot_functions::text::numeric::ParseFailure::Spreadsheet(
-                poirot_functions::text::Error::Num,
-            ) => FunctionFailure::Spreadsheet(Num),
-            poirot_functions::text::numeric::ParseFailure::Source(reason) => host.unsupported(
-                CapabilityId::FunctionAdapter,
-                format!("NUMBERVALUE separator representation: {reason:?}"),
-            ),
+            poirot_functions::text::numeric::NumericTextParseError::Spreadsheet(
+                poirot_functions::coercion::NumericTextError::Value,
+            ) => FunctionError::Spreadsheet(VALUE_ERROR),
+            poirot_functions::text::numeric::NumericTextParseError::Spreadsheet(
+                poirot_functions::coercion::NumericTextError::Num,
+            ) => FunctionError::Spreadsheet(Num),
+            poirot_functions::text::numeric::NumericTextParseError::Source(reason) => host
+                .unsupported(
+                    CapabilityId::FunctionAdapter,
+                    crate::eval::limits::EvaluationReasonError::NumericText(std::sync::Arc::new(
+                        reason,
+                    )),
+                ),
         })?;
         Ok(Number(number))
     }

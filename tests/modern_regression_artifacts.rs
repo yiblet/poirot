@@ -18,7 +18,7 @@ fn regression_arrays_execute_after_actual_xlsx_roundtrip() {
         ("D1", "LOGEST({3;6;12},{0;1;2})"),
         ("G1", "GROWTH({3;6;12},{0;1;2},{3;4})"),
     ] {
-        s.set_formula(c.parse().unwrap(), f).unwrap();
+        s.set_formula(c, f).unwrap();
     }
     let bytes = b.save_xlsx().to_buffer().unwrap();
     let reopened = poirot_io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
@@ -42,9 +42,8 @@ fn regression_arrays_execute_after_actual_xlsx_roundtrip() {
 fn incompatible_regression_preparation_recovers_source_and_overlay_edits() {
     let mut b = Workbook::new();
     let s = b.add_sheet("S").unwrap();
-    s.set_value("A1".parse().unwrap(), 3.).unwrap();
-    s.set_formula("D1".parse().unwrap(), "GROWTH({3;6;12},{0;1;2},A1)")
-        .unwrap();
+    s.set_value("A1", 3.).unwrap();
+    s.set_formula("D1", "GROWTH({3;6;12},{0;1;2},A1)").unwrap();
     let mut overlay = Overlay::with_workbook(b).build().unwrap();
     let input = overlay.target("S!A1").unwrap();
     let output = overlay.target("S!D1").unwrap();

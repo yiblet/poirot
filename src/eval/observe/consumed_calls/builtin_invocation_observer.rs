@@ -1,5 +1,5 @@
 use super::consumed_builtin_invocation::ConsumedBuiltinInvocation;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 
 /// Optional caller-owned run port. Capacity must be checked before copying an
 /// event or its text. Borrowed delivery does not charge calculation allocation
@@ -12,5 +12,5 @@ pub trait BuiltinInvocationObserver {
     fn consumed(
         &mut self,
         invocation: ConsumedBuiltinInvocation<'_>,
-    ) -> Result<(), EvaluationFailure>;
+    ) -> Result<(), EvaluationError>;
 }

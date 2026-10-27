@@ -7,8 +7,8 @@ use crate::eval::host::{
     ArgumentCoercion, CallHost, DynamicReferences, MissingPolicy, OperandKind, OperandReader,
     ScalarOperand, SelectionAccess,
 };
-use crate::eval::limits::EvaluationFailure;
-use crate::eval::values::{ArrayView, FunctionFailure, FunctionResult, VALUE_ERROR, Value};
+use crate::eval::limits::EvaluationError;
+use crate::eval::values::{ArrayView, FunctionError, FunctionResult, VALUE_ERROR, Value};
 use crate::model::CellError::{NA, Ref};
 use crate::model::CellValue::{Blank, Error, Number, Text};
 use crate::model::{CellAddress, CellError, CellValue};
@@ -179,8 +179,8 @@ impl SourceIdentity {
             value => {
                 Self::geometry(&value)
                     .map_err(|failure| match failure {
-                        FunctionFailure::Spreadsheet(CellError::Value) => {
-                            FunctionFailure::Spreadsheet(NA)
+                        FunctionError::Spreadsheet(CellError::Value) => {
+                            FunctionError::Spreadsheet(NA)
                         }
                         other => other,
                     })?
@@ -331,7 +331,7 @@ pub(super) fn array_projection(
     };
     let values = OperandReader::new(host)
         .matrix(value)?
-        .map_err(FunctionFailure::Spreadsheet)?;
+        .map_err(FunctionError::Spreadsheet)?;
     let height = values.len();
     let width = values.first().map_or(0, Vec::len);
     let rows = if row == 0 { height } else { 1 };
@@ -364,10 +364,9 @@ pub(super) fn array_projection(
                     rows: height,
                     columns: width,
                 },
-                r.checked_add(start_row)
-                    .ok_or(EvaluationFailure::StalePlan)?,
+                r.checked_add(start_row).ok_or(EvaluationError::StalePlan)?,
                 c.checked_add(start_column)
-                    .ok_or(EvaluationFailure::StalePlan)?,
+                    .ok_or(EvaluationError::StalePlan)?,
             )
         },
     )?;

@@ -1,6 +1,6 @@
 //! Terminal, JSONL and offline HTML views of the same typed observations.
 use crate::{
-    Error, invalid,
+    RunnerError,
     model::{CaseResult, Change, Outcome},
     runner::{EvaluationReport, Header, Summary},
 };
@@ -28,7 +28,7 @@ enum Record {
     Summary { summary: Summary },
 }
 
-fn json(output: &mut impl Write, value: &Record) -> Result<(), Error> {
+fn json(output: &mut impl Write, value: &Record) -> Result<(), RunnerError> {
     serde_json::to_writer(&mut *output, value)?;
     writeln!(output)?;
     output.flush()?;
@@ -40,7 +40,7 @@ pub fn begin(
     format: Format,
     header: &Header,
     selected: usize,
-) -> Result<(), Error> {
+) -> Result<(), RunnerError> {
     match format {
         Format::Json => json(
             output,
@@ -103,9 +103,7 @@ pub fn shell_quote(value: &str) -> String {
             '\r' => quoted.push_str("\\r"),
             '\t' => quoted.push_str("\\t"),
             c if c.is_control() || matches!(c, '\u{2028}' | '\u{2029}') => {
-                use std::fmt::Write;
-                // Writing into a String cannot fail; avoid a panic-capable unwrap.
-                let _ = write!(&mut quoted, "\\U{:08x}", u32::from(c));
+                quoted.push_str(&format!("\\U{:08x}", u32::from(c)));
             }
             _ => quoted.push(c),
         }
@@ -114,7 +112,7 @@ pub fn shell_quote(value: &str) -> String {
     quoted
 }
 
-pub fn detail(output: &mut impl Write, result: &CaseResult) -> Result<(), Error> {
+pub fn detail(output: &mut impl Write, result: &CaseResult) -> Result<(), RunnerError> {
     writeln!(
         output,
         "  {}  {}",
@@ -168,7 +166,7 @@ pub fn suite(
     cases: &[CaseResult],
     verbose: bool,
     quiet: bool,
-) -> Result<(), Error> {
+) -> Result<(), RunnerError> {
     if format == Format::Json {
         for result in cases {
             json(
@@ -229,7 +227,7 @@ pub fn finish(
     output: &mut impl Write,
     format: Format,
     report: &EvaluationReport,
-) -> Result<(), Error> {
+) -> Result<(), RunnerError> {
     if format == Format::Json {
         for id in &report.removed {
             json(output, &Record::Removed { id: id.clone() })?;
@@ -277,14 +275,14 @@ pub fn finish(
     Ok(())
 }
 
-pub fn read(path: &Path) -> Result<EvaluationReport, Error> {
+pub fn read(path: &Path) -> Result<EvaluationReport, RunnerError> {
     let mut header = None;
     let mut cases = Vec::new();
     let mut removed = Vec::new();
     let mut summary = None;
     for line in std::io::BufReader::new(std::fs::File::open(path)?).lines() {
         if summary.is_some() {
-            return Err(invalid("records after report summary"));
+            return Err(RunnerError::RecordsAfterSummary);
         }
         let record: Record = serde_json::from_str(&line?)?;
         match record {
@@ -293,19 +291,17 @@ pub fn read(path: &Path) -> Result<EvaluationReport, Error> {
             {
                 header = Some(value);
             }
-            Record::Header { .. } => return Err(invalid("duplicate or misplaced report header")),
+            Record::Header { .. } => return Err(RunnerError::MisplacedHeader),
             Record::Case { result } if header.is_some() => cases.push(*result),
             Record::Removed { id } if header.is_some() => removed.push(id),
             Record::Summary { summary: value } if header.is_some() => summary = Some(value),
-            _ => return Err(invalid("report must begin with a header")),
+            _ => return Err(RunnerError::MissingInitialHeader),
         }
     }
-    let header = header.ok_or_else(|| invalid("missing report header"))?;
-    let summary = summary.ok_or_else(|| {
-        invalid("incomplete report: missing final summary; baseline cannot be updated")
-    })?;
+    let header = header.ok_or(RunnerError::MissingHeader)?;
+    let summary = summary.ok_or(RunnerError::MissingSummary)?;
     if header.schema_version != 1 {
-        return Err(invalid("unsupported report schema"));
+        return Err(RunnerError::UnsupportedReportSchema);
     }
     let mut ids = BTreeSet::new();
     let inventory: BTreeMap<_, _> = header
@@ -314,7 +310,7 @@ pub fn read(path: &Path) -> Result<EvaluationReport, Error> {
         .map(|case| (&case.id, case))
         .collect();
     if inventory.len() != header.inventory.len() {
-        return Err(invalid("duplicate report inventory ID"));
+        return Err(RunnerError::DuplicateInventoryId);
     }
     for result in &cases {
         if !ids.insert(result.case.id.clone())
@@ -322,15 +318,11 @@ pub fn read(path: &Path) -> Result<EvaluationReport, Error> {
             || !header.selection.matches(&result.case)
             || inventory.get(&result.case.id).copied() != Some(&result.case)
         {
-            return Err(invalid(
-                "report case is duplicate, outside selection or inconsistent with inventory",
-            ));
+            return Err(RunnerError::InvalidReportCase);
         }
         if crate::baseline::compare(result.baseline.as_ref(), &result.observation) != result.change
         {
-            return Err(invalid(
-                "report comparison is inconsistent with its baseline observation",
-            ));
+            return Err(RunnerError::InvalidReportComparison);
         }
     }
     let expected: BTreeSet<_> = header
@@ -344,9 +336,7 @@ pub fn read(path: &Path) -> Result<EvaluationReport, Error> {
         || removed.iter().any(|id| inventory.contains_key(id))
         || (!header.complete_inventory && !removed.is_empty())
     {
-        return Err(invalid(
-            "report is missing selected cases or has invalid removals",
-        ));
+        return Err(RunnerError::IncompleteReport);
     }
     let mut report = EvaluationReport {
         header,
@@ -356,16 +346,28 @@ pub fn read(path: &Path) -> Result<EvaluationReport, Error> {
     };
     report.summarize();
     if report.summary != summary {
-        return Err(invalid("report summary does not match its case records"));
+        return Err(RunnerError::SummaryMismatch);
     }
     Ok(report)
 }
 
 /// Standalone viewer: all source content is data, rendered only with textContent.
-pub fn html(report: &EvaluationReport) -> Result<String, Error> {
+pub fn html(report: &EvaluationReport) -> Result<String, RunnerError> {
     let data = serde_json::to_string(report)?
         .replace('<', "\\u003c")
         .replace('\u{2028}', "\\u2028")
         .replace('\u{2029}', "\\u2029");
     Ok(include_str!("report.html").replace("__REPORT_DATA__", &data))
+}
+
+/// Render an operational error and its retained causes at the reporting boundary.
+pub(crate) fn error_message(error: &dyn std::error::Error) -> String {
+    let mut message = error.to_string();
+    let mut cause = error.source();
+    while let Some(source) = cause {
+        message.push_str(": ");
+        message.push_str(&source.to_string());
+        cause = source.source();
+    }
+    message
 }

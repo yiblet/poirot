@@ -3,7 +3,7 @@
 //! broadcasting.
 //! Behavior that needs the whole session runs through executor structs that borrow it.
 //!
-//! Depends on: compile (bytecode programs and bound trees), config (builtin policy),
+//! Depends on: compile (bytecode programs and bound trees),
 //! functions (registry identities), coordinates (cell targets), limits (budgets and
 //! failures), values (value channels and operator semantics), session (the borrowed
 //! `Session`, its run storage and expression demand, and its cell, read, projection and
@@ -12,8 +12,6 @@
 //! preparation), ports (dependency reads) and observe (execution events and consumed
 //! calls).
 
-/// Ordering of builtin admission relative to policy dependency reads.
-mod admission_order;
 /// Source-order iteration over deferred argument handles.
 mod arguments_iter;
 /// Deferred argument handles for one call.
@@ -24,8 +22,6 @@ mod array_operators;
 mod branch_selector;
 /// The bytecode virtual machine executor.
 mod bytecode_vm;
-/// Observation and policy admission of resolved builtin calls.
-mod call_admission;
 /// Borrowed expression blocks.
 mod executable_ref;
 /// Deferred expression dispatch to the VM (or the test-only tree oracle).
@@ -43,7 +39,6 @@ mod reference_operators;
 /// Borrowed decoded reference geometry.
 mod reference_ref;
 /// Resolved builtin metadata carried into call admission.
-mod resolved_call;
 /// Rectangular branch selection states and broadcasting.
 mod selection;
 /// Rectangular operand dimensions.
@@ -52,17 +47,14 @@ mod shape;
 #[cfg(test)]
 mod tests;
 
-pub(in crate::eval) use admission_order::AdmissionOrder;
 pub(in crate::eval) use arguments_ref::ArgumentsRef;
 pub(in crate::eval) use branch_selector::BranchSelector;
 pub(in crate::eval) use bytecode_vm::Vm;
-pub(in crate::eval) use call_admission::CallAdmission;
 pub(in crate::eval) use executable_ref::ExecutableRef;
 pub(in crate::eval) use expression_runner::ExpressionRunner;
 pub(in crate::eval) use machine::Machine;
 pub(in crate::eval) use rectangular_traversal::RectangularTraversal;
 #[cfg(test)]
 pub(in crate::eval) use reference_operators::ReferenceOperators;
-pub(in crate::eval) use resolved_call::ResolvedCall;
 pub(in crate::eval) use selection::{Selection, broadcast};
 pub(in crate::eval) use shape::Shape;

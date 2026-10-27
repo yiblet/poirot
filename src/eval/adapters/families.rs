@@ -16,11 +16,6 @@ macro_rules! family_adapter {
                     .iter()
                     .filter(|entry| matches!(entry.handler, FunctionId::$variant(_)))
             }
-            fn profile_functions(&self) -> impl Iterator<Item = &'static FunctionDescriptor> {
-                crate::eval::functions::registry::EXCEL_DESCRIPTORS
-                    .iter()
-                    .filter(|entry| matches!(entry.handler, FunctionId::$variant(_)))
-            }
             fn supports(&self, function: FunctionId) -> bool {
                 matches!(function, FunctionId::$variant(_))
             }
@@ -29,7 +24,7 @@ macro_rules! family_adapter {
                 $context: &mut CallContext<'_, '_>,
                 handler: FunctionId,
                 $params: FunctionParameters<'_>,
-            ) -> Option<Result<FunctionValue, crate::eval::limits::EvaluationFailure>> {
+            ) -> Option<Result<FunctionValue, crate::eval::limits::EvaluationError>> {
                 let FunctionId::$variant($function) = handler else {
                     return None;
                 };

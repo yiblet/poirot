@@ -1,7 +1,7 @@
 use crate::eval::host::{
-    ArgumentCoercion, CallHost, NumericPolicy, OperandDescription, OperandReader, ScalarOperand,
+    ArgumentCoercion, CallHost, OperandDescription, OperandReader, ScalarOperand,
 };
-use crate::eval::values::{ArrayView, FunctionFailure, FunctionResult, VALUE_ERROR, Value};
+use crate::eval::values::{ArrayView, FunctionError, FunctionResult, VALUE_ERROR, Value};
 use crate::model::CellError::{NA, Num};
 use crate::model::CellValue::Error;
 use crate::model::{CellAddress, CellValue, MAX_COLUMNS, MAX_ROWS};
@@ -46,7 +46,9 @@ impl Lift {
         let mut indices = poirot_functions::scalar::ParamVec::new();
         indices
             .try_reserve(selected.len())
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| {
+                host.small_vector_reservation_failure(reservation_source)
+            })?;
         // SAFETY: selected.len slots were reserved for exactly selected.len indices.
         indices.extend(selected.iter().copied());
         Self::from_arguments(host, selected.iter().copied(), 0, Some(indices))
@@ -62,9 +64,9 @@ impl Lift {
         let count = selected.len();
         host.check_values(count)?;
         let mut shapes = poirot_functions::scalar::ParamVec::new();
-        shapes
-            .try_reserve(count)
-            .map_err(|_| host.allocation_failure())?;
+        shapes.try_reserve(count).map_err(|reservation_source| {
+            host.small_vector_reservation_failure(reservation_source)
+        })?;
         let (mut rows, mut columns) = (1, 1);
         for _ in 0..count {
             let index = selected.next().ok_or(VALUE_ERROR)?;
@@ -137,7 +139,7 @@ impl Lift {
         if operand.missing {
             return default.ok_or(VALUE_ERROR.into());
         }
-        ArgumentCoercion::new(host).coerce_scalar_number(&operand.value, NumericPolicy::PinnedPoi)
+        ArgumentCoercion::new(host).coerce_scalar_number(&operand.value)
     }
 
     /// Evaluate each output member, preserving operational failures outside cells.
@@ -150,17 +152,17 @@ impl Lift {
         let mut result = Vec::new();
         result
             .try_reserve_exact(self.rows)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         for row in 0..self.rows {
             let mut values = Vec::new();
             values
                 .try_reserve_exact(self.columns)
-                .map_err(|_| host.allocation_failure())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             for column in 0..self.columns {
                 host.charge_work(1)?;
                 let value = match evaluate(host, row, column) {
                     Ok(value) => value,
-                    Err(FunctionFailure::Spreadsheet(error)) => Error(error),
+                    Err(FunctionError::Spreadsheet(error)) => Error(error),
                     Err(error) => return Err(error),
                 };
                 // SAFETY: Exactly columns pushes follow the local columns reservation.

@@ -1,5 +1,5 @@
 //! Deterministic encoding of complete syntax and raw compilation policy.
-use super::{Condition, Format, FormatCompilePolicy, FormatSourcePolicy, Token};
+use super::{Condition, Format, FormatCompilePolicy, Token};
 use std::hash::Hasher;
 
 /// Accumulates a deterministic fingerprint of compiled format settings for cache diagnostics.
@@ -27,15 +27,8 @@ fn string(h: &mut Fingerprint, s: &str) {
     h.write(s.as_bytes());
 }
 /// Hash parsed format structure and compilation policies for program identity.
-pub(super) fn program_fingerprint(
-    format: &Format,
-    p: FormatCompilePolicy,
-    source: FormatSourcePolicy,
-) -> u64 {
+pub(super) fn program_fingerprint(format: &Format, p: FormatCompilePolicy) -> u64 {
     let mut h = Fingerprint(0xcbf29ce484222325);
-    h.write_u8(match source {
-        FormatSourcePolicy::Poi7321209DataFormatter => 1,
-    });
     for n in [
         p.max_tokens_per_section,
         p.max_literal_characters,

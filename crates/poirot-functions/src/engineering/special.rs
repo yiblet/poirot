@@ -1,6 +1,4 @@
 //! Integer-order Bessel, Gaussian integral and numeric threshold kernels.
-use super::bessel_k::{log_scaled_k0, log_scaled_k1};
-
 /// The real integer-order cylindrical solution to evaluate.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Bessel {
@@ -13,16 +11,10 @@ pub enum Bessel {
     /// Modified second-kind solution K, on positive arguments.
     ModifiedSecond,
 }
-/// Numerical admission or execution failure, independent of worksheet errors.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Failure<O> {
-    /// The argument is outside the finite real domain or the answer overflows.
-    Number,
-    /// The caller's execution budget refused work.
-    Operational(O),
-    /// The requested order or series exceeds the explicitly bounded kernel.
-    ComputationalLimit,
-}
+
+use super::bessel_error::BesselError;
+use super::bessel_k::{log_scaled_k0, log_scaled_k1};
+
 /// Evaluate a real integer-order solution, truncating only nonnegative orders.
 ///
 /// Orders above 100,000 or modified-I arguments above 100,000 return an operational
@@ -32,23 +24,23 @@ pub fn bessel<O>(
     x: f64,
     order: f64,
     mut meter: impl FnMut(u64) -> Result<(), O>,
-) -> Result<f64, Failure<O>> {
+) -> Result<f64, BesselError<O>> {
     if !x.is_finite() || !order.is_finite() || order < 0.0 {
-        return Err(Failure::Number);
+        return Err(BesselError::Number);
     }
     if matches!(kind, Bessel::Second | Bessel::ModifiedSecond) && x <= 0.0 {
-        return Err(Failure::Number);
+        return Err(BesselError::Number);
     }
     if order.trunc() > 100_000.0 {
-        return Err(Failure::ComputationalLimit);
+        return Err(BesselError::ComputationalLimit);
     }
     let n = order.trunc() as u32;
-    meter(1).map_err(Failure::Operational)?;
+    meter(1).map_err(BesselError::Operational)?;
     let answer = match kind {
         Bessel::First | Bessel::Second => {
             // The admitted integer fits i32. libm's bounded-order recurrence
             // and its fixed base approximations are charged before execution.
-            meter(u64::from(n) + 10_001).map_err(Failure::Operational)?;
+            meter(u64::from(n) + 10_001).map_err(BesselError::Operational)?;
             if kind == Bessel::First {
                 libm::jn(n as i32, x)
             } else {
@@ -80,7 +72,7 @@ pub fn bessel<O>(
             let mut current = (base1 - initial).exp();
             let mut exponent = 0_u32;
             for k in 1..n {
-                meter(1).map_err(Failure::Operational)?;
+                meter(1).map_err(BesselError::Operational)?;
                 // DLMF10.29: K_(k+1)=K_(k-1)+(2k/x)K_k.
                 // Binary scaling avoids logarithmic roundoff on every step;
                 // base values never underflow before the order can recover them.
@@ -90,7 +82,7 @@ pub fn bessel<O>(
                     current /= SCALE;
                     exponent = exponent
                         .checked_add(256)
-                        .ok_or(Failure::ComputationalLimit)?;
+                        .ok_or(BesselError::ComputationalLimit)?;
                 }
                 let coefficient = 2.0 * f64::from(k) / x;
                 // K increases with nonnegative order (positive cosh integral).
@@ -102,7 +94,7 @@ pub fn bessel<O>(
                     + f64::from(exponent) * std::f64::consts::LN_2
                     - x;
                 if log_product > f64::MAX.ln() {
-                    return Err(Failure::Number);
+                    return Err(BesselError::Number);
                 }
                 let next = previous + coefficient * current;
                 previous = current;
@@ -113,20 +105,20 @@ pub fn bessel<O>(
     };
     finite(answer)
 }
-fn finite<O>(value: f64) -> Result<f64, Failure<O>> {
+fn finite<O>(value: f64) -> Result<f64, BesselError<O>> {
     if value.is_finite() {
         Ok(value)
     } else {
-        Err(Failure::Number)
+        Err(BesselError::Number)
     }
 }
 fn modified_i<O>(
     x: f64,
     n: u32,
     meter: &mut impl FnMut(u64) -> Result<(), O>,
-) -> Result<f64, Failure<O>> {
+) -> Result<f64, BesselError<O>> {
     if x > 100_000.0 {
-        return Err(Failure::ComputationalLimit);
+        return Err(BesselError::ComputationalLimit);
     }
     let v = f64::from(n);
     // DLMF10.25.2, positive series. Start at its largest term, not the
@@ -135,12 +127,12 @@ fn modified_i<O>(
     let k = f64::from(mode);
     let log_seed = log_series_weight(k, x) + log_series_weight(v + k, x);
     if log_seed > f64::MAX.ln() {
-        return Err(Failure::Number);
+        return Err(BesselError::Number);
     }
     let mut sum = 1.0;
     let mut term = 1.0;
     for j in (1..=mode).rev() {
-        meter(1).map_err(Failure::Operational)?;
+        meter(1).map_err(BesselError::Operational)?;
         let j = f64::from(j);
         term *= (2.0 * j / x) * (2.0 * (v + j) / x);
         sum += term;
@@ -151,7 +143,7 @@ fn modified_i<O>(
     term = 1.0;
     // SAFETY: x<=100000 and n>=0 imply mode<=x/2<=50000, so mode+1 fits u32.
     for j in mode + 1..=100_001 {
-        meter(1).map_err(Failure::Operational)?;
+        meter(1).map_err(BesselError::Operational)?;
         let j = f64::from(j);
         term *= (x / (2.0 * j)) * (x / (2.0 * (v + j)));
         sum += term;
@@ -161,7 +153,7 @@ fn modified_i<O>(
             return finite((log_seed + sum.ln()).exp());
         }
     }
-    Err(Failure::ComputationalLimit)
+    Err(BesselError::ComputationalLimit)
 }
 // Log((x/2)^count/count!), rearranged before subtracting large factorials.
 // DLMF5.11.1 Stirling series; for count>=32 the first omitted term is
@@ -341,33 +333,33 @@ mod tests {
             relative(compute(kind, -2.0, 3.9), -compute(kind, 2.0, 3.0), 1e-14);
             assert_eq!(
                 bessel(kind, 1.0, -0.1, |_| Ok::<_, ()>(())),
-                Err(Failure::Number)
+                Err(BesselError::Number)
             );
         }
         for kind in [Bessel::Second, Bessel::ModifiedSecond] {
             for x in [0.0, -1.0] {
                 assert_eq!(
                     bessel(kind, x, 0.0, |_| Ok::<_, ()>(())),
-                    Err(Failure::Number)
+                    Err(BesselError::Number)
                 );
             }
         }
         assert_eq!(
             bessel(Bessel::ModifiedFirst, 1000.0, 0.0, |_| Ok::<_, ()>(())),
-            Err(Failure::Number)
+            Err(BesselError::Number)
         );
         assert_eq!(
             bessel(Bessel::ModifiedSecond, 1e-300, 2.0, |_| Ok::<_, ()>(())),
-            Err(Failure::Number)
+            Err(BesselError::Number)
         );
         assert_eq!(compute(Bessel::ModifiedSecond, 1e300, 10.0), 0.0);
         assert_eq!(
             bessel(Bessel::ModifiedFirst, 1.0, 100001.0, |_| Ok::<_, ()>(())),
-            Err(Failure::ComputationalLimit)
+            Err(BesselError::ComputationalLimit)
         );
         assert_eq!(
             bessel(Bessel::ModifiedFirst, 100001.0, 1.0, |_| Ok::<_, ()>(())),
-            Err(Failure::ComputationalLimit)
+            Err(BesselError::ComputationalLimit)
         );
         for kind in [
             Bessel::First,
@@ -377,7 +369,7 @@ mod tests {
         ] {
             assert_eq!(
                 bessel(kind, 10.0, 10.0, |_| Err("work")),
-                Err(Failure::Operational("work"))
+                Err(BesselError::Operational("work"))
             );
         }
     }

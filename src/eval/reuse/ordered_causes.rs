@@ -36,7 +36,7 @@ impl OrderedCauses {
                     return Ok(None);
                 }
                 let Validity::Causes(causes) = validity else {
-                    return Err(crate::eval::limits::EvaluationFailure::StalePlan);
+                    return Err(crate::eval::limits::EvaluationError::StalePlan);
                 };
                 while let Some(address) = next.take() {
                     budget.charge(crate::eval::limits::WorkKind::Comparison, 1)?;

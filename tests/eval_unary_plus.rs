@@ -28,17 +28,14 @@ fn workbook() -> Workbook {
 
 #[test]
 fn unary_plus_retains_text_and_consumes_other_scalar_types() {
-    // Pinned POI retains text for unary plus, while booleans and blank
-    // operands pass through numeric argument conversion.
+    // Unary plus preserves typed scalar values under the documented contract.
     for arrays in [
         ArrayResultPolicy::ScalarIntersection,
         ArrayResultPolicy::DynamicSpill,
     ] {
         let book = workbook();
         let policy = PreparationPolicy::default();
-        let configuration = RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
-            .with_array_result_policy(arrays);
+        let configuration = RunConfiguration::default().with_array_result_policy(arrays);
         let mut compiler = FormulaCompiler::new();
         let plan = compiler.compile_workbook(&book, &policy);
         let mut run = EvaluationRun::new_with_configuration(
@@ -54,20 +51,20 @@ fn unary_plus_retains_text_and_consumes_other_scalar_types() {
             ("+\"1\"", text("1")),
             ("+\"pear\"", text("pear")),
             ("+\"\"", text("")),
-            ("+TRUE", CellValue::Number(1.)),
-            ("+FALSE", CellValue::Number(0.)),
+            ("+TRUE", CellValue::Boolean(true)),
+            ("+FALSE", CellValue::Boolean(false)),
             ("+#DIV/0!", CellValue::Error(CellError::Div0)),
             ("+#N/A", CellValue::Error(CellError::NA)),
-            ("+A1", CellValue::Number(0.)),
+            ("+A1", CellValue::Blank),
             (
                 "+A5",
                 CellValue::TextUtf16(ExcelText::from_units(vec![0xd800, 0x61, 0xdc00])),
             ),
-            ("ISBLANK(+A1)", CellValue::Boolean(false)),
-            ("ISBLANK(+IF(TRUE,))", CellValue::Boolean(false)),
+            ("ISBLANK(+A1)", CellValue::Boolean(true)),
+            ("ISBLANK(+IF(TRUE,))", CellValue::Boolean(true)),
             ("ISNUMBER(+\"1\")", CellValue::Boolean(false)),
             ("ISTEXT(+\"😀\")", CellValue::Boolean(true)),
-            ("ISLOGICAL(+A3)", CellValue::Boolean(false)),
+            ("ISLOGICAL(+A3)", CellValue::Boolean(true)),
             ("ISREF(+A2)", CellValue::Boolean(false)),
             ("ISREF(+IF(TRUE,A2))", CellValue::Boolean(false)),
             ("ISREF(IF(TRUE,A2))", CellValue::Boolean(true)),
@@ -77,8 +74,8 @@ fn unary_plus_retains_text_and_consumes_other_scalar_types() {
             ("-\"pear\"", CellValue::Error(CellError::Value)),
             ("-A1", CellValue::Number(0.)),
             ("+\"1\"+2", CellValue::Number(3.)),
-            ("SUM(+{\"1\",TRUE,2})", CellValue::Number(3.)),
-            // SUMPRODUCT consumes the numeric boolean projection and ignores text.
+            ("SUM(+{\"1\",TRUE,2})", CellValue::Number(2.)),
+            // SUMPRODUCT admits logical members numerically and ignores text.
             ("SUMPRODUCT(+A2:A4)", CellValue::Number(3.)),
             (
                 "ISTEXT(INDEX(+{\"1\",TRUE,2},1,1))",
@@ -86,7 +83,7 @@ fn unary_plus_retains_text_and_consumes_other_scalar_types() {
             ),
             (
                 "ISLOGICAL(INDEX(+{\"1\",TRUE,2},1,2))",
-                CellValue::Boolean(false),
+                CellValue::Boolean(true),
             ),
             ("SUM(+{1,#N/A})", CellValue::Error(CellError::NA)),
         ] {
@@ -234,7 +231,7 @@ fn unary_plus_array_admission_precedes_reads_and_failures_remain_operational() {
     .with_dependency_sink(&mut reads);
     assert!(matches!(
         run.evaluate_formula(target("F2"), &formula),
-        Err(EvaluationFailure::Budget(_))
+        Err(EvaluationError::Budget(_))
     ));
     run.finish(Ok(()));
     assert!(

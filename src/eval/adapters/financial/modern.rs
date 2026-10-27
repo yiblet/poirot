@@ -5,13 +5,13 @@ use crate::eval::adapters::{
         Variadic, WholeCollection,
         collections::{self, Admission},
     },
-    failure::operational_only,
+    operational_only::operational_only,
 };
 use crate::eval::functions::registry::{FinancialFunction, FunctionId};
 use crate::eval::host::{ArgumentCoercion, CallHost};
 use crate::eval::limits::{CapabilityId, EvalResult};
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::{Div0, Num};
 use crate::model::CellValue::{Error, Number};
@@ -21,7 +21,7 @@ use poirot_functions::financial::{
     modern::{self as kernel, DatedFlow, LoanComponent},
 };
 
-pub(super) fn spreadsheet(error: FinancialError) -> FunctionFailure {
+pub(super) fn spreadsheet(error: FinancialError) -> FunctionError {
     match error {
         FinancialError::Num => Num,
         FinancialError::DivZero => Div0,
@@ -30,16 +30,16 @@ pub(super) fn spreadsheet(error: FinancialError) -> FunctionFailure {
     .into()
 }
 
-fn numerical<E: Into<FunctionFailure>>(
+fn numerical<E: Into<FunctionError>>(
     host: &CallHost<'_, '_>,
-    error: kernel::Failure<E>,
-) -> FunctionFailure {
+    error: poirot_functions::financial::FinancialCalculationError<E>,
+) -> FunctionError {
     match error {
-        kernel::Failure::Spreadsheet(error) => spreadsheet(error),
-        kernel::Failure::Operational(error) => error.into(),
-        kernel::Failure::ComputationalLimit => host.unsupported(
+        poirot_functions::financial::FinancialCalculationError::Spreadsheet(error) => spreadsheet(error),
+        poirot_functions::financial::FinancialCalculationError::Operational(error) => error.into(),
+        poirot_functions::financial::FinancialCalculationError::ComputationalLimit => host.unsupported(
             CapabilityId::FunctionAdapter,
-            "financial computation exceeds its bounded work envelope",
+            crate::eval::limits::EvaluationReasonError::FinancialComputationExceedsItsBoundedWorkEnvelope,
         ),
     }
 }
@@ -81,8 +81,8 @@ fn dated_flows(
                     ArgumentCoercion::new(host)
                         .coerce_calendar_date(&Number(number.trunc()))
                         .map_err(|error| match error {
-                            FunctionFailure::Spreadsheet(_) => {
-                                FunctionFailure::Spreadsheet(VALUE_ERROR)
+                            FunctionError::Spreadsheet(_) => {
+                                FunctionError::Spreadsheet(VALUE_ERROR)
                             }
                             other => other,
                         })?
@@ -104,7 +104,7 @@ fn dated_flows(
             state
                 .0
                 .try_reserve(1)
-                .map_err(|_| host.allocation_failure())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             // SAFETY: one additional slot was reserved immediately above.
             state.0.push(DatedFlow {
                 value,
@@ -341,7 +341,7 @@ pub(super) fn execute(
     };
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
         Err(error) => Err(operational_only(error)),
     }
 }

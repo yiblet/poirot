@@ -1,7 +1,7 @@
 //! Shared output selection over the single execution engine.
 use super::source;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::session::CellEvaluator;
 use std::collections::BTreeMap;
 
@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 pub(super) fn outputs(
     session: &mut crate::eval::session::Session<'_>,
     targets: &[EvaluationTarget],
-) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationFailure> {
+) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationError> {
     session.state.runtime.budget.allocation(targets.len())?;
     targets
         .iter()
@@ -24,7 +24,7 @@ pub(super) fn outputs(
 /// Evaluate sparse effective source cells and materialized spill children.
 pub(super) fn all(
     session: &mut crate::eval::session::Session<'_>,
-) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationFailure> {
+) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationError> {
     let targets = source::source_targets(session.sources.workbook, session.sources.inputs);
     session.state.runtime.budget.allocation(targets.len())?;
     let mut values = BTreeMap::new();

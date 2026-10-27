@@ -73,6 +73,7 @@ fn complex_storage_prefixes_distinguish_legacy_and_newer_names() {
                     col: 0
                 })
                 .unwrap()
+                .unwrap()
                 .formula
                 .as_deref(),
             Some(format!("{prefix}{name}({args})").as_str()),

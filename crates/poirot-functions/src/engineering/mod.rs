@@ -7,6 +7,18 @@
 //! The caller resolves workbook references and evaluates arguments. Shared argument
 //! parsing lives in [coercion](https://docs.rs/poirot-functions/latest/poirot_functions/coercion).
 
+mod conversion_error;
+
+pub use conversion_error::ConversionError;
+
+mod engineering_error;
+
+pub use engineering_error::EngineeringError;
+
+mod bessel_error;
+
+pub use bessel_error::BesselError;
+
 // Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
 // <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
 // Pure engineering algorithms and retained pinned POI helper APIs.
@@ -25,14 +37,6 @@ pub mod radix;
 /// Physical measurement conversion using explicit unit definitions.
 pub mod units;
 
-/// Spreadsheet value/domain failures from engineering conversions.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum EngineeringError {
-    /// Input spelling or value type is invalid.
-    Value,
-    /// Input or requested width exceeds the supported numeric range.
-    Num,
-}
 /// Engineering kernel result, with spreadsheet value/domain failures in [`EngineeringError`].
 pub type Result<T> = std::result::Result<T, EngineeringError>;
 

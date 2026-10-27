@@ -1,6 +1,6 @@
 //! Independently authored coordinate and ordering tests; no upstream fixture material.
 use poirot_functions::matrix::{
-    Axis, Budget, Error, Matrix, SortOrder, filter, select, sort, unique,
+    Axis, Budget, Matrix, MatrixError, SortOrder, filter, select, sort, unique,
 };
 use poirot_functions::scalar::CellError;
 const B: Budget = Budget {
@@ -27,19 +27,19 @@ fn selection_and_masks_preserve_coordinates_and_validate_geometry() {
     );
     assert_eq!(
         filter(&input, Axis::Rows, &[false; 3], B),
-        Err(Error::Formula(CellError::Calc))
+        Err(MatrixError::Formula(CellError::Calc))
     );
     assert_eq!(
         filter(&input, Axis::Rows, &[true], B),
-        Err(Error::Formula(CellError::Value))
+        Err(MatrixError::Formula(CellError::Value))
     );
     assert_eq!(
         select(&input, Axis::Columns, &[2], B),
-        Err(Error::Formula(CellError::Value))
+        Err(MatrixError::Formula(CellError::Value))
     );
     assert_eq!(
         filter(&input, Axis::Rows, &[true; 3], Budget { max_cells: 5, ..B }),
-        Err(Error::BudgetExceeded)
+        Err(MatrixError::BudgetExceeded)
     );
 }
 #[test]
@@ -76,7 +76,7 @@ fn lexicographic_sort_and_unique_retain_first_occurrence_order() {
     );
     assert_eq!(
         unique(&m(3, 1, &[4, 4, 4]), Axis::Rows, true, i32::cmp, B),
-        Err(Error::Formula(CellError::Calc))
+        Err(MatrixError::Formula(CellError::Calc))
     );
     assert_eq!(
         sort(
@@ -87,7 +87,7 @@ fn lexicographic_sort_and_unique_retain_first_occurrence_order() {
             i32::cmp,
             B
         ),
-        Err(Error::Formula(CellError::Value))
+        Err(MatrixError::Formula(CellError::Value))
     );
     assert_eq!(
         unique(
@@ -97,7 +97,7 @@ fn lexicographic_sort_and_unique_retain_first_occurrence_order() {
             i32::cmp,
             Budget { max_work: 1, ..B }
         ),
-        Err(Error::BudgetExceeded)
+        Err(MatrixError::BudgetExceeded)
     );
 }
 #[test]

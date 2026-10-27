@@ -5,7 +5,7 @@
 //! changes the displayed text, not the stored cell value.
 //!
 //! ```rust
-//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! fn main() -> Result<(), poirot_functions::format::FormatCompileError> {
 //!     use poirot_functions::format::{compile_format, render_value, FormatCompilePolicy, FormatRenderContext};
 //!     use poirot_functions::scalar::CellValue;
 //!
@@ -30,15 +30,20 @@ use nom::{
     multi::{many0, separated_list1},
     sequence::{delimited, preceded},
 };
-use std::fmt;
 
 mod system;
 /// Pinned system date/time selectors resolved independently of host locale.
 pub use system::SystemDateTime;
-mod diagnostic;
+mod format_compile_error;
+pub use format_compile_error::FormatCompileError;
+mod format_error;
+mod format_error_kind;
+mod format_reason_error;
 // Structured syntax, fidelity, and resource diagnostics from format compilation/rendering.
-pub use diagnostic::{FormatError, FormatErrorKind};
-use diagnostic::{error, fidelity_error, resource_error};
+pub use format_error::FormatError;
+use format_error::{error, fidelity_error, resource_error};
+pub use format_error_kind::FormatErrorKind;
+pub use format_reason_error::FormatReasonError;
 /// One element of Excel number-format syntax, such as a digit placeholder or date field.
 /// These tokens describe display formatting, not the formula language.
 #[derive(Debug, Clone, PartialEq)]
@@ -222,20 +227,24 @@ fn token(input: &str) -> IResult<&str, Raw> {
 /// Parse up to four sections; unsupported bracket directives are explicit errors.
 pub fn parse_format(input: &str) -> Result<Format, FormatError> {
     if input.len() > 32768 {
-        return Err(error("format exceeds resource limit"));
+        return Err(error(
+            crate::format::FormatReasonError::FormatExceedsResourceLimit,
+        ));
     }
     let (rest, raw) = separated_list1(char(';'), many0(token))
         .parse(input)
-        .map_err(|_| error("invalid format syntax"))?;
+        .map_err(|_| error(crate::format::FormatReasonError::InvalidFormatSyntax))?;
     if !rest.is_empty() {
         return Err(FormatError {
             kind: FormatErrorKind::InvalidFormat,
             position: input.len() - rest.len(),
-            message: "unterminated quote, bracket, or escape".into(),
+            reason: crate::format::FormatReasonError::UnterminatedQuoteBracketOrEscape,
         });
     }
     if raw.len() > 4 {
-        return Err(error("number formats have at most four sections"));
+        return Err(error(
+            crate::format::FormatReasonError::NumberFormatsHaveAtMostFourSections,
+        ));
     }
     let mut sections = Vec::new();
     for parts in raw {
@@ -285,7 +294,9 @@ pub fn parse_format(input: &str) -> Result<Format, FormatError> {
                     }
                     if let Some(condition) = parse_condition(&s) {
                         if section.condition.replace(condition).is_some() {
-                            return Err(error("multiple conditions in one section"));
+                            return Err(error(
+                                crate::format::FormatReasonError::MultipleConditionsInOneSection,
+                            ));
                         }
                         continue;
                     }
@@ -305,7 +316,9 @@ pub fn parse_format(input: &str) -> Result<Format, FormatError> {
                         section.color = Some(s);
                         continue;
                     }
-                    return Err(error(&format!("unsupported bracket directive [{s}]")));
+                    return Err(error(FormatReasonError::UnsupportedBracketDirective {
+                        directive: s,
+                    }));
                 }
             }
         }
@@ -387,9 +400,8 @@ mod plan;
 pub use number::{NumberLayout, NumberPlan};
 // Pure format compilation and bounded execution of immutable rendering programs.
 pub use plan::{
-    FormatCompileError, FormatCompilePolicy, FormatLocale, FormatPlan, FormatRenderContext,
-    FormatSourcePolicy, SectionKind, SectionPlan, compile_format, compile_format_with_source,
-    compile_program, compile_program_with_source, render_value,
+    FormatCompilePolicy, FormatLocale, FormatPlan, FormatRenderContext, SectionKind, SectionPlan,
+    compile_format, compile_program, render_value,
 };
 
 #[cfg(test)]

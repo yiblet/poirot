@@ -1,11 +1,9 @@
 //! Modern OFFSET grid checks follow Microsoft documentation; direct SignedArea
 //! tests retain independent logical padding and overflowed-source invariants.
-use crate::eval::config::{
-    ArrayResultPolicy, BuiltinSemanticsPolicy, EvaluationInputs, RunConfiguration,
-};
+use crate::eval::config::{ArrayResultPolicy, EvaluationInputs, RunConfiguration};
 use crate::eval::entry::run_plan;
 use crate::eval::host::OperandReader;
-use crate::eval::limits::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::limits::{EvaluationBudgets, EvaluationError, EvaluationOutcome};
 use crate::eval::session::{ArgumentReader, ItemFolder, Session};
 use crate::eval::values::area_kind::AreaKind;
 use crate::eval::values::signed_reference;
@@ -30,10 +28,7 @@ fn fixture() -> Workbook {
         ("A1048576", 17.),
         ("XFD1", 23.),
     ] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(address.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(address, value).unwrap();
     }
     w
 }
@@ -49,7 +44,6 @@ fn formula(w: &Workbook, expression: &str) -> CellValue {
         "P1".parse().unwrap(),
         &plan,
         &RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
             .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
         Default::default(),
     ) {
@@ -203,7 +197,7 @@ fn zero_negative_source_dimensions_keep_metadata_and_empty_sparse_loop_policy() 
         assert!(logical.positive_shape().is_none());
         assert!(matches!(
             ArgumentReader::new(&mut session).matrix(Value::SignedRefs(vec![logical])),
-            Err(EvaluationFailure::UnsupportedCapability { .. })
+            Err(EvaluationError::UnsupportedCapability { .. })
         ));
     }
 }

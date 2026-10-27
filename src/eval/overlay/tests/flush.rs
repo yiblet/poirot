@@ -16,6 +16,7 @@ fn owned_flush_preserves_allocations_bytecode_results_and_followup_dependencies(
         .unwrap()
         .get(at("D1").address)
         .unwrap()
+        .unwrap()
         .formula
         .as_ref()
         .unwrap()
@@ -49,6 +50,7 @@ fn owned_flush_preserves_allocations_bytecode_results_and_followup_dependencies(
         sheet
             .get(at("D1").address)
             .unwrap()
+            .unwrap()
             .formula
             .as_ref()
             .unwrap()
@@ -59,17 +61,26 @@ fn owned_flush_preserves_allocations_bytecode_results_and_followup_dependencies(
         sheet
             .get(at("A1").address)
             .unwrap()
+            .unwrap()
             .style
             .number_format
             .as_deref(),
         Some("0.00")
     );
     assert_eq!(
-        sheet.get(at("B1").address).unwrap().formula.as_deref(),
+        sheet
+            .get(at("B1").address)
+            .unwrap()
+            .unwrap()
+            .formula
+            .as_deref(),
         Some("A1*3")
     );
     // Source publication deliberately does not materialize evaluated caches.
-    assert_eq!(sheet.get(at("B1").address).unwrap().value, CellValue::Blank);
+    assert_eq!(
+        sheet.get(at("B1").address).unwrap().unwrap().value,
+        CellValue::Blank
+    );
     let mut warm = overlay.evaluation(&context).unwrap();
     warm.all().unwrap();
     assert_eq!(warm.usage().formula_executions, 0);
@@ -87,6 +98,7 @@ fn owned_flush_preserves_allocations_bytecode_results_and_followup_dependencies(
             .sheet(0)
             .unwrap()
             .get(at("A1").address)
+            .unwrap()
             .is_none()
     );
     assert_eq!(value(&mut overlay, "C1", &context), CellValue::Number(1.));
@@ -135,6 +147,7 @@ fn exclusive_borrow_flush_and_rejected_edits_are_atomic() {
             .sheet(0)
             .unwrap()
             .get(at("A1").address)
+            .unwrap()
             .unwrap()
             .value,
         CellValue::Number(10.)
@@ -216,9 +229,22 @@ fn flush_spills_shrink_blockers_snapshots_and_saved_cache_export() {
     let changes = overlay.changes();
     let mut saved = overlay.workbook().clone();
     saved.apply(changes).unwrap();
-    assert!(saved.sheet(0).unwrap().get(at("H2").address).is_none());
+    assert!(
+        saved
+            .sheet(0)
+            .unwrap()
+            .get(at("H2").address)
+            .unwrap()
+            .is_none()
+    );
     assert_eq!(
-        saved.sheet(0).unwrap().get(at("G1").address).unwrap().value,
+        saved
+            .sheet(0)
+            .unwrap()
+            .get(at("G1").address)
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Number(9.)
     );
     overlay.set_formula(at("G1"), "{5,6;7,8}").unwrap();
@@ -230,6 +256,7 @@ fn flush_spills_shrink_blockers_snapshots_and_saved_cache_export() {
             .sheet(0)
             .unwrap()
             .get(at("H2").address)
+            .unwrap()
             .is_none()
     );
     let mut saved = overlay.workbook().clone();

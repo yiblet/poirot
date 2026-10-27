@@ -35,7 +35,9 @@ impl CellEncoding {
             CellValue::Blank => (None, None),
             CellValue::Number(n) => {
                 if !n.is_finite() {
-                    return Err(IoError::Unsupported("nonfinite formula cache".into()));
+                    return Err(IoError::Unsupported(
+                        crate::WorkbookFeatureError::NonfiniteFormulaCache,
+                    ));
                 }
                 (None, Some(n.to_string()))
             }
@@ -83,7 +85,9 @@ fn write_cells<W: Write>(
         let mut start = BytesStart::new("row");
         let number = index
             .checked_add(1)
-            .ok_or_else(|| IoError::Unsupported("row index overflow".into()))?
+            .ok_or(IoError::Unsupported(
+                crate::WorkbookFeatureError::RowIndexOverflow,
+            ))?
             .to_string();
         start.push_attribute(("r", number.as_str()));
         // OOXML has one row-hiding flag; the reader maps it back to `manually_hidden`.

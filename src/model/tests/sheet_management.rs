@@ -9,7 +9,7 @@ fn reorder_remaps_scopes_and_duplicate_retains_typed_sources_and_presentation() 
     w.define_name("local", "A1", Some(0)).unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), ExcelText::from_units(vec![0xd800]))
+        .set_value("A1", ExcelText::from_units(vec![0xd800]))
         .unwrap();
     w.sheet_mut(0).unwrap().set_presentation(SheetPresentation {
         visibility: SheetVisibility::VeryHidden,
@@ -25,8 +25,8 @@ fn reorder_remaps_scopes_and_duplicate_retains_typed_sources_and_presentation() 
         }
     );
     assert_eq!(
-        w.sheet(copy).unwrap().get("A1".parse().unwrap()),
-        w.sheet(0).unwrap().get("A1".parse().unwrap())
+        w.sheet(copy).unwrap().get("A1").unwrap(),
+        w.sheet(0).unwrap().get("A1").unwrap()
     );
     assert!(w.named_ranges.iter().any(|n| n.sheet_scope == Some(3)));
     w.move_sheet(0, 3).unwrap();

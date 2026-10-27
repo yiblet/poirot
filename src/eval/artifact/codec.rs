@@ -5,7 +5,7 @@ use super::prepared_status::PreparedStatus;
 use super::restored_artifact::RestoredArtifact;
 use super::snapshot_error::SnapshotError;
 use super::snapshot_limits::SnapshotLimits;
-use super::snapshot_quota_failure::SnapshotQuotaFailure;
+use super::snapshot_quota_error::SnapshotQuotaError;
 use super::snapshot_resource::SnapshotResource;
 use super::source_payload::SourcePayload;
 use crate::eval::overlay::snapshot::Snapshot;
@@ -92,7 +92,9 @@ fn encode_source(
         .max_file_bytes
         .checked_sub(HEADER)
         .and_then(|n| n.checked_sub(prepared_len))
-        .ok_or(SnapshotError::Envelope("file byte limit"))?;
+        .ok_or(SnapshotError::Envelope(
+            crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::FileByteLimit,
+        ))?;
     serialize(
         &SourcePayload {
             model: workbook.snapshot(),
@@ -127,7 +129,7 @@ pub fn decode(
 ) -> Result<RestoredArtifact, SnapshotError> {
     if limits.max_depth > 256 {
         return Err(SnapshotError::EngineConstraint(
-            "recursive decoder nesting ceiling is 256",
+            crate::eval::artifact::snapshot_constraint_error::SnapshotConstraintError::RecursiveDecoderNestingCeilingIs256,
         ));
     }
     let (encoded_source, prepared, revision) = sections(bytes, limits.max_file_bytes)?;
@@ -135,17 +137,17 @@ pub fn decode(
         .get(10..12)
         .and_then(|b| <[u8; 2]>::try_from(b).ok())
         .map(u16::from_le_bytes)
-        .ok_or(SnapshotError::Envelope("source schema missing"))?;
+        .ok_or(SnapshotError::Envelope(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::SourceSchemaMissing))?;
     let compatible = schema == SOURCE_SCHEMA
         && revision == crate::eval::overlay::snapshot::COMPATIBILITY_REVISION;
     if policy == PreparedPolicy::RequireCompatible && prepared.is_empty() {
         return Err(SnapshotError::Envelope(
-            "compatible prepared state required but absent",
+            crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::CompatiblePreparedStateRequiredButAbsent,
         ));
     }
     if policy == PreparedPolicy::RequireCompatible && !compatible {
         return Err(SnapshotError::Envelope(
-            "incompatible prepared engine revision",
+            crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::IncompatiblePreparedEngineRevision,
         ));
     }
     let budget = bounded::Budget::new(
@@ -168,15 +170,16 @@ pub fn decode(
         return Ok(RestoredArtifact {
             workbook,
             workspace: None,
+            extensions: None,
             prepared_status: status,
         });
     }
     let (prepared, checksum) = prepared
         .split_last_chunk::<SOURCE_CHECKSUM>()
-        .ok_or(SnapshotError::Envelope("truncated prepared section"))?;
+        .ok_or(SnapshotError::Envelope(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::TruncatedPreparedSection))?;
     if u32::from_le_bytes(*checksum) != crc32fast::hash(encoded_source) {
         return Err(SnapshotError::Envelope(
-            "source and prepared state disagree",
+            super::snapshot_envelope_error::SnapshotEnvelopeError::SourceAndPreparedStateDisagree,
         ));
     }
     let snapshot: Snapshot<'static> = deserialize(prepared, &budget)?;
@@ -188,6 +191,7 @@ pub fn decode(
     Ok(RestoredArtifact {
         workbook: baseline,
         workspace: Some(state),
+        extensions: None,
         prepared_status: status,
     })
 }
@@ -201,12 +205,12 @@ pub fn read_file(
 ) -> Result<RestoredArtifact, SnapshotError> {
     if limits.max_depth > 256 {
         return Err(SnapshotError::EngineConstraint(
-            "recursive decoder nesting ceiling is 256",
+            crate::eval::artifact::snapshot_constraint_error::SnapshotConstraintError::RecursiveDecoderNestingCeilingIs256,
         ));
     }
     let file = std::fs::File::open(path).map_err(SnapshotError::from_io)?;
     if file.metadata().map_err(SnapshotError::from_io)?.len() > limits.max_file_bytes as u64 {
-        return Err(SnapshotError::Quota(SnapshotQuotaFailure {
+        return Err(SnapshotError::Quota(SnapshotQuotaError {
             resource: SnapshotResource::FileBytes,
             limit: limits.max_file_bytes,
             consumed: 0,
@@ -224,7 +228,7 @@ pub fn read_file(
 pub(super) fn sections(bytes: &[u8], max: usize) -> Result<(&[u8], &[u8], u64), SnapshotError> {
     let invalid = SnapshotError::Envelope;
     if bytes.len() > max {
-        return Err(SnapshotError::Quota(SnapshotQuotaFailure {
+        return Err(SnapshotError::Quota(SnapshotQuotaError {
             resource: SnapshotResource::FileBytes,
             limit: max,
             consumed: 0,
@@ -233,42 +237,42 @@ pub(super) fn sections(bytes: &[u8], max: usize) -> Result<(&[u8], &[u8], u64), 
     }
     // SAFETY: The header guard requires at least HEADER (40) bytes; section lengths are checked against bytes.len() before slicing.
     if bytes.len() < HEADER || &bytes[..8] != MAGIC {
-        return Err(invalid("invalid magic or truncated header"));
+        return Err(invalid(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::InvalidMagicOrTruncatedHeader));
     }
     // SAFETY: The header guard requires at least HEADER (40) bytes; section lengths are checked against bytes.len() before slicing.
     if u16::from_le_bytes([bytes[8], bytes[9]]) != FILE_VERSION {
-        return Err(invalid("unsupported file version"));
+        return Err(invalid(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::UnsupportedFileVersion));
     }
     // SAFETY: The header guard requires at least HEADER (40) bytes; section lengths are checked against bytes.len() before slicing.
     if u16::from_le_bytes([bytes[10], bytes[11]]) != SOURCE_SCHEMA {
-        return Err(invalid("unsupported source schema"));
+        return Err(invalid(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::UnsupportedSourceSchema));
     }
     // SAFETY: The header guard requires at least HEADER (40) bytes; section lengths are checked against bytes.len() before slicing.
     let kind = bytes[12];
     // SAFETY: The header guard requires at least HEADER (40) bytes; section lengths are checked against bytes.len() before slicing.
     if kind > 1 || bytes[13..16] != [0; 3] {
-        return Err(invalid("unknown kind or header flags"));
+        return Err(invalid(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::UnknownKindOrHeaderFlags));
     }
     let number = |at: usize| -> Result<u64, SnapshotError> {
-        let end = at.checked_add(8).ok_or(invalid("header offset overflow"))?;
-        let word = bytes.get(at..end).ok_or(invalid("truncated header word"))?;
-        let word = word.try_into().map_err(|_| invalid("header word width"))?;
+        let end = at.checked_add(8).ok_or(invalid(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::HeaderOffsetOverflow))?;
+        let word = bytes.get(at..end).ok_or(invalid(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::TruncatedHeaderWord))?;
+        let word = word.try_into().map_err(|_| invalid(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::HeaderWordWidth))?;
         Ok(u64::from_le_bytes(word))
     };
     let revision = number(16)?;
-    let source_len = usize::try_from(number(24)?).map_err(|_| invalid("source length overflow"))?;
+    let source_len = usize::try_from(number(24)?).map_err(|_| invalid(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::SourceLengthOverflow))?;
     let prepared_len =
-        usize::try_from(number(32)?).map_err(|_| invalid("prepared length overflow"))?;
-    let split = HEADER
-        .checked_add(source_len)
-        .ok_or(invalid("source length overflow"))?;
+        usize::try_from(number(32)?).map_err(|_| invalid(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::PreparedLengthOverflow))?;
+    let split = HEADER.checked_add(source_len).ok_or(invalid(
+        crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::SourceLengthOverflow,
+    ))?;
     if split.checked_add(prepared_len) != Some(bytes.len()) || source_len == 0 {
-        return Err(invalid("section lengths or trailing data"));
+        return Err(invalid(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::SectionLengthsOrTrailingData));
     }
     if (kind == 0 && (prepared_len != 0 || revision != 0))
         || (kind == 1 && (prepared_len == 0 || revision == 0))
     {
-        return Err(invalid("kind does not match prepared section"));
+        return Err(invalid(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::KindDoesNotMatchPreparedSection));
     }
     // SAFETY: The header guard requires at least HEADER (40) bytes; section lengths are checked against bytes.len() before slicing.
     Ok((&bytes[HEADER..split], &bytes[split..], revision))
@@ -286,7 +290,7 @@ pub(super) fn deserialize<T: serde::de::DeserializeOwned>(
     })
     .map_err(|error| budget.failure().unwrap_or(SnapshotError::Codec(error)))?;
     if !decoder.finalize().map_err(SnapshotError::Codec)?.is_empty() {
-        return Err(SnapshotError::Envelope("trailing section bytes"));
+        return Err(SnapshotError::Envelope(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::TrailingSectionBytes));
     }
     Ok(value)
 }

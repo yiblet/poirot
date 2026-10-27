@@ -23,14 +23,14 @@ pub(in crate::xls) fn records(
         // Compound stream padding may contain zero records; those are harmless.
         let id = u16at(bytes, at)?;
         let n = u16at(bytes, at + 2)? as usize;
-        let end = at
-            .checked_add(4 + n)
-            .ok_or(PreflightError::Malformed("record offset overflow"))?;
-        let data = bytes
-            .get(at + 4..end)
-            .ok_or(PreflightError::Malformed("truncated record"))?;
+        let end = at.checked_add(4 + n).ok_or(PreflightError::Malformed(
+            crate::BiffStructureError::RecordOffsetOverflow,
+        ))?;
+        let data = bytes.get(at + 4..end).ok_or(PreflightError::Malformed(
+            crate::BiffStructureError::TruncatedRecord,
+        ))?;
         check(
-            "BIFF records",
+            crate::BiffResource::BiffRecords,
             (out.len() + 1) as u64,
             budget.max_records as u64,
         )?;

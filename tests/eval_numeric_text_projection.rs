@@ -1,8 +1,5 @@
 //! Spreadsheet numeric text preserves arithmetic values across text policies.
-use poirot::eval::{
-    EvaluationOutcome, RunConfiguration, TextSemanticsPolicy, TextSourceVersion,
-    run_formula_with_configuration,
-};
+use poirot::eval::{EvaluationOutcome, RunConfiguration, run_formula_with_configuration};
 use poirot::model::{CellAddress, CellValue, Workbook};
 
 #[test]
@@ -18,18 +15,9 @@ fn numeric_projection_uses_spreadsheet_precision_and_preserves_numeric_bits() {
         .set_value(input, CellValue::Number(number))
         .unwrap();
     let legacy = RunConfiguration::default();
-    assert_eq!(
-        legacy.text_policy().source,
-        TextSourceVersion::ExcelCompatibilityV2Documented
-    );
-    for (source, expected) in [
-        (TextSourceVersion::ExcelCompatibilityV2Documented, "-14"),
-        (TextSourceVersion::Poi7321209, "-14"),
-        (TextSourceVersion::Poi7321209OpenJdk21Unicode15, "-14"),
-    ] {
-        let configuration = legacy
-            .clone()
-            .with_text_policy(TextSemanticsPolicy { source });
+
+    for (_source, expected) in [(true, "-14")] {
+        let configuration = legacy.clone();
         for formula in ["A1&\"\"", "CONCAT(A1)", "CONCATENATE(A1)"] {
             let outcome = run_formula_with_configuration(
                 &workbook,
@@ -41,7 +29,7 @@ fn numeric_projection_uses_spreadsheet_precision_and_preserves_numeric_bits() {
             );
             assert!(
                 matches!(outcome,EvaluationOutcome::Complete { value,.. } if value==CellValue::Text(expected.into())),
-                "{source:?} {formula}"
+                "{formula}"
             );
         }
         let outcome = run_formula_with_configuration(
@@ -56,7 +44,7 @@ fn numeric_projection_uses_spreadsheet_precision_and_preserves_numeric_bits() {
             matches!(outcome,EvaluationOutcome::Complete { value:CellValue::Number(value),.. } if value.to_bits()==number.to_bits())
         );
         assert!(
-            matches!(workbook.sheet(0).unwrap().get(input).unwrap().value,CellValue::Number(value) if value.to_bits()==number.to_bits())
+            matches!(workbook.sheet(0).unwrap().get(input).unwrap().unwrap().value,CellValue::Number(value) if value.to_bits()==number.to_bits())
         );
     }
 }

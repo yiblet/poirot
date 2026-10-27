@@ -1,5 +1,4 @@
 //! Immutable formula syntax and parse errors.
-use std::fmt;
 
 /// Formula syntax before workbook name resolution or evaluation.
 ///
@@ -153,30 +152,3 @@ pub enum BinaryOp {
     /// Select the overlap of two reference areas.
     Intersection,
 }
-/// Why formula preparation rejected source text.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum ParseErrorKind {
-    /// Source text is outside the supported formula grammar.
-    Syntax,
-    /// A configured structural bound rejected otherwise parseable source.
-    ResourceLimit,
-    /// A parser limit is zero or exceeds its supported maximum.
-    InvalidPolicy,
-}
-/// Formula syntax or parser-limit failure at a UTF-8 byte offset in the input.
-/// This is a parsing diagnostic, not a spreadsheet cell error value.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct ParseError {
-    /// Whether rejection concerns syntax, resource capacity, or configuration.
-    pub kind: ParseErrorKind,
-    /// UTF-8 byte offset where parsing failed.
-    pub position: usize,
-    /// Diagnostic explaining the rejected syntax or parser limit.
-    pub message: String,
-}
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} at byte {}", self.message, self.position)
-    }
-}
-impl std::error::Error for ParseError {}

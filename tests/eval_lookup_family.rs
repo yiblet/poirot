@@ -13,7 +13,7 @@ fn workbook() -> Workbook {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_value(address.parse().unwrap(), value)
+            .set_value(address, value)
             .unwrap();
     }
     workbook
@@ -72,7 +72,7 @@ fn reference_identity_and_deferred_operands_follow_pinned_source() {
     }
 }
 #[test]
-fn unsupported_and_budget_failures_survive_iferror() {
+fn unsupported_and_budget_errors_survive_iferror() {
     let workbook = workbook();
     let at = CellAddress { row: 0, col: 3 };
     let supported_short = FormulaPlan::bind(
@@ -150,7 +150,6 @@ fn pinned_plan(
         address,
         plan,
         &poirot::eval::RunConfiguration::from(inputs)
-            .with_builtin_policy(poirot::eval::BuiltinSemanticsPolicy::PinnedPoi)
             .with_array_result_policy(poirot::eval::ArrayResultPolicy::ScalarIntersection),
         budgets,
     )

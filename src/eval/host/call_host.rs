@@ -6,15 +6,15 @@ use super::missing_scalar::coerce_missing_scalar;
 use super::operand_kind::OperandKind;
 use super::scalar_input::ScalarInput;
 use super::scalar_operand::ScalarOperand;
-use super::scalar_selection_policy::ScalarSelectionPolicy;
+use super::scalar_selection::array_position;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::observe;
 use crate::eval::session::ObservationRecorder;
 use crate::eval::session::Session;
 use crate::eval::session::{ArgumentReader, CellEvaluator, ItemFolder, ResultProjection};
 use crate::eval::values::core_projection::semantic;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::values::{OperandOrigin, copy_cell, copy_value};
 use crate::eval::vm::ArgumentsRef;
 use crate::eval::vm::ExpressionRunner;
@@ -35,6 +35,11 @@ pub(in crate::eval) struct CallHost<'call, 'workbook> {
 }
 
 impl<'call, 'workbook> CallHost<'call, 'workbook> {
+    /// Regex execution guards selected independently of calculation budgets.
+    pub(in crate::eval) fn regex_settings(&self) -> poirot_functions::text::regex::ExecutionLimits {
+        self.session.policies.regex
+    }
+
     /// Create a call-local memo over shared execution state and deferred arguments.
     pub(in crate::eval) fn new(
         session: &'call mut Session<'workbook>,
@@ -126,22 +131,23 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             return Ok(());
         }
         let expression = self.arguments.get(index).ok_or(VALUE_ERROR)?;
-        let count = index.checked_add(1).ok_or(EvaluationFailure::StalePlan)?;
+        let count = index.checked_add(1).ok_or(EvaluationError::StalePlan)?;
         if count > self.argument_slots {
             let end = self
                 .argument_base
                 .checked_add(count)
-                .ok_or(EvaluationFailure::StalePlan)?;
+                .ok_or(EvaluationError::StalePlan)?;
             let stack = &mut self.session.state.runtime.vm.operands;
             stack
                 .try_reserve(count - self.argument_slots)
-                .map_err(|_| EvaluationFailure::ResourceLimit {
+                .map_err(|reservation_source| EvaluationError::Resource {
+                    kind: crate::eval::limits::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: Some(EvaluationTarget {
+                    target: Some(EvaluationTarget {
                         sheet: self.sheet,
                         address: self.address,
                     }),
-                    detail: "VM argument stack allocation failed".into(),
+                    reason: (crate::eval::limits::EvaluationReasonError::VmArgumentStackAllocationFailed).with_reservation_source(reservation_source),
                 })?;
             stack.resize_with(end, || None);
             self.argument_slots = count;
@@ -168,7 +174,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         let slot = self
             .argument_base
             .checked_add(index)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         *self
             .session
             .state
@@ -176,7 +182,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             .vm
             .operands
             .get_mut(slot)
-            .ok_or(EvaluationFailure::StalePlan)? = Some(HostOperand {
+            .ok_or(EvaluationError::StalePlan)? = Some(HostOperand {
             value,
             missing,
             array_missing,
@@ -197,7 +203,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         let slot = self
             .argument_base
             .checked_add(index)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let runtime = &mut *self.session.state.runtime;
         let operand = &runtime
             .vm
@@ -230,7 +236,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         &mut self,
         index: usize,
         missing: MissingPolicy,
-    ) -> impl poirot_functions::scalar::Input<Value = ScalarOperand, Error = FunctionFailure> + '_
+    ) -> impl poirot_functions::scalar::Input<Value = ScalarOperand, Error = FunctionError> + '_
     {
         ScalarInput {
             host: self,
@@ -245,7 +251,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         let expression = self
             .arguments
             .get(index)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let observation = if self.session.ports.execution_observer.is_some() {
             Some(ObservationRecorder::new(self.session).observation_begin(
                 EvaluationTarget {
@@ -264,16 +270,16 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             if let Err(error) = semantic(self.prepare(index))? {
                 return Ok(err(error));
             }
-            if self.session.state.expression_demand.retains_array(
-                &self
-                    .operand(index)
-                    .ok_or(EvaluationFailure::StalePlan)?
-                    .value,
-            ) {
+            if self
+                .session
+                .state
+                .expression_demand
+                .retains_array(&self.operand(index).ok_or(EvaluationError::StalePlan)?.value)
+            {
                 let slot = self
                     .argument_base
                     .checked_add(index)
-                    .ok_or(EvaluationFailure::StalePlan)?;
+                    .ok_or(EvaluationError::StalePlan)?;
                 return self
                     .session
                     .state
@@ -283,7 +289,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
                     .get_mut(slot)
                     .and_then(Option::take)
                     .map(HostOperand::into_value)
-                    .ok_or(EvaluationFailure::StalePlan);
+                    .ok_or(EvaluationError::StalePlan);
             }
             match semantic(self.scalar_data(index, MissingPolicy::Blank))? {
                 Ok(scalar) => Ok(scalar.value.into()),
@@ -305,7 +311,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         let expression = self
             .arguments
             .get(index)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         ExpressionRunner::new(self.session).expr(self.sheet, self.address, expression)
     }
 
@@ -319,7 +325,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         let slot = self
             .argument_base
             .checked_add(index)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let runtime = &mut *self.session.state.runtime;
         let operand = &runtime
             .vm
@@ -327,20 +333,17 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             .get(slot)
             .and_then(Option::as_ref)
             .ok_or(VALUE_ERROR)?;
-        let selection = ScalarSelectionPolicy::PoiOperandResolver;
         let (row, column) = match &operand.value {
-            Value::Array(view) => {
-                selection
-                    .array_position(view, self.address)
-                    .map_err(|detail| EvaluationFailure::UnsupportedCapability {
-                        capability: CapabilityId::FunctionAdapter,
-                        source: Some(EvaluationTarget {
-                            sheet: self.sheet,
-                            address: self.address,
-                        }),
-                        detail: detail.into(),
-                    })??
-            }
+            Value::Array(view) => array_position(view, self.address).map_err(|reason| {
+                EvaluationError::UnsupportedCapability {
+                    capability: CapabilityId::FunctionAdapter,
+                    target: Some(EvaluationTarget {
+                        sheet: self.sheet,
+                        address: self.address,
+                    }),
+                    reason,
+                }
+            })??,
             _ => (0, 0),
         };
         let missing = operand.missing
@@ -384,7 +387,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
                 if areas.len() != 1 {
                     return Err(self.unsupported(
                         CapabilityId::FunctionAdapter,
-                        "signed union cannot be coerced to scalar",
+                        crate::eval::limits::EvaluationReasonError::SignedUnionCannotBeCoercedToScalar,
                     ));
                 }
                 // SAFETY: The branch rejects any area count other than one before reading element zero.
@@ -400,7 +403,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
                 if areas.len() != 1 && !matches!(operand.value, Value::SheetSpan(_)) {
                     return Err(self.unsupported(
                         CapabilityId::FunctionAdapter,
-                        "pinned OperandResolver cannot coerce RefListEval to a scalar",
+                        crate::eval::limits::EvaluationReasonError::ScalarProjectionRequiresSingleReferenceArea,
                     ));
                 }
                 // SAFETY: The branch rejects any area count other than one before reading element zero.
@@ -450,7 +453,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     ) -> EvalResult<T> {
         let (value, _, _) = operand.into_parts();
         let Value::SheetSpan(areas) = value else {
-            return Err(EvaluationFailure::StalePlan);
+            return Err(EvaluationError::StalePlan);
         };
         ItemFolder::new(self.session).fold_ordered_sheet_span(areas, state, consume)
     }
@@ -484,7 +487,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     ) -> EvalResult<()> {
         self.arguments
             .get(index)
-            .ok_or(EvaluationFailure::StalePlan)?
+            .ok_or(EvaluationError::StalePlan)?
             .visit_array_missing(visit)
     }
 
@@ -554,33 +557,55 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         self.session.state.runtime.budget.remaining_work()
     }
 
-    /// Attribute a pinned source exception to the current call's cell.
-    pub(in crate::eval) fn known_source_exception(
-        &self,
-        exception: crate::model::KnownSourceException,
-    ) -> EvaluationFailure {
-        EvaluationFailure::KnownSourceException {
-            source: Some(EvaluationTarget {
-                sheet: self.sheet,
-                address: self.address,
-            }),
-            exception,
-        }
-    }
-
     /// Report an allocation refusal without inventing an exhausted quota.
-    pub(in crate::eval) fn allocation_failure(&self) -> EvaluationFailure {
+    pub(in crate::eval) fn allocation_failure(&self) -> EvaluationError {
         self.resource_failure(
             crate::eval::limits::ResourceFailureKind::Allocation,
-            "allocating a function result or scratch buffer",
+            crate::eval::limits::EvaluationReasonError::AllocatingAFunctionResultOrScratchBuffer,
         )
     }
 
+    /// Retain a direct storage reservation's native cause and formula attribution.
+    pub(in crate::eval) fn reservation_failure(
+        &self,
+        source: std::collections::TryReserveError,
+    ) -> EvaluationError {
+        EvaluationError::reservation(
+            CapabilityId::FunctionAdapter,
+            Some(self.target()),
+            crate::eval::limits::EvaluationReasonError::AllocatingAFunctionResultOrScratchBuffer,
+            source,
+        )
+    }
+
+    /// Preserve smallvec's structured diagnostic, whose type does not implement Error.
+    pub(in crate::eval) fn small_vector_reservation_failure(
+        &self,
+        native: smallvec::CollectionAllocErr,
+    ) -> EvaluationError {
+        let kind = match &native {
+            smallvec::CollectionAllocErr::CapacityOverflow => {
+                crate::eval::limits::ResourceFailureKind::SizeOverflow
+            }
+            smallvec::CollectionAllocErr::AllocErr { .. } => {
+                crate::eval::limits::ResourceFailureKind::Allocation
+            }
+        };
+        EvaluationError::Resource {
+            kind,
+            capability: CapabilityId::FunctionAdapter,
+            target: Some(self.target()),
+            reason: crate::eval::limits::EvaluationReasonError::SmallVectorReservation {
+                native: std::sync::Arc::new(native),
+            },
+        }
+    }
+
     /// Report an unrepresentable size independently of caller quotas.
-    pub(in crate::eval) fn size_overflow(&self) -> EvaluationFailure {
+    pub(in crate::eval) fn size_overflow(&self) -> EvaluationError {
         self.resource_failure(
             crate::eval::limits::ResourceFailureKind::SizeOverflow,
-            "function size or work estimate overflow",
+            crate::eval::limits::EvaluationReasonError::FunctionSizeOrWorkEstimateOverflow,
         )
     }
 
@@ -588,16 +613,16 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     pub(in crate::eval) fn resource_failure(
         &self,
         kind: crate::eval::limits::ResourceFailureKind,
-        detail: impl Into<String>,
-    ) -> EvaluationFailure {
-        EvaluationFailure::Resource {
+        reason: crate::eval::limits::EvaluationReasonError,
+    ) -> EvaluationError {
+        EvaluationError::Resource {
             kind,
             capability: CapabilityId::FunctionAdapter,
-            source: Some(EvaluationTarget {
+            target: Some(EvaluationTarget {
                 sheet: self.sheet,
                 address: self.address,
             }),
-            detail: detail.into(),
+            reason,
         }
     }
 
@@ -605,12 +630,12 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     pub(in crate::eval) fn capability_failure(
         &self,
         capability: CapabilityId,
-        detail: impl Into<String>,
-    ) -> EvaluationFailure {
-        EvaluationFailure::UnsupportedCapability {
+        reason: crate::eval::limits::EvaluationReasonError,
+    ) -> EvaluationError {
+        EvaluationError::UnsupportedCapability {
             capability,
-            source: Some(self.target()),
-            detail: detail.into(),
+            target: Some(self.target()),
+            reason,
         }
     }
 
@@ -618,16 +643,16 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
     pub(in crate::eval) fn unsupported(
         &self,
         capability: CapabilityId,
-        detail: impl Into<String>,
-    ) -> FunctionFailure {
-        self.capability_failure(capability, detail).into()
+        reason: crate::eval::limits::EvaluationReasonError,
+    ) -> FunctionError {
+        self.capability_failure(capability, reason).into()
     }
 
     /// Reject a helper's unattributed internal resource exhaustion operationally.
-    pub(in crate::eval) fn budget_exceeded(&self) -> EvaluationFailure {
+    pub(in crate::eval) fn budget_exceeded(&self) -> EvaluationError {
         self.resource_failure(
             crate::eval::limits::ResourceFailureKind::BackendGuard,
-            "algorithm resource guard refused execution; native counts are unavailable",
+            crate::eval::limits::EvaluationReasonError::AlgorithmResourceGuardRefusedExecutionNativeCountsAreUnavailable,
         )
     }
 }

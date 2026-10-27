@@ -41,7 +41,7 @@ fn explicit_reference_intersection_selects_the_callers_member_before_gcd() {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("Sheet1").unwrap();
     for (address, value) in [("A1", 2.), ("B1", 4.), ("A2", 6.), ("B2", 8.)] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     for (formula, expected) in [("GCD(A1:B2)", 2.), ("GCD(@A1:A2)", 6.)] {
         assert!(

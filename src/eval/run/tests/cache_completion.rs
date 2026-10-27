@@ -5,7 +5,7 @@ use super::super::workbook_view::WorkbookView;
 use super::support::{A1, B1, C1, Reads, context, target, value, workbook};
 use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::limits::{EvaluationBudgets, EvaluationError, EvaluationOutcome};
 use crate::eval::ports::{CachedCellReader, CellCompletion, CellObserver, CellProvenance};
 use crate::eval::ports::{DependencyRead, ReadEvent};
 use crate::model::CellValue;
@@ -22,13 +22,13 @@ fn external_cache_port_preserves_consumed_edges_and_operational_failures() {
         fn cached_cell(
             &mut self,
             target: EvaluationTarget,
-        ) -> Result<Option<Arc<CellValue>>, EvaluationFailure> {
+        ) -> Result<Option<Arc<CellValue>>, EvaluationError> {
             self.queries.push(target);
             if self.failure {
-                return Err(EvaluationFailure::UnsupportedCapability {
+                return Err(EvaluationError::UnsupportedCapability {
                     capability: crate::eval::limits::CapabilityId::ExternalData,
-                    source: Some(target),
-                    detail: "cache read failed".into(),
+                    target: Some(target),
+                    reason: crate::eval::limits::EvaluationReasonError::ExternalSourceUnavailable,
                 });
             }
             Ok((target.address == A1).then(|| Arc::new(CellValue::Number(42.))))
@@ -81,7 +81,7 @@ fn external_cache_port_preserves_consumed_edges_and_operational_failures() {
         run.evaluate_probes(&[EvaluationProbe::Cell(target(B1))])
             .outcome,
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability { .. },
+            failure: EvaluationError::UnsupportedCapability { .. },
             ..
         }
     ));
@@ -93,7 +93,7 @@ fn completed_cell_observer_sees_recursive_results_and_all_provenances() {
     #[derive(Default)]
     struct Observer(Vec<(EvaluationTarget, CellProvenance, CellValue)>);
     impl CellObserver for Observer {
-        fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+        fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationError> {
             self.0.push((
                 completion.target,
                 completion.provenance,
@@ -108,7 +108,7 @@ fn completed_cell_observer_sees_recursive_results_and_all_provenances() {
         fn cached_cell(
             &mut self,
             target: EvaluationTarget,
-        ) -> Result<Option<Arc<CellValue>>, EvaluationFailure> {
+        ) -> Result<Option<Arc<CellValue>>, EvaluationError> {
             Ok((target.address == C1).then(|| Arc::new(CellValue::Number(44.))))
         }
     }
@@ -181,7 +181,7 @@ fn bounded_observer_failure_aborts_and_prevents_transaction_commit() {
         aborts: Vec<EvaluationTarget>,
     }
     impl CellObserver for Transaction {
-        fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+        fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationError> {
             match completion.result {
                 Err(_) => {
                     self.aborts.push(completion.target);
@@ -191,15 +191,13 @@ fn bounded_observer_failure_aborts_and_prevents_transaction_commit() {
                     self.staged.push(value.clone());
                     Ok(())
                 }
-                Ok(_) => Err(EvaluationFailure::Budget(
-                    crate::eval::limits::BudgetFailure {
-                        kind: crate::eval::limits::BudgetKind::Materialization,
-                        limit: 1,
-                        consumed: 1,
-                        requested: 1,
-                        target: Some(completion.target),
-                    },
-                )),
+                Ok(_) => Err(EvaluationError::Budget(crate::eval::limits::BudgetError {
+                    kind: crate::eval::limits::BudgetKind::Materialization,
+                    limit: 1,
+                    consumed: 1,
+                    requested: 1,
+                    target: Some(completion.target),
+                })),
             }
         }
     }
@@ -237,7 +235,7 @@ fn bounded_observer_failure_aborts_and_prevents_transaction_commit() {
     assert!(matches!(
         report.outcome,
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -255,13 +253,13 @@ fn observer_notification_cannot_mask_an_existing_operational_abort() {
         notified: usize,
     }
     impl CellObserver for Refuse {
-        fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+        fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationError> {
             self.notified += 1;
             assert!(completion.result.is_err());
-            Err(EvaluationFailure::UnsupportedCapability {
+            Err(EvaluationError::UnsupportedCapability {
                 capability: crate::eval::limits::CapabilityId::ExternalData,
-                source: Some(completion.target),
-                detail: "observer capacity exhausted".into(),
+                target: Some(completion.target),
+                reason: crate::eval::limits::EvaluationReasonError::ExecutionEvidenceRetentionCapacityExhausted,
             })
         }
     }
@@ -283,7 +281,7 @@ fn observer_notification_cannot_mask_an_existing_operational_abort() {
     assert!(matches!(
         run.finish(result).outcome,
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -301,15 +299,15 @@ fn lazy_cached_reads_keep_errors_operational_and_charge_text_to_dependency() {
         fn cached_cell(
             &mut self,
             target: EvaluationTarget,
-        ) -> Result<Option<Arc<CellValue>>, EvaluationFailure> {
+        ) -> Result<Option<Arc<CellValue>>, EvaluationError> {
             if target.address != C1 {
                 return Ok(None);
             }
             if self.fail {
-                return Err(EvaluationFailure::UnsupportedCapability {
+                return Err(EvaluationError::UnsupportedCapability {
                     capability: crate::eval::limits::CapabilityId::ExternalData,
-                    source: Some(target),
-                    detail: "cached dependency unavailable".into(),
+                    target: Some(target),
+                    reason: crate::eval::limits::EvaluationReasonError::ExternalSourceUnavailable,
                 });
             }
             Ok(Some(Arc::clone(&self.value)))
@@ -361,8 +359,13 @@ fn lazy_cached_reads_keep_errors_operational_and_charge_text_to_dependency() {
         consumer: Some(target(B1)),
         read: DependencyRead::Cell(target(C1))
     }));
-    workbook.sheet_mut(0).unwrap().get_mut(B1).unwrap().formula =
-        Some("IFERROR(IF(FALSE,A1,C1),5)".into());
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .get_mut(B1)
+        .unwrap()
+        .unwrap()
+        .formula = Some("IFERROR(IF(FALSE,A1,C1),5)".into());
     let plan = compiler.compile_workbook(&workbook, &policy);
     cache.fail = true;
     let run = EvaluationRun::new(
@@ -373,11 +376,23 @@ fn lazy_cached_reads_keep_errors_operational_and_charge_text_to_dependency() {
     .unwrap()
     .with_cell_reader(&mut cache);
     assert!(
-        matches!(run.evaluate_probes(&[EvaluationProbe::Cell(target(B1))]).outcome, EvaluationOutcome::Aborted { failure: EvaluationFailure::UnsupportedCapability { source: Some(at), .. }, .. } if at == target(C1))
+        matches!(run.evaluate_probes(&[EvaluationProbe::Cell(target(B1))]).outcome, EvaluationOutcome::Aborted { failure: EvaluationError::UnsupportedCapability { target: Some(at), .. }, .. } if at == target(C1))
     );
-    workbook.sheet_mut(0).unwrap().get_mut(B1).unwrap().formula = Some("IF(FALSE,A1,C1)".into());
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .get_mut(B1)
+        .unwrap()
+        .unwrap()
+        .formula = Some("IF(FALSE,A1,C1)".into());
     let large = "x".repeat(64);
-    workbook.sheet_mut(0).unwrap().get_mut(C1).unwrap().value = CellValue::Text(large.clone());
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .get_mut(C1)
+        .unwrap()
+        .unwrap()
+        .value = CellValue::Text(large.clone());
     let before = workbook.clone();
     let plan = compiler.compile_workbook(&workbook, &policy);
     cache.value = Arc::new(CellValue::Text(large));
@@ -393,7 +408,7 @@ fn lazy_cached_reads_keep_errors_operational_and_charge_text_to_dependency() {
     .unwrap()
     .with_cell_reader(&mut cache);
     assert!(
-        matches!(run.evaluate_probes(&[EvaluationProbe::Cell(target(B1))]).outcome, EvaluationOutcome::Aborted { failure: EvaluationFailure::Budget(crate::eval::limits::BudgetFailure { kind: crate::eval::limits::BudgetKind::TextBytes, target: Some(at), .. }), .. } if at == target(C1))
+        matches!(run.evaluate_probes(&[EvaluationProbe::Cell(target(B1))]).outcome, EvaluationOutcome::Aborted { failure: EvaluationError::Budget(crate::eval::limits::BudgetError { kind: crate::eval::limits::BudgetKind::TextBytes, target: Some(at), .. }), .. } if at == target(C1))
     );
     assert_eq!(workbook, before);
 }

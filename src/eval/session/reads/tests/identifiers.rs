@@ -1,6 +1,6 @@
 use crate::eval::config::EvaluationInputs;
 use crate::eval::entry::run_formula;
-use crate::eval::limits::{CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::limits::{CapabilityId, EvaluationBudgets, EvaluationError, EvaluationOutcome};
 use crate::model::CellError::Ref;
 use crate::model::CellValue::{Error, Number};
 use crate::model::Workbook;
@@ -11,7 +11,7 @@ fn formula_sheet_and_scoped_names_share_model_policy() {
     workbook
         .add_sheet("Ä Data")
         .unwrap()
-        .set_value("A1".parse().unwrap(), 7.)
+        .set_value("A1", 7.)
         .unwrap();
     workbook.add_sheet("Other").unwrap();
     workbook.define_name("ÉRate", "1", None).unwrap();
@@ -70,7 +70,7 @@ fn unresolved_identifiers_are_operational_diagnostics() {
                 EvaluationBudgets::default()
             ),
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::UnsupportedCapability {
+                failure: EvaluationError::UnsupportedCapability {
                     capability: CapabilityId::IdentifierComparison,
                     ..
                 },
@@ -88,7 +88,7 @@ fn distinct_utf16_lengths_allow_sheet_creation_and_runtime_lookup() {
         workbook
             .add_sheet(requested)
             .unwrap()
-            .set_value("A1".parse().unwrap(), 7.)
+            .set_value("A1", 7.)
             .unwrap();
         assert_eq!(
             match crate::eval::entry::run_formula(
@@ -121,7 +121,7 @@ fn equal_utf16_astral_lengths_keep_runtime_lookup_diagnostic() {
             EvaluationBudgets::default()
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability {
+            failure: EvaluationError::UnsupportedCapability {
                 capability: CapabilityId::IdentifierComparison,
                 ..
             },

@@ -5,8 +5,7 @@ use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
 use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{
-    EvaluationBudgets, EvaluationFailure, EvaluationOutcome, MemoRetentionLimits,
-    MemoRetentionUsage,
+    EvaluationBudgets, EvaluationError, EvaluationOutcome, MemoRetentionLimits, MemoRetentionUsage,
 };
 use crate::model::{CellAddress, CellValue, ExcelText, Workbook};
 
@@ -48,7 +47,7 @@ fn memo_limit_retains_partial_run_and_repeated_hits_cost_nothing() {
     let result = run.evaluate_cell(target("B1"));
     assert!(matches!(
         &result,
-        Err(EvaluationFailure::MemoRetentionLimit { .. })
+        Err(EvaluationError::MemoRetentionLimit { .. })
     ));
     let retained = run.finish_retaining_cells(result);
     assert_eq!(
@@ -66,7 +65,7 @@ fn memo_limit_retains_partial_run_and_repeated_hits_cost_nothing() {
     assert!(matches!(
         retained.report.outcome,
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::MemoRetentionLimit { .. },
+            failure: EvaluationError::MemoRetentionLimit { .. },
             ..
         }
     ));
@@ -106,7 +105,7 @@ fn utf16_payload_admission_is_independent_of_unlimited_calculation_budgets() {
     let result = run.evaluate_cell(target("A1"));
     assert!(matches!(
         &result,
-        Err(EvaluationFailure::MemoRetentionLimit {
+        Err(EvaluationError::MemoRetentionLimit {
             requested: MemoRetentionUsage {
                 cells: 1,
                 bytes: 134

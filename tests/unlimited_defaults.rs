@@ -1,7 +1,7 @@
 //! Defaults disable runtime policy caps while explicit limits remain enforceable.
 use poirot::calculation::EvaluationContext;
 use poirot::eval::{
-    self as eval, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    self as eval, EvaluationBudgets, EvaluationError, EvaluationInputs, EvaluationOutcome,
     EvaluationTarget, MemoRetentionLimits,
 };
 use poirot::{CellValue, Workbook};
@@ -39,12 +39,12 @@ fn default_direct_overlay_and_low_level_runs_accept_text_beyond_the_old_cap() {
         .unwrap();
     sheet.set_formula(target("B1").address, "LEN(A1)").unwrap();
     let expected = CellValue::Number(LENGTH as f64);
-    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(book.model())
+    let mut direct = poirot::eval::overlay::Evaluation::with_workbook(&book)
         .build(Default::default())
         .unwrap();
     assert_eq!(direct.cell(target("B1")).unwrap(), expected);
     assert_eq!(direct.cell(target("B1")).unwrap(), expected);
-    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(book.model())
+    let mut overlay = poirot::eval::overlay::Overlay::with_workbook(&book)
         .build()
         .unwrap();
     let context = EvaluationContext::default();
@@ -65,7 +65,7 @@ fn default_direct_overlay_and_low_level_runs_accept_text_beyond_the_old_cap() {
         expected
     );
     assert!(
-        matches!(eval::run_formula(book.model(), 0, target("B1").address, "LEN(A1)", EvaluationInputs::default(), EvaluationBudgets::default()), EvaluationOutcome::Complete { value, .. } if value == expected)
+        matches!(eval::run_formula(&book, 0, target("B1").address, "LEN(A1)", EvaluationInputs::default(), EvaluationBudgets::default()), EvaluationOutcome::Complete { value, .. } if value == expected)
     );
     // Cached values do not waive newly configured capacities.
     let limited = EvaluationContext {
@@ -78,12 +78,12 @@ fn default_direct_overlay_and_low_level_runs_accept_text_beyond_the_old_cap() {
     };
     assert!(matches!(
         overlay.evaluation(&limited).unwrap().cell(target("A1")),
-        Err(EvaluationFailure::Budget(_))
+        Err(EvaluationError::Budget(_))
     ));
     direct.begin(limited).unwrap();
     assert!(matches!(
         direct.cell(target("B1")),
-        Err(EvaluationFailure::Budget(_))
+        Err(EvaluationError::Budget(_))
     ));
     let limited = EvaluationContext {
         retention: MemoRetentionLimits { cells: 0, bytes: 0 },
@@ -92,12 +92,12 @@ fn default_direct_overlay_and_low_level_runs_accept_text_beyond_the_old_cap() {
     direct.begin(limited.clone()).unwrap();
     assert!(matches!(
         direct.cell(target("B1")),
-        Err(EvaluationFailure::MemoRetentionLimit { .. })
+        Err(EvaluationError::MemoRetentionLimit { .. })
     ));
     assert!(matches!(
         overlay.evaluation(&limited),
         Err(poirot::calculation::OverlayError::Evaluation(
-            EvaluationFailure::MemoRetentionLimit { .. }
+            EvaluationError::MemoRetentionLimit { .. }
         ))
     ));
 }

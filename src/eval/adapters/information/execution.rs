@@ -4,9 +4,9 @@ use crate::eval::adapters::elementwise::{
 };
 use crate::eval::functions::registry::{FunctionId, InformationFunction};
 use crate::eval::host::CallHost;
-use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::limits::{EvalResult, EvaluationError};
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::NA;
 use crate::model::CellValue::{Blank, Boolean, Error, Number, Text};
@@ -29,7 +29,7 @@ impl Kernel for Information {
         };
         let operand = match argument.read(context) {
             Ok(operand) => operand,
-            Err(FunctionFailure::Spreadsheet(error)) => crate::eval::host::ScalarOperand {
+            Err(FunctionError::Spreadsheet(error)) => crate::eval::host::ScalarOperand {
                 value: Error(error),
                 missing: false,
                 origin: crate::eval::values::OperandOrigin::Direct,
@@ -49,7 +49,7 @@ impl Kernel for Information {
             IsNonText => Boolean(!present || value.text_ref().is_none()),
             N => poirot_functions::coercion::compatibility::coerce_information_n(value),
             T => poirot_functions::coercion::compatibility::coerce_information_t(value),
-            Type | Na => return Err(EvaluationFailure::StalePlan.into()),
+            Type | Na => return Err(EvaluationError::StalePlan.into()),
         })
     }
 }
@@ -78,7 +78,7 @@ impl Kernel for TypeInformation {
         }
         let value = match source.scalar(context.host) {
             Ok(value) => value.value,
-            Err(FunctionFailure::Spreadsheet(error)) => Error(error),
+            Err(FunctionError::Spreadsheet(error)) => Error(error),
             Err(error) => return Err(error),
         };
         Ok(Number(match value {
@@ -126,7 +126,7 @@ pub(in crate::eval) fn execute(
     };
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }

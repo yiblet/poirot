@@ -57,7 +57,7 @@ fn xlsx_imported_qualified_names_recalculate_selected_scope_in_caller_context() 
                 col: 2,
             })
             .unwrap();
-        assert_eq!(cell.formula.as_deref(), Some(*formula));
-        assert_eq!(&cell.value, expected, "{formula}");
+        assert_eq!(cell.unwrap().formula.as_deref(), Some(*formula));
+        assert_eq!(&cell.unwrap().value, expected, "{formula}");
     }
 }

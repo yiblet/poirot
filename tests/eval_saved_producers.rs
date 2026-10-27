@@ -22,7 +22,7 @@ fn saved() -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     sheet.set_formula(at("A1").address, "{1,2;3,4}").unwrap();
-    sheet.get_mut(at("A1").address).unwrap().value = 10.0.into();
+    sheet.get_mut(at("A1").address).unwrap().unwrap().value = 10.0.into();
     sheet
         .set_spill_extent(at("A1").address, at("B2").address, "{1,2;3,4}")
         .unwrap();
@@ -130,6 +130,7 @@ fn saved_error_member_preserves_geometry_and_singleton_identity() {
     book.sheet_mut(0)
         .unwrap()
         .get_mut(at("A1").address)
+        .unwrap()
         .unwrap()
         .value = CellValue::Error(CellError::Div0);
     let mut eval = Evaluation::with_workbook(&book)
@@ -531,7 +532,7 @@ impl poirot::eval::CellObserver for Observations {
     fn completed(
         &mut self,
         cell: poirot::eval::CellCompletion<'_>,
-    ) -> Result<(), poirot::eval::EvaluationFailure> {
+    ) -> Result<(), poirot::eval::EvaluationError> {
         self.0
             .push((cell.target, cell.provenance, cell.result.is_ok()));
         Ok(())
@@ -542,7 +543,7 @@ fn trusted_producer_observers_report_external_origin_on_success_and_failure() {
     for incomplete in [false, true] {
         let mut book = saved();
         if incomplete {
-            book.sheet_mut(0).unwrap().remove(at("B2").address);
+            book.sheet_mut(0).unwrap().remove(at("B2").address).unwrap();
             book.sheet_mut(0)
                 .unwrap()
                 .set_spill_extent(at("A1").address, at("B2").address, "{1,2;3,4}")
@@ -730,7 +731,7 @@ fn trusted_scalar_text_is_admitted_before_copying_and_aborts_without_publication
         limits: poirot::eval::EvaluationLimits::default().max_text_bytes(8),
         ..Default::default()
     };
-    let expected = poirot::eval::EvaluationFailure::Budget(poirot::eval::BudgetFailure {
+    let expected = poirot::eval::EvaluationError::Budget(poirot::eval::BudgetError {
         kind: poirot::eval::BudgetKind::TextBytes,
         limit: 8,
         consumed: 0,
@@ -741,7 +742,10 @@ fn trusted_scalar_text_is_admitted_before_copying_and_aborts_without_publication
         .with_policy(policy())
         .build(context.clone())
         .unwrap();
-    assert_eq!(direct.cell(at("A1")).unwrap_err(), expected);
+    assert_eq!(
+        (direct.cell(at("A1")).unwrap_err()).budget().unwrap(),
+        expected.budget().unwrap()
+    );
     assert_eq!(direct.usage().formula_executions, 0);
     assert!(direct.into_changes().is_empty());
     let mut overlay = Overlay::with_workbook(&book)
@@ -750,7 +754,10 @@ fn trusted_scalar_text_is_admitted_before_copying_and_aborts_without_publication
         .unwrap();
     {
         let mut eval = overlay.evaluation(&context).unwrap();
-        assert_eq!(eval.cell(at("A1")).unwrap_err(), expected);
+        assert_eq!(
+            (eval.cell(at("A1")).unwrap_err()).budget().unwrap(),
+            expected.budget().unwrap()
+        );
         assert_eq!(eval.usage().formula_executions, 0);
     }
     assert!(overlay.changes().is_empty());

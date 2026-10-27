@@ -10,10 +10,12 @@ use crate::xls::text::{take, text, units, word};
 use crate::{CellAddress, CellValue, ExcelText, NamedRange};
 use std::collections::BTreeMap;
 
-fn charge(total: &mut u64, bytes: usize, limit: u64, resource: &'static str) -> Result<()> {
+fn charge(total: &mut u64, bytes: usize, limit: u64, resource: crate::BiffResource) -> Result<()> {
     *total = total
         .checked_add(bytes as u64)
-        .ok_or(PreflightError::Representation("BIFF text total overflow"))?;
+        .ok_or(PreflightError::Representation(
+            crate::BiffRepresentationError::BiffTextTotalOverflow,
+        ))?;
     if *total > limit {
         return Err(PreflightError::Resource {
             resource,
@@ -74,10 +76,9 @@ pub(super) fn reconstruct(
             0x85 => {
                 let mut b = r.data;
                 take(&mut b, 6)?;
-                let n = *take(&mut b, 1)?
-                    .first()
-                    .ok_or(PreflightError::Malformed("missing byte"))?
-                    as usize;
+                let n = *take(&mut b, 1)?.first().ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::MissingByte,
+                ))? as usize;
                 sheets.push(text(&mut b, n)?);
             }
             0x17 => {
@@ -86,16 +87,20 @@ pub(super) fn reconstruct(
                 let total = xtis
                     .len()
                     .checked_add(count)
-                    .ok_or(PreflightError::Representation("XTI count overflow"))?;
+                    .ok_or(PreflightError::Representation(
+                        crate::BiffRepresentationError::XtiCountOverflow,
+                    ))?;
                 if total > budget.max_metadata_entries {
                     return Err(PreflightError::Resource {
-                        resource: "XTI declarations",
+                        resource: crate::BiffResource::XtiDeclarations,
                         requested: total as u64,
                         limit: budget.max_metadata_entries as u64,
                     });
                 }
                 if b.len() != count * 6 {
-                    return Err(PreflightError::Malformed("EXTERNSHEET record length"));
+                    return Err(PreflightError::Malformed(
+                        crate::BiffStructureError::ExternsheetRecordLength,
+                    ));
                 }
                 for _ in 0..count {
                     xtis.push((word(&mut b)?, word(&mut b)?, word(&mut b)?));
@@ -105,10 +110,9 @@ pub(super) fn reconstruct(
                 let mut b = r.data;
                 let flags = word(&mut b)?;
                 take(&mut b, 1)?;
-                let n = *take(&mut b, 1)?
-                    .first()
-                    .ok_or(PreflightError::Malformed("missing byte"))?
-                    as usize;
+                let n = *take(&mut b, 1)?.first().ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::MissingByte,
+                ))? as usize;
                 let tokens = word(&mut b)? as usize;
                 take(&mut b, 2)?;
                 let scope = word(&mut b)?;
@@ -131,7 +135,7 @@ pub(super) fn reconstruct(
                     &mut formula_bytes,
                     name.len(),
                     budget.max_string_bytes as u64,
-                    "BIFF formula/name bytes",
+                    crate::BiffResource::BiffFormulaNameBytes,
                 )?;
                 names.push(NamedRange {
                     name,
@@ -152,7 +156,7 @@ pub(super) fn reconstruct(
                 &mut formula_bytes,
                 f.len(),
                 budget.max_string_bytes as u64,
-                "BIFF formula/name bytes",
+                crate::BiffResource::BiffFormulaNameBytes,
             )?;
             // SAFETY: names and name_tokens are pushed together locally; record cursors come from enumeration or checked binary search and are guarded by rs.len(). The four-byte conversion follows take(..., 4).
             names[i].formula = f;
@@ -184,7 +188,9 @@ pub(super) fn reconstruct(
     let mut caches = Vec::new();
     let mut values = Vec::new();
     if starts.len() != sheets.len() {
-        return Err(PreflightError::Malformed("sheet boundary"));
+        return Err(PreflightError::Malformed(
+            crate::BiffStructureError::SheetBoundary,
+        ));
     }
     for (sheet, &start) in starts.iter().enumerate() {
         let mut substream = Substream::new(rs, start);
@@ -211,22 +217,22 @@ pub(super) fn reconstruct(
                 let mut b = r.data;
                 let row = word(&mut b)?;
                 let col = word(&mut b)?;
-                let address = CellAddress::new(row as u32, col as u32)
-                    .map_err(|_| PreflightError::Representation("text coordinate"))?;
+                let address = CellAddress::new(row as u32, col as u32).map_err(|_| {
+                    PreflightError::Representation(crate::BiffRepresentationError::TextCoordinate)
+                })?;
                 take(&mut b, 2)?;
                 let text = if r.id == 0xfd {
                     let raw = take(&mut b, 4)?;
                     // SAFETY: take(&mut b, 4) above returned exactly four bytes, so the conversion succeeds.
                     let index = u32::from_le_bytes(raw.try_into().expect("four bytes")) as usize;
-                    shared
-                        .get(index)
-                        .cloned()
-                        .ok_or(PreflightError::Malformed("shared string index"))?
+                    shared.get(index).cloned().ok_or(PreflightError::Malformed(
+                        crate::BiffStructureError::SharedStringIndex,
+                    ))?
                 } else {
                     let n = word(&mut b)? as usize;
                     if n > budget.max_string_chars {
                         return Err(PreflightError::Resource {
-                            resource: "LABEL string characters",
+                            resource: crate::BiffResource::LabelStringCharacters,
                             requested: n as u64,
                             limit: budget.max_string_chars as u64,
                         });
@@ -237,7 +243,7 @@ pub(super) fn reconstruct(
                     &mut cache_bytes,
                     text.units().len() * 2,
                     budget.max_cell_text_bytes,
-                    "BIFF cached text bytes",
+                    crate::BiffResource::BiffCachedTextBytes,
                 )?;
                 caches.push((sheet, address, text));
             }
@@ -248,8 +254,11 @@ pub(super) fn reconstruct(
                 let mut b = r.data;
                 let row = word(&mut b)?;
                 let col = word(&mut b)?;
-                let address = CellAddress::new(row as u32, col as u32)
-                    .map_err(|_| PreflightError::Representation("formula coordinate"))?;
+                let address = CellAddress::new(row as u32, col as u32).map_err(|_| {
+                    PreflightError::Representation(
+                        crate::BiffRepresentationError::FormulaCoordinate,
+                    )
+                })?;
                 take(&mut b, 16)?;
                 let n = word(&mut b)? as usize;
                 let tokens = ParsedFormula {
@@ -296,7 +305,7 @@ pub(super) fn reconstruct(
                         &mut formula_bytes,
                         text.len(),
                         budget.max_string_bytes as u64,
-                        "BIFF formula/name bytes",
+                        crate::BiffResource::BiffFormulaNameBytes,
                     )?;
                     formulas.push(SheetFormula {
                         sheet,
@@ -310,9 +319,9 @@ pub(super) fn reconstruct(
                 }
             }
             if r.id == 0x207 {
-                let address = pending
-                    .take()
-                    .ok_or(PreflightError::Malformed("cached STRING without FORMULA"))?;
+                let address = pending.take().ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::CachedStringWithoutFormula,
+                ))?;
                 let cached = cached_text(rs, i, budget)?;
                 substream.skip_to(cached.last_record);
                 let text = cached.text;
@@ -320,7 +329,7 @@ pub(super) fn reconstruct(
                     &mut cache_bytes,
                     text.units().len() * 2,
                     budget.max_cell_text_bytes,
-                    "BIFF cached text bytes",
+                    crate::BiffResource::BiffCachedTextBytes,
                 )?;
                 caches.push((sheet, address, text));
             }
@@ -756,7 +765,7 @@ mod tests {
         assert!(matches!(
             result,
             Err(IoError::BiffPreflight(PreflightError::Resource {
-                resource: "BIFF scan work",
+                resource: crate::BiffResource::BiffScanWork,
                 requested: 50_001,
                 limit: 50_000,
             }))
@@ -767,7 +776,7 @@ mod tests {
         assert!(matches!(
             read_with(&bytes, cells),
             Err(IoError::BiffPreflight(PreflightError::Resource {
-                resource: "decoded cells",
+                resource: crate::BiffResource::DecodedCells,
                 requested: 30_001,
                 limit: 30_000,
             }))
@@ -790,7 +799,7 @@ mod tests {
         assert!(matches!(
             read_with(&bytes, crate::ResourceBudget::default().max_cells(3)),
             Err(IoError::BiffPreflight(PreflightError::Resource {
-                resource: "decoded cells",
+                resource: crate::BiffResource::DecodedCells,
                 requested: 4,
                 limit: 3,
             }))
@@ -829,7 +838,7 @@ mod tests {
         assert!(matches!(
             crate::read_workbook_bytes::<Workbook>(&bytes),
             Err(IoError::BiffPreflight(PreflightError::Representation(
-                "encrypted XLS workbooks are not supported"
+                crate::BiffRepresentationError::EncryptedXls
             )))
         ));
     }
@@ -847,9 +856,9 @@ mod tests {
         for (bytes, detail) in [
             (
                 biff5,
-                "only BIFF8 (Excel 97-2003) XLS workbooks are supported",
+                crate::BiffRepresentationError::UnsupportedBiffVersion,
             ),
-            (encrypted, "encrypted XLS workbooks are not supported"),
+            (encrypted, crate::BiffRepresentationError::EncryptedXls),
         ] {
             assert!(matches!(
                 crate::read_workbook_bytes::<Workbook>(&bytes),

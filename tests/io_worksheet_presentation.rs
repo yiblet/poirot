@@ -136,11 +136,11 @@ fn prefixed_presentation_and_cell_styles_use_backend_metadata() {
             visibility: SheetVisibility::Visible,
             tab_color: color,
         });
-        let address = "A1".parse().unwrap();
+        let address = "A1".parse::<poirot::model::CellAddress>().unwrap();
         sheet
             .set_formula_with_cached_value(address, "1+2", 3.0.into())
             .unwrap();
-        sheet.get_mut(address).unwrap().style.number_format = Some("0.00".into());
+        sheet.get_mut(address).unwrap().unwrap().style.number_format = Some("0.00".into());
     }
     let bytes = write_xlsx_to_buffer(&book).unwrap();
     let prefixed = rewrite(&bytes, |name, bytes| {
@@ -161,10 +161,7 @@ fn prefixed_presentation_and_cell_styles_use_backend_metadata() {
     let loaded = read_workbook_bytes::<poirot::model::Workbook>(&prefixed).unwrap();
     for (original, actual) in book.sheets().iter().zip(loaded.sheets()) {
         assert_eq!(actual.presentation(), original.presentation());
-        assert_eq!(
-            actual.get("A1".parse().unwrap()),
-            original.get("A1".parse().unwrap())
-        );
+        assert_eq!(actual.get("A1").unwrap(), original.get("A1").unwrap());
     }
 }
 
@@ -181,7 +178,7 @@ fn hidden_rows_with_and_without_cells_survive_save_and_keep_subtotal_109() {
     let mut w = Workbook::new();
     let s = w.add_sheet("Data").unwrap();
     for (at, n) in [("A1", 2.), ("A2", 3.), ("A3", 5.), ("A4", 7.)] {
-        s.set_value(at.parse().unwrap(), n).unwrap();
+        s.set_value(at, n).unwrap();
     }
     s.set_row_visibility(1, manual).unwrap();
     s.set_row_visibility(

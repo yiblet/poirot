@@ -3,7 +3,7 @@
 use super::read_recorder::ReadRecorder;
 use super::sparse_member::SparseMember;
 use crate::eval::config::ArrayResultPolicy;
-use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::composition::Session;
 use crate::eval::spill::{SpillDemand, SpillQuery};
@@ -114,7 +114,7 @@ impl<'s, 'a> SparseReader<'s, 'a> {
                 col: area.c1,
             },
         )
-        .map_err(|_| EvaluationFailure::StalePlan)?;
+        .map_err(|_| EvaluationError::StalePlan)?;
         let view = crate::eval::inputs::EffectiveWorkbook::new(
             self.session.sources.workbook,
             self.session.sources.inputs,
@@ -124,7 +124,7 @@ impl<'s, 'a> SparseReader<'s, 'a> {
         let mut addresses = Vec::new();
         let mut cells = view
             .stored(membership)
-            .map_err(|_| EvaluationFailure::StalePlan)?;
+            .map_err(|_| EvaluationError::StalePlan)?;
         while let Some((address, cell)) = sparse_next(&mut cells, &mut runtime.budget)? {
             runtime.budget.check_allocation(
                 prefix_members
@@ -134,11 +134,11 @@ impl<'s, 'a> SparseReader<'s, 'a> {
             runtime.budget.charge(WorkKind::Materialization, 1)?;
             addresses
                 .try_reserve(1)
-                .map_err(|_| EvaluationFailure::Resource {
+                .map_err(|reservation_source| EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::Allocation,
                     capability: CapabilityId::FunctionAdapter,
-                    source: runtime.stack.consumer,
-                    detail: "sparse coordinate allocation failed".into(),
+                    target: runtime.stack.consumer,
+                    reason: (crate::eval::limits::EvaluationReasonError::SparseCoordinateAllocationFailed).with_reservation_source(reservation_source),
                 })?;
             // SAFETY: The successful reservation provides room for this one push.
             addresses.push(project(address, Some(cell)));

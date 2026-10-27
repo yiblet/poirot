@@ -35,18 +35,19 @@ Model daily energy use with operating hours in `A1`, power in kilowatts in `B1`,
 and energy in kilowatt-hours in `C1`:
 
 ```rust
-use poirot::{CellValue, Workbook};
+use poirot::Workbook;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Energy")?;
-    sheet.set_value("A1".parse()?, 12.)?;
-    sheet.set_value("B1".parse()?, 25.)?;
-    sheet.set_formula("C1".parse()?, "=A1*B1")?;
+    sheet.set_value("A1", 12)?;
+    sheet.set_value("B1", 25)?;
+    sheet.set_formula("C1", "=A1*B1")?;
     book.recalculate()?;
 
-    let energy = book.stored_cell("Energy", "C1".parse()?).ok_or("missing energy result")?;
-    assert_eq!(energy.value, CellValue::Number(300.));
+    let energy = book.stored_cell("Energy", "C1")?.ok_or("missing energy result")?;
+    let kilowatt_hours = energy.value.as_number().ok_or("expected numeric energy")?;
+    assert_eq!(kilowatt_hours, 300.);
     book.save_xlsx().write_file("energy.xlsx")?;
     Ok(())
 }
@@ -55,6 +56,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 To use an existing model, start with `Workbook::open("energy.xlsx")` or
 `Workbook::from_bytes(&bytes)`. Reading a cell returns its stored result; call
 `recalculate()` after editing inputs to update it. Saving writes those results.
+Use `as_number()` or `as_boolean()` to extract a scalar without coercion; each
+returns `None` for other value kinds. Match `CellValue` when those distinctions
+matter.
 
 ## Calculate the way your application needs
 
@@ -64,7 +68,7 @@ Choose how much calculation state to keep:
 | Workflow | API | What it does |
 | --- | --- | --- |
 | Edit a workbook and save current results | `Workbook::recalculate` | Calculates the workbook and updates stored values. |
-| Query individual cells or formula text | `poirot::eval::run_cell`, `poirot::eval::run_formula` | Runs a direct calculation against workbook data. |
+| Query individual cells or formula text | `poirot::calculation::run_cell`, `poirot::calculation::run_formula` | Runs a direct calculation against workbook data. |
 | Compare scenarios without changing the original | `book.evaluation().build()` | Calculates requested outputs and their dependencies; input edits clear calculated results. |
 | Repeatedly edit a larger model | `book.overlay().build()` | Retains edits, compiled formulas, and intermediate results; reuses computations unaffected by changes. |
 
@@ -80,14 +84,44 @@ for modes, cycle boundaries, lifecycle operations and snapshot recovery.
 
 The component crates let you use formula parsing, file codecs, or pure function
 algorithms and display formatting independently. Register custom functions through
-[`poirot::eval::functions::extensions`](src/eval/functions/extensions/mod.rs); existing built-in functions
+[`poirot::calculation::extensions`](https://docs.rs/poirot/latest/poirot/calculation/extensions/); existing built-in functions
 keep their implementations.
+
+## Find the API for your task
+
+`poirot::Workbook` is the same type as `poirot::model::Workbook`; no conversion is
+needed between ordinary workflows and sparse storage APIs. Common types such as
+`Worksheet`, `Cell`, `CellAddress`, `CellValue`, `CellError`, `DateSystem` and
+`ModelError` are exported directly from `poirot`.
+
+| Domain | Use it for |
+| --- | --- |
+| `poirot::cells` | Exact Excel text, text units and formula provenance |
+| `poirot::styles` | Cell presentation and number-format display rendering |
+| `poirot::calculation` | `Evaluation`, `Overlay`, contexts, limits, direct runs and custom functions |
+| `poirot::files` | Import/export options, file metadata and diagnostics |
+| `poirot::editing` | Sheet renaming and checked formula-reference translation |
+| `poirot::snapshots` | Native source and prepared calculation-state persistence |
+
+Start with `poirot::calculation` for application calculation. The public
+`poirot::eval` modules expose compiler, engine, observation and run contracts for
+advanced integrations; their types and reporting defaults can differ from the
+application `Evaluation` and `Overlay` workflows. `poirot::model` exposes sparse
+storage and queries; reading stored cells never calculates formulas.
+
+Use the component crates independently when you need only
+[formula/text parsing](https://docs.rs/poirot-parsing),
+[pure functions and display formatting](https://docs.rs/poirot-functions), or
+[file codecs with your own storage](https://docs.rs/poirot-io).
 
 ## Excel compatibility
 
-Poirot targets modern Excel and is useful today for known spreadsheet models.
-Validate the input cases your application uses. The [compatibility guide](docs/compatibility.md)
-covers function and file support, known gaps, test evidence, and reporting issues.
+Poirot targets modern Excel, including dynamic arrays, with partial compatibility.
+It does not claim complete Excel equivalence or lossless workbook round trips.
+Validate the input cases and edits your application uses. The
+[compatibility guide](docs/compatibility.md) lists feature status, default policies,
+observable differences, file losses and ways to verify your model. A registered
+function or a passing comparison case does not establish every Excel edge case.
 
 XLSX files retain ordinary cell fonts, pattern fills, borders, alignment and number
 formats, including styled blank cells. Edit `Cell::style` with `CellStyle` and a

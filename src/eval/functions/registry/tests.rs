@@ -1,7 +1,6 @@
 use super::arity::Arity;
 use super::catalog::{
-    EXCEL_DESCRIPTORS, FUNCTION_DESCRIPTORS, SUPPORTED_FUNCTIONS, resolve_excel_function,
-    resolve_function,
+    FUNCTION_DESCRIPTORS, SUPPORTED_FUNCTIONS, resolve_function, resolve_handler,
 };
 use super::dependency_policy::DependencyPolicy;
 use super::evaluation_strategy::EvaluationStrategy;
@@ -14,7 +13,7 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
     let mut workbook = crate::model::Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();
     let address = crate::model::CellAddress { row: 0, col: 0 };
-    assert_eq!(SUPPORTED_FUNCTIONS.len(), 262);
+    assert_eq!(SUPPORTED_FUNCTIONS.len(), FUNCTION_DESCRIPTORS.len());
     let mut names = std::collections::HashSet::new();
     for descriptor in FUNCTION_DESCRIPTORS {
         assert!(names.insert(descriptor.name));
@@ -53,12 +52,11 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
                 "advertised handler missing: {formula}"
             ),
             crate::eval::limits::EvaluationOutcome::Aborted {
-                failure:
-                    crate::eval::limits::EvaluationFailure::UnsupportedCapability { detail, .. },
+                failure: crate::eval::limits::EvaluationError::UnsupportedCapability { reason, .. },
                 ..
             } => {
                 assert!(
-                    !detail.is_empty(),
+                    !reason.to_string().is_empty(),
                     "missing capability diagnostic: {formula}"
                 );
             }
@@ -132,7 +130,7 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
         resolve_function(&poirot_parsing::formula::FunctionName::from(
             "_xlfn.PERCENTILE.INC"
         ))
-        .is_none()
+        .is_some()
     );
     assert_ne!(
         UdfIdentity {
@@ -144,32 +142,6 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
             version: 2
         }
     );
-}
-
-#[test]
-fn policy_catalog_adds_only_excel_policy_registrations() {
-    let pinned: Vec<_> = super::function_descriptor::descriptors_for_policy(
-        crate::eval::config::BuiltinSemanticsPolicy::PinnedPoi,
-    )
-    .collect();
-    assert_eq!(
-        pinned,
-        super::catalog::FUNCTION_DESCRIPTORS
-            .iter()
-            .collect::<Vec<_>>()
-    );
-    let excel: Vec<_> = super::function_descriptor::descriptors_for_policy(
-        crate::eval::config::BuiltinSemanticsPolicy::ExcelDocumentation,
-    )
-    .collect();
-    assert_eq!(
-        excel.len(),
-        pinned.len() + super::catalog::EXCEL_DESCRIPTORS.len()
-    );
-    for d in super::catalog::EXCEL_DESCRIPTORS {
-        assert!(excel.contains(&d));
-        assert!(!pinned.contains(&d));
-    }
 }
 
 #[test]
@@ -196,10 +168,9 @@ fn atomic_dependency_categories_have_distinct_bits() {
 
 #[test]
 fn typed_descriptors_match_ordered_catalog_scan_for_every_alias() {
-    for declared in FUNCTION_DESCRIPTORS.iter().chain(EXCEL_DESCRIPTORS) {
+    for declared in FUNCTION_DESCRIPTORS.iter() {
         let expected = FUNCTION_DESCRIPTORS
             .iter()
-            .chain(EXCEL_DESCRIPTORS)
             .find(|descriptor| descriptor.handler == declared.handler)
             .unwrap();
         assert_eq!(declared.handler.descriptor(), expected, "{}", declared.name);
@@ -213,14 +184,12 @@ fn typed_descriptors_match_ordered_catalog_scan_for_every_alias() {
             resolve_function(&poirot_parsing::formula::FunctionName::from(declared.name))
                 .map(|descriptor| descriptor.handler)
                 .or_else(|| {
-                    resolve_excel_function(&poirot_parsing::formula::FunctionName::from(
-                        declared.name,
-                    ))
+                    resolve_handler(&poirot_parsing::formula::FunctionName::from(declared.name))
                 });
         assert_eq!(resolved, Some(declared.handler), "{}", declared.name);
     }
     // This documented Excel alias reuses an advertised handler without a row.
-    let percentile = resolve_excel_function(&poirot_parsing::formula::FunctionName::from(
+    let percentile = resolve_handler(&poirot_parsing::formula::FunctionName::from(
         "PERCENTILE.INC",
     ))
     .unwrap();

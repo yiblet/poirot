@@ -6,13 +6,19 @@
 //! Implement [`Input`](crate::scalar::Input) to let a function evaluate an argument only when it needs it.
 //! These types let function algorithms run without a workbook or formula evaluator.
 //! Workbook storage lives in [poirot::model](https://docs.rs/poirot/latest/poirot/model).
-mod error;
+mod text_units_error;
+
+pub use text_units_error::TextUnitsError;
+
+mod cell_error;
 mod excel_text;
 mod value;
+mod value_error;
 // Spreadsheet errors and model-validation diagnostics shared across crate boundaries.
-pub use error::{CellError, ValueError};
+pub use cell_error::CellError;
+pub use value_error::ValueError;
 // Exact Excel UTF-16 storage and checked text-unit selection errors.
-pub use excel_text::{ExcelText, TextUnitsError};
+pub use excel_text::ExcelText;
 // Canonical scalar values and borrowed access for either physical text encoding.
 pub use value::{CellValue, TextRef, TextUnits};
 
@@ -48,7 +54,8 @@ pub enum Scalar {
     Number(f64),
     /// Boolean operand before family-specific coercion.
     Boolean(bool),
-    /// Borrowed exact text operand.
+    /// Owned UTF-8 text after host projection; cannot retain isolated UTF-16 surrogates.
+    /// Use [`CellValue`] and [`TextRef`] when original Excel text units are required.
     Text(String),
     /// Explicit or referenced blank value.
     Blank,

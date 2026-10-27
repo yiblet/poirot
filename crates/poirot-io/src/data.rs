@@ -5,6 +5,9 @@ use crate::{
 };
 
 /// Sparse worksheet data consumed by Excel encoders.
+/// Addresses and row indices are zero-based within Excel's grid. Implementations
+/// expose saved values and formula caches; encoders do not calculate formulas.
+/// Explicit blank cells and rows remain distinct from absent storage.
 pub trait SheetSource {
     /// Borrow the stored worksheet name.
     fn name(&self) -> &str;
@@ -85,6 +88,8 @@ pub trait WorkbookSource {
 }
 
 /// Direct construction and fidelity recovery of decoded workbook records.
+/// Codecs construct a private sink and return it only after successful import;
+/// individual sink methods need not provide transaction rollback for callers.
 /// `Default` must create empty storage; codecs append decoded sheets and records.
 pub trait WorkbookSink: WorkbookSource + Default
 where

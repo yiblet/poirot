@@ -1,6 +1,6 @@
 use super::self_read::SelfRead;
 use crate::eval::coordinates::{CellMap, CellSet, EvaluationTarget};
-use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::values::Area;
 use crate::model::CellAddress;
 
@@ -30,14 +30,16 @@ impl ProducerReadEvidence {
         if previous.is_none() {
             self.blank_points
                 .try_reserve(1)
-                .map_err(|_| Self::allocation_failure(owner))?;
+                .map_err(|reservation_source| {
+                    Self::allocation_failure(owner, reservation_source)
+                })?;
         }
         // SAFETY: A missing owner reserved one map entry above; an existing owner
         // adds no entry. Numeric coordinate hashing and equality cannot panic.
         let reads = self.blank_points.entry(owner).or_default();
         reads
             .try_reserve(1)
-            .map_err(|_| Self::allocation_failure(owner))?;
+            .map_err(|reservation_source| Self::allocation_failure(owner, reservation_source))?;
         // SAFETY: The successful reservation admits this one new coordinate.
         reads.insert(point);
         Ok(())
@@ -56,29 +58,34 @@ impl ProducerReadEvidence {
         if previous.is_none() {
             self.sparse_ranges
                 .try_reserve(1)
-                .map_err(|_| Self::allocation_failure(owner))?;
+                .map_err(|reservation_source| {
+                    Self::allocation_failure(owner, reservation_source)
+                })?;
         }
         // SAFETY: A missing owner reserved one map entry above; an existing owner
         // adds no entry. Numeric coordinate hashing and equality cannot panic.
         let reads = self.sparse_ranges.entry(owner).or_default();
         reads
             .try_reserve(1)
-            .map_err(|_| Self::allocation_failure(owner))?;
+            .map_err(|reservation_source| Self::allocation_failure(owner, reservation_source))?;
         // SAFETY: The successful reservation provides one range slot.
         reads.push(area);
         Ok(())
     }
 
     /// Attribute fallible observation storage to the producer being tracked.
-    pub(super) fn allocation_failure(owner: (usize, CellAddress)) -> EvaluationFailure {
-        EvaluationFailure::Resource {
+    pub(super) fn allocation_failure(
+        owner: (usize, CellAddress),
+        reservation_source: std::collections::TryReserveError,
+    ) -> EvaluationError {
+        EvaluationError::Resource {
             kind: crate::eval::limits::ResourceFailureKind::Allocation,
             capability: CapabilityId::FunctionAdapter,
-            source: Some(EvaluationTarget {
+            target: Some(EvaluationTarget {
                 sheet: owner.0,
                 address: owner.1,
             }),
-            detail: "producer self-read observation allocation failed".into(),
+            reason: crate::eval::limits::EvaluationReasonError::ProducerSelfReadObservationAllocationFailed.with_reservation_source(reservation_source),
         }
     }
 

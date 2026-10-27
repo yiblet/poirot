@@ -1,4 +1,5 @@
 //! Namespace-aware XML input reader. Cached formula results are discarded.
+use super::extraction_error::ExtractionError;
 use super::{
     SOURCE_COMMIT,
     model::{
@@ -35,41 +36,58 @@ fn required<'a, 'input>(
     node: Node<'a, 'input>,
     namespace: &str,
     key: &str,
-) -> Result<&'a str, String> {
-    attr(node, namespace, key).ok_or_else(|| format!("missing {key} on {}", node.tag_name().name()))
+) -> Result<&'a str, ExtractionError> {
+    attr(node, namespace, key).ok_or_else(|| ExtractionError::MissingAttribute {
+        attribute: key.to_owned(),
+        element: node.tag_name().name().to_owned(),
+    })
 }
-fn positive_attr(node: Node<'_, '_>, key: &str, default: usize) -> Result<usize, String> {
+fn positive_attr(node: Node<'_, '_>, key: &str, default: usize) -> Result<usize, ExtractionError> {
     match attr(node, TABLE, key) {
         None => Ok(default),
-        Some(value) => value
-            .parse::<usize>()
-            .ok()
-            .filter(|n| *n > 0)
-            .ok_or_else(|| format!("invalid positive {key}: {value}")),
+        Some(value) => {
+            let parsed = value
+                .parse::<usize>()
+                .map_err(|source| ExtractionError::Integer {
+                    value: value.to_owned(),
+                    source,
+                })?;
+            if parsed == 0 {
+                Err(ExtractionError::PositiveAttribute {
+                    attribute: key.to_owned(),
+                    value: value.to_owned(),
+                })
+            } else {
+                Ok(parsed)
+            }
+        }
     }
 }
-fn append_text(output: &mut String, text: &str) -> Result<(), String> {
+fn append_text(output: &mut String, text: &str) -> Result<(), ExtractionError> {
     if output
         .len()
         .checked_add(text.len())
         .is_none_or(|n| n > MAX_TEXT)
     {
-        return Err("ODF text exceeds bounded input size".into());
+        return Err(ExtractionError::TextLimit);
     }
     output.push_str(text);
     Ok(())
 }
-fn odf_text(node: Node<'_, '_>, output: &mut String) -> Result<(), String> {
+fn odf_text(node: Node<'_, '_>, output: &mut String) -> Result<(), ExtractionError> {
     for child in node.children() {
         if child.is_text() {
             append_text(output, child.text().unwrap_or(""))?;
         } else if tag(child, TEXT, "s") {
-            let n = attr(child, TEXT, "c")
-                .unwrap_or("1")
+            let raw = attr(child, TEXT, "c").unwrap_or("1");
+            let n = raw
                 .parse::<usize>()
-                .map_err(|_| "invalid ODF space count")?;
+                .map_err(|source| ExtractionError::Integer {
+                    value: raw.to_owned(),
+                    source,
+                })?;
             if n > MAX_TEXT || output.len().checked_add(n).is_none_or(|n| n > MAX_TEXT) {
-                return Err("ODF spaces exceed bounded input size".into());
+                return Err(ExtractionError::SpaceLimit);
             }
             output.extend(std::iter::repeat_n(' ', n));
         } else if tag(child, TEXT, "tab") {
@@ -82,13 +100,24 @@ fn odf_text(node: Node<'_, '_>, output: &mut String) -> Result<(), String> {
     }
     Ok(())
 }
-fn finite_number(raw: &str) -> Result<f64, String> {
-    raw.parse::<f64>()
-        .ok()
-        .filter(|n| n.is_finite())
-        .ok_or_else(|| format!("invalid finite ODF number: {raw}"))
+fn finite_number(raw: &str) -> Result<f64, ExtractionError> {
+    {
+        let value = raw
+            .parse::<f64>()
+            .map_err(|source| ExtractionError::Number {
+                value: raw.to_owned(),
+                source,
+            })?;
+        if value.is_finite() {
+            Ok(value)
+        } else {
+            Err(ExtractionError::FiniteNumber {
+                value: raw.to_owned(),
+            })
+        }
+    }
 }
-fn capture_number(m: &Captures<'_>, index: usize) -> Result<f64, String> {
+fn capture_number(m: &Captures<'_>, index: usize) -> Result<f64, ExtractionError> {
     m.get(index).map_or(Ok(0.0), |s| finite_number(s.as_str()))
 }
 fn date_regex() -> &'static Regex {
@@ -103,7 +132,7 @@ fn time_regex() -> &'static Regex {
     // SAFETY: This literal regex has balanced groups/classes and supported syntax; no caller input is compiled.
     TIME.get_or_init(|| Regex::new(r"^(-)?PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$").unwrap())
 }
-fn cell_value(node: Node<'_, '_>) -> Result<InputValue, String> {
+fn cell_value(node: Node<'_, '_>) -> Result<InputValue, ExtractionError> {
     if attr(node, TABLE, "formula").is_some_and(|s| !s.is_empty()) {
         return Ok(InputValue::Blank);
     }
@@ -128,15 +157,33 @@ fn cell_value(node: Node<'_, '_>) -> Result<InputValue, String> {
             let raw = required(node, OFFICE, "date-value")?;
             let m = date_regex()
                 .captures(raw)
-                .ok_or_else(|| format!("invalid ODF date: {raw}"))?;
-            let mut year = m[1].parse::<i64>().map_err(|_| "ODF year out of bounds")?;
+                .ok_or_else(|| ExtractionError::Date {
+                    value: raw.to_owned(),
+                })?;
+            let date_field = |index| {
+                let field = m
+                    .get(index)
+                    .ok_or_else(|| ExtractionError::Date {
+                        value: raw.to_owned(),
+                    })?
+                    .as_str();
+                field
+                    .parse::<i64>()
+                    .map_err(|source| ExtractionError::Integer {
+                        value: field.to_owned(),
+                        source,
+                    })
+            };
+            let mut year = date_field(1)?;
             if !(-1_000_000..=1_000_000).contains(&year) {
-                return Err("ODF year out of bounds".into());
+                return Err(ExtractionError::OdfYearOutOfBounds);
             }
-            let month = m[2].parse::<i64>().map_err(|_| "invalid ODF month")?;
-            let day = m[3].parse::<i64>().map_err(|_| "invalid ODF day")?;
+            let month = date_field(2)?;
+            let day = date_field(3)?;
             if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
-                return Err(format!("invalid ODF date fields: {raw}"));
+                return Err(ExtractionError::Date {
+                    value: raw.to_owned(),
+                });
             }
             year -= i64::from(month <= 2);
             let era = year.div_euclid(400);
@@ -183,22 +230,23 @@ fn cell_value(node: Node<'_, '_>) -> Result<InputValue, String> {
         _ => Ok(InputValue::Blank),
     }
 }
-fn insert_cell(cells: &mut BTreeMap<Coordinate, CellInput>, item: CellInput) -> Result<(), String> {
+fn insert_cell(
+    cells: &mut BTreeMap<Coordinate, CellInput>,
+    item: CellInput,
+) -> Result<(), ExtractionError> {
     if cells.len() >= MAX_CELLS {
-        return Err("materialized FODS cells exceed bounded input size".into());
+        return Err(ExtractionError::CellLimit);
     }
     cells.insert((item.row, item.col), item);
     Ok(())
 }
-fn read_sheet(table: Node<'_, '_>) -> Result<Sheet, String> {
+fn read_sheet(table: Node<'_, '_>) -> Result<Sheet, ExtractionError> {
     let name = required(table, TABLE, "name")?.into();
     let mut cells: BTreeMap<Coordinate, CellInput> = BTreeMap::new();
     let mut r = 0usize;
     for row in table.children().filter(|n| tag(*n, TABLE, "table-row")) {
         let repeat = positive_attr(row, "number-rows-repeated", 1)?;
-        let end_row = r
-            .checked_add(repeat)
-            .ok_or("FODS row padding overflows coordinates")?;
+        let end_row = r.checked_add(repeat).ok_or(ExtractionError::RowOverflow)?;
         let mut c = 0usize;
         let mut row_cells = Vec::new();
         for node in row
@@ -206,14 +254,12 @@ fn read_sheet(table: Node<'_, '_>) -> Result<Sheet, String> {
             .filter(|n| tag(*n, TABLE, "table-cell") || tag(*n, TABLE, "covered-table-cell"))
         {
             let n = positive_attr(node, "number-columns-repeated", 1)?;
-            let end_col = c
-                .checked_add(n)
-                .ok_or("FODS column padding overflows coordinates")?;
+            let end_col = c.checked_add(n).ok_or(ExtractionError::ColumnOverflow)?;
             let formula = attr(node, TABLE, "formula").filter(|s| !s.is_empty());
             let value = cell_value(node)?;
             if formula.is_some() || !value.is_blank() {
                 if end_col > MAX_COLS || r >= MAX_ROWS {
-                    return Err("nonempty FODS cell exceeds worksheet bounds".into());
+                    return Err(ExtractionError::CellBounds);
                 }
                 for offset in 0..n {
                     let mut cell = CellInput::blank(r as u32, (c + offset) as u32);
@@ -231,9 +277,7 @@ fn read_sheet(table: Node<'_, '_>) -> Result<Sheet, String> {
                                 || (c + offset).checked_add(cols).is_none_or(|n| n > MAX_COLS)
                                 || rows.checked_mul(cols).is_none_or(|n| n > MAX_CELLS)
                             {
-                                return Err(
-                                    "matrix span exceeds worksheet/materialization bounds".into()
-                                );
+                                return Err(ExtractionError::MatrixBounds);
                             }
                             cell.matrix = Some(MatrixSpan {
                                 rows: rows as u32,
@@ -253,14 +297,14 @@ fn read_sheet(table: Node<'_, '_>) -> Result<Sheet, String> {
         }
         if !row_cells.is_empty() {
             if end_row > MAX_ROWS {
-                return Err("nonempty FODS row exceeds worksheet bounds".into());
+                return Err(ExtractionError::RowBounds);
             }
             if repeat > 10000
                 || repeat
                     .checked_mul(row_cells.len())
                     .is_none_or(|n| n > MAX_CELLS.saturating_sub(cells.len()))
             {
-                return Err("enormous nonempty repeated row".into());
+                return Err(ExtractionError::RepeatedRowLimit);
             }
             for dr in 0..repeat {
                 for cell in &row_cells {
@@ -278,14 +322,19 @@ fn read_sheet(table: Node<'_, '_>) -> Result<Sheet, String> {
         .cloned()
         .collect();
     for origin in matrices {
-        let matrix = origin.matrix.as_ref().ok_or("missing matrix origin")?;
+        let matrix = origin
+            .matrix
+            .as_ref()
+            .ok_or(ExtractionError::MissingMatrixOrigin)?;
         for dr in 0..matrix.rows {
             for dc in 0..matrix.cols {
                 let at = (origin.row + dr, origin.col + dc);
                 if !cells.contains_key(&at) {
                     insert_cell(&mut cells, CellInput::blank(at.0, at.1))?;
                 }
-                let cell = cells.get_mut(&at).ok_or("missing matrix cell")?;
+                let cell = cells
+                    .get_mut(&at)
+                    .ok_or(ExtractionError::MissingMatrixCell)?;
                 cell.value = InputValue::Blank;
                 let mut span = matrix.clone();
                 span.offset_row = dr;
@@ -311,12 +360,12 @@ fn linked_table_source<'a, 'input>(table: Node<'a, 'input>) -> Option<Node<'a, '
     })
 }
 /// Extract original inputs and checks into typed records without cached formula values.
-pub fn extract_bytes(bytes: &[u8], source: &str) -> Result<FodsWorkbook, String> {
+pub fn extract_bytes(bytes: &[u8], source: &str) -> Result<FodsWorkbook, ExtractionError> {
     if bytes.len() > MAX_SOURCE {
-        return Err("FODS fixture exceeds bounded source size".into());
+        return Err(ExtractionError::SourceLimit);
     }
-    let text = std::str::from_utf8(bytes).map_err(|e| format!("FODS is not UTF-8: {e}"))?;
-    let document = Document::parse(text).map_err(|e| format!("invalid FODS XML: {e}"))?;
+    let text = std::str::from_utf8(bytes).map_err(ExtractionError::Utf8)?;
+    let document = Document::parse(text).map_err(ExtractionError::Xml)?;
     let mut sheets = Vec::new();
     let mut total_cells = 0usize;
     let mut omissions = Vec::new();
@@ -341,7 +390,7 @@ pub fn extract_bytes(bytes: &[u8], source: &str) -> Result<FodsWorkbook, String>
         total_cells = total_cells
             .checked_add(sheet.cells.len())
             .filter(|n| *n <= MAX_CELLS)
-            .ok_or("FODS workbook materialization exceeds bounded size")?;
+            .ok_or(ExtractionError::WorkbookCellLimit)?;
         sheets.push(sheet);
     }
     let (cases, case_omissions) = cases::extract(&sheets, source)?;
@@ -417,10 +466,15 @@ pub fn extract_bytes(bytes: &[u8], source: &str) -> Result<FodsWorkbook, String>
     })
 }
 /// Return structured extracted source records for one native fixture.
-pub fn fixture_data(path: &Path, source: &str) -> Result<FodsWorkbook, String> {
-    let bytes =
-        std::fs::read(path).map_err(|e| format!("cannot read FODS {}: {e}", path.display()))?;
-    extract_bytes(&bytes, source).map_err(|e| format!("{}: {e}", path.display()))
+pub fn fixture_data(path: &Path, source: &str) -> Result<FodsWorkbook, ExtractionError> {
+    let bytes = std::fs::read(path).map_err(|source| ExtractionError::Read {
+        path: path.to_owned(),
+        source,
+    })?;
+    extract_bytes(&bytes, source).map_err(|source| ExtractionError::Fixture {
+        path: path.to_owned(),
+        source: Box::new(source),
+    })
 }
 
 #[cfg(test)]

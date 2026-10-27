@@ -36,7 +36,7 @@ impl XlsWorkbook {
             .is_none_or(|r| r.data.get(..2) != Some(&[0, 6]))
         {
             return Err(PreflightError::Representation(
-                "only BIFF8 (Excel 97-2003) XLS workbooks are supported",
+                crate::BiffRepresentationError::UnsupportedBiffVersion,
             ));
         }
         let visibility = rs
@@ -48,7 +48,7 @@ impl XlsWorkbook {
                 Some(1) => Ok(crate::SheetVisibility::Hidden),
                 Some(2) => Ok(crate::SheetVisibility::VeryHidden),
                 _ => Err(PreflightError::Malformed(
-                    "invalid BIFF worksheet visibility",
+                    crate::BiffStructureError::InvalidBiffWorksheetVisibility,
                 )),
             })
             .collect::<Result<Vec<_>>>()?;

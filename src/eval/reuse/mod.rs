@@ -7,14 +7,16 @@
 //! coordinate tables), limits (failures and retention limits) and ports (consumed-read
 //! events).
 
-/// Persistent results with reverse edges and range indexes for transitive invalidation.
 mod cache;
+/// Persistent results with reverse edges and range indexes for transitive invalidation.
+mod cache_error;
 /// One retained result and the dependencies needed to validate its reuse.
 mod cached;
 /// Reads and execution properties that determine when one cached result expires.
 mod dependencies;
 /// Sheet index and cell address identifying a dependency graph node.
 mod key;
+mod lookup_prefix_error;
 /// Reusable exact-search prefixes retained across compatible lookup calls.
 mod lookup_prefixes;
 /// Dirty causes in consumed order.
@@ -58,3 +60,7 @@ pub(in crate::eval) use reads::Reads;
 pub(in crate::eval) use search_prefix::SearchPrefix;
 pub(in crate::eval) use spill_role::SpillRole;
 pub(in crate::eval) use validity::Validity;
+
+pub(in crate::eval) use lookup_prefix_error::LookupPrefixError;
+
+pub(in crate::eval) use cache_error::CacheError;

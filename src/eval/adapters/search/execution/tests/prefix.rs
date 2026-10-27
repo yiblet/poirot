@@ -44,14 +44,11 @@ fn repeated_exact_queries_share_keys_but_keep_first_duplicate_and_range_bounds()
         ("C2", 200.),
         ("B3", 30.),
     ] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(cell.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(cell, value).unwrap();
     }
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A4".parse().unwrap(), "UNSUPPORTED()")
+        .set_formula("A4", "UNSUPPORTED()")
         .unwrap();
     let mut run = session(&w);
     assert_eq!(evaluate(&mut run, "VLOOKUP(2,A1:B4,2,FALSE)"), Number(20.));
@@ -71,10 +68,7 @@ fn zero_boolean_and_absent_candidates_remain_distinct_and_misses_can_be_reused()
         ("A3", Boolean(false)),
         ("A4", Number(4.)),
     ] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(cell.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(cell, value).unwrap();
     }
     let mut run = session(&w);
     assert_eq!(evaluate(&mut run, "MATCH(0,A1:A5,0)"), Number(2.));
@@ -89,10 +83,7 @@ fn zero_boolean_and_absent_candidates_remain_distinct_and_misses_can_be_reused()
     assert_eq!(run.state.runtime.budget.usage.cell_reads, reads);
     // A different source/run has no retained miss or first-match position.
     drop(run);
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A1".parse().unwrap(), 9.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("A1", 9.).unwrap();
     assert_eq!(evaluate(&mut session(&w), "MATCH(9,A1:A5,0)"), Number(1.));
 }
 
@@ -107,10 +98,7 @@ fn horizontal_prefixes_and_overlaid_key_cells_are_case_local() {
         ("C2", 30.),
         ("C3", 300.),
     ] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(cell.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(cell, value).unwrap();
     }
     let input = crate::eval::inputs::RunInputs::new(
         &w,
@@ -131,12 +119,9 @@ fn errored_prefixes_and_reentrant_lookup_providers_do_not_poison_later_selection
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "IFERROR(MATCH(7,A1:A2,0),0)")
+        .set_formula("A1", "IFERROR(MATCH(7,A1:A2,0),0)")
         .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A2".parse().unwrap(), 7.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("A2", 7.).unwrap();
     let mut indexed = session(&w);
     let mut streamed = Session::with_context(&w, EvaluationInputs::default());
     for formula in ["MATCH(7,A1:A2,0)", "MATCH(2,A1:A2,0)", "MATCH(7,A1:A2,0)"] {
@@ -159,10 +144,7 @@ fn observed_queries_keep_each_consumers_original_reads_and_small_caps_stream() {
     }
     let mut w = book();
     for (cell, value) in [("A1", 1.), ("A2", 2.), ("B2", 20.)] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(cell.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(cell, value).unwrap();
     }
     let mut reads = Reads::default();
     let mut run = session(&w);

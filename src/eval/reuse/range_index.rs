@@ -12,15 +12,6 @@ pub(super) struct RangeIndex {
 }
 
 impl RangeIndex {
-    #[cfg(test)]
-    pub(super) fn intersects(&self, key: Key) -> bool {
-        self.sheets.get(&key.0).is_some_and(|tree| {
-            key.1.col >= tree.first_col
-                && key.1.col <= tree.last_col
-                && tree.intersects(1, 0, tree.entries.len(), key)
-        })
-    }
-
     pub(super) fn readers(&self, key: Key, out: &mut Vec<Key>) {
         if let Some(tree) = self.sheets.get(&key.0)
             && key.1.col >= tree.first_col
@@ -67,20 +58,5 @@ impl RangeIndex {
             tree.build(1, 0, tree.entries.len());
         }
         index
-    }
-
-    // A matched entry can be consumed: its consumer is now pending and will
-    // propagate once through `seen`, even if other entries reach it again.
-    // Unmatched entries remain live, including column misses and row-zero reads.
-    // Invalidation removes every reached consumer, marking the index dirty; the
-    // next nonempty pass rebuilds only surviving traces. Exclusive mutable access
-    // keeps a pass synchronous, so no nested pass can observe a partial closure.
-    pub(super) fn take_readers(&mut self, key: Key, out: &mut Vec<Key>) {
-        if let Some(tree) = self.sheets.get_mut(&key.0)
-            && tree.first_col <= key.1.col
-            && key.1.col <= tree.last_col
-        {
-            tree.query(1, 0, tree.entries.len(), key, out);
-        }
     }
 }

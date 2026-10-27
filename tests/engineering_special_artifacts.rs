@@ -7,10 +7,8 @@ use poirot::{CellValue, Workbook};
 fn incompatible_special_preparation_preserves_formulas_and_overlay_edits() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 8.).unwrap();
-    sheet
-        .set_formula("D1".parse().unwrap(), "GESTEP(A1,32)")
-        .unwrap();
+    sheet.set_value("A1", 8.).unwrap();
+    sheet.set_formula("D1", "GESTEP(A1,32)").unwrap();
     let mut overlay = Overlay::with_workbook(book).build().unwrap();
     let input = overlay.target("S!A1").unwrap();
     let output = overlay.target("S!D1").unwrap();
@@ -45,7 +43,13 @@ fn incompatible_special_preparation_preserves_formulas_and_overlay_edits() {
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedIncompatible);
     assert_eq!(
-        workbook.sheet(0).unwrap().get(input.address).unwrap().value,
+        workbook
+            .sheet(0)
+            .unwrap()
+            .get(input.address)
+            .unwrap()
+            .unwrap()
+            .value,
         64.0.into()
     );
     let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
@@ -62,7 +66,7 @@ fn stored_engineering_names_execute_after_xlsx_roundtrip() {
         ("D1", "GESTEP({-1;0})"),
         ("G1", "ERF.PRECISE({0;0})"),
     ] {
-        sheet.set_formula(cell.parse().unwrap(), formula).unwrap();
+        sheet.set_formula(cell, formula).unwrap();
     }
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let book = poirot_io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();

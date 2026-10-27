@@ -7,22 +7,29 @@ use crate::eval::adapters::elementwise::{
 };
 use crate::eval::functions::registry::TextFunction;
 use crate::eval::host::{
-    ArgumentCoercion, CallHost, NumericPolicy, OperandDescription, OperandReader, ScalarOperand,
+    ArgumentCoercion, CallHost, OperandDescription, OperandReader, ScalarOperand,
 };
-use crate::eval::limits::{EvalResult, EvaluationFailure};
-use crate::eval::values::{FunctionFailure, FunctionResult, Value, core_projection, err};
+use crate::eval::limits::{EvalResult, EvaluationError};
+use crate::eval::values::{FunctionError, FunctionResult, Value, core_projection, err};
 use crate::model::CellValue::{Error, Number};
 use crate::model::{CellAddress, CellError, CellValue, ExcelText};
 use poirot_functions::text::modern::{self, Case, Side, Split};
 
-fn failure(host: &CallHost<'_, '_>, error: modern::Error) -> FunctionFailure {
+fn failure(
+    host: &CallHost<'_, '_>,
+    error: poirot_functions::text::ModernTextError,
+) -> FunctionError {
     match error {
-        modern::Error::Value => CellError::Value.into(),
-        modern::Error::NotFound => CellError::NA.into(),
-        modern::Error::Empty => CellError::Calc.into(),
-        modern::Error::SizeOverflow => host.size_overflow().into(),
-        modern::Error::AllocationFailure => host.allocation_failure().into(),
-        modern::Error::InvalidGeometry => EvaluationFailure::StalePlan.into(),
+        poirot_functions::text::ModernTextError::Value => CellError::Value.into(),
+        poirot_functions::text::ModernTextError::NotFound => CellError::NA.into(),
+        poirot_functions::text::ModernTextError::Empty => CellError::Calc.into(),
+        poirot_functions::text::ModernTextError::SizeOverflow => host.size_overflow().into(),
+        poirot_functions::text::ModernTextError::AllocationFailure => {
+            host.allocation_failure().into()
+        }
+        poirot_functions::text::ModernTextError::InvalidGeometry => {
+            EvaluationError::StalePlan.into()
+        }
     }
 }
 
@@ -44,9 +51,7 @@ fn coerce_text_units(
     let text = match value {
         Error(error) if errors => error.to_string(),
         Error(error) => return Err((*error).into()),
-        Number(number) => {
-            ArgumentCoercion::new(host).coerce_number_to_text(*number, NumericPolicy::PinnedPoi)?
-        }
+        Number(number) => ArgumentCoercion::new(host).coerce_number_to_text(*number)?,
         _ => ArgumentCoercion::new(host).coerce_scalar_text(value)?,
     };
     admit_text(host, text.encode_utf16().count())?;
@@ -76,7 +81,7 @@ pub(super) fn number(
     if operand.missing {
         Ok(default)
     } else {
-        ArgumentCoercion::new(host).coerce_scalar_number(&operand.value, NumericPolicy::PinnedPoi)
+        ArgumentCoercion::new(host).coerce_scalar_number(&operand.value)
     }
 }
 
@@ -179,7 +184,7 @@ impl elementwise::text::FallbackKernel for ExtractionKernel {
                 let selected = text.get(span).ok_or(CellError::Value)?;
                 Ok(Selection::Value(elementwise::text::copied(host, selected)?))
             }
-            Err(modern::Error::NotFound) => Ok(Selection::Fallback),
+            Err(poirot_functions::text::ModernTextError::NotFound) => Ok(Selection::Fallback),
             Err(error) => Err(failure(host, error)),
         }
     }
@@ -279,7 +284,7 @@ impl elementwise::text::ExpansionKernel for SplitKernel {
         let mut values = Vec::new();
         values
             .try_reserve_exact(count)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         let mut fields = fields.into_iter().peekable();
         for row in 0..shape.rows {
             for column in 0..shape.columns {
@@ -334,7 +339,7 @@ fn append(host: &mut CallHost<'_, '_>, output: &mut Vec<u16>, text: &[u16]) -> F
     host.check_values_capacity(size)?;
     output
         .try_reserve(text.len())
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     host.charge_work(text.len() as u64)?;
     // SAFETY: Checked size is at most 32767 and try_reserve admitted all appended units locally.
     output.extend_from_slice(text);
@@ -453,8 +458,8 @@ pub(in crate::eval) fn execute(
     };
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }
 
@@ -475,21 +480,24 @@ mod resource_mapping_tests {
         let host = CallHost::new_array(&mut session, 0, address, ArgumentsRef::Empty, 0);
         for (error, expected) in [
             (
-                modern::Error::SizeOverflow,
+                poirot_functions::text::ModernTextError::SizeOverflow,
                 ResourceFailureKind::SizeOverflow,
             ),
             (
-                modern::Error::AllocationFailure,
+                poirot_functions::text::ModernTextError::AllocationFailure,
                 ResourceFailureKind::Allocation,
             ),
         ] {
             assert!(
-                matches!(failure(&host, error), FunctionFailure::Operational(EvaluationFailure::Resource { kind, source: Some(source), .. }) if kind == expected && source == EvaluationTarget { sheet: 0, address })
+                matches!(failure(&host, error), FunctionError::Operational(EvaluationError::Resource { kind, target: Some(source), .. }) if kind == expected && source == EvaluationTarget { sheet: 0, address })
             );
         }
         assert!(matches!(
-            failure(&host, modern::Error::InvalidGeometry),
-            FunctionFailure::Operational(EvaluationFailure::StalePlan)
+            failure(
+                &host,
+                poirot_functions::text::ModernTextError::InvalidGeometry
+            ),
+            FunctionError::Operational(EvaluationError::StalePlan)
         ));
     }
 }

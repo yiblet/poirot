@@ -19,10 +19,8 @@ fn variance_and_standard_deviation_share_stable_reduction_across_public_workflow
             )
             .unwrap();
     }
-    sheet
-        .set_value("A5".parse().unwrap(), "ignored reference text")
-        .unwrap();
-    sheet.set_value("A6".parse().unwrap(), true).unwrap();
+    sheet.set_value("A5", "ignored reference text").unwrap();
+    sheet.set_value("A6", true).unwrap();
     let context = EvaluationContext::default();
     let mut direct = Evaluation::with_workbook(&book)
         .build(context.clone())

@@ -1,5 +1,5 @@
 use crate::eval::compile::compiler::{CompiledWorkbook, PreparationPolicy};
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::model::Workbook;
 
 /// Pairs a workbook with a compiled plan validated against its formula topology and policy.
@@ -16,9 +16,9 @@ impl<'a> WorkbookView<'a> {
         workbook: &'a Workbook,
         plan: &'a CompiledWorkbook,
         policy: &PreparationPolicy,
-    ) -> Result<Self, EvaluationFailure> {
+    ) -> Result<Self, EvaluationError> {
         if !plan.matches(workbook, policy) {
-            return Err(EvaluationFailure::StalePlan);
+            return Err(EvaluationError::StalePlan);
         }
         Ok(Self { workbook, plan })
     }

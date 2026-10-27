@@ -1,10 +1,10 @@
-use super::budget_failure::BudgetFailure;
+use super::budget_error::BudgetError;
 use super::budget_kind::BudgetKind;
 use super::capability_id::CapabilityId;
 use super::charge_request::ChargeRequest;
 use super::eval_result::EvalResult;
 use super::evaluation_budgets::EvaluationBudgets;
-use super::evaluation_failure::EvaluationFailure;
+use super::evaluation_error::EvaluationError;
 use super::evaluation_limits::EvaluationLimits;
 use super::evaluation_outcome::EvaluationOutcome;
 use super::evaluation_usage::EvaluationUsage;
@@ -42,7 +42,7 @@ impl BudgetMeter {
         limits: EvaluationBudgets,
         profiling: bool,
     ) -> EvalResult<Self> {
-        policy::validate_limits(limits).map_err(EvaluationFailure::Budget)?;
+        policy::validate_limits(limits).map_err(EvaluationError::Budget)?;
         Ok(Self {
             limits,
             profiling,
@@ -84,8 +84,8 @@ impl BudgetMeter {
         limit: u64,
         consumed: u64,
         requested: u64,
-    ) -> EvaluationFailure {
-        EvaluationFailure::Budget(BudgetFailure {
+    ) -> EvaluationError {
+        EvaluationError::Budget(BudgetError {
             kind,
             limit,
             consumed,
@@ -111,7 +111,7 @@ impl BudgetMeter {
             },
             ChargeRequest { kind, amount },
         )
-        .map_err(EvaluationFailure::Budget)?;
+        .map_err(EvaluationError::Budget)?;
         self.usage.work_units = self.usage.work_units.saturating_add(amount);
         if let Some((_, consumed)) = self.frames.last_mut() {
             *consumed = consumed.saturating_add(amount);
@@ -159,11 +159,11 @@ impl BudgetMeter {
     pub fn enter_depth(&mut self) -> EvalResult<()> {
         if self.depth >= self.limits.depth {
             if !self.depth_limited {
-                return Err(EvaluationFailure::Resource {
+                return Err(EvaluationError::Resource {
                     kind: ResourceFailureKind::BackendGuard,
                     capability: CapabilityId::FunctionAdapter,
-                    source: self.frames.last().map(|(target, _)| *target),
-                    detail: "evaluation reached the engine's 128-frame nesting ceiling".into(),
+                    target: self.frames.last().map(|(target, _)| *target),
+                    reason: crate::eval::limits::budget::evaluation_reason_error::EvaluationReasonError::EvaluationReachedTheEngineS128FrameNestingCeiling,
                 });
             }
             return Err(self.failure(
@@ -194,11 +194,11 @@ impl BudgetMeter {
     pub fn try_push_cell(&mut self, target: EvaluationTarget) -> EvalResult<()> {
         self.frames
             .try_reserve(1)
-            .map_err(|_| EvaluationFailure::Resource {
+            .map_err(|reservation_source| EvaluationError::Resource {
                 kind: crate::eval::limits::budget::resource_failure_kind::ResourceFailureKind::Allocation,
                 capability: crate::eval::limits::budget::capability_id::CapabilityId::FunctionAdapter,
-                source: Some(target),
-                detail: "cell budget frame allocation failed".into(),
+                target: Some(target),
+                reason: (crate::eval::limits::budget::evaluation_reason_error::EvaluationReasonError::CellBudgetFrameAllocationFailed).with_reservation_source(reservation_source),
             })?;
         // SAFETY: The successful reservation provides one frame slot.
         self.frames.push((target, 0));
@@ -216,7 +216,7 @@ impl BudgetMeter {
             self.frames.last().map(|(target, _)| *target),
             reservation,
         )
-        .map_err(EvaluationFailure::Budget)
+        .map_err(EvaluationError::Budget)
     }
 
     /// Check a collection size without charging materialization work.

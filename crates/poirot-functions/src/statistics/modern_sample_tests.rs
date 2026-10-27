@@ -133,7 +133,7 @@ fn independent_hypothesis_probabilities_and_work_failure() {
         t_test(&[0., 2.], &[2., 3., 4.], TestKind::Welch, true, |_| Err(
             "stop"
         )),
-        Err(Failure::Operational("stop"))
+        Err(DistributionError::Operational("stop"))
     );
 }
 

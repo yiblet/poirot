@@ -1,38 +1,21 @@
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::model::ModelError;
 
 /// Failure to construct, restore, or operate on an overlay.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum OverlayError {
     /// Invalid workbook target or authored cell content.
-    Model(ModelError),
+    #[error("overlay model operation rejected")]
+    Model(#[source] ModelError),
     /// Operational evaluation or policy failure.
-    Evaluation(EvaluationFailure),
+    #[error("overlay evaluation rejected")]
+    Evaluation(#[source] EvaluationError),
     /// Invalid or incompatible serialized state.
-    Snapshot(String),
+    #[error("overlay snapshot rejected")]
+    Snapshot(#[source] super::overlay_snapshot_error::OverlaySnapshotError),
     /// The supplied extension registry does not match the snapshot's identity.
+    #[error("overlay requires its exact extension registry")]
     RegistryMismatch,
-}
-
-impl std::fmt::Display for OverlayError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Model(e) => e.fmt(f),
-            Self::Evaluation(e) => e.fmt(f),
-            Self::Snapshot(e) => write!(f, "overlay snapshot: {e}"),
-            Self::RegistryMismatch => f.write_str("overlay requires its exact extension registry"),
-        }
-    }
-}
-
-impl std::error::Error for OverlayError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Model(error) => Some(error),
-            Self::Evaluation(error) => Some(error),
-            _ => None,
-        }
-    }
 }
 
 impl From<ModelError> for OverlayError {
@@ -41,8 +24,20 @@ impl From<ModelError> for OverlayError {
     }
 }
 
-impl From<EvaluationFailure> for OverlayError {
-    fn from(e: EvaluationFailure) -> Self {
+impl From<EvaluationError> for OverlayError {
+    fn from(e: EvaluationError) -> Self {
         Self::Evaluation(e)
+    }
+}
+
+impl From<crate::eval::reuse::CacheError> for OverlayError {
+    fn from(error: crate::eval::reuse::CacheError) -> Self {
+        Self::Snapshot(error.into())
+    }
+}
+
+impl From<poirot_io::ModelError> for OverlayError {
+    fn from(error: poirot_io::ModelError) -> Self {
+        Self::Model(error.into())
     }
 }

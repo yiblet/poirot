@@ -1,12 +1,12 @@
 //! Modern regression shape admission and typed worksheet presentation.
 use crate::eval::adapters::elementwise::matrices;
 use crate::eval::adapters::elementwise::matrices::array;
-use crate::eval::adapters::failure::operational_only;
+use crate::eval::adapters::operational_only::operational_only;
 use crate::eval::functions::registry::MatrixFunction;
 use crate::eval::host::{CallHost, OperandReader};
 use crate::eval::limits::EvalResult;
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::Num;
 use crate::model::CellValue::{Error, Number};
@@ -35,17 +35,17 @@ fn predictors(y: &Matrix<f64>, x: Matrix<f64>) -> kernel::Result<Matrix<f64>> {
     let n = y.values().len();
     if y.rows() == 1 && y.cols() > 1 {
         if x.cols() != n {
-            return Err(kernel::Error::Formula(CellError::Ref));
+            return Err(kernel::MatrixError::Formula(CellError::Ref));
         }
         kernel::transpose(&x, UNLIMITED)
     } else if y.cols() == 1 {
         if x.rows() != n {
-            return Err(kernel::Error::Formula(CellError::Ref));
+            return Err(kernel::MatrixError::Formula(CellError::Ref));
         }
         Ok(x)
     } else {
         if x.rows() != y.rows() || x.cols() != y.cols() {
-            return Err(kernel::Error::Formula(CellError::Ref));
+            return Err(kernel::MatrixError::Formula(CellError::Ref));
         }
         Matrix::new(n, 1, x.into_values())
     }
@@ -89,7 +89,7 @@ fn evaluate(
     length: usize,
     address: CellAddress,
 ) -> FunctionResult<Value> {
-    let y = collect(host, 0)?.ok_or(FunctionFailure::Spreadsheet(VALUE_ERROR))?;
+    let y = collect(host, 0)?.ok_or(FunctionError::Spreadsheet(VALUE_ERROR))?;
     let x = if length > 1 { collect(host, 1)? } else { None };
     let prediction = matches!(function, MatrixFunction::Growth | MatrixFunction::Trend);
     let nx = if prediction && length > 2 {
@@ -223,7 +223,7 @@ fn evaluate(
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     for coefficient in fit
         .coefficients()
         .map_err(|e| matrices::failure(host, e))?
@@ -289,7 +289,7 @@ pub(super) fn execute(
     let mut host = CallHost::new_array(session, sheet, address, args, arrays);
     match evaluate(&mut host, function, length, address) {
         Ok(v) => Ok(v),
-        Err(FunctionFailure::Spreadsheet(e)) => Ok(err(e)),
+        Err(FunctionError::Spreadsheet(e)) => Ok(err(e)),
         Err(e) => Err(operational_only(e)),
     }
 }

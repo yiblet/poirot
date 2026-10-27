@@ -6,7 +6,7 @@ use crate::fods::{
 };
 use poirot::eval::{
     CellCompletion, CellObserver, CompiledWorkbook, DependencyRead, DependencyReadSink,
-    EvaluationFailure, PreparedFormula, ReadEvent,
+    EvaluationError, PreparedFormula, ReadEvent,
 };
 use std::cell::RefCell;
 
@@ -157,7 +157,7 @@ impl DependencyReadSink for Reads<'_> {
             } => {
                 if matches!(
                     self.plan.defined_name(index).map(|p| p.as_ref()),
-                    Some(PreparedFormula::ParseFailure { error, .. }) if error.kind == poirot_parsing::formula::ParseErrorKind::Syntax
+                    Some(PreparedFormula::ParseFailure { error, .. }) if error.kind() == poirot_parsing::formula::ParseErrorKind::Syntax
                 ) {
                     trace
                         .syntax
@@ -179,14 +179,14 @@ pub(crate) struct Cells<'a> {
     pub plan: &'a CompiledWorkbook,
 }
 impl CellObserver for Cells<'_> {
-    fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+    fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationError> {
         if self
             .matrix_cells
             .contains(&(completion.target.sheet, completion.target.address))
         {
             self.trace
                 .try_borrow_mut()
-                .map_err(|_| EvaluationFailure::StalePlan)?
+                .map_err(|_| EvaluationError::StalePlan)?
                 .matrix_cell
                 .get_or_insert(completion.target);
         }
@@ -195,12 +195,12 @@ impl CellObserver for Cells<'_> {
         if completion.result.is_ok()
             && matches!(
                 self.plan.formula(completion.target).map(|p| p.as_ref()),
-                Some(PreparedFormula::ParseFailure { error, .. }) if error.kind == poirot_parsing::formula::ParseErrorKind::Syntax
+                Some(PreparedFormula::ParseFailure { error, .. }) if error.kind() == poirot_parsing::formula::ParseErrorKind::Syntax
             )
         {
             self.trace
                 .try_borrow_mut()
-                .map_err(|_| EvaluationFailure::StalePlan)?
+                .map_err(|_| EvaluationError::StalePlan)?
                 .syntax
                 .get_or_insert_with(|| {
                     format!(

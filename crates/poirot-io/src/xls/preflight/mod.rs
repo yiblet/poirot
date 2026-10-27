@@ -10,7 +10,7 @@
 //! <https://github.com/tafia/calamine/tree/0a24c2a9f1e38c0932c1299e633270dc730db505/src>
 //! Calamine credit is in root LICENSES/ACKNOWLEDGEMENTS; terms in LICENSES/MIT.txt.
 //!
-//! Depends on: nothing outside this folder.
+//! Depends on: crate BIFF error categories and resource identities.
 mod admission;
 mod biff_plan;
 mod cfb;

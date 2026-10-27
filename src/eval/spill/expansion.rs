@@ -1,5 +1,5 @@
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError};
 use crate::model::CellAddress;
 
 /// Stages the uninspected source strips needed to extend a sheet's discovery proof.
@@ -27,11 +27,11 @@ impl Expansion {
         budget.check_allocation(self.strips.len().saturating_add(1))?;
         self.strips
             .try_reserve(1)
-            .map_err(|_| EvaluationFailure::Resource {
+            .map_err(|reservation_source| EvaluationError::Resource {
                 kind: crate::eval::limits::ResourceFailureKind::Allocation,
                 capability: CapabilityId::FunctionAdapter,
-                source: consumer,
-                detail: "spill discovery strip allocation failed".into(),
+                target: consumer,
+                reason: (crate::eval::limits::EvaluationReasonError::SpillDiscoveryStripAllocationFailed).with_reservation_source(reservation_source),
             })?;
         // SAFETY: The successful reservation provides one source strip slot.
         self.strips

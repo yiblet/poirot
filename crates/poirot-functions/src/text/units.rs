@@ -1,17 +1,8 @@
 //! Lossless UTF-16 selection, Unicode casing, and bounded wildcard search.
 //! Hosts admit reservations before executing allocating helpers.
+use super::text_plan_error::TextPlanError;
 use std::ops::Range;
 
-/// Selection/reservation failure before copying UTF-16 text.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PlanFailure {
-    /// Invalid text-function position or count.
-    Value,
-    /// Pinned Java index calculation overflowed.
-    JavaIndexOverflow,
-    /// Output-size or reservation arithmetic overflowed.
-    SizeOverflow,
-}
 /// Text bytes, retained elements, and work to admit before executing a UTF-16 plan.
 /// Text storage counts two bytes per code unit, not Unicode characters.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -25,42 +16,29 @@ pub struct Reservation {
 }
 impl Reservation {
     /// Build a checked UTF-16 byte/element reservation.
-    pub fn units(units: usize, work: usize) -> Result<Self, PlanFailure> {
+    pub fn units(units: usize, work: usize) -> Result<Self, TextPlanError> {
         Ok(Self {
-            text_bytes: units.checked_mul(2).ok_or(PlanFailure::SizeOverflow)?,
+            text_bytes: units.checked_mul(2).ok_or(TextPlanError::SizeOverflow)?,
             elements: units,
             work,
         })
     }
 }
 /// Plan a clamped prefix range without allocating output.
-pub fn left(length: usize, count: i32) -> Result<Range<usize>, PlanFailure> {
+pub fn left(length: usize, count: i32) -> Result<Range<usize>, TextPlanError> {
     if count < 0 {
-        return Err(PlanFailure::Value);
+        return Err(TextPlanError::Value);
     }
     Ok(0..length.min(count as usize))
 }
 /// Plan a clamped suffix range without allocating output.
-pub fn right(length: usize, count: i32) -> Result<Range<usize>, PlanFailure> {
+pub fn right(length: usize, count: i32) -> Result<Range<usize>, TextPlanError> {
     if count < 0 {
-        return Err(PlanFailure::Value);
+        return Err(TextPlanError::Value);
     }
     Ok(length.saturating_sub(count as usize)..length)
 }
-/// Plan MID selection with the pinned Java signed-index behavior.
-pub fn mid(length: usize, start: i32, count: i32) -> Result<Range<usize>, PlanFailure> {
-    let start = start.wrapping_sub(1);
-    if start < 0 || count < 0 {
-        return Err(PlanFailure::Value);
-    }
-    if start as usize > length {
-        return Ok(length..length);
-    }
-    let end = start
-        .checked_add(count)
-        .ok_or(PlanFailure::JavaIndexOverflow)?;
-    Ok(start as usize..length.min(end as usize))
-}
+
 /// Exact-unit scan: combine only an adjacent high/low surrogate pair.
 /// The caller admits scan work before invoking this allocation-free helper.
 pub fn paired_length(text: &[u16]) -> usize {
@@ -97,66 +75,70 @@ pub fn paired_offset(text: &[u16], index: usize) -> usize {
     offset
 }
 /// Plan the replaced interval after one-based argument validation.
-pub fn replace(length: usize, start: i32, count: i32) -> Result<Range<usize>, PlanFailure> {
+pub fn replace(length: usize, start: i32, count: i32) -> Result<Range<usize>, TextPlanError> {
     if start < 1 || count < 0 {
-        return Err(PlanFailure::Value);
+        return Err(TextPlanError::Value);
     }
     let start = (start as usize - 1).min(length);
     Ok(start..start.saturating_add(count as usize).min(length))
 }
 /// V2 boundaries clamp without importing Java MID's signed overflow fault.
-pub fn paired_mid(length: usize, start: i32, count: i32) -> Result<Range<usize>, PlanFailure> {
+pub fn mid(length: usize, start: i32, count: i32) -> Result<Range<usize>, TextPlanError> {
     replace(length, start, count)
 }
 /// Java start_num - 1 wraps before its negative check.
-pub fn find_start(start: i32) -> Result<usize, PlanFailure> {
+pub fn find_start(start: i32) -> Result<usize, TextPlanError> {
     let start = start.wrapping_sub(1);
     if start < 0 {
-        return Err(PlanFailure::Value);
+        return Err(TextPlanError::Value);
     }
     Ok(start as usize)
 }
 /// Estimate UTF-16 output and work before case mapping.
-pub fn case_reservation(input: usize) -> Result<Reservation, PlanFailure> {
+pub fn case_reservation(input: usize) -> Result<Reservation, TextPlanError> {
     // Java helper owns code-point tuple and output vectors. Reserve both.
-    let output = input.checked_mul(3).ok_or(PlanFailure::SizeOverflow)?;
+    let output = input.checked_mul(3).ok_or(TextPlanError::SizeOverflow)?;
     Reservation::units(
         output,
-        input.checked_mul(32).ok_or(PlanFailure::SizeOverflow)?,
+        input.checked_mul(32).ok_or(TextPlanError::SizeOverflow)?,
     )
 }
 /// Estimate text-search work and temporary storage before execution.
-pub fn search_reservation(hay: usize, needle: usize) -> Result<Reservation, PlanFailure> {
-    let inputs = hay.checked_add(needle).ok_or(PlanFailure::SizeOverflow)?;
-    let output = inputs.checked_mul(3).ok_or(PlanFailure::SizeOverflow)?;
+pub fn search_reservation(hay: usize, needle: usize) -> Result<Reservation, TextPlanError> {
+    let inputs = hay.checked_add(needle).ok_or(TextPlanError::SizeOverflow)?;
+    let output = inputs.checked_mul(3).ok_or(TextPlanError::SizeOverflow)?;
     // Worst-case literal window search plus mapping table work.
     let comparisons = hay
         .checked_mul(3)
         .and_then(|h| needle.checked_mul(3).and_then(|n| h.checked_mul(n)))
-        .ok_or(PlanFailure::SizeOverflow)?;
+        .ok_or(TextPlanError::SizeOverflow)?;
     Reservation::units(
         output,
         inputs
             .checked_mul(32)
             .and_then(|n| n.checked_add(comparisons))
-            .ok_or(PlanFailure::SizeOverflow)?,
+            .ok_or(TextPlanError::SizeOverflow)?,
     )
 }
 /// Validate repeated-text output size and return its admission plan.
-pub fn rept(length: usize, count: f64) -> Result<(usize, Reservation), PlanFailure> {
+pub fn rept(length: usize, count: f64) -> Result<(usize, Reservation), TextPlanError> {
     if count < 0. || length as f64 * count.floor() > 32767. {
-        return Err(PlanFailure::Value);
+        return Err(TextPlanError::Value);
     }
     // Java double-to-int conversion saturates, and NaN casts to zero.
     let count = count as i32;
     let count = count.max(0) as usize;
-    let units = length.checked_mul(count).ok_or(PlanFailure::SizeOverflow)?;
+    let units = length
+        .checked_mul(count)
+        .ok_or(TextPlanError::SizeOverflow)?;
     // Empty input with a very large count still needs loop-work admission.
     Ok((
         count,
         Reservation::units(
             units,
-            units.checked_add(count).ok_or(PlanFailure::SizeOverflow)?,
+            units
+                .checked_add(count)
+                .ok_or(TextPlanError::SizeOverflow)?,
         )?,
     ))
 }
@@ -172,12 +154,9 @@ mod tests {
     }
     #[test]
     fn java_source_arithmetic_and_repeat_admission() {
-        assert_eq!(mid(3, 2, i32::MAX), Err(PlanFailure::JavaIndexOverflow));
-        assert_eq!(mid(3, i32::MAX, i32::MAX), Ok(3..3));
-        assert_eq!(mid(3, i32::MIN, 1), Ok(3..3));
         assert_eq!(find_start(i32::MIN), Ok(i32::MAX as usize));
-        assert_eq!(find_start(0), Err(PlanFailure::Value));
-        assert_eq!(rept(2, 16384.), Err(PlanFailure::Value));
+        assert_eq!(find_start(0), Err(TextPlanError::Value));
+        assert_eq!(rept(2, 16384.), Err(TextPlanError::Value));
         assert_eq!(rept(2, 1.9).unwrap().0, 1);
         assert_eq!(rept(0, 1e30).unwrap().1.work, i32::MAX as usize);
     }
@@ -195,10 +174,10 @@ mod paired_tests {
         }
         assert_eq!(paired_offset(&text, usize::MAX), 6);
         assert_eq!(paired_length(&[0xdc00, 0xd800]), 2);
-        assert_eq!(replace(5, 0, 1), Err(PlanFailure::Value));
-        assert_eq!(replace(5, 1, -1), Err(PlanFailure::Value));
+        assert_eq!(replace(5, 0, 1), Err(TextPlanError::Value));
+        assert_eq!(replace(5, 1, -1), Err(TextPlanError::Value));
         assert_eq!(replace(5, i32::MAX, i32::MAX), Ok(5..5));
-        assert_eq!(paired_mid(5, 2, i32::MAX), Ok(1..5));
+        assert_eq!(mid(5, 2, i32::MAX), Ok(1..5));
     }
 }
 
@@ -228,27 +207,14 @@ pub fn case(text: &[u16], uppercase: bool) -> Vec<u16> {
     output
 }
 
-/// Character boundaries used when capitalizing word starts.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ProperUnits {
-    /// Supplementary characters remain unchanged and restart the next Java char's word.
-    JavaChars,
-    /// Supplementary letters participate in Unicode words and case conversion.
-    UnicodeScalars,
-}
-
-/// Capitalize letter runs with explicit Java UTF-16 or Unicode-scalar boundaries.
-pub fn proper(text: &[u16], units: ProperUnits) -> Vec<u16> {
+/// Capitalize Unicode letter runs while preserving isolated UTF-16 units.
+pub fn proper(text: &[u16]) -> Vec<u16> {
     use crate::text::UnicodePolicy;
     let policy = crate::text::ModernUnicode;
     let mut output = Vec::new();
     let mut upper = true;
     for decoded in char::decode_utf16(text.iter().copied()) {
         match decoded {
-            Ok(character) if units == ProperUnits::JavaChars && character.len_utf16() == 2 => {
-                output.extend(character.encode_utf16(&mut [0; 2]).iter().copied());
-                upper = true;
-            }
             Ok(character) => {
                 output.extend(policy.case(character, upper).encode_utf16());
                 upper = !policy.is_letter(character);
@@ -263,18 +229,18 @@ pub fn proper(text: &[u16], units: ProperUnits) -> Vec<u16> {
 }
 
 /// Bound logical-unit wildcard dynamic programming before allocation or execution.
-pub fn wildcard_reservation(hay: usize, needle: usize) -> Result<Reservation, PlanFailure> {
-    let cells = hay.checked_add(1).ok_or(PlanFailure::SizeOverflow)?;
+pub fn wildcard_reservation(hay: usize, needle: usize) -> Result<Reservation, TextPlanError> {
+    let cells = hay.checked_add(1).ok_or(TextPlanError::SizeOverflow)?;
     let elements = cells
         .checked_mul(3)
         .and_then(|n| n.checked_add(needle))
-        .ok_or(PlanFailure::SizeOverflow)?;
+        .ok_or(TextPlanError::SizeOverflow)?;
     let work = cells
-        .checked_mul(needle.checked_add(1).ok_or(PlanFailure::SizeOverflow)?)
+        .checked_mul(needle.checked_add(1).ok_or(TextPlanError::SizeOverflow)?)
         .and_then(|n| n.checked_mul(8))
-        .ok_or(PlanFailure::SizeOverflow)?;
+        .ok_or(TextPlanError::SizeOverflow)?;
     Reservation::units(
-        elements.checked_mul(8).ok_or(PlanFailure::SizeOverflow)?,
+        elements.checked_mul(8).ok_or(TextPlanError::SizeOverflow)?,
         work,
     )
 }

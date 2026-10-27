@@ -200,23 +200,9 @@ fn worksheet_epoch_serials_and_leap_slot_are_preserved() {
     near(call(&b, "COUPPCD(1,366,1)"), 0.); // preceding1899-12-31 boundary remains representable as a serial.
 }
 #[test]
-fn pinned_availability_lazy_branches_and_spill_collisions_remain_host_owned() {
+fn lazy_branches_and_spill_collisions_remain_host_owned() {
     let mut b = book();
-    let config = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    assert!(matches!(
-        run_formula_with_configuration(
-            &b,
-            0,
-            at("Z100").address,
-            "COUPDAYS(45000,46000,2)",
-            &config,
-            Default::default()
-        ),
-        EvaluationOutcome::Complete {
-            value: CellValue::Error(CellError::Name),
-            ..
-        }
-    ));
+
     near(
         call(&b, "IF(FALSE,YIELD(45000,46000,0.1,1E-300,100,2),7)"),
         7.,

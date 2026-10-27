@@ -17,15 +17,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Inputs")?;
-    sheet.set_value("A1".parse()?, 21.)?;
-    sheet.set_formula("B1".parse()?, "A1*2")?;
+    sheet.set_value("A1", 21)?;
+    sheet.set_formula("B1", "A1*2")?;
     let context = EvaluationContext {
         as_of_time: std::time::UNIX_EPOCH,
         randomness_seed: 42,
         ..Default::default()
     };
     let policy = poirot::calculation::EvaluationPolicy {
-        builtin: poirot::calculation::BuiltinSemanticsPolicy::ExcelDocumentation,
         ..Default::default()
     };
     let mut prepared = book
@@ -49,10 +48,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     evaluation.all()?;
     evaluation.save_xlsx().write_file(&output_path)?;
     let reopened = Workbook::open(&output_path)?;
-    let address = "B1".parse()?;
     let saved = reopened
-        .sheet(0)
-        .and_then(|sheet| sheet.get(address))
+        .stored_cell("Inputs", "B1")?
         .ok_or("saved formula cell is missing")?;
     if saved.value != CellValue::Number(42.) {
         return Err("unexpected saved value".into());

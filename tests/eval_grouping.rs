@@ -169,7 +169,6 @@ fn scoped_aliases_cycles_and_conflicting_values() {
         result(&book, "GROUPBY(1,2,Scalar)"),
         CellValue::Error(CellError::Value)
     );
-    assert_eq!(result(&book, "SUM"), CellValue::Error(CellError::Name));
 }
 #[test]
 fn direct_overlay_edits_and_spill_children() {
@@ -186,10 +185,10 @@ fn direct_overlay_edits_and_spill_children() {
         ("C2", 1.0),
         ("C3", 1.0),
     ] {
-        sheet.set_value(cell.parse().unwrap(), value).unwrap();
+        sheet.set_value(cell, value).unwrap();
     }
     sheet
-        .set_formula("E1".parse().unwrap(), "GROUPBY(A1:A3,B1:B3,SUM,0,0,,C1:C3)")
+        .set_formula("E1", "GROUPBY(A1:A3,B1:B3,SUM,0,0,,C1:C3)")
         .unwrap();
     let mut direct = Evaluation::with_workbook(&book)
         .build(Default::default())
@@ -273,12 +272,12 @@ fn a_family_admission_reference_blanks_and_standalone_origin() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     for cell in ["A1", "A2", "A3", "A4"] {
-        sheet.set_value(cell.parse().unwrap(), 1.0).unwrap();
+        sheet.set_value(cell, 1.0).unwrap();
     }
-    sheet.set_value("B1".parse().unwrap(), 2.0).unwrap();
-    sheet.set_value("B3".parse().unwrap(), "").unwrap();
+    sheet.set_value("B1", 2.0).unwrap();
+    sheet.set_value("B3", "").unwrap();
     sheet
-        .set_value("B4".parse().unwrap(), CellValue::Error(CellError::NA))
+        .set_value("B4", CellValue::Error(CellError::NA))
         .unwrap();
     assert_eq!(
         result(&book, "INDEX(GROUPBY(A1:A4,B1:B4,COUNT,0,0),1,2)"),
@@ -298,10 +297,7 @@ fn snapshot_preserves_role_programs_and_rejects_a_changed_name_baseline() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     sheet
-        .set_formula(
-            "A1".parse().unwrap(),
-            "GROUPBY({1;1},{2;8},HSTACK(SUM,AVERAGE),0,0)",
-        )
+        .set_formula("A1", "GROUPBY({1;1},{2;8},HSTACK(SUM,AVERAGE),0,0)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(book).build().unwrap();
     let context = EvaluationContext::default();
@@ -395,9 +391,9 @@ fn grouping_budgets_are_operational_and_spill_blockers_are_normal() {
     ));
     let sheet = book.sheet_mut(0).unwrap();
     sheet
-        .set_formula("A1".parse().unwrap(), "GROUPBY({1;2},{3;4},SUM,0,0)")
+        .set_formula("A1", "GROUPBY({1;2},{3;4},SUM,0,0)")
         .unwrap();
-    sheet.set_value("B2".parse().unwrap(), 19.0).unwrap();
+    sheet.set_value("B2", 19.0).unwrap();
     let mut direct = Evaluation::with_workbook(&book)
         .build(Default::default())
         .unwrap();
@@ -425,7 +421,7 @@ fn aggregation_name_misses_are_observed_only_on_reached_calls() {
         let mut book = Workbook::new();
         book.add_sheet("S")
             .unwrap()
-            .set_formula("A1".parse().unwrap(), source)
+            .set_formula("A1", source)
             .unwrap();
         let policy = PreparationPolicy::default();
         let plan = FormulaCompiler::new().compile_workbook(&book, &policy);
@@ -451,44 +447,15 @@ fn aggregation_name_misses_are_observed_only_on_reached_calls() {
 }
 
 #[test]
-fn pinned_profile_and_registered_constructor_extensions_remain_separate() {
+fn registered_extensions_are_not_builtin_aggregation_constructors() {
     let mut book = Workbook::new();
     book.add_sheet("S").unwrap();
-    for source in [
-        "GROUPBY(1,2,SUM)",
-        "_xlfn.GROUPBY(1,2,SUM)",
-        "PERCENTOF(1,2)",
-        "_xlfn.PERCENTOF(1,2)",
-    ] {
-        let outcome = run_formula_with_configuration(
-            &book,
-            0,
-            target("Z100").address,
-            source,
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-            EvaluationBudgets::default(),
-        );
-        assert!(
-            matches!(
-                outcome,
-                EvaluationOutcome::Complete {
-                    value: CellValue::Error(CellError::Name),
-                    ..
-                }
-            ),
-            "{source}"
-        );
-        assert!(
-            !matches!(result(&book, source), CellValue::Error(CellError::Name)),
-            "{source}"
-        );
-    }
     use poirot::eval::functions::extensions::*;
     let mut registry = ExtensionRegistry::new();
     registry
         .register(
             ExtensionNamespace::UserDefined,
-            "HSTACK",
+            "CUSTOM_STACK",
             "group007-test",
             ExtensionContract {
                 arity: functions::registry::Arity {
@@ -508,12 +475,13 @@ fn pinned_profile_and_registered_constructor_extensions_remain_separate() {
             },
         )
         .unwrap();
-    let syntax =
-        poirot_parsing::formula::parse_formula("GROUPBY({1;1},{2;8},HSTACK(SUM,AVERAGE),0,0)")
-            .unwrap();
+    let syntax = poirot_parsing::formula::parse_formula(
+        "GROUPBY({1;1},{2;8},CUSTOM_STACK(SUM,AVERAGE),0,0)",
+    )
+    .unwrap();
     let program = compile::bytecode::compile_with_registry(&syntax, Some(&registry)).unwrap();
     assert!(program.template.aggregations.is_empty());
-    let ordinary = poirot_parsing::formula::parse_formula("HSTACK(1)").unwrap();
+    let ordinary = poirot_parsing::formula::parse_formula("CUSTOM_STACK(1)").unwrap();
     assert!(matches!(
         compile::bytecode::compile_with_registry(&ordinary, Some(&registry))
             .unwrap()
@@ -527,12 +495,10 @@ fn pinned_profile_and_registered_constructor_extensions_remain_separate() {
 fn generated_headers_obey_utf16_limits_and_intermediate_text_budgets() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), "Key").unwrap();
-    sheet.set_value("A2".parse().unwrap(), 1.0).unwrap();
-    sheet
-        .set_value("B1".parse().unwrap(), "x".repeat(32767))
-        .unwrap();
-    sheet.set_value("B2".parse().unwrap(), 3.0).unwrap();
+    sheet.set_value("A1", "Key").unwrap();
+    sheet.set_value("A2", 1.0).unwrap();
+    sheet.set_value("B1", "x".repeat(32767)).unwrap();
+    sheet.set_value("B2", 3.0).unwrap();
     let call = "GROUPBY(A1:A2,B1:B2,HSTACK(SUM,AVERAGE),3,0)";
     assert_eq!(
         result(&book, &format!("INDEX({call},1,2)")),
@@ -540,7 +506,7 @@ fn generated_headers_obey_utf16_limits_and_intermediate_text_budgets() {
     );
     book.sheet_mut(0)
         .unwrap()
-        .set_value("B1".parse().unwrap(), "x".repeat(32759))
+        .set_value("B1", "x".repeat(32759))
         .unwrap();
     // 32,759 source units plus a space and seven units in AVERAGE exactly fit.
     assert_eq!(

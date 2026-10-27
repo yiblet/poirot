@@ -19,13 +19,8 @@ fn outcome(
     book: &Workbook,
     formula: &str,
     budgets: EvaluationBudgets,
-    excel: bool,
 ) -> EvaluationOutcome<CellValue> {
-    let config = if excel {
-        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation)
-    } else {
-        RunConfiguration::default()
-    };
+    let config = RunConfiguration::default();
     run_formula_with_configuration(
         book,
         0,
@@ -41,7 +36,7 @@ fn moved_paths_preserve_public_values() {
     let book = book();
     // Calendar controls use the same September 2021 weekdays documented in the
     // existing date tests; text/reference expectations follow the literal operands.
-    for excel in [false, true] {
+    {
         for (formula, expected) in [
             ("NETWORKDAYS(44466,44470,A1:A2)", CellValue::Number(3.)),
             (
@@ -68,11 +63,11 @@ fn moved_paths_preserve_public_values() {
             ),
             ("\"a\"&\"😀\"", CellValue::Text("a😀".into())),
         ] {
-            match outcome(&book, formula, EvaluationBudgets::default(), excel) {
+            match outcome(&book, formula, EvaluationBudgets::default()) {
                 EvaluationOutcome::Complete { value, .. } => {
-                    assert_eq!(value, expected, "{formula}, excel={excel}")
+                    assert_eq!(value, expected, "{formula}")
                 }
-                other => panic!("{formula}, excel={excel}: {other:?}"),
+                other => panic!("{formula}: {other:?}"),
             }
         }
     }
@@ -93,10 +88,9 @@ fn moved_collection_limits_remain_operational_and_attributed() {
                 materialized_values: 1,
                 ..Default::default()
             },
-            true,
         ) {
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::Budget(failure),
+                failure: EvaluationError::Budget(failure),
                 ..
             } => {
                 assert_eq!(

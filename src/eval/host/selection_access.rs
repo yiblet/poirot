@@ -3,7 +3,7 @@
 //! call-local branch masks.
 use super::call_host::CallHost;
 use super::selected_reader::SelectedReader;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::observe;
 use crate::eval::session::{Coercer, ObservationRecorder};
 use crate::eval::values::{FunctionResult, Value};
@@ -28,17 +28,17 @@ impl<'h, 'call, 'workbook> SelectionAccess<'h, 'call, 'workbook> {
         &mut self,
         count: usize,
         fill: Selection,
-        allocation_detail: &'static str,
+        allocation_detail: crate::eval::limits::EvaluationReasonError,
     ) -> EvalResult<Vec<Selection>> {
         self.host.session.state.runtime.budget.allocation(count)?;
         let mut selected = Vec::new();
         selected
             .try_reserve_exact(count)
-            .map_err(|_| EvaluationFailure::Resource {
+            .map_err(|reservation_source| EvaluationError::Resource {
                 kind: crate::eval::limits::ResourceFailureKind::Allocation,
                 capability: CapabilityId::FunctionAdapter,
-                source: self.host.session.state.runtime.stack.consumer,
-                detail: allocation_detail.into(),
+                target: self.host.session.state.runtime.stack.consumer,
+                reason: allocation_detail.with_reservation_source(reservation_source),
             })?;
         // SAFETY: Reservation admitted exactly count slots; resize fills no more than count.
         selected.resize(count, fill);
@@ -56,9 +56,13 @@ impl<'h, 'call, 'workbook> SelectionAccess<'h, 'call, 'workbook> {
     }
 
     /// Inspect a selected rectangle or return the evaluator's spill diagnostic.
-    pub(in crate::eval) fn shape(&self, value: &Value, detail: &'static str) -> EvalResult<Shape> {
+    pub(in crate::eval) fn shape(
+        &self,
+        value: &Value,
+        reason: crate::eval::limits::EvaluationReasonError,
+    ) -> EvalResult<Shape> {
         Shape::inspect(value).ok_or_else(|| {
-            crate::eval::spill::unsupported(self.host.sheet, self.host.address, detail)
+            crate::eval::spill::unsupported(self.host.sheet, self.host.address, reason)
         })
     }
 
@@ -72,7 +76,7 @@ impl<'h, 'call, 'workbook> SelectionAccess<'h, 'call, 'workbook> {
             .host
             .arguments
             .get(index)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         ObservationRecorder::new(self.host.session).observed_value_argument(
             self.host.sheet,
             self.host.address,

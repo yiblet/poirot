@@ -5,7 +5,7 @@
 //! attributed failures. Other behavior over a call runs through executor structs that
 //! borrow the host, each named for its job: `OperandReader` (shapes, coordinates and
 //! collections), `ArgumentCoercion` (numbers, text and equality), `ContextReads` (clock,
-//! calendar, locale and currency), `PolicyReads` (builtin, text and regex policies),
+//! calendar, locale and currency),
 //! `RandomDraws` (per-cell random streams), `SelectionAccess` (selected arguments,
 //! rectangles and branch masks), `DynamicReferences` (sheet names, cells and reference
 //! text), `LookupService`, `SubtotalReader` and `ErrorHandler`. `execute_extension` runs a registered provider
@@ -49,7 +49,6 @@ mod missing_policy;
 /// Coercion of omitted scalar arguments under a missing-value policy.
 mod missing_scalar;
 /// Numeric coercion contract and its pure grammar decisions.
-mod numeric_policy;
 /// Operand shape and channel inspected without traversing member cells.
 mod operand_description;
 /// Value channel of an operand before scalar coercion.
@@ -57,7 +56,6 @@ mod operand_kind;
 /// Shape, coordinate and collection reads of deferred operands.
 mod operand_reader;
 /// Builtin, text and regex policy reads with their recorded dependencies.
-mod policy_reads;
 /// Budgeted draws from the calling cell's reproducible random stream.
 mod random_draws;
 /// Presents one deferred argument through the function-core scalar input interface.
@@ -65,7 +63,7 @@ mod scalar_input;
 /// Selected scalar with its coercion provenance and omission flag.
 mod scalar_operand;
 /// Caller-cell scalar selection from arrays, without reading cells.
-mod scalar_selection_policy;
+mod scalar_selection;
 /// Reads selected array members while the evaluator builds a rectangular result.
 mod selected_reader;
 /// Selected arguments, selected rectangles and branch masks for selecting consumers.
@@ -89,11 +87,9 @@ pub(in crate::eval) use extension_invocation::execute_extension;
 pub(in crate::eval) use host_operand::HostOperand;
 pub(in crate::eval) use lookup_service::LookupService;
 pub(in crate::eval) use missing_policy::MissingPolicy;
-pub(in crate::eval) use numeric_policy::NumericPolicy;
 pub(in crate::eval) use operand_description::OperandDescription;
 pub(in crate::eval) use operand_kind::OperandKind;
 pub(in crate::eval) use operand_reader::OperandReader;
-pub(in crate::eval) use policy_reads::PolicyReads;
 pub(in crate::eval) use random_draws::RandomDraws;
 pub(in crate::eval) use scalar_operand::ScalarOperand;
 pub(in crate::eval) use selected_reader::SelectedReader;

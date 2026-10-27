@@ -1,7 +1,7 @@
 use super::super::cache::Cache;
 use super::super::cached::Cached;
 use super::super::validity::Validity;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 
 use crate::model::{CellAddress, CellValue};
 use std::sync::Arc;
@@ -30,7 +30,7 @@ fn unlimited_policy_still_refuses_intrinsic_cache_size_overflow_atomically() {
             None,
             []
         ),
-        Err(EvaluationFailure::MemoRetentionLimit { .. })
+        Err(EvaluationError::MemoRetentionLimit { .. })
     ));
     assert!(cache.insert(key, entry()).is_err());
     assert_eq!(cache.retained_bytes, usize::MAX);

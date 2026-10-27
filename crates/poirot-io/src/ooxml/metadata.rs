@@ -56,7 +56,11 @@ pub(crate) fn apply_workbook_metadata(
                     None | Some("visible") => crate::SheetVisibility::Visible,
                     Some("hidden") => crate::SheetVisibility::Hidden,
                     Some("veryHidden") => crate::SheetVisibility::VeryHidden,
-                    Some(_) => return Err(IoError::Read("invalid worksheet visibility".into())),
+                    Some(_) => {
+                        return Err(IoError::Read(
+                            crate::WorkbookReadError::InvalidWorksheetVisibility,
+                        ));
+                    }
                 };
                 if let Some(sheet) = workbook.sheet_by_name_mut(&name) {
                     let mut p = sheet.presentation();
@@ -72,8 +76,9 @@ pub(crate) fn apply_workbook_metadata(
     loop {
         match reader.read_event().map_err(xml)? {
             Event::Start(e) if e.local_name().as_ref() == "definedName" => {
-                let name = attr(&e, "name")?
-                    .ok_or_else(|| IoError::Read("defined name without name".into()))?;
+                let name = attr(&e, "name")?.ok_or(IoError::Read(
+                    crate::WorkbookReadError::DefinedNameWithoutName,
+                ))?;
                 let scope = attr(&e, "localSheetId")?
                     .map(|n| n.parse::<usize>().map_err(xml))
                     .transpose()?;
@@ -111,9 +116,9 @@ pub(crate) fn apply_workbook_metadata(
                                 .iter()
                                 .position(|sheet| sheet.name() == identity.name)
                                 .ok_or_else(|| {
-                                    IoError::Opc(crate::opc::OpcError::SheetMismatch(
-                                        identity.name.clone(),
-                                    ))
+                                    IoError::Opc(crate::opc::OpcError::MissingSheet {
+                                        name: identity.name.clone(),
+                                    })
                                 })?,
                         )
                     }

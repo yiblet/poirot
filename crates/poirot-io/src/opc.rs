@@ -16,35 +16,8 @@ use std::collections::{BTreeMap, BTreeSet};
 const REL: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/";
 const PKG: &str = "http://schemas.openxmlformats.org/package/2006/relationships";
 const MAIN: &str = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-/// Invalid or unsupported XLSX package structure, relationships, or part identity.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum OpcError {
-    /// A required package entry is absent.
-    MissingPart(String),
-    /// Relationship target cannot be safely resolved within the package.
-    InvalidTarget {
-        /// Owning part used as the relative URI base.
-        owner: String,
-        /// Rejected relationship target spelling.
-        target: String,
-    },
-    /// Package contains conflicting part, sheet, or relationship identities.
-    DuplicateIdentity(String),
-    /// Relationship metadata violates the supported package contract.
-    InvalidRelationship(String),
-    /// External link is rejected by import policy.
-    ExternalRelationship(String),
-    /// Declared sheet inventory disagrees with decoded worksheet identity.
-    SheetMismatch(String),
-    /// XML namespace is not supported for the selected package part.
-    InvalidNamespace(String),
-}
-impl std::fmt::Display for OpcError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:?}")
-    }
-}
-impl std::error::Error for OpcError {}
+pub use crate::opc_error::OpcError;
+
 /// External targets are never fetched. Select whether unrepresented links are
 /// reported as loss or make the entire import fail before backend execution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -110,8 +83,8 @@ struct Relationship {
 fn fail(e: OpcError) -> IoError {
     IoError::Opc(e)
 }
-fn xml(e: impl std::fmt::Display) -> IoError {
-    IoError::Xml(e.to_string())
+fn xml(e: impl Into<crate::XmlCodecError>) -> IoError {
+    IoError::Xml(e.into())
 }
 /// Resolve an internal URI relative to its owning part, rejecting escape and ambiguous URI syntax.
 pub fn resolve_target(owner: &str, target: &str) -> Result<String, OpcError> {
@@ -242,21 +215,21 @@ fn select_relationship(
         .filter(|(_, r)| r.kind == format!("{REL}{kind}"))
         .collect();
     if found.len() > 1 || (required && found.is_empty()) {
-        return Err(fail(OpcError::InvalidRelationship(format!(
-            "expected {} {kind} relationship",
-            if required {
-                "exactly one"
-            } else {
-                "at most one"
-            }
-        ))));
+        return Err(fail(OpcError::RelationshipCount {
+            kind: kind.into(),
+            required,
+            found: found.len(),
+        }));
     }
     found
         .first()
         .map(|(id, r)| {
-            r.target
-                .clone()
-                .ok_or_else(|| fail(OpcError::ExternalRelationship((*id).clone())))
+            r.target.clone().ok_or_else(|| {
+                fail(OpcError::ExternalRelationship {
+                    owner: None,
+                    id: (*id).clone(),
+                })
+            })
         })
         .transpose()
 }
@@ -265,7 +238,7 @@ impl PackageInventory {
         self.parts
             .get(path)
             .map(Vec::as_slice)
-            .ok_or_else(|| fail(OpcError::MissingPart(path.into())))
+            .ok_or_else(|| fail(OpcError::MissingPart { path: path.into() }))
     }
     fn relationships(
         &self,
@@ -282,7 +255,7 @@ impl PackageInventory {
                 Event::Start(e) if e.local_name().as_ref() == "Relationship" => {
                     let (ns, _) = reader.resolver().resolve_element(e.name());
                     if !matches!(ns, ResolveResult::Bound(n) if n.as_ref() == PKG) {
-                        return Err(fail(OpcError::InvalidNamespace(path.clone())));
+                        return Err(fail(OpcError::InvalidNamespace { path: path.clone() }));
                     }
                     let a = attrs(&e)?;
                     let required = |key: &str| {
@@ -290,9 +263,10 @@ impl PackageInventory {
                             .filter(|s| !s.is_empty())
                             .cloned()
                             .ok_or_else(|| {
-                                fail(OpcError::InvalidRelationship(format!(
-                                    "{path}: missing {key}"
-                                )))
+                                fail(OpcError::MissingRelationshipAttribute {
+                                    path: path.clone(),
+                                    attribute: key.into(),
+                                })
                             })
                     };
                     let id = required("Id")?;
@@ -306,24 +280,29 @@ impl PackageInventory {
                         }
                         Some("External") => {
                             if policy.external_relationships == ExternalRelationshipPolicy::Reject {
-                                return Err(fail(OpcError::ExternalRelationship(format!(
-                                    "{owner}#{id}"
-                                ))));
+                                return Err(fail(OpcError::ExternalRelationship {
+                                    owner: Some(owner.into()),
+                                    id: id.clone(),
+                                }));
                             }
                             warnings.push(ImportDiagnostic { kind: ImportDiagnosticKind::ExternalLink, detail: format!("external relationship {owner}#{id} ({kind}) is not followed or preserved") });
                             None
                         }
                         _ => {
-                            return Err(fail(OpcError::InvalidRelationship(format!(
-                                "{path}#{id}: invalid TargetMode"
-                            ))));
+                            return Err(fail(OpcError::InvalidTargetMode {
+                                path: path.clone(),
+                                id: id.clone(),
+                            }));
                         }
                     };
                     if result
                         .insert(id.clone(), Relationship { kind, target })
                         .is_some()
                     {
-                        return Err(fail(OpcError::DuplicateIdentity(format!("{path}#{id}"))));
+                        return Err(fail(OpcError::DuplicateRelationship {
+                            path: path.clone(),
+                            id: id.clone(),
+                        }));
                     }
                 }
                 Event::Eof => break,
@@ -336,9 +315,9 @@ impl PackageInventory {
     pub(crate) fn workbook_part(&self, policy: OpcImportPolicy) -> Result<String, IoError> {
         let roots = self.relationships("", &mut Vec::new(), policy)?;
         select_relationship(&roots, "officeDocument", true)?.ok_or_else(|| {
-            fail(OpcError::InvalidRelationship(
-                "missing officeDocument relationship".into(),
-            ))
+            fail(OpcError::MissingRelationship {
+                id: "officeDocument".into(),
+            })
         })
     }
     /// Validate package identity using the default external-relationship policy.
@@ -351,9 +330,9 @@ impl PackageInventory {
         let roots = self.relationships("", &mut warnings, policy)?;
         let workbook_part =
             select_relationship(&roots, "officeDocument", true)?.ok_or_else(|| {
-                fail(OpcError::InvalidRelationship(
-                    "missing officeDocument relationship".into(),
-                ))
+                fail(OpcError::MissingRelationship {
+                    id: "officeDocument".into(),
+                })
             })?;
         let rels = self.relationships(&workbook_part, &mut warnings, policy)?;
         let styles_part = select_relationship(&rels, "styles", false)?;
@@ -371,21 +350,21 @@ impl PackageInventory {
                 Event::Start(e) if e.local_name().as_ref() == "sheet" => {
                     let (ns, _) = reader.resolver().resolve_element(e.name());
                     if !matches!(ns, ResolveResult::Bound(n) if n.as_ref() == MAIN) {
-                        return Err(fail(OpcError::InvalidNamespace(workbook_part.clone())));
+                        return Err(fail(OpcError::InvalidNamespace {
+                            path: workbook_part.clone(),
+                        }));
                     }
                     let a = attrs(&e)?;
                     let name = a
                         .get("name")
                         .filter(|s| !s.is_empty())
                         .cloned()
-                        .ok_or_else(|| {
-                            fail(OpcError::SheetMismatch("missing sheet name".into()))
-                        })?;
+                        .ok_or_else(|| fail(OpcError::MissingSheetName))?;
                     let sheet_id = a
                         .get("sheetId")
                         .filter(|s| s.parse::<u32>().is_ok_and(|id| id > 0))
                         .cloned()
-                        .ok_or_else(|| fail(OpcError::SheetMismatch("invalid sheetId".into())))?;
+                        .ok_or_else(|| fail(OpcError::InvalidSheetId))?;
                     let mut relationship_id = None;
                     for attribute in e.attributes() {
                         let attribute = attribute.map_err(xml)?;
@@ -402,25 +381,28 @@ impl PackageInventory {
                         }
                     }
                     let relationship_id = relationship_id.ok_or_else(|| {
-                        fail(OpcError::SheetMismatch(format!(
-                            "{name}: missing namespace-qualified relationship id"
-                        )))
+                        fail(OpcError::MissingSheetRelationship { name: name.clone() })
                     })?;
                     let r = rels.get(&relationship_id).ok_or_else(|| {
-                        fail(OpcError::InvalidRelationship(relationship_id.clone()))
+                        fail(OpcError::MissingRelationship {
+                            id: relationship_id.clone(),
+                        })
                     })?;
                     let supported = r.kind == format!("{REL}worksheet");
                     if !supported
                         && r.kind != format!("{REL}chartsheet")
                         && r.kind != format!("{REL}dialogsheet")
                     {
-                        return Err(fail(OpcError::InvalidRelationship(format!(
-                            "{name}: invalid sheet relationship type {}",
-                            r.kind
-                        ))));
+                        return Err(fail(OpcError::InvalidSheetRelationshipType {
+                            name: name.clone(),
+                            kind: r.kind.clone(),
+                        }));
                     }
                     let part = r.target.clone().ok_or_else(|| {
-                        fail(OpcError::ExternalRelationship(relationship_id.clone()))
+                        fail(OpcError::ExternalRelationship {
+                            owner: Some(workbook_part.clone()),
+                            id: relationship_id.clone(),
+                        })
                     })?;
                     let mut duplicate_name = false;
                     for previous in &names {
@@ -439,7 +421,7 @@ impl PackageInventory {
                         || !used.insert(relationship_id.clone())
                         || !targets.insert(part.clone())
                     {
-                        return Err(fail(OpcError::DuplicateIdentity(name)));
+                        return Err(fail(OpcError::DuplicateIdentity { identity: name }));
                     }
                     if !supported {
                         warnings.push(ImportDiagnostic {

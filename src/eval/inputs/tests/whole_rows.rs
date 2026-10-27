@@ -3,7 +3,7 @@
 //! Exact floating-point order and admission limits are Poirot contracts.
 use crate::eval::config::EvaluationContext;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{BudgetKind, EvaluationFailure};
+use crate::eval::limits::{BudgetKind, EvaluationError};
 use crate::eval::overlay::{Evaluation, Overlay};
 use crate::model::{CellValue, Workbook};
 
@@ -74,9 +74,9 @@ fn whole_row_collection_refuses_before_evaluating_referenced_errors() {
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     assert!(
-        matches!(direct.cell(at("A1")), Err(EvaluationFailure::Budget(failure)) if failure.kind == BudgetKind::Materialization)
+        matches!(direct.cell(at("A1")), Err(EvaluationError::Budget(failure)) if failure.kind == BudgetKind::Materialization)
     );
     assert!(
-        matches!(overlay.evaluation(&context).unwrap().cell(at("A1")), Err(EvaluationFailure::Budget(failure)) if failure.kind == BudgetKind::Materialization)
+        matches!(overlay.evaluation(&context).unwrap().cell(at("A1")), Err(EvaluationError::Budget(failure)) if failure.kind == BudgetKind::Materialization)
     );
 }

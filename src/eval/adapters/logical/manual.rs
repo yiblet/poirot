@@ -7,7 +7,7 @@ use crate::eval::adapters::elementwise::{
 };
 use crate::eval::functions::registry::{FunctionId, LogicalFunction};
 use crate::eval::host::CallHost;
-use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::limits::{EvalResult, EvaluationError};
 use crate::eval::session::Session;
 use crate::eval::values::{VALUE_ERROR, Value, core_projection, err};
 use crate::eval::vm::ArgumentsRef;
@@ -113,7 +113,7 @@ pub(super) fn execute_variadic(
         LogicalFunction::Ifs if host.len().is_multiple_of(2) => selection::variadic(host, Ifs),
         LogicalFunction::Ifs => Ok(err(VALUE_ERROR)),
         LogicalFunction::Switch => selection::variadic(host, Switch),
-        _ => Err(EvaluationFailure::StalePlan),
+        _ => Err(EvaluationError::StalePlan),
     }
 }
 

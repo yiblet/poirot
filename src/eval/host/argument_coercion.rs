@@ -1,13 +1,12 @@
 //! Numeric and text coercion contracts, including attributed context effects.
 use super::call_host::CallHost;
-use super::numeric_policy::NumericPolicy;
 use crate::eval::config::calendar::valid;
 use crate::eval::limits::WorkKind;
 use crate::eval::session::Coercer;
 use crate::eval::values::core_projection::{
     checked_text_view, coerce_arithmetic_number, coerce_formula_text, compare,
 };
-use crate::eval::values::{FunctionFailure, FunctionResult};
+use crate::eval::values::{FunctionError, FunctionResult};
 use crate::model::CellValue::Blank;
 use crate::model::{CellError, CellValue};
 use poirot_functions::coercion::compatibility::NumericTextDecision;
@@ -47,11 +46,10 @@ impl<'h, 'call, 'workbook> ArgumentCoercion<'h, 'call, 'workbook> {
     pub(in crate::eval) fn coerce_scalar_number(
         &mut self,
         value: &CellValue,
-        policy: NumericPolicy,
     ) -> FunctionResult<f64> {
         if let Some(text) = value.text_ref() {
             let text = checked_text_view(text, &mut self.host.session.state.runtime.budget)?;
-            self.coerce_number_text(&text, policy)
+            self.coerce_number_text(&text)
         } else {
             coerce_arithmetic_number(value, &mut self.host.session.state.runtime.budget)
         }
@@ -76,7 +74,7 @@ impl<'h, 'call, 'workbook> ArgumentCoercion<'h, 'call, 'workbook> {
             let mut units = Vec::new();
             units
                 .try_reserve_exact(text.len_units())
-                .map_err(|_| self.host.budget_exceeded())?;
+                .map_err(|reservation_source| self.host.reservation_failure(reservation_source))?;
             // SAFETY: This unchanged TextRef emits exactly len_units members, reserved locally above.
             units.extend(text.units());
             return Ok(units);
@@ -86,9 +84,7 @@ impl<'h, 'call, 'workbook> ArgumentCoercion<'h, 'call, 'workbook> {
             ScalarRef::from(value),
             false,
             |request| match request {
-                DeferredText::Number(number) => {
-                    self.coerce_number_to_text(number, NumericPolicy::PinnedPoi)
-                }
+                DeferredText::Number(number) => self.coerce_number_to_text(number),
                 DeferredText::Missing => Err(CellError::Value.into()),
                 DeferredText::Text(text) => self.project_text(text),
             },
@@ -104,7 +100,7 @@ impl<'h, 'call, 'workbook> ArgumentCoercion<'h, 'call, 'workbook> {
         let mut output = Vec::new();
         output
             .try_reserve_exact(units)
-            .map_err(|_| self.host.budget_exceeded())?;
+            .map_err(|reservation_source| self.host.reservation_failure(reservation_source))?;
         // SAFETY: units was counted from this unchanged string's UTF-16 iterator immediately above.
         output.extend(text.encode_utf16());
         Ok(output)
@@ -128,17 +124,9 @@ impl<'h, 'call, 'workbook> ArgumentCoercion<'h, 'call, 'workbook> {
     }
 
     /// Parse numeric text, recording context consumed by any date-time fallback.
-    pub(in crate::eval) fn coerce_number_text(
-        &mut self,
-        text: &str,
-        policy: NumericPolicy,
-    ) -> FunctionResult<f64> {
+    pub(in crate::eval) fn coerce_number_text(&mut self, text: &str) -> FunctionResult<f64> {
         self.host.check_text(text.len())?;
-        let decision = match policy {
-            NumericPolicy::PinnedPoi => {
-                Coercer::new(self.host.session).coerce_formatted_text(text)?
-            }
-        };
+        let decision = Coercer::new(self.host.session).coerce_formatted_text(text)?;
         match decision {
             NumericTextDecision::Number(result) => result.map_err(Into::into),
             NumericTextDecision::DateTime => Coercer::new(self.host.session)
@@ -147,18 +135,12 @@ impl<'h, 'call, 'workbook> ArgumentCoercion<'h, 'call, 'workbook> {
     }
 
     /// Render a number with the selected source-compatible numeric formatter.
-    pub(in crate::eval) fn coerce_number_to_text(
-        &mut self,
-        value: f64,
-        _policy: NumericPolicy,
-    ) -> FunctionResult<String> {
+    pub(in crate::eval) fn coerce_number_to_text(&mut self, value: f64) -> FunctionResult<String> {
         // Binary64 rendering has fixed precision and bounded scratch. Capacity
         // limits concern the produced buffer, not the formatter's static bound.
         let rendered =
             poirot_functions::coercion::compatibility::coerce_render_finite_number(value, || {
-                self.host
-                    .charge_work(1)
-                    .map_err(FunctionFailure::Operational)
+                self.host.charge_work(1).map_err(FunctionError::Operational)
             })?;
         self.host.check_text(rendered.len())?;
         Ok(rendered)
@@ -169,9 +151,8 @@ impl<'h, 'call, 'workbook> ArgumentCoercion<'h, 'call, 'workbook> {
         &mut self,
         left: &CellValue,
         right: &CellValue,
-        policy: NumericPolicy,
     ) -> FunctionResult<bool> {
-        if policy == NumericPolicy::PinnedPoi {
+        {
             // TODO(coercion-non-argument): [LOW] Equality collapses numeric/blank pairs; reusing those values outside comparison would alter type-sensitive behavior.
             let numeric = coerce_equality_numeric_pair(left, right);
             if let Some((left, right)) = numeric {

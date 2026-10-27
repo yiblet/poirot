@@ -64,7 +64,11 @@ pub(in crate::xls) fn error_text(code: u8) -> Result<&'static str> {
         0x24 => "#NUM!",
         0x2a => "#N/A",
         0x2b => "#GETTING_DATA",
-        _ => return Err(PreflightError::Malformed("unknown BIFF error code")),
+        _ => {
+            return Err(PreflightError::Malformed(
+                crate::BiffStructureError::UnknownBiffErrorCode,
+            ));
+        }
     })
 }
 
@@ -78,9 +82,11 @@ fn pop(s: &mut Vec<Item>) -> Result<String> {
     match s.pop() {
         Some(Item::Expression(value)) => Ok(value),
         Some(Item::AddIn(_)) => Err(PreflightError::Representation(
-            "NameX used outside external function call",
+            crate::BiffRepresentationError::NamexUsedOutsideExternalFunctionCall,
         )),
-        None => Err(PreflightError::Malformed("formula stack underflow")),
+        None => Err(PreflightError::Malformed(
+            crate::BiffStructureError::FormulaStackUnderflow,
+        )),
     }
 }
 
@@ -130,18 +136,18 @@ pub(in crate::xls) fn formula_with_addins(
         token_count = token_count
             .checked_add(1)
             .ok_or(PreflightError::Representation(
-                "formula token count overflow",
+                crate::BiffRepresentationError::FormulaTokenCountOverflow,
             ))?;
         if token_count > budget.max_metadata_entries {
             return Err(PreflightError::Resource {
-                resource: "BIFF formula tokens",
+                resource: crate::BiffResource::BiffFormulaTokens,
                 requested: token_count as u64,
                 limit: budget.max_metadata_entries as u64,
             });
         }
-        let raw = *take(&mut b, 1)?
-            .first()
-            .ok_or(PreflightError::Malformed("missing byte"))?;
+        let raw = *take(&mut b, 1)?.first().ok_or(PreflightError::Malformed(
+            crate::BiffStructureError::MissingByte,
+        ))?;
         let id = if raw >= 0x20 {
             0x20 | (raw & 0x1f)
         } else {
@@ -190,9 +196,9 @@ pub(in crate::xls) fn formula_with_addins(
                     let ranges = usize::from(word(&mut extra)?);
                     take(
                         &mut extra,
-                        ranges
-                            .checked_mul(8)
-                            .ok_or(PreflightError::Representation("PtgExtraMem size overflow"))?,
+                        ranges.checked_mul(8).ok_or(PreflightError::Representation(
+                            crate::BiffRepresentationError::PtgextramemSizeOverflow,
+                        ))?,
                     )?;
                 }
                 pending_memory_areas = 0;
@@ -203,17 +209,16 @@ pub(in crate::xls) fn formula_with_addins(
                 )?));
             }
             0x17 => {
-                let n = *take(&mut b, 1)?
-                    .first()
-                    .ok_or(PreflightError::Malformed("missing byte"))?
-                    as usize;
+                let n = *take(&mut b, 1)?.first().ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::MissingByte,
+                ))? as usize;
                 let t = text(&mut b, n)?;
                 s.push(Item::Expression(format!("\"{}\"", t.replace('"', "\"\""))));
             }
             0x19 => {
-                let flags = *take(&mut b, 1)?
-                    .first()
-                    .ok_or(PreflightError::Malformed("missing byte"))?;
+                let flags = *take(&mut b, 1)?.first().ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::MissingByte,
+                ))?;
                 let n = word(&mut b)?;
                 if flags & 4 != 0 {
                     take(&mut b, (n as usize + 1) * 2)?;
@@ -224,10 +229,9 @@ pub(in crate::xls) fn formula_with_addins(
                 }
             }
             0x1d => s.push(Item::Expression(
-                if *take(&mut b, 1)?
-                    .first()
-                    .ok_or(PreflightError::Malformed("missing byte"))?
-                    == 0
+                if *take(&mut b, 1)?.first().ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::MissingByte,
+                ))? == 0
                 {
                     "FALSE"
                 } else {
@@ -239,19 +243,18 @@ pub(in crate::xls) fn formula_with_addins(
             0x1f => {
                 let v = take(&mut b, 8)?;
                 s.push(Item::Expression(
-                    f64::from_le_bytes(
-                        v.try_into()
-                            .map_err(|_| PreflightError::Malformed("number token"))?,
-                    )
+                    f64::from_le_bytes(v.try_into().map_err(|_| {
+                        PreflightError::Malformed(crate::BiffStructureError::NumberToken)
+                    })?)
                     .to_string(),
                 ));
             }
             0x23 => {
                 let v = take(&mut b, 4)?;
-                let i = u32::from_le_bytes(
-                    v.try_into()
-                        .map_err(|_| PreflightError::Malformed("name token"))?,
-                ) as usize;
+                let i =
+                    u32::from_le_bytes(v.try_into().map_err(|_| {
+                        PreflightError::Malformed(crate::BiffStructureError::NameToken)
+                    })?) as usize;
                 let Some(name) = i.checked_sub(1).and_then(|i| names.get(i)) else {
                     return Ok(None);
                 };
@@ -288,9 +291,9 @@ pub(in crate::xls) fn formula_with_addins(
             }
             // PtgErr carries one BErr code (MS-XLS 2.5.198.52).
             0x1c => {
-                let code = *take(&mut b, 1)?
-                    .first()
-                    .ok_or(PreflightError::Malformed("missing byte"))?;
+                let code = *take(&mut b, 1)?.first().ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::MissingByte,
+                ))?;
                 s.push(Item::Expression(error_text(code)?.into()));
             }
             // PtgRefErr/PtgAreaErr and their 3-D forms keep unused location bytes.
@@ -309,17 +312,16 @@ pub(in crate::xls) fn formula_with_addins(
             0x39 => {
                 let xti = word(&mut b)? as usize;
                 let slot = take(&mut b, 4)?;
-                let slot = u32::from_le_bytes(
-                    slot.try_into()
-                        .map_err(|_| PreflightError::Malformed("NameX slot"))?,
-                );
-                let xti = *xtis
-                    .get(xti)
-                    .ok_or(PreflightError::Malformed("NameX XTI"))?;
+                let slot = u32::from_le_bytes(slot.try_into().map_err(|_| {
+                    PreflightError::Malformed(crate::BiffStructureError::NamexSlot)
+                })?);
+                let xti = *xtis.get(xti).ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::NamexXti,
+                ))?;
                 let name = addins.resolve(xti, slot)?;
                 if name.len() > budget.max_string_bytes {
                     return Err(PreflightError::Resource {
-                        resource: "BIFF formula bytes",
+                        resource: crate::BiffResource::BiffFormulaBytes,
                         requested: name.len() as u64,
                         limit: budget.max_string_bytes as u64,
                     });
@@ -328,41 +330,39 @@ pub(in crate::xls) fn formula_with_addins(
             }
             0x21 | 0x22 => {
                 let count = if id == 0x22 {
-                    Some(
-                        *take(&mut b, 1)?
-                            .first()
-                            .ok_or(PreflightError::Malformed("missing byte"))?
-                            as usize,
-                    )
+                    Some(*take(&mut b, 1)?.first().ok_or(PreflightError::Malformed(
+                        crate::BiffStructureError::MissingByte,
+                    ))? as usize)
                 } else {
                     None
                 };
                 let index = word(&mut b)?;
                 if index == 255 {
                     let count = count.ok_or(PreflightError::Malformed(
-                        "external function must use FuncVar",
+                        crate::BiffStructureError::ExternalFunctionMustUseFuncvar,
                     ))?;
-                    let start = s
-                        .len()
-                        .checked_sub(count)
-                        .ok_or(PreflightError::Malformed("external function stack"))?;
+                    let start = s.len().checked_sub(count).ok_or(PreflightError::Malformed(
+                        crate::BiffStructureError::ExternalFunctionStack,
+                    ))?;
                     let Some(Item::AddIn(name)) = s.get(start) else {
                         return Err(PreflightError::Representation(
-                            "UDF function identity unsupported",
+                            crate::BiffRepresentationError::UdfFunctionIdentityUnsupported,
                         ));
                     };
                     let (min, max) = arity(name).ok_or(PreflightError::Representation(
-                        "unsupported add-in function identity",
+                        crate::BiffRepresentationError::UnsupportedAddInFunctionIdentity,
                     ))?;
                     if count == 0 || count - 1 < min || count - 1 > max {
-                        return Err(PreflightError::Malformed("external function arity"));
+                        return Err(PreflightError::Malformed(
+                            crate::BiffStructureError::ExternalFunctionArity,
+                        ));
                     }
                     // SAFETY: The opcode match bounds id - 3 within the fifteen literal operators; the stack suffix start is checked_sub(count) from the current stack length.
                     let bytes = s[start..]
                         .iter()
                         .try_fold(
                             count.checked_add(1).ok_or(PreflightError::Representation(
-                                "external formula size overflow",
+                                crate::BiffRepresentationError::ExternalFormulaSizeOverflow,
                             ))?,
                             |total, item| {
                                 total.checked_add(match item {
@@ -371,12 +371,12 @@ pub(in crate::xls) fn formula_with_addins(
                             },
                         )
                         .ok_or(PreflightError::Representation(
-                            "external formula size overflow",
+                            crate::BiffRepresentationError::ExternalFormulaSizeOverflow,
                         ))?;
                     // Includes name, arguments, commas and parentheses before split/join/format allocations.
                     if bytes > budget.max_string_bytes {
                         return Err(PreflightError::Resource {
-                            resource: "BIFF formula bytes",
+                            resource: crate::BiffResource::BiffFormulaBytes,
                             requested: bytes as u64,
                             limit: budget.max_string_bytes as u64,
                         });
@@ -384,13 +384,15 @@ pub(in crate::xls) fn formula_with_addins(
                     // SAFETY: start is computed by checked subtraction from s.len(), without intervening mutation of s.
                     let mut items = s.split_off(start).into_iter();
                     let Some(Item::AddIn(name)) = items.next() else {
-                        return Err(PreflightError::Malformed("external function identity"));
+                        return Err(PreflightError::Malformed(
+                            crate::BiffStructureError::ExternalFunctionIdentity,
+                        ));
                     };
                     let args = items
                         .map(|item| match item {
                             Item::Expression(value) => Ok(value),
                             Item::AddIn(_) => Err(PreflightError::Malformed(
-                                "nested external function identity",
+                                crate::BiffStructureError::NestedExternalFunctionIdentity,
                             )),
                         })
                         .collect::<Result<Vec<_>>>()?;
@@ -402,10 +404,12 @@ pub(in crate::xls) fn formula_with_addins(
                                 Item::Expression(text) | Item::AddIn(text) => text.len(),
                             })
                         })
-                        .ok_or(PreflightError::Representation("formula text overflow"))?;
+                        .ok_or(PreflightError::Representation(
+                            crate::BiffRepresentationError::FormulaTextOverflow,
+                        ))?;
                     if retained > budget.max_string_bytes {
                         return Err(PreflightError::Resource {
-                            resource: "BIFF formula bytes",
+                            resource: crate::BiffResource::BiffFormulaBytes,
                             requested: retained as u64,
                             limit: budget.max_string_bytes as u64,
                         });
@@ -417,7 +421,9 @@ pub(in crate::xls) fn formula_with_addins(
                 };
                 let n = if let Some(n) = count {
                     if n < min || n > max {
-                        return Err(PreflightError::Malformed("function arity"));
+                        return Err(PreflightError::Malformed(
+                            crate::BiffStructureError::FunctionArity,
+                        ));
                     }
                     n
                 } else {
@@ -427,10 +433,9 @@ pub(in crate::xls) fn formula_with_addins(
                     min
                 };
 
-                let start = s
-                    .len()
-                    .checked_sub(n)
-                    .ok_or(PreflightError::Malformed("function argument stack"))?;
+                let start = s.len().checked_sub(n).ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::FunctionArgumentStack,
+                ))?;
                 // SAFETY: start is computed by checked subtraction from s.len(), without intervening mutation of s.
                 let args = s
                     .split_off(start)
@@ -438,7 +443,7 @@ pub(in crate::xls) fn formula_with_addins(
                     .map(|item| match item {
                         Item::Expression(value) => Ok(value),
                         Item::AddIn(_) => Err(PreflightError::Representation(
-                            "NameX used as ordinary argument",
+                            crate::BiffRepresentationError::NamexUsedAsOrdinaryArgument,
                         )),
                     })
                     .collect::<Result<Vec<_>>>()?;
@@ -453,17 +458,21 @@ pub(in crate::xls) fn formula_with_addins(
                     Item::Expression(v) | Item::AddIn(v) => v.len(),
                 })
             })
-            .ok_or(PreflightError::Representation("formula text overflow"))?;
+            .ok_or(PreflightError::Representation(
+                crate::BiffRepresentationError::FormulaTextOverflow,
+            ))?;
         if bytes > budget.max_string_bytes {
             return Err(PreflightError::Resource {
-                resource: "BIFF formula bytes",
+                resource: crate::BiffResource::BiffFormulaBytes,
                 requested: bytes as u64,
                 limit: budget.max_string_bytes as u64,
             });
         }
     }
     if s.len() != 1 {
-        return Err(PreflightError::Malformed("formula final stack"));
+        return Err(PreflightError::Malformed(
+            crate::BiffStructureError::FormulaFinalStack,
+        ));
     }
     Ok(Some(pop(&mut s)?))
 }

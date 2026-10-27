@@ -1,27 +1,18 @@
 //! Structural failure while admitting caller-provided expression syntax.
 
 /// Structural failure while admitting caller-provided expression syntax.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, thiserror::Error)]
 pub enum BindingError {
     /// Syntax exceeds supported node count or depth.
+    #[error("binding structural resource limit exceeded")]
     ResourceLimit,
     /// Array syntax is empty or not rectangular.
+    #[error("array must be nonempty and rectangular")]
     InvalidArray,
     /// Reference coordinates exceed worksheet bounds.
+    #[error("reference exceeds worksheet bounds")]
     InvalidReference,
 }
-
-impl std::fmt::Display for BindingError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            Self::ResourceLimit => "formula binding resource limit exceeded",
-            Self::InvalidArray => "array expressions must be nonempty and rectangular",
-            Self::InvalidReference => "reference exceeds spreadsheet grid bounds",
-        })
-    }
-}
-
-impl std::error::Error for BindingError {}
 
 impl From<crate::eval::compile::bytecode::CompileError> for BindingError {
     fn from(error: crate::eval::compile::bytecode::CompileError) -> Self {

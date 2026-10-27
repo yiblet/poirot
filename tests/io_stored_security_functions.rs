@@ -53,6 +53,7 @@ fn security_function_storage_names_roundtrip() {
                     col: 0
                 })
                 .unwrap()
+                .unwrap()
                 .formula
                 .as_deref(),
             Some(format!("{prefix}{name}(1)").as_str())

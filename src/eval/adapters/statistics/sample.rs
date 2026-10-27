@@ -6,18 +6,18 @@ use crate::eval::adapters::{
         collections::{self, Admission},
         matrices,
     },
-    failure::operational_only,
+    operational_only::operational_only,
 };
 use crate::eval::functions::registry::{FunctionId, StatisticsFunction};
 use crate::eval::host::{CallHost, OperandReader};
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::{NA, Num};
 use crate::model::CellValue::Number;
 use crate::model::{CellAddress, CellValue};
-use poirot_functions::statistics::{modern::Failure, modern_sample as kernel};
+use poirot_functions::statistics::{DistributionError, modern_sample as kernel};
 
 /// Identify the modern descriptive-statistics and hypothesis-test handlers.
 pub(super) fn handles(function: StatisticsFunction) -> bool {
@@ -56,17 +56,17 @@ pub(super) fn handles(function: StatisticsFunction) -> bool {
     )
 }
 
-fn failure<E: Into<FunctionFailure>>(
+fn failure<E: Into<FunctionError>>(
     host: &CallHost<'_, '_>,
-    failure: Failure<E>,
-) -> FunctionFailure {
+    failure: DistributionError<E>,
+) -> FunctionError {
     match failure {
-        Failure::Spreadsheet(error) => error.into(),
-        Failure::Operational(error) => error.into(),
-        Failure::NonConvergence => Num.into(),
-        Failure::ComputationalLimit => host.unsupported(
+        DistributionError::Spreadsheet(error) => error.into(),
+        DistributionError::Operational(error) => error.into(),
+        DistributionError::NonConvergence => Num.into(),
+        DistributionError::ComputationalLimit => host.unsupported(
             CapabilityId::FunctionAdapter,
-            "sample statistics exceeds bounded numerical work",
+            crate::eval::limits::EvaluationReasonError::SampleStatisticsExceedsBoundedNumericalWork,
         ),
     }
 }
@@ -95,11 +95,8 @@ impl collections::CollectionKernel for SampleAggregate {
         let mut values = collections::collect(host, arguments.iter(), Admission::Aggregate)?;
         processing(host, values.len())?;
         if matches!(function, ModeSngl | ModeMult) {
-            let count = kernel::modes(
-                &mut values,
-                FunctionFailure::from(host.allocation_failure()),
-            )
-            .map_err(|e| failure(host, e))?;
+            let count = kernel::modes(&mut values, FunctionError::from(host.allocation_failure()))
+                .map_err(|e| failure(host, e))?;
             if function == ModeSngl {
                 return Ok(Number(*values.first().ok_or(NA)?).into());
             }
@@ -112,9 +109,9 @@ impl collections::CollectionKernel for SampleAggregate {
             );
         }
         let value = if function == HarMean {
-            kernel::harmonic_mean::<EvaluationFailure>(&values)
+            kernel::harmonic_mean::<EvaluationError>(&values)
         } else {
-            kernel::moment::<EvaluationFailure>(
+            kernel::moment::<EvaluationError>(
                 &values,
                 match function {
                     Kurt => kernel::MomentKind::Kurtosis,
@@ -203,7 +200,7 @@ impl<R: SampleRoles> Kernel for Sample<R> {
         let mut values = self
             .values
             .try_borrow_mut()
-            .map_err(|_| FunctionFailure::from(VALUE_ERROR))?;
+            .map_err(|_| FunctionError::from(VALUE_ERROR))?;
         let value = match function {
             RSq | Steyx => {
                 let (y, x) = self.mass.as_ref().ok_or(VALUE_ERROR)?;
@@ -285,9 +282,9 @@ impl<R: SampleRoles> Kernel for Sample<R> {
                 processing(host, a.len().saturating_add(b.len()))?;
                 let (mut x, mut y) = (Vec::new(), Vec::new());
                 x.try_reserve_exact(a.len())
-                    .map_err(|_| host.allocation_failure())?;
+                    .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
                 y.try_reserve_exact(b.len())
-                    .map_err(|_| host.allocation_failure())?;
+                    .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
                 if kind == 1.0 {
                     for (a, b) in a.iter().zip(b) {
                         if let (Some(a), Some(b)) = (a, b) {
@@ -563,7 +560,7 @@ pub(super) fn execute(
     };
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
         Err(error) => Err(operational_only(error)),
     }
 }

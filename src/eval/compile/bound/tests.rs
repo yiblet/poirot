@@ -443,7 +443,7 @@ fn extension_binding_retains_identity_spelling_and_deferred_operands() {
     };
     let compiled = FormulaPlan::bind_with_extensions(&syntax, &registry).unwrap();
     assert_eq!(compiled.syntax(), &syntax);
-    assert_eq!(compiled.extension_identity(), Some(&registry.identity()));
+
     let Expression::Extension {
         binding: actual,
         arguments,

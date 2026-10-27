@@ -1,9 +1,9 @@
 use super::broadcast::Broadcast;
 use super::source::{Projection, SourceIdentity, array_projection};
 use crate::eval::host::{CallHost, DynamicReferences, OperandReader};
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::values::{
-    Area, AreaKind, FunctionFailure, FunctionResult, ReferenceAreas, VALUE_ERROR, Value,
+    Area, AreaKind, FunctionError, FunctionResult, ReferenceAreas, VALUE_ERROR, Value,
 };
 use crate::eval::vm::Shape;
 use crate::model::CellError::Ref;
@@ -83,11 +83,10 @@ impl Prepared<SourceIdentity> {
         match &self.value {
             Value::Array(a) => Ok((a.len(), a.first().map_or(0, Vec::len))),
             Value::SheetSpan(areas) if areas.len() != 1 => {
-                Err(EvaluationFailure::UnsupportedCapability {
+                Err(EvaluationError::UnsupportedCapability {
                     capability: CapabilityId::FunctionAdapter,
-                    source: None,
-                    detail: "matrix materialization of a multi-sheet reference is not verified"
-                        .into(),
+                    target: None,
+                    reason: crate::eval::limits::EvaluationReasonError::MatrixMaterializationOfAMultiSheetReferenceIsNotVerified,
                 }
                 .into())
             }
@@ -95,7 +94,7 @@ impl Prepared<SourceIdentity> {
                 let geometry =
                     SourceIdentity::area_geometry(&self.value, area).map_err(|failure| {
                         match failure {
-                            FunctionFailure::Spreadsheet(_) => FunctionFailure::Spreadsheet(Ref),
+                            FunctionError::Spreadsheet(_) => FunctionError::Spreadsheet(Ref),
                             other => other,
                         }
                     })?;
@@ -247,7 +246,7 @@ impl Prepared<SourceIdentity> {
                 let mut selected = Vec::new();
                 selected
                     .try_reserve_exact(1)
-                    .map_err(|_| host.allocation_failure())?;
+                    .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
                 // SAFETY: One reference slot was reserved immediately above.
                 selected.push(a);
                 Value::SignedRefs(selected)

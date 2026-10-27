@@ -22,6 +22,7 @@ fn xlsx_retains_qualified_formula_and_scoped_name_identity() {
             .unwrap()
             .get(at)
             .unwrap()
+            .unwrap()
             .formula
             .as_deref(),
         Some("'O''Brien'!Rate")
@@ -32,6 +33,7 @@ fn xlsx_retains_qualified_formula_and_scoped_name_identity() {
                 .sheet(0)
                 .unwrap()
                 .get(at)
+                .unwrap()
                 .unwrap()
                 .formula
                 .as_ref()

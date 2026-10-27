@@ -18,7 +18,9 @@
 //! Apache Commons Math 3.6.1 Gamma algorithms, Apache-2.0.
 //! Coefficients and operation order follow the Java implementation; elementary
 //! functions use Rust platform math, so final bits can differ from Java FastMath.
-use crate::statistics::iteration::{KernelFailure, KernelResult, SourceConvergenceFailure, step};
+use super::source_convergence_error::SourceConvergenceError;
+use super::statistical_kernel_error::StatisticalKernelError;
+use crate::statistics::iteration::{KernelResult, step};
 // Exact authenticated Commons coefficient encoding; preserves the original decimal bits.
 const COMMONS_EULER_GAMMA: f64 = f64::from_bits(0x3fe2_788c_fc6f_b619);
 const NEG_B: &[f64] = &[
@@ -188,13 +190,13 @@ pub(super) fn gamma_q<O, M: FnMut(u64) -> Result<(), O>>(
         let delta = cn * dn;
         let next = h * delta;
         if next.is_infinite() {
-            return Err(KernelFailure::SourceConvergence(
-                SourceConvergenceFailure::InfiniteContinuedFraction,
+            return Err(StatisticalKernelError::SourceConvergence(
+                SourceConvergenceError::InfiniteContinuedFraction,
             ));
         }
         if next.is_nan() {
-            return Err(KernelFailure::SourceConvergence(
-                SourceConvergenceFailure::NanContinuedFraction,
+            return Err(StatisticalKernelError::SourceConvergence(
+                SourceConvergenceError::NanContinuedFraction,
             ));
         }
         if (delta - 1.0).abs() < epsilon {
@@ -204,8 +206,8 @@ pub(super) fn gamma_q<O, M: FnMut(u64) -> Result<(), O>>(
         c = cn;
         h = next;
     }
-    Err(KernelFailure::SourceConvergence(
-        SourceConvergenceFailure::IterationLimit,
+    Err(StatisticalKernelError::SourceConvergence(
+        SourceConvergenceError::IterationLimit,
     ))
 }
 
@@ -232,8 +234,8 @@ fn gamma_p<O, M: FnMut(u64) -> Result<(), O>>(
         sum += term;
     }
     if n >= limit {
-        return Err(KernelFailure::SourceConvergence(
-            SourceConvergenceFailure::IterationLimit,
+        return Err(StatisticalKernelError::SourceConvergence(
+            SourceConvergenceError::IterationLimit,
         ));
     }
     if sum.is_infinite() {
@@ -251,20 +253,20 @@ mod iteration_tests {
         let mut accept = |_| Ok::<(), &'static str>(());
         assert_eq!(
             gamma_q(3.0, 1.0, 1e-12, 1, &mut accept),
-            Err(KernelFailure::SourceConvergence(
-                SourceConvergenceFailure::IterationLimit
+            Err(StatisticalKernelError::SourceConvergence(
+                SourceConvergenceError::IterationLimit
             ))
         );
         assert_eq!(
             gamma_q(3.0, 4.0, 1e-12, 1, &mut accept),
-            Err(KernelFailure::SourceConvergence(
-                SourceConvergenceFailure::IterationLimit
+            Err(StatisticalKernelError::SourceConvergence(
+                SourceConvergenceError::IterationLimit
             ))
         );
         let mut reject = |_| Err("budget");
         assert_eq!(
             gamma_q(3.0, 4.0, 1e-12, 10, &mut reject),
-            Err(KernelFailure::Operational("budget"))
+            Err(StatisticalKernelError::Operational("budget"))
         );
     }
 }

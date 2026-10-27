@@ -6,38 +6,50 @@ struct Book {
     queries: Vec<DynamicReference>,
 }
 impl Workbook for Book {
-    fn preflight(&mut self, _: BudgetRequest) -> Result<(), Failure> {
+    fn preflight(&mut self, _: BudgetRequest) -> Result<(), LookupError> {
         Ok(())
     }
-    fn argument(&mut self, _: usize, _: Context) -> Result<Value, Failure> {
-        Err(Failure::Unsupported(Unsupported::DeferredArguments))
+    fn argument(&mut self, _: usize, _: Context) -> Result<Value, LookupError> {
+        Err(LookupError::Unsupported(
+            LookupUnsupportedError::DeferredArguments,
+        ))
     }
-    fn coerce_numeric_text(&mut self, text: &str) -> Result<f64, Failure> {
+    fn coerce_numeric_text(&mut self, text: &str) -> Result<f64, LookupError> {
         text.trim()
             .parse()
-            .map_err(|_| Failure::Spreadsheet(Error::Value))
+            .map_err(|_| LookupError::Spreadsheet(LookupValueError::Value))
     }
-    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, Failure> {
+    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, LookupError> {
         Ok(number.to_string())
     }
-    fn cell(&mut self, _: &Reference, sheet: u32, row: u32, col: u32) -> Result<Scalar, Failure> {
+    fn cell(
+        &mut self,
+        _: &Reference,
+        sheet: u32,
+        row: u32,
+        col: u32,
+    ) -> Result<Scalar, LookupError> {
         self.reads.push((sheet, row, col));
         Ok(Scalar::Number((100 * sheet + 10 * row + col) as f64))
     }
 
-    fn dynamic_reference(&mut self, q: &DynamicReference, _: Context) -> Result<Value, Failure> {
+    fn dynamic_reference(
+        &mut self,
+        q: &DynamicReference,
+        _: Context,
+    ) -> Result<Value, LookupError> {
         self.queries.push(q.clone());
         if q.first == "bad" {
-            Err(Error::Name.into())
+            Err(LookupValueError::Name.into())
         } else {
             Ok(area(2, 0, 0, 0, 0))
         }
     }
-    fn structured_reference(&mut self, text: &str, _: Context) -> Result<Value, Failure> {
+    fn structured_reference(&mut self, text: &str, _: Context) -> Result<Value, LookupError> {
         if text == "Table[Column]" {
             Ok(area(2, 0, 2, 1, 1))
         } else {
-            Err(Error::Ref.into())
+            Err(LookupValueError::Ref.into())
         }
     }
 }
@@ -65,7 +77,7 @@ fn n(n: f64) -> Value {
 fn s(s: &str) -> Value {
     Value::Scalar(Scalar::Text(s.into()))
 }
-fn error(e: Error) -> Value {
+fn error(e: LookupValueError) -> Value {
     Value::Scalar(Scalar::Error(e))
 }
 fn array(rows: usize, cols: usize, values: &[f64]) -> Value {
@@ -83,7 +95,7 @@ const C: Context = Context {
     row: 3,
     col: 4,
 };
-fn run(f: ReferenceFunction, args: &[Value]) -> Result<Value, Failure> {
+fn run(f: ReferenceFunction, args: &[Value]) -> Result<Value, LookupError> {
     evaluate(Function::Reference(f), args, C, &mut book())
 }
 
@@ -101,15 +113,15 @@ fn indirect_parses_quoted_workbook_and_trims_range_only() {
     );
     assert_eq!(
         parse_dynamic_reference(" Data!A1", true, &mut book()),
-        Err(Error::Ref.into())
+        Err(LookupValueError::Ref.into())
     );
     assert_eq!(
         parse_dynamic_reference("'O'Brien'!A1", true, &mut book()),
-        Err(Error::Ref.into())
+        Err(LookupValueError::Ref.into())
     );
     assert_eq!(
         run(ReferenceFunction::Indirect, &[s("bad")]),
-        Err(Error::Ref.into())
+        Err(LookupValueError::Ref.into())
     );
     let mut b = book();
     assert!(
@@ -169,7 +181,7 @@ fn lookup_array_orientation_and_last_duplicate() {
     );
     assert_eq!(
         approximate_index(&Scalar::Number(0.), &[Scalar::Number(1.)], &mut book()),
-        Err(Error::Na.into())
+        Err(LookupValueError::Na.into())
     );
 }
 #[test]
@@ -277,7 +289,7 @@ fn xmatch_wildcard_escape_and_type_mismatch() {
             SearchMode::Forward,
             &mut book()
         ),
-        Err(Error::Na.into())
+        Err(LookupValueError::Na.into())
     );
 }
 #[test]
@@ -288,10 +300,10 @@ fn xlookup_preserves_reference_and_eager_fallback_error() {
         Ok(area(4, 8, 8, 2, 4))
     );
     let mut args = args.to_vec();
-    args.push(error(Error::Div0));
+    args.push(error(LookupValueError::Div0));
     assert_eq!(
         evaluate(Function::Search(Search::XLookup), &args, C, &mut book()),
-        Err(Error::Div0.into())
+        Err(LookupValueError::Div0.into())
     );
 }
 #[test]
@@ -340,7 +352,10 @@ fn malformed_array_rejected_at_construction() {
         (usize::MAX, 2, vec![]),
         (1, 1, vec![Scalar::Blank; 2]),
     ] {
-        assert_eq!(Array::new(rows, cols, values), Err(Error::Value.into()));
+        assert_eq!(
+            Array::new(rows, cols, values),
+            Err(LookupValueError::Value.into())
+        );
     }
 }
 
@@ -355,10 +370,18 @@ fn optional_search_modes_default_only_for_absent_or_missing_operands() {
         (missing.clone(), n(-1.), Ok(n(3.))),
         (blank.clone(), missing.clone(), Ok(n(1.))),
         (n(0.), missing.clone(), Ok(n(1.))),
-        (n(0.), n(0.), Err(Error::Value.into())),
-        (missing.clone(), blank, Err(Error::Value.into())),
-        (error(Error::Div0), n(1.), Err(Error::Div0.into())),
-        (missing, error(Error::Na), Err(Error::Na.into())),
+        (n(0.), n(0.), Err(LookupValueError::Value.into())),
+        (missing.clone(), blank, Err(LookupValueError::Value.into())),
+        (
+            error(LookupValueError::Div0),
+            n(1.),
+            Err(LookupValueError::Div0.into()),
+        ),
+        (
+            missing,
+            error(LookupValueError::Na),
+            Err(LookupValueError::Na.into()),
+        ),
     ] {
         assert_eq!(
             evaluate(
@@ -400,12 +423,15 @@ fn xlookup_retains_fallback_presence_and_defaults_missing_modes() {
         );
     }
     for (fallback, expected) in [
-        (missing.clone(), Err(Error::Na.into())),
+        (missing.clone(), Err(LookupValueError::Na.into())),
         (blank.clone(), Ok(blank)),
         (n(0.), Ok(n(0.))),
         (s(""), Ok(s(""))),
         (s("absent"), Ok(s("absent"))),
-        (error(Error::Div0), Err(Error::Div0.into())),
+        (
+            error(LookupValueError::Div0),
+            Err(LookupValueError::Div0.into()),
+        ),
     ] {
         assert_eq!(
             evaluate(
@@ -431,6 +457,6 @@ fn xlookup_retains_fallback_presence_and_defaults_missing_modes() {
             C,
             &mut book()
         ),
-        Err(Error::Na.into())
+        Err(LookupValueError::Na.into())
     );
 }

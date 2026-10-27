@@ -4,22 +4,22 @@ use crate::eval::adapters::{
         self, Broadcast, Kernel, MemberContext, NumericParameter, NumericSignature, Optional,
         WholeCollection, collections,
     },
-    failure::operational_only,
+    operational_only::operational_only,
 };
 use crate::eval::functions::registry::{FunctionId, StatisticsFunction};
 use crate::eval::host::CallHost;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::{ReadRecorder, Session};
 use crate::eval::values::{
-    FunctionFailure, FunctionResult, VALUE_ERROR, Value, err, numeric_outcome,
+    FunctionError, FunctionResult, VALUE_ERROR, Value, err, numeric_outcome,
 };
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::Num;
 use crate::model::CellValue::Number;
 use crate::model::{CellAddress, CellValue};
 use poirot_functions::coercion::date_time::CalendarEpoch;
-use poirot_functions::statistics::{ets as kernel, modern::Failure};
+use poirot_functions::statistics::{DistributionError, ets as kernel};
 
 /// Identify the additive forecasting family independently of legacy FORECAST.
 pub(super) fn handles(function: StatisticsFunction) -> bool {
@@ -32,17 +32,17 @@ pub(super) fn handles(function: StatisticsFunction) -> bool {
     )
 }
 
-fn failure(host: &CallHost<'_, '_>, value: Failure<EvaluationFailure>) -> FunctionFailure {
+fn failure(host: &CallHost<'_, '_>, value: DistributionError<EvaluationError>) -> FunctionError {
     match value {
-        Failure::Spreadsheet(error) => error.into(),
-        Failure::Operational(error) => error.into(),
-        Failure::NonConvergence => host.unsupported(
+        DistributionError::Spreadsheet(error) => error.into(),
+        DistributionError::Operational(error) => error.into(),
+        DistributionError::NonConvergence => host.unsupported(
             CapabilityId::FunctionAdapter,
-            "bounded ETS optimizer did not converge",
+            crate::eval::limits::EvaluationReasonError::BoundedEtsOptimizerDidNotConverge,
         ),
-        Failure::ComputationalLimit => host.unsupported(
+        DistributionError::ComputationalLimit => host.unsupported(
             CapabilityId::FunctionAdapter,
-            "ETS preparation exceeds its admitted allocation or work envelope",
+            crate::eval::limits::EvaluationReasonError::EtsPreparationExceedsItsAdmittedAllocationOrWorkEnvelope,
         ),
     }
 }
@@ -133,7 +133,7 @@ macro_rules! ets_kernel {
             let mut copied = Vec::new();
             copied
                 .try_reserve_exact(self.observed.len())
-                .map_err(|_| host.allocation_failure())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             // SAFETY: self.observed.len slots reserved for exactly self.observed.len copied pairs.
             copied.extend(self.observed.iter().copied());
             let series = kernel::prepare(copied, aggregation, completion, self.epoch, maximum, |w| {
@@ -253,7 +253,7 @@ pub(super) fn execute(
     };
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
         Err(error) => Err(operational_only(error)),
     }
 }

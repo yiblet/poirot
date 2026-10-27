@@ -1,6 +1,6 @@
 use poirot_functions::format::{
-    FormatCompilePolicy, FormatErrorKind, FormatLocale, FormatRenderContext, SectionKind,
-    compile_format, render_value,
+    FormatCompilePolicy, FormatErrorKind, FormatLocale, FormatReasonError, FormatRenderContext,
+    SectionKind, compile_format, render_value,
 };
 use poirot_functions::scalar::{CellValue, DateSystem};
 
@@ -68,10 +68,9 @@ fn locale_failure_is_render_time_and_plan_reusable() {
     };
     let error = render_value(&CellValue::Number(46082.), &plan, context).unwrap_err();
     assert_eq!(error.kind, FormatErrorKind::UnsupportedFidelity);
-    assert!(
-        error
-            .message
-            .contains("unsupported system date/time locale")
+    assert_eq!(
+        error.reason,
+        FormatReasonError::UnsupportedSystemDateTimeLocale
     );
     assert_eq!(plan, identity);
     assert_eq!(

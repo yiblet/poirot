@@ -398,7 +398,7 @@ fn identity_arrays_spill_child_first_shrink_and_invalidate_in_both_evaluators() 
     );
 }
 #[test]
-fn utility_shapes_profiles_stored_aliases_and_budgets() {
+fn utility_shapes_stored_aliases_and_budgets() {
     let b = book();
     for call_text in [
         "ACOT(1)",
@@ -417,19 +417,6 @@ fn utility_shapes_profiles_stored_aliases_and_budgets() {
         "EUROCONVERT(1,\"DEM\",\"EUR\")",
         "XOR(TRUE,FALSE)",
     ] {
-        let pinned = run_formula_with_configuration(
-            &b,
-            0,
-            at("Z100").address,
-            call_text,
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-            Default::default(),
-        );
-        assert_eq!(
-            value(pinned),
-            CellValue::Error(CellError::Name),
-            "{call_text}"
-        );
         assert_eq!(
             call(&b, &format!("_xlfn.{call_text}")),
             call(&b, call_text),
@@ -641,7 +628,7 @@ fn documented_abs_spills_and_explicit_intersection_retains_scalar_policy() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -776,7 +763,7 @@ fn documented_sign_spills_and_explicit_intersection_retains_scalar_policy() {
             }
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));

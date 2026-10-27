@@ -14,13 +14,22 @@ pub enum OutputFormat {
 
 /// Select bounded worker parallelism, honoring RAYON_NUM_THREADS when valid.
 pub fn default_jobs() -> NonZeroUsize {
-    if let Some(jobs) = std::env::var("RAYON_NUM_THREADS")
-        .ok()
-        .and_then(|value| value.parse::<NonZeroUsize>().ok())
-    {
-        return jobs;
+    // The environment setting is an advisory hint: absent, non-Unicode, zero,
+    // malformed, and out-of-range hints deliberately select automatic concurrency.
+    match std::env::var("RAYON_NUM_THREADS") {
+        Ok(value) => {
+            if let Ok(jobs) = value.parse::<NonZeroUsize>() {
+                return jobs;
+            }
+        }
+        Err(std::env::VarError::NotPresent | std::env::VarError::NotUnicode(_)) => {}
     }
-    let available = std::thread::available_parallelism().unwrap_or(NonZeroUsize::MIN);
+    // The platform concurrency query is also advisory; one worker is the
+    // specified fallback when the OS cannot provide a count.
+    let available = match std::thread::available_parallelism() {
+        Ok(available) => available,
+        Err(_unavailable_count) => NonZeroUsize::MIN,
+    };
     // SAFETY: available is nonzero and min with eight remains at least one.
     NonZeroUsize::new(available.get().min(8)).unwrap()
 }

@@ -10,11 +10,15 @@ fn rounded(n: f64, places: usize) -> Result<f64, FormatError> {
     let factor = 10f64.powi(places as i32);
     let scaled = approx(n * factor);
     if !scaled.is_finite() {
-        return Err(error("number rounding exceeds supported finite range"));
+        return Err(error(
+            crate::format::FormatReasonError::NumberRoundingExceedsSupportedFiniteRange,
+        ));
     }
     let rounded = scaled.round() / factor;
     if !rounded.is_finite() {
-        return Err(error("number rounding exceeds supported finite range"));
+        return Err(error(
+            crate::format::FormatReasonError::NumberRoundingExceedsSupportedFiniteRange,
+        ));
     }
     Ok(rounded)
 }
@@ -23,7 +27,7 @@ impl NumberPlan {
     /// Render the resolved numeric layout under output resource limits.
     pub(super) fn render_numeric_output(&self, n: f64) -> Result<RenderedText, FormatError> {
         if !n.is_finite() {
-            return Err(error("non-finite number"));
+            return Err(error(crate::format::FormatReasonError::NonFiniteNumber));
         }
         let p = match &self.program {
             NumberProgram::General(parts) => {
@@ -41,7 +45,9 @@ impl NumberPlan {
         };
         let value = n * 100f64.powi(p.percentages) / 1000f64.powi(p.scaling);
         if !value.is_finite() {
-            return Err(error("scaled number overflow"));
+            return Err(error(
+                crate::format::FormatReasonError::ScaledNumberOverflow,
+            ));
         }
         let negative = value.is_sign_negative() && value != 0.;
         let value = value.abs();
@@ -56,13 +62,15 @@ impl NumberPlan {
             };
             let mut mantissa = value / 10f64.powi(exp);
             if !mantissa.is_finite() {
-                return Err(error("scientific exponent exceeds supported finite range"));
+                return Err(error(
+                    crate::format::FormatReasonError::ScientificExponentExceedsSupportedFiniteRange,
+                ));
             }
             if rounded(mantissa, p.decimal.len())? >= 10f64.powi(integer_count as i32) {
                 exp += integer_count as i32;
                 mantissa = value / 10f64.powi(exp);
                 if !mantissa.is_finite() {
-                    return Err(error("scientific exponent exceeds supported finite range"));
+                    return Err(error(crate::format::FormatReasonError::ScientificExponentExceedsSupportedFiniteRange));
                 }
             }
             exponent_text = format!(

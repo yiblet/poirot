@@ -1,6 +1,7 @@
 //! Bounded modern beta/gamma tails, independent of pinned numerical policies.
 //! Equations and independently generated quadrature constants: DISTRIBUTION_SOURCES.md.
-use super::modern::{Failure, Result};
+use super::distribution_error::DistributionError;
+use super::modern::Result;
 use crate::scalar::CellError;
 
 /// Probability side retained through endpoint-sensitive transformations.
@@ -27,8 +28,8 @@ const LOG_SQRT_TAU: f64 = 0.9189385332046727;
 const LIMIT: usize = 100_000;
 fn charge<O>(
     meter: &mut impl FnMut(u64) -> std::result::Result<(), O>,
-) -> std::result::Result<(), Failure<O>> {
-    meter(1).map_err(Failure::Operational)
+) -> std::result::Result<(), DistributionError<O>> {
+    meter(1).map_err(DistributionError::Operational)
 }
 /// Evaluate log(1+u)-u without losing the quadratic term near zero.
 fn log1pmx(u: f64) -> f64 {
@@ -134,7 +135,7 @@ pub fn beta<O>(
             };
             if log < -230.0 && a > 0.0 && b > 0.0 && a.is_finite() && b.is_finite() {
                 if a > 1e12 || b > 1e12 {
-                    return Err(Failure::ComputationalLimit);
+                    return Err(DistributionError::ComputationalLimit);
                 }
                 charge(&mut meter)?;
                 if b == 1.0 {
@@ -186,7 +187,7 @@ pub fn beta<O>(
         || !x.is_finite()
         || !(0.0..=1.0).contains(&x)
     {
-        return Err(Failure::Spreadsheet(CellError::Num));
+        return Err(DistributionError::Spreadsheet(CellError::Num));
     }
     if x == 0.0 {
         return Ok(if tail == Tail::Lower { 0.0 } else { 1.0 });
@@ -195,7 +196,7 @@ pub fn beta<O>(
         return Ok(if tail == Tail::Lower { 1.0 } else { 0.0 });
     }
     if a > 1e12 || b > 1e12 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
     charge(&mut meter)?;
     if a == b && x == 0.5 {
@@ -262,7 +263,7 @@ pub fn beta<O>(
         let delta = d * c;
         h *= delta;
         if !h.is_finite() || h <= 0.0 {
-            return Err(Failure::NonConvergence);
+            return Err(DistributionError::NonConvergence);
         }
         if (delta - 1.0).abs() <= 4.0 * f64::EPSILON {
             let log = beta_log_weight(a, b, x, y) + h.ln() - a.ln();
@@ -271,7 +272,7 @@ pub fn beta<O>(
             return Ok(if direct { log.exp() } else { -log.exp_m1() }.clamp(0.0, 1.0));
         }
     }
-    Err(Failure::NonConvergence)
+    Err(DistributionError::NonConvergence)
 }
 /// Logarithm of the gamma density after standardizing x=a+t*sqrt(a).
 fn standardized_log_density(a: f64, t: f64) -> f64 {
@@ -319,12 +320,12 @@ impl<F: Fn(f64) -> f64> TailIntegral<F> {
         for &(x, w) in nodes {
             for t in [mid - half * x, mid + half * x] {
                 if self.remaining == 0 {
-                    return Err(Failure::ComputationalLimit);
+                    return Err(DistributionError::ComputationalLimit);
                 }
                 self.remaining = self
                     .remaining
                     .checked_sub(1)
-                    .ok_or(Failure::ComputationalLimit)?;
+                    .ok_or(DistributionError::ComputationalLimit)?;
                 charge(meter)?;
                 sum += w * ((self.log_density)(t) - self.scale).exp();
             }
@@ -342,19 +343,21 @@ impl<F: Fn(f64) -> f64> TailIntegral<F> {
         let coarse = self.rule(l, r, &G8, meter)?;
         let fine = self.rule(l, r, &G16, meter)?;
         if !fine.is_finite() {
-            return Err(Failure::NonConvergence);
+            return Err(DistributionError::NonConvergence);
         }
         if (fine - coarse).abs() <= tolerance.max(fine.abs() * 512.0 * f64::EPSILON) {
             return Ok(fine);
         }
         if depth == 0 {
-            return Err(Failure::NonConvergence);
+            return Err(DistributionError::NonConvergence);
         }
         let mid = l + (r - l) * 0.5;
         if mid == l || mid == r {
-            return Err(Failure::NonConvergence);
+            return Err(DistributionError::NonConvergence);
         }
-        let next = depth.checked_sub(1).ok_or(Failure::NonConvergence)?;
+        let next = depth
+            .checked_sub(1)
+            .ok_or(DistributionError::NonConvergence)?;
         Ok(self.integrate(l, mid, tolerance * 0.5, next, meter)?
             + self.integrate(mid, r, tolerance * 0.5, next, meter)?)
     }
@@ -388,7 +391,7 @@ fn gamma_integral<O>(
         right *= 2.0;
     }
     if a * log1pmx(right / sq) >= -800.0 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
     let mut left = -1.0f64;
     for _ in 0..32 {
@@ -408,11 +411,11 @@ fn gamma_integral<O>(
     };
     let coarse = integral.rule(l, r, &G16, meter)?;
     if coarse <= 0.0 {
-        return Err(Failure::NonConvergence);
+        return Err(DistributionError::NonConvergence);
     }
     let value = integral.integrate(l, r, coarse * 2e-13, 20, meter)?;
     if value <= 0.0 {
-        return Err(Failure::NonConvergence);
+        return Err(DistributionError::NonConvergence);
     }
     let log = scale + value.ln();
     Ok(if (tail == Tail::Upper) == upper {
@@ -431,7 +434,7 @@ pub fn gamma<O>(
     mut meter: impl FnMut(u64) -> std::result::Result<(), O>,
 ) -> Result<O> {
     if !a.is_finite() || a <= 0.0 || x.is_nan() || x < 0.0 {
-        return Err(Failure::Spreadsheet(CellError::Num));
+        return Err(DistributionError::Spreadsheet(CellError::Num));
     }
     if x == 0.0 {
         return Ok(if tail == Tail::Lower { 0.0 } else { 1.0 });
@@ -448,7 +451,7 @@ pub fn gamma<O>(
         });
     }
     if a > 1e12 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
     if a >= 4096.0 {
         return gamma_integral(a, x, tail, &mut meter);
@@ -481,7 +484,7 @@ pub fn gamma<O>(
                 .clamp(0.0, 1.0));
             }
         }
-        return Err(Failure::NonConvergence);
+        return Err(DistributionError::NonConvergence);
     }
     if x < a + 1.0 && a >= 1.0 {
         let mut term = 1.0;
@@ -491,7 +494,7 @@ pub fn gamma<O>(
             term *= x / (a + n as f64);
             sum += term;
             if !sum.is_finite() {
-                return Err(Failure::NonConvergence);
+                return Err(DistributionError::NonConvergence);
             }
             if term <= sum * 2.0 * f64::EPSILON {
                 let l = log - a.ln() + sum.ln();
@@ -521,7 +524,7 @@ pub fn gamma<O>(
             let delta = d * c;
             h *= delta;
             if !h.is_finite() || h <= 0.0 {
-                return Err(Failure::NonConvergence);
+                return Err(DistributionError::NonConvergence);
             }
             if (delta - 1.0).abs() <= 4.0 * f64::EPSILON {
                 let l = log + h.ln();
@@ -535,7 +538,7 @@ pub fn gamma<O>(
             }
         }
     }
-    Err(Failure::NonConvergence)
+    Err(DistributionError::NonConvergence)
 }
 
 /// Log gamma density with cancellation-safe large-shape evaluation.
@@ -641,11 +644,11 @@ fn beta_integral<O>(
     };
     let coarse = integral.rule(l, r, &G16, meter)?;
     if coarse <= 0.0 {
-        return Err(Failure::NonConvergence);
+        return Err(DistributionError::NonConvergence);
     }
     let value = integral.integrate(l, r, coarse * 2e-13, 20, meter)?;
     if value <= 0.0 {
-        return Err(Failure::NonConvergence);
+        return Err(DistributionError::NonConvergence);
     }
     let log = scale + value.ln();
     Ok(if (tail == Tail::Upper) == upper {
@@ -669,7 +672,7 @@ fn beta_small_shape<O>(
     // For b<1, u=s^b cancels the integrable singularity at s=0.
     let end = -log_x;
     if end > 4096.0 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
     let log_b = log_beta(a, b);
     let log_complement = if log_x > -std::f64::consts::LN_2 {
@@ -727,11 +730,11 @@ fn beta_small_shape<O>(
     };
     let coarse = integral.rule(0.0, limit, &G16, meter)?;
     if coarse <= 0.0 {
-        return Err(Failure::NonConvergence);
+        return Err(DistributionError::NonConvergence);
     }
     let value = integral.integrate(0.0, limit, coarse * 2e-13, 20, meter)?;
     if value <= 0.0 {
-        return Err(Failure::NonConvergence);
+        return Err(DistributionError::NonConvergence);
     }
     let log = scale + value.ln();
     Ok(if tail == Tail::Upper {
@@ -775,7 +778,7 @@ mod tests {
         };
         assert_eq!(
             exhausted.rule(0.0, 1.0, &G8, &mut |_| Ok::<_, ()>(())),
-            Err(Failure::ComputationalLimit)
+            Err(DistributionError::ComputationalLimit)
         );
         let mut divergent = TailIntegral {
             log_density: |_| f64::NAN,
@@ -784,7 +787,7 @@ mod tests {
         };
         assert_eq!(
             divergent.integrate(0.0, 1.0, 1e-14, 2, &mut |_| Ok::<_, ()>(())),
-            Err(Failure::NonConvergence)
+            Err(DistributionError::NonConvergence)
         );
         let mut unresolved = TailIntegral {
             log_density: |t: f64| t.exp(),
@@ -793,7 +796,7 @@ mod tests {
         };
         assert_eq!(
             unresolved.integrate(0.0, 3.0, 0.0, 0, &mut |_| Ok::<_, ()>(())),
-            Err(Failure::NonConvergence)
+            Err(DistributionError::NonConvergence)
         );
     }
 }

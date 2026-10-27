@@ -11,7 +11,7 @@ use crate::eval::functions::registry::MatrixFunction;
 use crate::eval::host::CallHost;
 use crate::eval::limits::EvalResult;
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellValue::{Blank, Boolean, Error, Number, Text};
 use crate::model::{CellAddress, CellError, CellValue};
@@ -182,7 +182,7 @@ fn evaluate(
         let mut values = Vec::new();
         values
             .try_reserve_exact(records)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         for i in 0..records {
             values.push(
                 match axis {
@@ -228,7 +228,7 @@ fn evaluate(
     let mut values = Vec::new();
     values
         .try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     for record in 0..records {
         for (key, order) in keys.iter().zip(&orders) {
             values.push(SortMember {
@@ -269,7 +269,7 @@ pub(super) fn execute(
     let mut host = CallHost::new_array(session, sheet, address, args, length);
     match evaluate(&mut host, function, length, address) {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }

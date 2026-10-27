@@ -18,12 +18,12 @@ use poirot_io as io;
 fn workbook() -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 3.).unwrap();
+    sheet.set_value("A1", 3.).unwrap();
     sheet
-        .set_formula_with_cached_value("B1".parse().unwrap(), "A1*2", CellValue::Number(999.))
+        .set_formula_with_cached_value("B1", "A1*2", CellValue::Number(999.))
         .unwrap();
     sheet
-        .set_formula_with_cached_value("C1".parse().unwrap(), "A1*3", CellValue::Number(999.))
+        .set_formula_with_cached_value("C1", "A1*3", CellValue::Number(999.))
         .unwrap();
     book
 }
@@ -46,7 +46,7 @@ fn strict_restore_requires_present_preparation_at_every_decode_entry() {
             PreparedPolicy::RequireCompatible
         ),
         Err(SnapshotError::Envelope(
-            "compatible prepared state required but absent"
+            crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::CompatiblePreparedStateRequiredButAbsent
         ))
     ));
     assert!(
@@ -99,14 +99,8 @@ fn source_file_rehydrates_evaluates_and_writes_xlsx_with_diagnostics() {
     std::fs::write(&path, bytes).unwrap();
     let reopened = io::read_workbook::<crate::model::Workbook>(&path).unwrap();
     let s = reopened.sheet(0).unwrap();
-    assert_eq!(
-        s.get("B1".parse().unwrap()).unwrap().value,
-        CellValue::Number(6.)
-    );
-    assert_eq!(
-        s.get("C1".parse().unwrap()).unwrap().value,
-        CellValue::Number(9.)
-    );
+    assert_eq!(s.get("B1").unwrap().unwrap().value, CellValue::Number(6.));
+    assert_eq!(s.get("C1").unwrap().unwrap().value, CellValue::Number(9.));
     std::fs::remove_dir_all(dir).unwrap();
 }
 
@@ -158,7 +152,7 @@ fn prepared_restore_reuses_programs_and_fallback_preserves_edits_and_deletions()
             PreparedPolicy::RequireCompatible
         ),
         Err(SnapshotError::Envelope(
-            "incompatible prepared engine revision"
+            crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::IncompatiblePreparedEngineRevision
         ))
     ));
 }
@@ -210,7 +204,7 @@ fn envelope_rejects_kind_versions_lengths_and_trailing_bytes_before_decode() {
     bad[HEADER..].fill(255);
     assert!(matches!(
         decode_default(&bad),
-        Err(SnapshotError::Envelope("unsupported file version"))
+        Err(SnapshotError::Envelope(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::UnsupportedFileVersion))
     ));
 }
 
@@ -259,7 +253,7 @@ fn limits_reject_before_oversized_reservation_and_string_copy() {
     bad[24..32].copy_from_slice(&len.to_le_bytes());
     assert!(matches!(
         decode_default(&bad),
-        Err(SnapshotError::Envelope("trailing section bytes"))
+        Err(SnapshotError::Envelope(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::TrailingSectionBytes))
     ));
 }
 
@@ -272,16 +266,12 @@ fn prepared_source_mismatch_is_rejected() {
     let bytes = encode_workspace(evaluation.snapshot(), SnapshotLimits::default()).unwrap();
     let (_, prepared, revision) = sections(&bytes, usize::MAX).unwrap();
     let mut other = workbook();
-    other
-        .sheet_mut(0)
-        .unwrap()
-        .set_value("A1".parse().unwrap(), 99.)
-        .unwrap();
+    other.sheet_mut(0).unwrap().set_value("A1", 99.).unwrap();
     let bad = encode(&other, prepared, revision, SnapshotLimits::default()).unwrap();
     assert!(matches!(
         decode_default(&bad),
         Err(SnapshotError::Envelope(
-            "source and prepared state disagree"
+            super::snapshot_envelope_error::SnapshotEnvelopeError::SourceAndPreparedStateDisagree
         ))
     ));
 }
@@ -292,7 +282,7 @@ fn provider_implementations_remain_external_and_identity_checked() {
     let mut book = workbook();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("B1".parse().unwrap(), "PROVIDER()")
+        .set_formula("B1", "PROVIDER()")
         .unwrap();
     let contract = ExtensionContract {
         arity: Arity {
@@ -359,16 +349,14 @@ fn source_files_preserve_numeric_bits_and_exact_utf16() {
     let sheet = book.sheet_mut(0).unwrap();
     sheet
         .set_value(
-            "A2".parse().unwrap(),
+            "A2",
             CellValue::Number(f64::from_bits(0x7ff8_0000_0000_1234)),
         )
         .unwrap();
-    sheet
-        .set_value("A3".parse().unwrap(), CellValue::Number(-0.))
-        .unwrap();
+    sheet.set_value("A3", CellValue::Number(-0.)).unwrap();
     sheet
         .set_value(
-            "A4".parse().unwrap(),
+            "A4",
             CellValue::TextUtf16(crate::model::ExcelText::from_units(vec![0xd800, 65])),
         )
         .unwrap();
@@ -382,7 +370,7 @@ fn restored_execution_keeps_operational_failure_separate_from_spreadsheet_error(
     let mut book = workbook();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("D1".parse().unwrap(), "SQRT(-1)")
+        .set_formula("D1", "SQRT(-1)")
         .unwrap();
     let bytes = encode_workbook(&book, SnapshotLimits::default()).unwrap();
     let restored = decode_default(&bytes).unwrap();
@@ -394,7 +382,7 @@ fn restored_execution_keeps_operational_failure_separate_from_spreadsheet_error(
     let target = run.target("S!B1").unwrap();
     assert!(matches!(
         run.cell(target),
-        Err(eval::EvaluationFailure::Budget(_))
+        Err(eval::EvaluationError::Budget(_))
     ));
     assert!(run.changes().is_empty());
     let mut run = Evaluation::with_workbook(&restored.workbook)
@@ -415,7 +403,7 @@ fn older_source_schemas_are_rejected_before_decoding() {
         bytes[10..12].copy_from_slice(&schema.to_le_bytes());
         assert!(matches!(
             decode_default(&bytes),
-            Err(SnapshotError::Envelope("unsupported source schema"))
+            Err(SnapshotError::Envelope(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::UnsupportedSourceSchema))
         ));
     }
 }
@@ -464,7 +452,7 @@ fn durable_source_and_prepared_metadata_must_agree_even_without_calculation_iden
     assert!(matches!(
         decode_default(&inconsistent),
         Err(SnapshotError::Envelope(
-            "source and prepared state disagree"
+            super::snapshot_envelope_error::SnapshotEnvelopeError::SourceAndPreparedStateDisagree
         ))
     ));
 }
@@ -514,7 +502,7 @@ fn native_visual_style_context_and_sparse_edits_obey_payload_quotas() {
         .with_default_style(style.clone());
     book.sheet_mut(0)
         .unwrap()
-        .set_style("D1".parse().unwrap(), style.clone())
+        .set_style("D1", style.clone())
         .unwrap();
     let bytes = encode_workbook(&book, Default::default()).unwrap();
     assert_eq!(decode_default(&bytes).unwrap().workbook, book);
@@ -550,7 +538,8 @@ fn native_visual_style_context_and_sparse_edits_obey_payload_quotas() {
         effective
             .sheet(0)
             .unwrap()
-            .get("E1".parse().unwrap())
+            .get("E1")
+            .unwrap()
             .unwrap()
             .style,
         style
@@ -599,23 +588,19 @@ fn styled_workbook() -> Workbook {
     });
     book.define_name("Rate", "S!$A$1", None).unwrap();
     let sheet = book.sheet_mut(0).unwrap();
+    sheet.set_style("A1", bold.clone()).unwrap();
+    sheet.set_value("A2", "text").unwrap();
+    sheet.set_style("A2", bold.clone()).unwrap();
     sheet
-        .set_style("A1".parse().unwrap(), bold.clone())
-        .unwrap();
-    sheet.set_value("A2".parse().unwrap(), "text").unwrap();
-    sheet
-        .set_style("A2".parse().unwrap(), bold.clone())
-        .unwrap();
-    sheet
-        .set_formula_with_cached_value("D1".parse().unwrap(), "SEQUENCE(3)", CellValue::Blank)
+        .set_formula_with_cached_value("D1", "SEQUENCE(3)", CellValue::Blank)
         .unwrap();
     let other = book.add_sheet("T").unwrap();
-    other.set_value("A1".parse().unwrap(), 5.).unwrap();
+    other.set_value("A1", 5.).unwrap();
     other
-        .set_formula_with_cached_value("B1".parse().unwrap(), "S!B1+A1", CellValue::Blank)
+        .set_formula_with_cached_value("B1", "S!B1+A1", CellValue::Blank)
         .unwrap();
-    other.set_style("B1".parse().unwrap(), bold).unwrap();
-    other.set_formula("C1".parse().unwrap(), "Rate*10").unwrap();
+    other.set_style("B1", bold).unwrap();
+    other.set_formula("C1", "Rate*10").unwrap();
     book
 }
 
@@ -750,27 +735,17 @@ fn checkpoints_store_the_workbook_once_and_restore_identical_results() {
     .into_parts()
     .0;
     let sheet = source.sheet(0).unwrap();
-    assert_eq!(sheet.get("A1".parse().unwrap()).unwrap().value, number(7.));
-    assert!(sheet.get("C1".parse().unwrap()).is_none());
+    assert_eq!(sheet.get("A1").unwrap().unwrap().value, number(7.));
+    assert!(sheet.get("C1").unwrap().is_none());
     assert_eq!(
-        sheet.get("E5".parse().unwrap()).unwrap().formula.as_deref(),
+        sheet.get("E5").unwrap().unwrap().formula.as_deref(),
         Some("A1+T!A1")
     );
     assert_eq!(
-        sheet
-            .get("A2".parse().unwrap())
-            .unwrap()
-            .style
-            .number_format,
+        sheet.get("A2").unwrap().unwrap().style.number_format,
         Some("0.00".into())
     );
-    assert!(
-        source
-            .sheet(1)
-            .unwrap()
-            .get("B1".parse().unwrap())
-            .is_none()
-    );
+    assert!(source.sheet(1).unwrap().get("B1").unwrap().is_none());
 }
 
 #[test]
@@ -804,15 +779,12 @@ fn caller_supplied_baselines_are_still_compared_on_attach() {
     let bytes = encode_workspace(overlay.snapshot(), SnapshotLimits::default()).unwrap();
     let (workbook, state) = decode_default(&bytes).unwrap().into_parts();
     let mut other = workbook.clone();
-    other
-        .sheet_mut(0)
-        .unwrap()
-        .set_value("A1".parse().unwrap(), 4.)
-        .unwrap();
+    other.sheet_mut(0).unwrap().set_value("A1", 4.).unwrap();
     assert!(matches!(
         state.unwrap().attach(&other),
-        Err(eval::overlay::OverlayError::Snapshot(detail))
-            if detail == "baseline differs from detached state"
+        Err(eval::overlay::OverlayError::Snapshot(
+            crate::eval::overlay::OverlaySnapshotError::BaselineDiffersFromDetachedState
+        ))
     ));
     let (workbook, state) = decode_default(&bytes).unwrap().into_parts();
     let state = state.unwrap();
@@ -834,7 +806,7 @@ fn prepared_sections_must_end_with_their_source_checksum() {
         let truncated = encode(&styled_workbook(), short, revision, Default::default()).unwrap();
         assert!(matches!(
             decode_default(&truncated),
-            Err(SnapshotError::Envelope("truncated prepared section"))
+            Err(SnapshotError::Envelope(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::TruncatedPreparedSection))
         ));
     }
     let mut bad_checksum = bytes.clone();
@@ -842,7 +814,7 @@ fn prepared_sections_must_end_with_their_source_checksum() {
     assert!(matches!(
         decode_default(&bad_checksum),
         Err(SnapshotError::Envelope(
-            "source and prepared state disagree"
+            super::snapshot_envelope_error::SnapshotEnvelopeError::SourceAndPreparedStateDisagree
         ))
     ));
     // Dropping a payload byte keeps the checksum but leaves a malformed payload.
@@ -960,15 +932,11 @@ fn previous_format_prepared_sections_are_rejected_while_their_source_restores() 
             PreparedPolicy::RequireCompatible
         ),
         Err(SnapshotError::Envelope(
-            "incompatible prepared engine revision"
+            crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::IncompatiblePreparedEngineRevision
         ))
     ));
     let mut edited = workbook();
-    edited
-        .sheet_mut(0)
-        .unwrap()
-        .set_value("A1".parse().unwrap(), 7.)
-        .unwrap();
+    edited.sheet_mut(0).unwrap().set_value("A1", 7.).unwrap();
     for policy in [PreparedPolicy::ReuseCompatible, PreparedPolicy::SourceOnly] {
         let restored = decode(&checkpoint, SnapshotLimits::default(), policy).unwrap();
         assert_ne!(restored.prepared_status, PreparedStatus::Restored);
@@ -996,7 +964,7 @@ fn compiler_caches_with_older_template_keys_are_rejected_while_their_source_rest
                 PreparedPolicy::RequireCompatible
             ),
             Err(SnapshotError::Envelope(
-                "incompatible prepared engine revision"
+                crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::IncompatiblePreparedEngineRevision
             ))
         ));
         let restored = decode_default(&checkpoint).unwrap();

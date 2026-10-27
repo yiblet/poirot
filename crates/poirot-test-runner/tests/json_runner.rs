@@ -182,51 +182,45 @@ fn clap_filters_and_empty_selections_fail() {
 }
 
 #[test]
-fn suites_select_one_builtin_contract_for_both_modes() {
-    let fixture = |policy, expected| {
-        let mut value = suite(json!([scenario(
-            "numeric grammar",
-            json!([
-                {"action":"set","cell":"S!A1","content":{"formula":"NUMBERVALUE(\"12..\")"}},
-                check(expected)
-            ])
-        )]));
-        if let Some(policy) = policy {
-            value["builtin_policy"] = policy;
-        }
-        value
-    };
-    for (policy, expected, selected) in [
-        (
-            None,
-            json!({"type":"error","value":"#VALUE!"}),
-            poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
-        ),
-        (
-            Some(json!("PinnedPoi")),
-            json!({"type":"error","value":"#VALUE!"}),
-            poirot::eval::BuiltinSemanticsPolicy::PinnedPoi,
-        ),
-        (
-            Some(json!("ExcelDocumentation")),
-            json!({"type":"error","value":"#VALUE!"}),
-            poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
-        ),
-    ] {
-        let results = run(fixture(policy, expected));
-        assert_eq!(results[0].status, Status::Passed);
-        assert_eq!(results[0].normal.builtin_policy, selected);
-        assert_eq!(results[0].overlay.builtin_policy, selected);
-        assert!(results[0].outputs_equal && results[0].changes_equal);
+fn suites_reject_obsolete_builtin_policy_selectors() {
+    let fixture = suite(json!([scenario(
+        "number",
+        json!([check(json!({"type":"number","value":1}))])
+    )]));
+    for policy in ["PinnedPoi", "ExcelDocumentation", "UnknownPolicy"] {
+        let mut fixture = fixture.clone();
+        fixture["builtin_policy"] = json!(policy);
+        assert!(parse_suite(&fixture.to_string()).is_err());
     }
-    assert!(
-        parse_suite(
-            &fixture(
-                Some(json!("UnknownPolicy")),
-                json!({"type":"number","value":0})
-            )
-            .to_string()
-        )
-        .is_err()
-    );
+}
+
+#[test]
+fn validation_exposes_typed_categories_and_rejected_identity() {
+    use poirot_test_runner::json::JsonError;
+    let mut value = suite(json!([scenario(
+        "example",
+        json!([check(json!({"type":"number","value":1}))])
+    )]));
+    value["schema_version"] = json!(99);
+    assert!(matches!(
+        parse_suite(&value.to_string()),
+        Err(JsonError::UnsupportedSchema)
+    ));
+    value["schema_version"] = json!(1);
+    value["scenarios"][0]["evidence"] = json!([]);
+    let JsonError::MissingEvidence { scenario } = parse_suite(&value.to_string()).unwrap_err()
+    else {
+        panic!("wrong failure category")
+    };
+    assert_eq!(scenario, "example");
+    value["scenarios"][0]["evidence"] = json!(["literal comparison"]);
+    value["workbook"]["cells"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({"cell":"S!A1","content":{"type":"number","value":2}}));
+    let parsed = parse_suite(&value.to_string()).unwrap();
+    let JsonError::DuplicateInitialCell { cell } = run_suite(&parsed, None).unwrap_err() else {
+        panic!("wrong failure category")
+    };
+    assert_eq!(cell, "S!A1");
 }

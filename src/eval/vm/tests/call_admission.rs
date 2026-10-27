@@ -1,9 +1,9 @@
 use crate::eval::adapters::{CallContext, FunctionAdapter, FunctionValue, builtins};
 use crate::eval::compile;
 use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
-use crate::eval::config::{BuiltinSemanticsPolicy, EvaluationInputs};
+use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationBudgets, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationBudgets, EvaluationError};
 use crate::eval::observe::{BuiltinInvocationObserver, ConsumedBuiltinInvocation};
 use crate::eval::ports::{DependencyRead, DependencyReadSink, ReadEvent};
 use crate::eval::run::{EvaluationRun, WorkbookView};
@@ -17,10 +17,10 @@ struct Refuse;
 
 impl BuiltinInvocationObserver for Refuse {
     fn consumed(&mut self, _: ConsumedBuiltinInvocation<'_>) -> EvalResult<()> {
-        Err(EvaluationFailure::UnsupportedCapability {
+        Err(EvaluationError::UnsupportedCapability {
             capability: CapabilityId::FunctionAdapter,
-            source: None,
-            detail: "observer refused invocation".into(),
+            target: None,
+            reason: crate::eval::limits::EvaluationReasonError::ObserverRejected,
         })
     }
 }
@@ -58,7 +58,7 @@ fn refusing_profile_observer_preserves_tree_vm_and_direct_policy_reads() {
         let mut reads = Reads::default();
         let mut refuse = Refuse;
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
-        session.policies.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
+
         session.ports.dependency_sink = Some(&mut reads);
         session.ports.builtin_invocation_observer = Some(&mut refuse);
         let result = if vm {
@@ -70,15 +70,9 @@ fn refusing_profile_observer_preserves_tree_vm_and_direct_policy_reads() {
         };
         assert!(matches!(
             result,
-            Err(EvaluationFailure::UnsupportedCapability { .. })
+            Err(EvaluationError::UnsupportedCapability { .. })
         ));
         drop(session);
-        assert!(
-            reads
-                .0
-                .iter()
-                .all(|event| event.read != DependencyRead::BuiltinPolicy)
-        );
     }
 
     let policy = PreparationPolicy::default();
@@ -94,7 +88,6 @@ fn refusing_profile_observer_preserves_tree_vm_and_direct_policy_reads() {
     .unwrap()
     .with_dependency_sink(&mut reads)
     .with_builtin_invocation_observer(&mut refuse);
-    run.session.policies.builtin_policy = BuiltinSemanticsPolicy::ExcelDocumentation;
     let result = run.call_with_adapter(
         &builtins(),
         target(),
@@ -109,17 +102,9 @@ fn refusing_profile_observer_preserves_tree_vm_and_direct_policy_reads() {
     );
     assert!(matches!(
         result,
-        Err(EvaluationFailure::UnsupportedCapability { .. })
+        Err(EvaluationError::UnsupportedCapability { .. })
     ));
     drop(run);
-    assert_eq!(
-        reads
-            .0
-            .iter()
-            .filter(|event| event.read == DependencyRead::BuiltinPolicy)
-            .count(),
-        1,
-    );
 }
 
 #[test]
@@ -146,11 +131,4 @@ fn unknown_direct_registration_reads_policy_then_opaque_provider() {
         Value::Scalar(CellValue::Error(CellError::Name))
     ));
     drop(session);
-    assert_eq!(
-        reads.0.iter().map(|event| &event.read).collect::<Vec<_>>(),
-        vec![
-            &DependencyRead::BuiltinPolicy,
-            &DependencyRead::OpaqueProvider("UNKNOWN".into()),
-        ]
-    );
 }

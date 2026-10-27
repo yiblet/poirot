@@ -1,7 +1,7 @@
 //! Independently authored tests of Microsoft array contracts, retrieved 2026-10-21.
 //! See https://support.microsoft.com/en-us/excel/functions/take-function and the
 //! corresponding drop, hstack, vstack, choosecols, chooserows and expand pages.
-use poirot_functions::matrix::{Axis, Budget, Error, Matrix, Transform};
+use poirot_functions::matrix::{Axis, Budget, Matrix, MatrixError, Transform};
 use poirot_functions::scalar::CellError;
 const B: Budget = Budget {
     max_cells: 100,
@@ -123,7 +123,10 @@ fn invalid_empty_shapes_and_budgets_are_distinct() {
             columns: None,
         },
     ] {
-        assert_eq!(t.shape(&[input()]), Err(Error::Formula(CellError::Calc)));
+        assert_eq!(
+            t.shape(&[input()]),
+            Err(MatrixError::Formula(CellError::Calc))
+        );
     }
     for t in [
         Transform::Choose {
@@ -139,7 +142,10 @@ fn invalid_empty_shapes_and_budgets_are_distinct() {
             columns: 3,
         },
     ] {
-        assert_eq!(t.shape(&[input()]), Err(Error::Formula(CellError::Value)));
+        assert_eq!(
+            t.shape(&[input()]),
+            Err(MatrixError::Formula(CellError::Value))
+        );
     }
     assert_eq!(
         Transform::Expand {
@@ -147,7 +153,7 @@ fn invalid_empty_shapes_and_budgets_are_distinct() {
             columns: 3
         }
         .apply(&[input()], &0, B),
-        Err(Error::SizeOverflow)
+        Err(MatrixError::SizeOverflow)
     );
     assert_eq!(
         Transform::Stack(Axis::Rows).apply(
@@ -158,6 +164,6 @@ fn invalid_empty_shapes_and_budgets_are_distinct() {
                 max_work: 100
             }
         ),
-        Err(Error::BudgetExceeded)
+        Err(MatrixError::BudgetExceeded)
     );
 }

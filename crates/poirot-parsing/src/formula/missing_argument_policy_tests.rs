@@ -9,7 +9,10 @@ fn policy(max_expressions: usize) -> FormulaParsePolicy {
 
 fn complexity_error(source: &str, limit: usize, position: usize) {
     let error = parse_formula_with_policy(source, policy(limit)).unwrap_err();
-    assert_eq!(error.message, "expression complexity limit exceeded");
+    assert!(matches!(
+        error.reason,
+        super::ParseReasonError::ExpressionLimit { .. }
+    ));
     assert_eq!(error.position, position);
 }
 
@@ -102,7 +105,10 @@ fn rejected_omission_preserves_outer_metadata_checkpoint_and_depth_cleanup() {
         function_invocations: Vec::new(),
     };
     let error = parser.expression(0, true).unwrap_err();
-    assert_eq!(error.message, "expression complexity limit exceeded");
+    assert!(matches!(
+        error.reason,
+        super::ParseReasonError::ExpressionLimit { .. }
+    ));
     assert_eq!(error.position, 10);
     assert_eq!(parser.expressions, 3);
     assert_eq!(parser.depth, 0);

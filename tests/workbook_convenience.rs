@@ -6,16 +6,17 @@ use poirot::{CellValue, Workbook};
 fn book() -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Model inputs").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 3.).unwrap();
-    sheet.set_formula("B1".parse().unwrap(), "A1*2").unwrap();
-    sheet.set_formula("C1".parse().unwrap(), "A1*3").unwrap();
+    sheet.set_value("A1", 3.).unwrap();
+    sheet.set_formula("B1", "A1*2").unwrap();
+    sheet.set_formula("C1", "A1*3").unwrap();
     // Deliberately stale saved values demonstrate partial export's honest contract.
-    sheet.get_mut("B1".parse().unwrap()).unwrap().value = CellValue::Number(900.);
-    sheet.get_mut("C1".parse().unwrap()).unwrap().value = CellValue::Number(901.);
+    sheet.get_mut("B1").unwrap().unwrap().value = CellValue::Number(900.);
+    sheet.get_mut("C1").unwrap().unwrap().value = CellValue::Number(901.);
     book
 }
 fn saved(book: &Workbook, cell: &str) -> CellValue {
-    book.stored_cell("Model inputs", cell.parse().unwrap())
+    book.stored_cell("Model inputs", cell)
+        .unwrap()
         .unwrap()
         .value
         .clone()
@@ -38,6 +39,7 @@ fn direct_defaults_typed_targets_blank_and_errors_remain_distinct() {
         book.sheet_by_name("Model inputs")
             .unwrap()
             .get(blank.address)
+            .unwrap()
             .is_none()
     );
     evaluation.set_formula(output, "1/0").unwrap();
@@ -57,14 +59,11 @@ fn direct_export_matches_manual_path_partial_full_and_continued_use() {
     evaluation.set_value(input, 5.).unwrap();
     assert_eq!(evaluation.cell(output).unwrap(), CellValue::Number(10.));
     let count = evaluation.cached_cells();
-    let mut manual = book.model().clone();
+    let mut manual = book.clone();
     manual.apply(evaluation.changes()).unwrap();
     let bytes = evaluation.save_xlsx().to_buffer().unwrap();
     let exported = Workbook::from_bytes(&bytes).unwrap();
-    let expected = Workbook::from_model(manual)
-        .save_xlsx()
-        .to_buffer()
-        .unwrap();
+    let expected = manual.save_xlsx().to_buffer().unwrap();
     assert_eq!(exported, Workbook::from_bytes(&expected).unwrap());
     assert_eq!(saved(&exported, "A1"), CellValue::Number(5.));
     assert_eq!(saved(&exported, "B1"), CellValue::Number(10.));
@@ -90,19 +89,13 @@ fn overlay_export_keeps_edits_and_warm_results() {
         CellValue::Number(14.)
     );
     let count = overlay.cached_cells();
-    let mut manual = book.model().clone();
+    let mut manual = book.clone();
     manual.apply(overlay.changes()).unwrap();
     let bytes = overlay.save_xlsx().to_buffer().unwrap();
     let exported = Workbook::from_bytes(&bytes).unwrap();
     assert_eq!(
         exported,
-        Workbook::from_bytes(
-            &Workbook::from_model(manual)
-                .save_xlsx()
-                .to_buffer()
-                .unwrap()
-        )
-        .unwrap()
+        Workbook::from_bytes(&manual.save_xlsx().to_buffer().unwrap()).unwrap()
     );
     assert_eq!(saved(&exported, "B1"), CellValue::Number(14.));
     assert_eq!(overlay.cached_cells(), count);
@@ -124,7 +117,7 @@ fn export_shrinking_spills_cleans_owned_children_and_remains_usable() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("E1".parse().unwrap(), "SEQUENCE(3)")
+        .set_formula("E1", "SEQUENCE(3)")
         .unwrap();
     book.recalculate().unwrap();
     let mut overlay = book.overlay().build().unwrap();
@@ -137,7 +130,8 @@ fn export_shrinking_spills_cleans_owned_children_and_remains_usable() {
     for address in ["E2", "E3"] {
         assert!(
             exported
-                .stored_cell("Model inputs", address.parse().unwrap())
+                .stored_cell("Model inputs", address)
+                .unwrap()
                 .is_none_or(|c| c.value == CellValue::Blank)
         );
     }
@@ -152,7 +146,6 @@ fn export_shrinking_spills_cleans_owned_children_and_remains_usable() {
 fn snapshot_convenience_reports_recovery_and_preserves_saved_policy() {
     let book = book();
     let policy = EvaluationPolicy {
-        builtin: poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         ..Default::default()
     };
     let mut overlay = book.overlay().policy(policy.clone()).build().unwrap();
@@ -308,20 +301,19 @@ fn staged_export_changes_fail_atomically_and_owned_edit_application_is_explicit(
     let book = book();
     let address = "A1".parse().unwrap();
     assert!(
-        book.model()
-            .with_changes([
-                poirot::editing::WorkbookChange::SetValue {
-                    sheet: 0,
-                    address,
-                    value: CellValue::Number(100.)
-                },
-                poirot::editing::WorkbookChange::SetValue {
-                    sheet: 100,
-                    address,
-                    value: CellValue::Number(200.)
-                },
-            ])
-            .is_err()
+        book.with_changes([
+            poirot::editing::WorkbookChange::SetValue {
+                sheet: 0,
+                address,
+                value: CellValue::Number(100.)
+            },
+            poirot::editing::WorkbookChange::SetValue {
+                sheet: 100,
+                address,
+                value: CellValue::Number(200.)
+            },
+        ])
+        .is_err()
     );
     assert_eq!(saved(&book, "A1"), CellValue::Number(3.));
     let mut overlay = poirot::calculation::Overlay::from_overlay(
@@ -345,6 +337,7 @@ fn staged_export_changes_fail_atomically_and_owned_edit_application_is_explicit(
             .sheet(0)
             .unwrap()
             .get(output.address)
+            .unwrap()
             .unwrap()
             .value,
         CellValue::Number(900.)
@@ -387,7 +380,7 @@ fn export_captures_state_now_without_recalculation_or_cycle_reset() {
 
 #[test]
 fn wrappers_preserve_owned_and_shared_advanced_modes() {
-    let book = std::sync::Arc::new(book().into_model());
+    let book = std::sync::Arc::new(book());
     let direct = poirot::eval::overlay::Evaluation::with_workbook(std::sync::Arc::clone(&book))
         .build_calculation(EvaluationContext::default())
         .unwrap();
@@ -415,7 +408,7 @@ fn discarding_direct_edits_restores_baseline_saved_spill_children_for_export() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_formula("E1".parse().unwrap(), "SEQUENCE(3)")
+        .set_formula("E1", "SEQUENCE(3)")
         .unwrap();
     book.recalculate().unwrap();
     let mut evaluation = book.evaluation().build().unwrap();

@@ -65,9 +65,7 @@ fn source_owned_index_omits_scalar_and_preserves_static_disjointness() {
         ("H1", "bad_name"),
         ("J1", "{1,2}"),
     ] {
-        sheet
-            .set_formula(address.parse().unwrap(), formula)
-            .unwrap();
+        sheet.set_formula(address, formula).unwrap();
     }
     book.add_sheet("Other").unwrap();
     let mut session = Session::with_context(&book, EvaluationInputs::default());

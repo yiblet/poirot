@@ -1,27 +1,17 @@
 //! Modern distribution equations with separate domain, convergence and work failures.
+use super::distribution_error::DistributionError;
 use super::modern_tails::{self as tails, BetaCoordinate, Tail};
 use crate::scalar::CellError;
-/// Failure retaining the distinction between mathematical errors and execution limits.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Failure<O> {
-    /// Invalid worksheet domain or nonrepresentable mathematical result.
-    Spreadsheet(CellError),
-    /// Caller work or execution failure.
-    Operational(O),
-    /// A finite numerical iteration did not meet its convergence criterion.
-    NonConvergence,
-    /// Requested work exceeds the numerical implementation's finite allowance.
-    ComputationalLimit,
-}
+
 /// Numerical value or a typed mathematical/operational failure.
-pub type Result<O> = std::result::Result<f64, Failure<O>>;
-fn num<O>() -> Failure<O> {
-    Failure::Spreadsheet(CellError::Num)
+pub type Result<O> = std::result::Result<f64, DistributionError<O>>;
+fn num<O>() -> DistributionError<O> {
+    DistributionError::Spreadsheet(CellError::Num)
 }
 fn finite<O>(x: f64) -> Result<O> {
     if x.is_finite() { Ok(x) } else { Err(num()) }
 }
-fn inputs<O>(values: &[f64]) -> std::result::Result<(), Failure<O>> {
+fn inputs<O>(values: &[f64]) -> std::result::Result<(), DistributionError<O>> {
     if values.iter().all(|v| v.is_finite()) {
         Ok(())
     } else {
@@ -38,7 +28,7 @@ fn count<O>(x: f64) -> Result<O> {
 fn bounded_count<O>(x: f64) -> Result<O> {
     let n = count(x)?;
     if n > 1e12 {
-        Err(Failure::ComputationalLimit)
+        Err(DistributionError::ComputationalLimit)
     } else {
         Ok(n)
     }
@@ -146,7 +136,7 @@ pub fn gamma_dist<O>(
         return Err(num());
     }
     if shape > 1e12 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
     if x == 0.0 {
         return if cumulative || shape > 1.0 {
@@ -161,7 +151,7 @@ pub fn gamma_dist<O>(
     let ratio = x / scale;
     if cumulative {
         if log_ratio < -230.0 {
-            meter(1).map_err(Failure::Operational)?;
+            meter(1).map_err(DistributionError::Operational)?;
             return Ok((shape * log_ratio - libm::lgamma(shape + 1.0))
                 .exp()
                 .min(1.0));
@@ -221,7 +211,7 @@ pub fn beta_dist<O>(
         return Err(num());
     }
     if a > 1e12 || b > 1e12 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
     // Half-scale differences also support bounds straddling ±MAX without overflow.
     let width = upper - lower;
@@ -304,7 +294,7 @@ pub fn fisher_f<O>(
         return Err(num());
     }
     if d1 > 2e12 || d2 > 2e12 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
     if x == 0.0 {
         return match kind {
@@ -418,14 +408,14 @@ pub fn binomial_range<O>(
         let mut sum = 0.0;
         let mut k = low;
         for _ in 0..4097 {
-            meter(1).map_err(Failure::Operational)?;
+            meter(1).map_err(DistributionError::Operational)?;
             sum += binomial_log_mass(n, k, p).exp();
             if k == high {
                 return Ok(sum.min(1.0));
             }
             k += 1.0;
         }
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
     if low == 0.0 {
         return binomial(high, n, p, true, meter);
@@ -517,7 +507,7 @@ pub fn hypergeometric<O>(
         return Err(num());
     }
     if population > 1e8 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
     if n == population {
         return Ok(1.0);
@@ -529,7 +519,7 @@ pub fn hypergeometric<O>(
         .exp()
     };
     if !cumulative {
-        meter(1).map_err(Failure::Operational)?;
+        meter(1).map_err(DistributionError::Operational)?;
         return Ok(mass(k).min(1.0));
     }
     let low = (n - (population - successes)).max(0.0);
@@ -541,13 +531,13 @@ pub fn hypergeometric<O>(
     let upper = k >= n * (successes / population);
     let (start, end) = if upper { (k + 1.0, high) } else { (low, k) };
     if end - start > 100_000.0 {
-        return Err(Failure::ComputationalLimit);
+        return Err(DistributionError::ComputationalLimit);
     }
     let mut sum = 0.0;
     let mut correction = 0.0;
     let mut j = start;
     for _ in 0..=100_000 {
-        meter(1).map_err(Failure::Operational)?;
+        meter(1).map_err(DistributionError::Operational)?;
         let value = mass(j) - correction;
         let next = sum + value;
         correction = (next - sum) - value;
@@ -558,7 +548,7 @@ pub fn hypergeometric<O>(
         }
         j += 1.0;
     }
-    Err(Failure::ComputationalLimit)
+    Err(DistributionError::ComputationalLimit)
 }
 #[cfg(test)]
 #[path = "modern_tests.rs"]

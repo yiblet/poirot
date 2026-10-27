@@ -4,7 +4,7 @@
 use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
 use crate::eval::config::EvaluationContext;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::overlay::{Evaluation, Overlay};
 use crate::eval::ports::{CellCompletion, CellObserver, CellProvenance};
 use crate::eval::run::{EvaluationRun, WorkbookView};
@@ -120,9 +120,7 @@ fn top_left_winner_recomputes_after_its_supplier_loses() {
 fn scalar_intermediates_and_cross_sheet_producers_read_final_children() {
     let mut book = book(&[("D1", "{1,2}+B1"), ("B1", "SUM(A6)"), ("A5", "{10;20}")]);
     let other = book.add_sheet("Other").unwrap();
-    other
-        .set_formula("A1".parse().unwrap(), "TRANSPOSE(S!D1:E1)")
-        .unwrap();
+    other.set_formula("A1", "TRANSPOSE(S!D1:E1)").unwrap();
     verify(&book, &[("E1", 22.0.into()), ("B1", 20.0.into())]);
     let mut direct = Evaluation::with_workbook(&book)
         .build(Default::default())
@@ -143,7 +141,7 @@ fn ordinary_sheet_reads_do_not_prepare_unreferenced_sheets() {
     let mut book = book(&[("A1", "{1,2}")]);
     book.add_sheet("Other")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "{1,2}+SUM(A1:B2)")
+        .set_formula("A1", "{1,2}+SUM(A1:B2)")
         .unwrap();
     verify(&book, &[("B1", 2.0.into())]);
 }
@@ -224,7 +222,12 @@ fn unchanged_overlay_source_reuses_candidate_classification_after_value_edits() 
     for row in 2..=129 {
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(format!("J{row}").parse().unwrap(), format!("{row}+1"))
+            .set_formula(
+                format!("J{row}")
+                    .parse::<crate::model::CellAddress>()
+                    .unwrap(),
+                format!("{row}+1"),
+            )
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&book).build().unwrap();
@@ -287,7 +290,7 @@ fn producer_observers_receive_finalized_results_and_ordinary_child_completions()
     #[derive(Default)]
     struct Observer(Vec<(EvaluationTarget, CellProvenance, CellValue)>);
     impl CellObserver for Observer {
-        fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+        fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationError> {
             if let Ok(value) = event.result {
                 self.0.push((event.target, event.provenance, value.clone()));
             }
@@ -377,7 +380,7 @@ fn a_later_failing_sheet_preserves_previously_successful_values_and_changes() {
     let mut book = book(&[("A1", "{1,2}")]);
     book.add_sheet("Other")
         .unwrap()
-        .set_formula("A1".parse().unwrap(), "{1,2}+B1")
+        .set_formula("A1", "{1,2}+B1")
         .unwrap();
     let other = EvaluationTarget {
         sheet: 1,
@@ -417,7 +420,12 @@ fn real_producer_dependencies_still_obey_depth_budgets_atomically() {
         };
         book.sheet_mut(0)
             .unwrap()
-            .set_formula(format!("A{row}").parse().unwrap(), formula)
+            .set_formula(
+                format!("A{row}")
+                    .parse::<crate::model::CellAddress>()
+                    .unwrap(),
+                formula,
+            )
             .unwrap();
     }
     let mut context = EvaluationContext::default();
@@ -426,7 +434,7 @@ fn real_producer_dependencies_still_obey_depth_budgets_atomically() {
         .build(context.clone())
         .unwrap();
     assert!(
-        matches!(direct.cell(at("B1")),Err(crate::eval::limits::EvaluationFailure::Budget(failure)) if failure.kind==crate::eval::limits::BudgetKind::Depth)
+        matches!(direct.cell(at("B1")),Err(crate::eval::limits::EvaluationError::Budget(failure)) if failure.kind==crate::eval::limits::BudgetKind::Depth)
     );
     assert_eq!(direct.values().count(), 0);
     assert!(direct.changes().is_empty());
@@ -440,7 +448,7 @@ fn real_producer_dependencies_still_obey_depth_budgets_atomically() {
 #[test]
 fn unresolved_resource_limited_producers_do_not_silently_turn_children_into_blanks() {
     use crate::eval::config::EvaluationPolicy;
-    use crate::eval::limits::EvaluationFailure;
+    use crate::eval::limits::EvaluationError;
     let book = book(&[("A1", "{1,2}")]);
     let policy = EvaluationPolicy {
         parse: poirot_parsing::formula::FormulaParsePolicy {
@@ -457,7 +465,7 @@ fn unresolved_resource_limited_producers_do_not_silently_turn_children_into_blan
     let mut e = overlay.evaluation(&context).unwrap();
     assert!(matches!(
         e.cell(at("B1")),
-        Err(EvaluationFailure::ResourceLimit { .. })
+        Err(EvaluationError::ResourceLimit { .. })
     ));
     assert_eq!(e.values().count(), 0);
     assert!(e.result_changes().unwrap().is_empty());
@@ -467,7 +475,7 @@ fn unresolved_resource_limited_producers_do_not_silently_turn_children_into_blan
         .unwrap();
     assert!(matches!(
         direct.cell(at("B1")),
-        Err(EvaluationFailure::ResourceLimit { .. })
+        Err(EvaluationError::ResourceLimit { .. })
     ));
     let malformed = book_with_syntax_error();
     let mut direct = Evaluation::with_workbook(&malformed)
@@ -540,7 +548,7 @@ fn extension_created_arrays_publish_their_actual_growing_and_shrinking_dimension
 #[test]
 fn parser_policy_changes_reclassify_formerly_proven_scalar_sources() {
     use crate::eval::config::EvaluationPolicy;
-    use crate::eval::limits::EvaluationFailure;
+    use crate::eval::limits::EvaluationError;
     let book = book(&[("A1", "A2")]);
     let context = EvaluationContext::default();
     let policy = EvaluationPolicy {
@@ -562,7 +570,7 @@ fn parser_policy_changes_reclassify_formerly_proven_scalar_sources() {
     overlay.set_policy(policy.clone()).unwrap();
     assert!(matches!(
         overlay.evaluation(&context).unwrap().cell(at("C1")),
-        Err(EvaluationFailure::ResourceLimit { .. })
+        Err(EvaluationError::ResourceLimit { .. })
     ));
     let mut direct = Evaluation::with_workbook(&book)
         .build(Default::default())
@@ -571,7 +579,7 @@ fn parser_policy_changes_reclassify_formerly_proven_scalar_sources() {
     direct.set_policy(policy).unwrap();
     assert!(matches!(
         direct.cell(at("C1")),
-        Err(EvaluationFailure::ResourceLimit { .. })
+        Err(EvaluationError::ResourceLimit { .. })
     ));
 }
 
@@ -580,7 +588,7 @@ fn cross_sheet_nonowners_do_not_create_an_artificial_producer_cycle() {
     let mut book = book(&[("A1", "{1,2}+SUM(Other!A6)")]);
     book.add_sheet("Other")
         .unwrap()
-        .set_formula("D1".parse().unwrap(), "{1,2}+S!B1")
+        .set_formula("D1", "{1,2}+S!B1")
         .unwrap();
     let first = at("B1");
     let second = EvaluationTarget {

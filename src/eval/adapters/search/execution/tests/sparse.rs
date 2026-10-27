@@ -2,12 +2,10 @@ use super::super::search_mode::SearchMode;
 use super::super::selection::select_with_reader;
 use super::super::{historical_selection, selection};
 use crate::eval::compile;
-use crate::eval::config::{
-    ArrayResultPolicy, BuiltinSemanticsPolicy, EvaluationInputs, RunConfiguration,
-};
+use crate::eval::config::{ArrayResultPolicy, EvaluationInputs, RunConfiguration};
 use crate::eval::entry::run_formula_with_configuration;
 use crate::eval::limits::{
-    BudgetMeter, CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationOutcome,
+    BudgetMeter, CapabilityId, EvaluationBudgets, EvaluationError, EvaluationOutcome,
 };
 use crate::eval::ports::{DependencyRead, DependencyReadSink, ReadEvent};
 use crate::eval::session::{ResultProjection, Session};
@@ -16,7 +14,6 @@ use crate::eval::vm::ExpressionRunner;
 use crate::model::CellError::Div0;
 use crate::model::CellValue::{Error, Number};
 use crate::model::{CellAddress, CellValue, Workbook};
-use poirot_functions::text_units::{SourceVersion as TextSourceVersion, TextSemanticsPolicy};
 use std::cmp::Ordering;
 
 #[derive(Default)]
@@ -42,7 +39,6 @@ fn evaluate(w: &Workbook, formula: &str, budgets: EvaluationBudgets) -> CellValu
         "Z20".parse().unwrap(),
         formula,
         &RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
             .with_array_result_policy(ArrayResultPolicy::ScalarIntersection),
         budgets,
     ) {
@@ -55,10 +51,7 @@ fn evaluate(w: &Workbook, formula: &str, budgets: EvaluationBudgets) -> CellValu
 fn full_axes_misses_and_last_logical_positions_use_default_budgets() {
     let mut w = book();
     for (cell, value) in [("A1", 1.), ("B1", 10.), ("A2", 2.), ("B2", 20.)] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(cell.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(cell, value).unwrap();
     }
     for formula in [
         "IFERROR(VLOOKUP(999,A:B,2,FALSE),7)",
@@ -71,10 +64,7 @@ fn full_axes_misses_and_last_logical_positions_use_default_budgets() {
         );
     }
     for (cell, value) in [("A1048576", 9.), ("B1048576", 42.)] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(cell.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(cell, value).unwrap();
     }
     for (formula, expected) in [
         ("MATCH(9,A:A,0)", 1048576.),
@@ -87,14 +77,8 @@ fn full_axes_misses_and_last_logical_positions_use_default_budgets() {
             Number(expected)
         );
     }
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("XFD1".parse().unwrap(), 9.)
-        .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("XFD2".parse().unwrap(), 42.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("XFD1", 9.).unwrap();
+    w.sheet_mut(0).unwrap().set_value("XFD2", 42.).unwrap();
     assert_eq!(
         evaluate(&w, "HLOOKUP(9,1:2,2,FALSE)", EvaluationBudgets::default()),
         Number(42.)
@@ -104,14 +88,8 @@ fn full_axes_misses_and_last_logical_positions_use_default_budgets() {
 #[test]
 fn first_match_does_not_reserve_or_read_populated_unused_suffix() {
     let mut w = book();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A1".parse().unwrap(), 7.)
-        .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("B1".parse().unwrap(), 42.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("A1", 7.).unwrap();
+    w.sheet_mut(0).unwrap().set_value("B1", 42.).unwrap();
     for row in 1..100 {
         w.sheet_mut(0)
             .unwrap()
@@ -166,12 +144,9 @@ fn absent_gap_has_membership_guard_and_stored_blank_formula_is_evaluated() {
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula_with_cached_value("A10".parse().unwrap(), "IF(TRUE,C1,RAND())", Number(7.))
+        .set_formula_with_cached_value("A10", "IF(TRUE,C1,RAND())", Number(7.))
         .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A20".parse().unwrap(), 7.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("A20", 7.).unwrap();
     let mut reads = Reads::default();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     session.ports.dependency_sink = Some(&mut reads);
@@ -215,16 +190,13 @@ fn gaps_stop_duplicate_runs_and_preserve_descending_previous_logical_index() {
         ("B4", 20.),
         ("B5", 21.),
     ] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value(cell.parse().unwrap(), value)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value(cell, value).unwrap();
     }
     assert_eq!(
         evaluate(&w, "VLOOKUP(2,A1:B6,2,TRUE)", EvaluationBudgets::default()),
         Number(21.)
     );
-    w.sheet_mut(0).unwrap().remove("A5".parse().unwrap());
+    w.sheet_mut(0).unwrap().remove("A5").unwrap();
     assert_eq!(
         evaluate(&w, "VLOOKUP(2,A1:B6,2,TRUE)", EvaluationBudgets::default()),
         Number(20.)
@@ -233,7 +205,7 @@ fn gaps_stop_duplicate_runs_and_preserve_descending_previous_logical_index() {
     descending
         .sheet_mut(0)
         .unwrap()
-        .set_value("A4".parse().unwrap(), 1.)
+        .set_value("A4", 1.)
         .unwrap();
     assert_eq!(
         evaluate(
@@ -241,7 +213,7 @@ fn gaps_stop_duplicate_runs_and_preserve_descending_previous_logical_index() {
             "MATCH(2,A1:A6,-1)",
             EvaluationBudgets::default()
         ),
-        Number(3.)
+        Error(crate::model::CellError::NA)
     );
 }
 
@@ -250,31 +222,15 @@ fn stored_formula_scalar_projection_remains_operational_and_lazy_branch_has_no_q
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula("A10".parse().unwrap(), "LEFT(UNICHAR(128512),1)")
+        .set_value(
+            "A10",
+            CellValue::TextUtf16(crate::model::ExcelText::from_units(vec![0xd83d])),
+        )
         .unwrap();
-    // A UTF16 LEFT split returns one surrogate unit; scalar wildcard projection
+    // A stored isolated surrogate has no Unicode scalar; scalar wildcard projection
     // refuses that text rather than treating it as a Unicode scalar.
-    assert!(matches!(
-        run_formula_with_configuration(
-            &w,
-            0,
-            "Z20".parse().unwrap(),
-            "MATCH(\"*\",A:A,0)",
-            &RunConfiguration::default()
-                .with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi)
-                .with_text_policy(TextSemanticsPolicy {
-                    source: TextSourceVersion::Poi7321209
-                }),
-            EvaluationBudgets::default()
-        ),
-        EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability { .. },
-            ..
-        }
-    ));
-    let poi = RunConfiguration::default().with_text_policy(TextSemanticsPolicy {
-        source: TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-    });
+
+    let poi = RunConfiguration::default();
     assert!(matches!(
         run_formula_with_configuration(
             &w,
@@ -285,7 +241,7 @@ fn stored_formula_scalar_projection_remains_operational_and_lazy_branch_has_no_q
             EvaluationBudgets::default(),
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability {
+            failure: EvaluationError::UnsupportedCapability {
                 capability: CapabilityId::FunctionAdapter,
                 ..
             },
@@ -385,16 +341,13 @@ fn stored_random_and_error_formulas_keep_actual_effects_despite_stale_caches() {
     let mut w = book();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula_with_cached_value("A10".parse().unwrap(), "RAND()", Number(9.))
+        .set_formula_with_cached_value("A10", "RAND()", Number(9.))
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula_with_cached_value("A20".parse().unwrap(), "1/0", Number(9.))
+        .set_formula_with_cached_value("A20", "1/0", Number(9.))
         .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A30".parse().unwrap(), 9.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("A30", 9.).unwrap();
     let mut reads = Reads::default();
     let mut session = Session::with_context(&w, EvaluationInputs::default());
     session.ports.dependency_sink = Some(&mut reads);

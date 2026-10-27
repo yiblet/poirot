@@ -1,8 +1,9 @@
 //! Direct file-record adaptation over sparse workbook storage.
 use crate::model::{
-    Cell, CellAddress, CellValue, DateSystem, FileMetadata, ModelError, NamedRange, RowVisibility,
+    Cell, CellAddress, CellValue, DateSystem, FileMetadata, NamedRange, RowVisibility,
     SheetPresentation, StyleContext, Workbook, Worksheet,
 };
+use poirot_io::ModelError;
 use poirot_io::data::{SheetSink, SheetSource, WorkbookSink, WorkbookSource};
 
 impl SheetSource for Worksheet {
@@ -13,7 +14,7 @@ impl SheetSource for Worksheet {
         self.cells().iter()
     }
     fn get(&self, address: CellAddress) -> Option<&Cell> {
-        self.get(address)
+        self.get_validated(address)
     }
     fn row_indices(&self) -> impl DoubleEndedIterator<Item = u32> + ExactSizeIterator {
         self.row_indices()
@@ -45,7 +46,7 @@ impl SheetSource for Worksheet {
 }
 impl SheetSink for Worksheet {
     fn get_mut(&mut self, address: CellAddress) -> Option<&mut Cell> {
-        self.get_mut(address)
+        self.get_mut_validated(address)
     }
     fn set(&mut self, address: CellAddress, cell: Cell) -> Result<(), ModelError> {
         self.set(address, cell).map(|_| ())
@@ -143,9 +144,7 @@ mod tests {
         let mut book = Workbook::new();
         let sheet = book.add_sheet("Data").unwrap();
         for address in ["A1", "B1", "C1", "A2", "B2", "C2", "A3", "B3", "C3"] {
-            sheet
-                .set_value(address.parse().unwrap(), CellValue::Blank)
-                .unwrap();
+            sheet.set_value(address, CellValue::Blank).unwrap();
         }
         let selected =
             SheetSource::stored_range(sheet, "B1".parse().unwrap(), "B3".parse().unwrap())

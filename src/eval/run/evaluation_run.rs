@@ -9,7 +9,7 @@ use crate::eval::compile::compiler::PreparedFormula;
 use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::RunUsage;
-use crate::eval::limits::{BudgetMeter, EvaluationBudgets, EvaluationFailure, MemoRetentionLimits};
+use crate::eval::limits::{BudgetMeter, EvaluationBudgets, EvaluationError, MemoRetentionLimits};
 use crate::eval::observe::BuiltinInvocationObserver;
 use crate::eval::ports::DependencyReadSink;
 use crate::eval::ports::{CachedCellReader, CellObserver};
@@ -27,7 +27,7 @@ use poirot_parsing::formula::FunctionName;
 pub struct EvaluationRun<'a> {
     /// Execution state shared by this run's probes and nested formula calls.
     pub(in crate::eval) session: Session<'a>,
-    pub(in crate::eval) failure: Option<EvaluationFailure>,
+    pub(in crate::eval) failure: Option<EvaluationError>,
 }
 
 impl<'a> EvaluationRun<'a> {
@@ -36,7 +36,7 @@ impl<'a> EvaluationRun<'a> {
         view: WorkbookView<'a>,
         context: EvaluationInputs,
         budgets: EvaluationBudgets,
-    ) -> Result<Self, EvaluationFailure> {
+    ) -> Result<Self, EvaluationError> {
         Self::new_with_registry(view, RunPolicies::from_inputs(context), budgets, None)
     }
 
@@ -46,7 +46,7 @@ impl<'a> EvaluationRun<'a> {
         context: EvaluationInputs,
         budgets: EvaluationBudgets,
         registry: &'a crate::eval::functions::extensions::ExtensionRegistry,
-    ) -> Result<Self, EvaluationFailure> {
+    ) -> Result<Self, EvaluationError> {
         Self::new_with_registry(
             view,
             RunPolicies::from_inputs(context),
@@ -60,14 +60,14 @@ impl<'a> EvaluationRun<'a> {
         configuration: RunPolicies<'a>,
         budgets: EvaluationBudgets,
         registry: Option<&'a crate::eval::functions::extensions::ExtensionRegistry>,
-    ) -> Result<Self, EvaluationFailure> {
+    ) -> Result<Self, EvaluationError> {
         let meter = BudgetMeter::new(budgets)?;
         if view.plan.policy().registry.extensions.as_deref()
             != registry
                 .map(crate::eval::functions::extensions::ExtensionRegistry::identity)
                 .as_ref()
         {
-            return Err(EvaluationFailure::StalePlan);
+            return Err(EvaluationError::StalePlan);
         }
         let mut session = Session::with_configuration(view.workbook, configuration, meter);
         session.sources.plan = Some(view.plan);
@@ -83,7 +83,7 @@ impl<'a> EvaluationRun<'a> {
         view: WorkbookView<'a>,
         configuration: &'a crate::eval::config::RunConfiguration,
         budgets: EvaluationBudgets,
-    ) -> Result<Self, EvaluationFailure> {
+    ) -> Result<Self, EvaluationError> {
         Self::new_with_registry(
             view,
             RunPolicies::from_run_configuration(configuration),
@@ -98,7 +98,7 @@ impl<'a> EvaluationRun<'a> {
         configuration: &'a crate::eval::config::RunConfiguration,
         budgets: EvaluationBudgets,
         registry: &'a crate::eval::functions::extensions::ExtensionRegistry,
-    ) -> Result<Self, EvaluationFailure> {
+    ) -> Result<Self, EvaluationError> {
         Self::new_with_registry(
             view,
             RunPolicies::from_run_configuration(configuration),
@@ -113,11 +113,11 @@ impl<'a> EvaluationRun<'a> {
         if self.session.state.runtime.memo.usage.cells > limits.cells
             || self.session.state.runtime.memo.usage.bytes > limits.bytes
         {
-            self.failure = Some(EvaluationFailure::MemoRetentionLimit {
+            self.failure = Some(EvaluationError::MemoRetentionLimit {
                 limits,
                 consumed: self.session.state.runtime.memo.usage,
                 requested: Default::default(),
-                source: self.session.state.runtime.stack.consumer,
+                target: self.session.state.runtime.stack.consumer,
             });
         } else {
             self.session.state.memo_limits = Some(limits);
@@ -129,7 +129,7 @@ impl<'a> EvaluationRun<'a> {
     pub fn try_with_memo_limits(
         self,
         limits: MemoRetentionLimits,
-    ) -> Result<Self, EvaluationFailure> {
+    ) -> Result<Self, EvaluationError> {
         let run = self.with_memo_limits(limits);
         if let Some(failure) = &run.failure {
             return Err(failure.clone());
@@ -184,11 +184,6 @@ impl<'a> EvaluationRun<'a> {
         self
     }
 
-    /// Return the active text source semantics.
-    pub fn text_policy(&self) -> poirot_functions::text_units::TextSemanticsPolicy {
-        self.session.policies.text_policy
-    }
-
     /// Borrow cumulative execution and reuse counters.
     pub fn usage(&self) -> &RunUsage {
         &self.session.state.runtime.run_usage
@@ -198,7 +193,7 @@ impl<'a> EvaluationRun<'a> {
     pub fn evaluate_cell(
         &mut self,
         target: EvaluationTarget,
-    ) -> Result<CellValue, EvaluationFailure> {
+    ) -> Result<CellValue, EvaluationError> {
         self.perform(|session| CellEvaluator::new(session).cell(target.sheet, target.address))
     }
 
@@ -208,7 +203,7 @@ impl<'a> EvaluationRun<'a> {
         &mut self,
         target: EvaluationTarget,
         formula: &PreparedFormula,
-    ) -> Result<CellValue, EvaluationFailure> {
+    ) -> Result<CellValue, EvaluationError> {
         self.perform(|session| FormulaExecution::new(session).prepared_at(target, formula))
     }
 
@@ -217,14 +212,14 @@ impl<'a> EvaluationRun<'a> {
         &mut self,
         target: EvaluationTarget,
         formula: &bound::FormulaPlan,
-    ) -> Result<CellValue, EvaluationFailure> {
+    ) -> Result<CellValue, EvaluationError> {
         self.perform(|session| FormulaExecution::new(session).bound_at(target, formula))
     }
 
     pub(super) fn perform<T>(
         &mut self,
-        execute: impl FnOnce(&mut Session<'a>) -> Result<T, EvaluationFailure>,
-    ) -> Result<T, EvaluationFailure> {
+        execute: impl FnOnce(&mut Session<'a>) -> Result<T, EvaluationError>,
+    ) -> Result<T, EvaluationError> {
         if let Some(failure) = &self.failure {
             return Err(failure.clone());
         }
@@ -265,7 +260,7 @@ impl<'a> EvaluationRun<'a> {
     pub fn evaluate_targets(
         &mut self,
         targets: &[EvaluationTarget],
-    ) -> Result<(), EvaluationFailure> {
+    ) -> Result<(), EvaluationError> {
         self.perform(|session| {
             session.state.runtime.budget.allocation(targets.len())?;
             for target in targets {
@@ -277,7 +272,7 @@ impl<'a> EvaluationRun<'a> {
 
     /// Read-only full recalculation with the ordinary discovery/usage gates.
     /// Inputs suppress formulas and newly stored cells count in the sparse scan.
-    pub fn evaluate_workbook(&mut self) -> Result<usize, EvaluationFailure> {
+    pub fn evaluate_workbook(&mut self) -> Result<usize, EvaluationError> {
         self.perform(|session| {
             let effective = crate::eval::inputs::EffectiveWorkbook::new(
                 session.sources.workbook,
@@ -293,10 +288,10 @@ impl<'a> EvaluationRun<'a> {
                         col: crate::model::MAX_COLUMNS - 1,
                     },
                 )
-                .map_err(|_| EvaluationFailure::StalePlan)?;
+                .map_err(|_| EvaluationError::StalePlan)?;
                 let count = effective
                     .stored(area)
-                    .map_err(|_| EvaluationFailure::StalePlan)?
+                    .map_err(|_| EvaluationError::StalePlan)?
                     .count();
                 session
                     .state
@@ -305,7 +300,7 @@ impl<'a> EvaluationRun<'a> {
                     .charge(crate::eval::limits::WorkKind::SparseScan, count as u64)?;
                 for (address, cell) in effective
                     .stored(area)
-                    .map_err(|_| EvaluationFailure::StalePlan)?
+                    .map_err(|_| EvaluationError::StalePlan)?
                 {
                     if cell.formula.is_some() {
                         session
@@ -336,7 +331,7 @@ impl<'a> EvaluationRun<'a> {
     /// Finish while moving the memo into the report's retained result owner.
     pub fn finish_retaining_cells<T>(
         mut self,
-        result: Result<T, EvaluationFailure>,
+        result: Result<T, EvaluationError>,
     ) -> RetainedRun<T> {
         let cells = std::mem::take(&mut self.session.state.runtime.memo.cache);
         let memo_usage = self.session.state.runtime.memo.usage;
@@ -348,7 +343,7 @@ impl<'a> EvaluationRun<'a> {
     }
 
     /// Finish with the caller's result and accumulated accounting.
-    pub fn finish<T>(mut self, result: Result<T, EvaluationFailure>) -> RunReport<T> {
+    pub fn finish<T>(mut self, result: Result<T, EvaluationError>) -> RunReport<T> {
         RunReport {
             execution: std::mem::take(&mut self.session.state.runtime.run_usage),
             outcome: self
@@ -368,7 +363,7 @@ impl<'a> EvaluationRun<'a> {
         target: EvaluationTarget,
         name: &FunctionName,
         parameters: ParamVec<Compiled>,
-    ) -> Result<CellValue, EvaluationFailure> {
+    ) -> Result<CellValue, EvaluationError> {
         self.call_with_adapter(&builtins(), target, name, parameters)
     }
 
@@ -379,7 +374,7 @@ impl<'a> EvaluationRun<'a> {
         target: EvaluationTarget,
         name: &FunctionName,
         parameters: ParamVec<Compiled>,
-    ) -> Result<CellValue, EvaluationFailure> {
+    ) -> Result<CellValue, EvaluationError> {
         if self.session.sources.workbook.sheet(target.sheet).is_none()
             || target.address.validate().is_err()
         {

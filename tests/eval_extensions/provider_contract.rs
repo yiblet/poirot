@@ -1,6 +1,6 @@
 use super::support::{contract, identity, run, value, workbook};
 use poirot::eval::{
-    CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
+    CapabilityId, EvaluationBudgets, EvaluationError, EvaluationInputs, EvaluationOutcome,
     ExtensionExecution, functions::extensions::*, functions::registry::Arity,
     run_formula_with_extensions,
 };
@@ -185,7 +185,7 @@ fn reference_and_array_reads_are_budgeted_and_missing_is_preserved() {
             )
             .outcome,
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::Budget(_),
+                failure: EvaluationError::Budget(_),
                 ..
             }
         ));
@@ -216,9 +216,9 @@ fn undeclared_capabilities_fail_operationally_and_arity_is_semantic() {
     assert!(matches!(
         run(&workbook(), &registry, "CUSTOM(A1)").outcome,
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::UnsupportedCapability {
+            failure: EvaluationError::UnsupportedCapability {
                 capability: CapabilityId::UserDefinedFunction,
-                source: Some(_),
+                target: Some(_),
                 ..
             },
             ..

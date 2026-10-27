@@ -1,26 +1,29 @@
 use crate::lookup::operands::{charge, checked_product};
-use crate::lookup::{Failure, OperationalFailure, Work, Workbook};
+use crate::lookup::{LookupError, LookupOperationalError, Work, Workbook};
 /// Match supported wildcard syntax with host-metered matching states.
 pub(super) fn wildcard_matches(
     pattern: &str,
     text: &str,
     w: &mut impl Workbook,
-) -> Result<bool, Failure> {
+) -> Result<bool, LookupError> {
     let rows = pattern
         .len()
         .checked_add(1)
-        .ok_or(Failure::Operational(OperationalFailure::ResourceOverflow))?;
-    let cols = text
-        .len()
-        .checked_add(1)
-        .ok_or(Failure::Operational(OperationalFailure::ResourceOverflow))?;
+        .ok_or(LookupError::Operational(
+            LookupOperationalError::ResourceOverflow,
+        ))?;
+    let cols = text.len().checked_add(1).ok_or(LookupError::Operational(
+        LookupOperationalError::ResourceOverflow,
+    ))?;
     charge(
         w,
         Work::SearchText,
         pattern
             .len()
             .checked_add(text.len())
-            .ok_or(Failure::Operational(OperationalFailure::ResourceOverflow))?,
+            .ok_or(LookupError::Operational(
+                LookupOperationalError::ResourceOverflow,
+            ))?,
     )?;
     charge(w, Work::WildcardStates, checked_product(rows, cols)?)?;
     Ok(wildcard_kernel(pattern, text))

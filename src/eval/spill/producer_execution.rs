@@ -6,7 +6,7 @@ use super::settlement::unsupported;
 use super::spill_publisher::SpillPublisher;
 use crate::eval::config::ProducerPolicy;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::ports::{CellCompletion, CellProvenance, same_result_identity};
 use crate::eval::reuse::SpillRole;
 use crate::eval::session::Session;
@@ -54,14 +54,14 @@ impl<'s, 'a> ProducerExecution<'s, 'a> {
             return Err(unsupported(
                 sheet,
                 at,
-                "circular unpublished producer dependency",
+                crate::eval::limits::EvaluationReasonError::CircularUnpublishedProducerDependency,
             ));
         }
         if self.session.ports.cell_reader.is_some() {
             return Err(unsupported(
                 sheet,
                 at,
-                "dynamic spill ownership is incompatible with an external scalar cell cache",
+                crate::eval::limits::EvaluationReasonError::DynamicSpillOwnershipIsIncompatibleWithAnExternalScalarCellCache,
             ));
         }
         let conditional = self
@@ -165,7 +165,7 @@ impl<'s, 'a> ProducerExecution<'s, 'a> {
             .session
             .sources
             .source_formula(sheet, at)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let target = EvaluationTarget { sheet, address: at };
         self.session
             .state
@@ -257,12 +257,12 @@ impl<'s, 'a> ProducerExecution<'s, 'a> {
             let last_row = u32::try_from(rows.len().saturating_sub(1))
                 .ok()
                 .and_then(|n| at.row.checked_add(n))
-                .ok_or(EvaluationFailure::StalePlan)?;
+                .ok_or(EvaluationError::StalePlan)?;
             let last_col = rows
                 .first()
                 .and_then(|r| u32::try_from(r.len().saturating_sub(1)).ok())
                 .and_then(|n| at.col.checked_add(n))
-                .ok_or(EvaluationFailure::StalePlan)?;
+                .ok_or(EvaluationError::StalePlan)?;
             let runtime = &mut *self.session.state.runtime;
             if let Some(active) = runtime.preparation.settlement.active_mut() {
                 let settled_collision = (at.row..=last_row).any(|row| {
@@ -362,9 +362,7 @@ impl<'s, 'a> ProducerExecution<'s, 'a> {
             return Ok(());
         };
         let restored = {
-            let cache = cache
-                .try_borrow()
-                .map_err(|_| EvaluationFailure::StalePlan)?;
+            let cache = cache.try_borrow().map_err(|_| EvaluationError::StalePlan)?;
             let validated = |key| {
                 self.session
                     .reuse
@@ -401,12 +399,12 @@ impl<'s, 'a> ProducerExecution<'s, 'a> {
                 .row
                 .checked_sub(owner.row)
                 .and_then(|height| height.checked_add(1))
-                .ok_or(EvaluationFailure::StalePlan)? as usize;
+                .ok_or(EvaluationError::StalePlan)? as usize;
             let width = last
                 .col
                 .checked_sub(owner.col)
                 .and_then(|width| width.checked_add(1))
-                .ok_or(EvaluationFailure::StalePlan)? as usize;
+                .ok_or(EvaluationError::StalePlan)? as usize;
             self.session
                 .state
                 .runtime
@@ -443,7 +441,7 @@ impl<'s, 'a> ProducerExecution<'s, 'a> {
             .1
             .first()
             .and_then(|row| row.first())
-            .ok_or(EvaluationFailure::StalePlan)?
+            .ok_or(EvaluationError::StalePlan)?
             .clone();
         self.session.state.runtime.preparation.held.insert(
             (sheet, restored.0),
@@ -475,14 +473,14 @@ impl<'s, 'a> ProducerExecution<'s, 'a> {
             .sources
             .workbook
             .sheet(sheet)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let effective = crate::eval::inputs::EffectiveWorkbook::new(
             self.session.sources.workbook,
             self.session.sources.inputs,
         );
         let cell = effective
             .cell(sheet, at)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         let baseline = worksheet.source_cell(at);
         let unchanged_anchor = baseline.is_some_and(|base| {
             base.formula == cell.formula && same_result_identity(&base.value, &cell.value)
@@ -528,7 +526,7 @@ impl<'s, 'a> ProducerExecution<'s, 'a> {
                     unsupported(
                         sheet,
                         at,
-                        "caller-trusted saved spill is incomplete or lacks declared geometry",
+                        crate::eval::limits::EvaluationReasonError::CallerTrustedSavedSpillIsIncompleteOrLacksDeclaredGeometry,
                     )
                 })?;
                 let height = last
@@ -536,13 +534,13 @@ impl<'s, 'a> ProducerExecution<'s, 'a> {
                     .checked_sub(at.row)
                     .and_then(|n| n.checked_add(1))
                     .and_then(|n| usize::try_from(n).ok())
-                    .ok_or(EvaluationFailure::StalePlan)?;
+                    .ok_or(EvaluationError::StalePlan)?;
                 let width = last
                     .col
                     .checked_sub(at.col)
                     .and_then(|n| n.checked_add(1))
                     .and_then(|n| usize::try_from(n).ok())
-                    .ok_or(EvaluationFailure::StalePlan)?;
+                    .ok_or(EvaluationError::StalePlan)?;
                 self.session
                     .state
                     .runtime
@@ -551,18 +549,18 @@ impl<'s, 'a> ProducerExecution<'s, 'a> {
                 let mut saved = Vec::new();
                 saved
                     .try_reserve_exact(height)
-                    .map_err(|_| EvaluationFailure::ResourceLimit {
+                    .map_err(|reservation_source| EvaluationError::ResourceLimit {
                         capability: CapabilityId::FunctionAdapter,
-                        source: Some(EvaluationTarget { sheet, address: at }),
-                        detail: "saved spill row allocation failed".into(),
+                        target: Some(EvaluationTarget { sheet, address: at }),
+                        reason: (crate::eval::limits::EvaluationReasonError::SavedSpillRowAllocationFailed).with_reservation_source(reservation_source),
                     })?;
                 for row in at.row..=last.row {
                     let mut values = Vec::new();
-                    values.try_reserve_exact(width).map_err(|_| {
-                        EvaluationFailure::ResourceLimit {
+                    values.try_reserve_exact(width).map_err(|reservation_source| {
+                        EvaluationError::ResourceLimit {
                             capability: CapabilityId::FunctionAdapter,
-                            source: Some(EvaluationTarget { sheet, address: at }),
-                            detail: "saved spill value allocation failed".into(),
+                            target: Some(EvaluationTarget { sheet, address: at }),
+                            reason: (crate::eval::limits::EvaluationReasonError::SavedSpillValueAllocationFailed).with_reservation_source(reservation_source),
                         }
                     })?;
                     for col in at.col..=last.col {
@@ -598,10 +596,12 @@ impl<'s, 'a> ProducerExecution<'s, 'a> {
                             return Err(unsupported(
                                 sheet,
                                 at,
-                                "caller-trusted saved spill has an edited child",
+                                crate::eval::limits::EvaluationReasonError::CallerTrustedSavedSpillHasAnEditedChild,
                             ));
                         }
-                        let cached = worksheet.get(address).ok_or(EvaluationFailure::StalePlan)?;
+                        let cached = worksheet
+                            .get_validated(address)
+                            .ok_or(EvaluationError::StalePlan)?;
                         self.session
                             .state
                             .runtime

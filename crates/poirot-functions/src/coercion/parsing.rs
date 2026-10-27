@@ -1,24 +1,24 @@
-use crate::coercion::{CoercionContext, CoercionFailure, TextRef};
+use crate::coercion::{CoercionContext, CoercionError, TextRef};
 use std::borrow::Cow;
 
 /// Checked representation projection, without substituting malformed text.
 pub(crate) fn coerce_text_view<'a>(
     text: TextRef<'a>,
     context: &mut CoercionContext,
-) -> Result<Cow<'a, str>, CoercionFailure> {
+) -> Result<Cow<'a, str>, CoercionError> {
     let work = u64::try_from(text.storage_bytes())
-        .map_err(|_| CoercionFailure::Limit(crate::coercion::Resource::Work))?;
+        .map_err(|_| CoercionError::Limit(crate::coercion::Resource::Work))?;
     context.charge(work)?;
     match text {
         TextRef::Utf8(text) => Ok(Cow::Borrowed(text)),
         TextRef::Utf16(units) => {
             let bytes = text
                 .utf8_len()
-                .map_err(|_| CoercionFailure::UnsupportedText)?;
+                .map_err(|_| CoercionError::UnsupportedText)?;
             context.admit_text(bytes)?;
             String::from_utf16(units)
                 .map(Cow::Owned)
-                .map_err(|_| CoercionFailure::UnsupportedText)
+                .map_err(|_| CoercionError::UnsupportedText)
         }
     }
 }

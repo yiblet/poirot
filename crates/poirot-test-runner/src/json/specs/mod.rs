@@ -1,20 +1,22 @@
 //! Source-backed Excel specification tables in the combined JSON corpus.
 // Specifications retain owned model snapshots and exercise engine policy updates directly.
+mod schema;
+mod specification_error;
+
 use poirot::calculation::EvaluationContext;
 use poirot::eval;
 use poirot::eval::EvaluationPolicy;
 use poirot::eval::overlay::{Evaluation, Overlay};
 use poirot::model;
-use schema::{Cell, Currency, EvidenceKind, Name, Scalar, SettingsUpdate, TextPolicy};
+use schema::{Cell, Currency, EvidenceKind, Name, Scalar, SettingsUpdate};
 
-mod schema;
 pub(crate) use schema::{Case, CellContent};
+pub use specification_error::SpecificationError;
 
 /// Effective execution context and overlay policies retained between fixture steps.
 struct Settings {
     context: eval::EvaluationInputs,
     currency: Option<Currency>,
-    text_policy: TextPolicy,
     array_result_policy: schema::ArrayResultPolicy,
 }
 impl Settings {
@@ -24,7 +26,6 @@ impl Settings {
         Self {
             context,
             currency: case.settings.currency,
-            text_policy: case.settings.text_policy.unwrap_or(case.text_policy),
             array_result_policy: case.settings.array_result_policy.unwrap_or_default(),
         }
     }
@@ -35,9 +36,6 @@ impl Settings {
         }
         if let Some(policy) = update.array_result_policy {
             self.array_result_policy = policy;
-        }
-        if let Some(policy) = update.text_policy {
-            self.text_policy = policy;
         }
     }
     fn execution_context(&self) -> EvaluationContext {
@@ -65,31 +63,25 @@ impl Settings {
         }
     }
     fn policy(&self) -> EvaluationPolicy {
-        let source = match self.text_policy {
-            TextPolicy::ExcelV1 => eval::TextSourceVersion::Poi7321209OpenJdk21Unicode15,
-            TextPolicy::ExcelV2 => eval::TextSourceVersion::ExcelCompatibilityV2Documented,
-        };
         EvaluationPolicy {
-            builtin: eval::BuiltinSemanticsPolicy::ExcelDocumentation,
             arrays: self.array_result_policy.execution(),
-            text: eval::TextSemanticsPolicy { source },
             ..Default::default()
         }
     }
 }
 
-fn write_cells(workbook: &mut model::Workbook, cells: &[Cell]) -> Result<(), String> {
+fn write_cells(workbook: &mut model::Workbook, cells: &[Cell]) -> Result<(), SpecificationError> {
     for cell in cells {
         let worksheet = workbook
             .sheet_mut(cell.target.sheet)
-            .ok_or("fixture worksheet is missing")?;
+            .ok_or(SpecificationError::MissingWorksheet)?;
         match &cell.content {
             CellContent::Formula(formula) => worksheet
                 .set_formula(cell.target.address, formula)
-                .map_err(|e| e.to_string())?,
+                .map_err(|source| SpecificationError::Model(source.into()))?,
             CellContent::Literal(value) => worksheet
                 .set_value(cell.target.address, value.cell_value())
-                .map_err(|e| e.to_string())?,
+                .map_err(|source| SpecificationError::Model(source.into()))?,
         }
     }
     Ok(())
@@ -116,8 +108,8 @@ fn scalar_matches(actual: &model::CellValue, expected: &Scalar, tolerance: Optio
     }
 }
 
-pub(crate) fn parse(bytes: &[u8]) -> Result<Vec<Case>, String> {
-    let cases: Vec<Case> = serde_json::from_slice(bytes).map_err(|e| e.to_string())?;
+pub(crate) fn parse(bytes: &[u8]) -> Result<Vec<Case>, SpecificationError> {
+    let cases: Vec<Case> = serde_json::from_slice(bytes).map_err(SpecificationError::from)?;
     let mut names = std::collections::BTreeSet::new();
     for (index, case) in cases.iter().enumerate() {
         if case.schema_version != 2
@@ -126,27 +118,26 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Vec<Case>, String> {
             || case.sheets.is_empty()
             || case.steps.is_empty()
         {
-            return Err(format!(
-                "invalid Excel specification identity: {}",
-                case.name
-            ));
+            return Err(SpecificationError::InvalidIdentity {
+                name: case.name.clone(),
+            });
         }
         for step in &case.steps {
             if step.assertions.is_empty() {
-                return Err("specification step has no assertions".into());
+                return Err(SpecificationError::MissingAssertions);
             }
             for assertion in &step.assertions {
                 if assertion
                     .tolerance
                     .is_some_and(|t| !t.is_finite() || t < 0.)
                 {
-                    return Err("invalid specification tolerance".into());
+                    return Err(SpecificationError::InvalidTolerance);
                 }
                 if assertion.evidence.kind != EvidenceKind::Unresolved {
                     if assertion.evidence.source_urls.is_empty()
                         || assertion.evidence.explanation.trim().is_empty()
                     {
-                        return Err("specification assertion lacks evidence".into());
+                        return Err(SpecificationError::MissingEvidence);
                     }
                     assertion.expected_cells()?;
                 }
@@ -165,10 +156,10 @@ pub(crate) struct Observation {
     pub mode_errors: Vec<String>,
 }
 
-pub(crate) fn observe(case: &Case) -> Result<Observation, String> {
+pub(crate) fn observe(case: &Case) -> Result<Observation, SpecificationError> {
     let mut model = model::Workbook::new();
     for name in &case.sheets {
-        model.add_sheet(name).map_err(|e| e.to_string())?;
+        model.add_sheet(name).map_err(SpecificationError::from)?;
     }
     model.date_system = case.settings.date_system.into();
     write_cells(&mut model, &case.cells)?;
@@ -177,7 +168,7 @@ pub(crate) fn observe(case: &Case) -> Result<Observation, String> {
     let mut overlay = Overlay::with_workbook(std::sync::Arc::new(model.clone()))
         .with_policy(settings.policy())
         .build()
-        .map_err(|e| e.to_string())?;
+        .map_err(SpecificationError::from)?;
     let mut result = Observation {
         checks: Vec::new(),
         failures: Vec::new(),
@@ -188,7 +179,7 @@ pub(crate) fn observe(case: &Case) -> Result<Observation, String> {
             settings.update(update);
             overlay
                 .set_policy(settings.policy())
-                .map_err(|e| e.to_string())?;
+                .map_err(SpecificationError::from)?;
         }
         write_cells(&mut model, &step.edits)?;
         let recompile = step.recompile
@@ -204,7 +195,7 @@ pub(crate) fn observe(case: &Case) -> Result<Observation, String> {
             overlay = Overlay::with_workbook(std::sync::Arc::new(model.clone()))
                 .with_policy(settings.policy())
                 .build()
-                .map_err(|e| e.to_string())?;
+                .map_err(SpecificationError::from)?;
         } else {
             for edit in &step.edits {
                 match &edit.content {
@@ -215,7 +206,7 @@ pub(crate) fn observe(case: &Case) -> Result<Observation, String> {
                         overlay.set_formula(edit.target.evaluation(), formula)
                     }
                 }
-                .map_err(|e| e.to_string())?;
+                .map_err(SpecificationError::from)?;
             }
         }
         let footprints = step
@@ -228,7 +219,7 @@ pub(crate) fn observe(case: &Case) -> Result<Observation, String> {
                     assertion.expected_cells()
                 }
             })
-            .collect::<Result<Vec<_>, String>>()?;
+            .collect::<Result<Vec<_>, SpecificationError>>()?;
         let targets: Vec<_> = footprints
             .iter()
             .flatten()
@@ -238,8 +229,10 @@ pub(crate) fn observe(case: &Case) -> Result<Observation, String> {
         let mut direct = Evaluation::with_workbook(&model)
             .with_policy(settings.policy())
             .build(context.clone())
-            .map_err(|e| e.to_string())?;
-        let mut evaluation = overlay.evaluation(&context).map_err(|e| e.to_string())?;
+            .map_err(SpecificationError::from)?;
+        let mut evaluation = overlay
+            .evaluation(&context)
+            .map_err(SpecificationError::from)?;
         for (mode, outputs) in [
             ("normal", direct.outputs(&targets)),
             ("overlay", evaluation.outputs(&targets)),
@@ -250,9 +243,10 @@ pub(crate) fn observe(case: &Case) -> Result<Observation, String> {
                     .map(|r| ((r.target.sheet, r.target.address), r.value))
                     .collect::<std::collections::BTreeMap<_, _>>(),
                 Err(error) => {
-                    result
-                        .mode_errors
-                        .push(format!("{mode} step {step_index}: {error}"));
+                    result.mode_errors.push(format!(
+                        "{mode} step {step_index}: {}",
+                        crate::report::error_message(&error)
+                    ));
                     continue;
                 }
             };
@@ -288,42 +282,37 @@ pub(crate) fn observe(case: &Case) -> Result<Observation, String> {
 
 /// Original strict Excel-specification test entry point, now backed by the shared JSON table.
 /// This retains the registry inventory check and does not waive compatibility gaps.
-pub fn check_table() -> Result<(), String> {
+pub fn check_table() -> Result<(), SpecificationError> {
     let root = crate::package_root();
     let inventory: schema::RegistryInventory = serde_json::from_slice(
         &std::fs::read(root.join("../poirot-test-excel-specs/test-specs/inventory.json"))
-            .map_err(|e| e.to_string())?,
+            .map_err(SpecificationError::Io)?,
     )
-    .map_err(|e| e.to_string())?;
+    .map_err(SpecificationError::from)?;
     let registered: std::collections::BTreeSet<_> = inventory
-        .features
+        .registered_functions
         .iter()
-        .filter(|f| f.implementation_status == schema::ImplementationStatus::Registered)
-        .map(|f| f.name.as_str())
+        .map(String::as_str)
         .collect();
     if registered != eval::SUPPORTED_FUNCTIONS.iter().copied().collect() {
-        return Err("Excel specification inventory differs from the public registry".into());
+        return Err(SpecificationError::InventoryMismatch);
     }
-    let bytes = std::fs::read(root.join("corpus/json/cases.json")).map_err(|e| e.to_string())?;
+    let bytes =
+        std::fs::read(root.join("corpus/json/cases.json")).map_err(SpecificationError::from)?;
     let cases = parse(&bytes)?;
     if cases.len() < 1000 {
-        return Err("at least 1,000 Excel specifications are required".into());
+        return Err(SpecificationError::InsufficientCases);
     }
     let mut failures = Vec::new();
     for case in &cases {
         let observed = observe(case)?;
         if !observed.failures.is_empty() || !observed.mode_errors.is_empty() {
-            failures.push(format!(
-                "{}: {} assertion failures; {:?}",
-                case.name,
-                observed.failures.len(),
-                observed.mode_errors
-            ));
+            failures.push(case.name.clone());
         }
     }
     if failures.is_empty() {
         Ok(())
     } else {
-        Err(failures.join("\n"))
+        Err(SpecificationError::FailedCases { cases: failures })
     }
 }

@@ -210,7 +210,7 @@ fn saved_footprints_are_independent_of_computed_bounds() {
         let mut book = Workbook::new();
         let sheet = book.add_sheet("S").unwrap();
         sheet.set_formula(at("A1").address, "SEQUENCE(1)").unwrap();
-        sheet.get_mut(at("A1").address).unwrap().value = 11.0.into();
+        sheet.get_mut(at("A1").address).unwrap().unwrap().value = 11.0.into();
         sheet
             .set_spill_extent(at("A1").address, at("B2").address, "SEQUENCE(1)")
             .unwrap();
@@ -239,30 +239,14 @@ fn saved_footprints_are_independent_of_computed_bounds() {
         } else {
             assert!(matches!(
                 result,
-                Err(EvaluationFailure::UnsupportedCapability { .. })
+                Err(EvaluationError::UnsupportedCapability { .. })
             ));
         }
         assert_eq!(evaluation.usage().formula_executions, 0);
     }
 }
 #[test]
-fn sequence_is_modern_profile_only_and_unknown_geometry_survives_profile_resolution() {
-    let mut book = Workbook::new();
-    book.add_sheet("S")
-        .unwrap()
-        .set_formula(at("A1").address, "SEQUENCE(3)")
-        .unwrap();
-    let mut evaluation = Evaluation::with_workbook(&book)
-        .with_policy(EvaluationPolicy {
-            builtin: BuiltinSemanticsPolicy::PinnedPoi,
-            ..Default::default()
-        })
-        .build(Default::default())
-        .unwrap();
-    assert_eq!(
-        evaluation.cell(at("A1")).unwrap(),
-        CellValue::Error(CellError::Name)
-    );
+fn sequence_has_a_registered_shape_contract() {
     assert_eq!(properties("SEQUENCE(3)").shape, S::new(3, 1));
 }
 
@@ -280,7 +264,7 @@ fn sequence_allocation_failure_is_operational_and_edge_spills_are_blocked() {
     let mut evaluation = Evaluation::with_workbook(&book).build(context).unwrap();
     assert!(matches!(
         evaluation.cell(at("A1")),
-        Err(EvaluationFailure::Budget(_))
+        Err(EvaluationError::Budget(_))
     ));
     assert_eq!(evaluation.cached_cells(), 0);
     let edge: CellAddress = "XFD1048576".parse().unwrap();

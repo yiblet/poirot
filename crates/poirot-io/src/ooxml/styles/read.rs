@@ -1,5 +1,5 @@
 //! Indexed source style records; component IDs describe the direct cell XF.
-use super::codec::{Token, argb, boolean, choice, color, invalid, number, valid};
+use super::codec::{Token, argb, boolean, choice, color, number, valid};
 use crate::IoError;
 use crate::ooxml::xml::{attr, xml};
 use crate::{
@@ -39,7 +39,7 @@ struct Xf {
 fn push<T>(records: &mut Vec<T>, value: T) -> Result<(), IoError> {
     records
         .try_reserve(1)
-        .map_err(|_| IoError::Allocation("style table"))?;
+        .map_err(|source| IoError::Allocation(crate::AllocationError::StyleTable(source)))?;
     records.push(value);
     Ok(())
 }
@@ -60,8 +60,14 @@ fn children(
                 }
             }
             Event::End(_) => return Ok(()),
-            Event::Eof => return Err(invalid("truncated style record")),
-            Event::DocType(_) => return Err(invalid("DTD in style metadata")),
+            Event::Eof => {
+                return Err(IoError::Style(
+                    crate::StyleDecodeError::TruncatedStyleRecord,
+                ));
+            }
+            Event::DocType(_) => {
+                return Err(IoError::Style(crate::StyleDecodeError::DtdInStyleMetadata));
+            }
             _ => {}
         }
     }
@@ -94,13 +100,17 @@ fn validate_root(bytes: &[u8], local: &str, namespace: &str) -> Result<bool, IoE
                         || name.as_ref() != local
                         || !matches!(ns, ResolveResult::Bound(n) if n.as_ref() == namespace)
                     {
-                        return Err(invalid("metadata root/namespace"));
+                        return Err(IoError::Style(
+                            crate::StyleDecodeError::MetadataRootNamespace,
+                        ));
                     }
                     seen = true;
                 }
                 let (ns, _) = reader.resolver().resolve_element(e.name());
                 foreign |= !matches!(ns, ResolveResult::Bound(n) if n.as_ref() == namespace);
-                depth = depth.checked_add(1).ok_or_else(|| invalid("XML depth"))?;
+                depth = depth
+                    .checked_add(1)
+                    .ok_or(IoError::Style(crate::StyleDecodeError::XmlDepth))?;
                 for a in e.attributes() {
                     let a = a.map_err(xml)?;
                     let value = a
@@ -109,23 +119,35 @@ fn validate_root(bytes: &[u8], local: &str, namespace: &str) -> Result<bool, IoE
                     valid(&value)?;
                 }
             }
-            Event::End(_) => depth = depth.checked_sub(1).ok_or_else(|| invalid("XML depth"))?,
-            Event::DocType(_) => return Err(invalid("DTD in metadata")),
+            Event::End(_) => {
+                depth = depth
+                    .checked_sub(1)
+                    .ok_or(IoError::Style(crate::StyleDecodeError::XmlDepth))?
+            }
+            Event::DocType(_) => {
+                return Err(IoError::Style(crate::StyleDecodeError::DtdInMetadata));
+            }
             Event::Decl(_) => {
                 if seen || declaration {
-                    return Err(invalid("misplaced XML declaration"));
+                    return Err(IoError::Style(
+                        crate::StyleDecodeError::MisplacedXmlDeclaration,
+                    ));
                 }
                 declaration = true;
             }
             Event::CData(e) => {
                 if depth == 0 {
-                    return Err(invalid("CDATA outside metadata root"));
+                    return Err(IoError::Style(
+                        crate::StyleDecodeError::CdataOutsideMetadataRoot,
+                    ));
                 }
                 valid(e.as_ref())?;
             }
             Event::GeneralRef(e) => {
                 if depth == 0 {
-                    return Err(invalid("reference outside metadata root"));
+                    return Err(IoError::Style(
+                        crate::StyleDecodeError::ReferenceOutsideMetadataRoot,
+                    ));
                 }
                 if let Some(c) = e.resolve_char_ref().map_err(xml)? {
                     valid(&c.to_string())?;
@@ -133,14 +155,18 @@ fn validate_root(bytes: &[u8], local: &str, namespace: &str) -> Result<bool, IoE
                 if e.resolve_char_ref().map_err(xml)?.is_none()
                     && !matches!(e.as_ref(), "amp" | "lt" | "gt" | "apos" | "quot")
                 {
-                    return Err(invalid("unknown entity in metadata"));
+                    return Err(IoError::Style(
+                        crate::StyleDecodeError::UnknownEntityInMetadata,
+                    ));
                 }
             }
             Event::Text(t) => {
                 let value = t.xml10_content();
                 valid(&value)?;
                 if depth == 0 && !value.trim().is_empty() {
-                    return Err(invalid("text outside metadata root"));
+                    return Err(IoError::Style(
+                        crate::StyleDecodeError::TextOutsideMetadataRoot,
+                    ));
                 }
             }
             Event::Eof => break,
@@ -148,7 +174,9 @@ fn validate_root(bytes: &[u8], local: &str, namespace: &str) -> Result<bool, IoE
         }
     }
     if !seen || depth != 0 {
-        return Err(invalid("incomplete metadata root"));
+        return Err(IoError::Style(
+            crate::StyleDecodeError::IncompleteMetadataRoot,
+        ));
     }
     Ok(foreign)
 }
@@ -167,14 +195,14 @@ fn font(reader: &mut NsReader<&[u8]>, losses: &mut BTreeSet<String>) -> Result<F
     children(reader, |r, e| {
         match e.local_name().as_ref() {
             "name" => {
-                f.name = Some(Arc::from(
-                    attr(e, "val")?.ok_or_else(|| invalid("missing font name"))?,
-                ))
+                f.name = Some(Arc::from(attr(e, "val")?.ok_or({
+                    IoError::Style(crate::StyleDecodeError::MissingFontName)
+                })?))
             }
             "sz" => {
-                f.size = Some(FontSize::new(
-                    number(e, "val")?.ok_or_else(|| invalid("missing font size"))?,
-                )?)
+                f.size = Some(FontSize::new(number(e, "val")?.ok_or({
+                    IoError::Style(crate::StyleDecodeError::MissingFontSize)
+                })?)?)
             }
             "b" => f.bold = boolean(e, "val", true)?,
             "i" => f.italic = boolean(e, "val", true)?,
@@ -192,13 +220,22 @@ fn font(reader: &mut NsReader<&[u8]>, losses: &mut BTreeSet<String>) -> Result<F
             }
             "color" => f.color = Some(color(e)?),
             "scheme" => {
-                f.scheme = Some(choice(e, "val")?.ok_or_else(|| invalid("missing font scheme"))?)
+                f.scheme = Some(
+                    choice(e, "val")?
+                        .ok_or(IoError::Style(crate::StyleDecodeError::MissingFontScheme))?,
+                )
             }
             "family" => {
-                f.family = Some(choice(e, "val")?.ok_or_else(|| invalid("missing font family"))?)
+                f.family = Some(
+                    choice(e, "val")?
+                        .ok_or(IoError::Style(crate::StyleDecodeError::MissingFontFamily))?,
+                )
             }
             "charset" => {
-                f.charset = Some(number(e, "val")?.ok_or_else(|| invalid("missing font charset"))?)
+                f.charset = Some(
+                    number(e, "val")?
+                        .ok_or(IoError::Style(crate::StyleDecodeError::MissingFontCharset))?,
+                )
             }
             _ => return skip(r, e, losses),
         }
@@ -302,7 +339,7 @@ fn alignment(e: &BytesStart<'_>, losses: &mut BTreeSet<String>) -> Result<Alignm
             0..=90 => Ok(TextRotation::Degrees(RotationDegrees::new(v as i16)?)),
             91..=180 => Ok(TextRotation::Degrees(RotationDegrees::new(90 - v as i16)?)),
             255 => Ok(TextRotation::Stacked),
-            _ => Err(invalid("textRotation")),
+            _ => Err(IoError::Style(crate::StyleDecodeError::TextRotation)),
         })
         .transpose()?;
     let indent = number(e, "indent")?.unwrap_or(0);
@@ -362,10 +399,9 @@ fn component<T>(values: &[T], index: usize) -> Result<Option<&T>, IoError> {
     if values.is_empty() && index == 0 {
         return Ok(None);
     }
-    values
-        .get(index)
-        .map(Some)
-        .ok_or_else(|| invalid("dangling style component index"))
+    values.get(index).map(Some).ok_or(IoError::Style(
+        crate::StyleDecodeError::DanglingStyleComponentIndex,
+    ))
 }
 /// Decode actual style elements; source count attributes never drive allocation.
 pub(crate) fn read_styles(
@@ -440,11 +476,12 @@ pub(crate) fn read_styles(
                             return skip(r, e, &mut losses);
                         }
                         let id = number::<u32>(e, "numFmtId")?
-                            .ok_or_else(|| invalid("missing numFmtId"))?;
-                        let code =
-                            attr(e, "formatCode")?.ok_or_else(|| invalid("missing formatCode"))?;
+                            .ok_or(IoError::Style(crate::StyleDecodeError::MissingNumfmtid))?;
+                        let code = attr(e, "formatCode")?.ok_or({
+                            IoError::Style(crate::StyleDecodeError::MissingFormatcode)
+                        })?;
                         if formats.insert(id, code).is_some() {
-                            return Err(invalid("duplicate numFmtId"));
+                            return Err(IoError::Style(crate::StyleDecodeError::DuplicateNumfmtid));
                         }
                         r.read_to_end(e.name()).map_err(xml)?;
                         Ok(())
@@ -458,11 +495,15 @@ pub(crate) fn read_styles(
                                 return skip(r, e, &mut losses);
                             }
                             if palette.len() >= 64 {
-                                return Err(invalid("indexed palette exceeds 64"));
+                                return Err(IoError::Style(
+                                    crate::StyleDecodeError::IndexedPaletteExceeds64,
+                                ));
                             }
                             push(
                                 &mut palette,
-                                argb(&attr(e, "rgb")?.ok_or_else(|| invalid("palette rgb"))?)?,
+                                argb(&attr(e, "rgb")?.ok_or({
+                                    IoError::Style(crate::StyleDecodeError::PaletteRgb)
+                                })?)?,
                             )?;
                             r.read_to_end(e.name()).map_err(xml)?;
                             Ok(())
@@ -485,7 +526,9 @@ pub(crate) fn read_styles(
             component(&parents, parent)?;
         }
         if xf.number >= 164 && !formats.contains_key(&xf.number) {
-            return Err(invalid("dangling custom numFmtId"));
+            return Err(IoError::Style(
+                crate::StyleDecodeError::DanglingCustomNumfmtid,
+            ));
         }
     }
     if xfs.is_empty() {
@@ -522,9 +565,9 @@ pub(crate) fn read_styles(
         } else if let Some(shared) = visuals.get(&visual) {
             Some(Arc::clone(shared))
         } else {
-            visuals
-                .try_reserve(1)
-                .map_err(|_| IoError::Allocation("shared visual styles"))?;
+            visuals.try_reserve(1).map_err(|source| {
+                IoError::Allocation(crate::AllocationError::SharedStyles(source))
+            })?;
             let shared = Arc::new(visual);
             visuals.insert(Arc::clone(&shared));
             Some(shared)

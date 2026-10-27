@@ -4,15 +4,13 @@ use crate::eval::adapters::{
         self, Broadcast, BroadcastCollections, Kernel, MemberContext, NumericParameter,
         NumericSignature, Optional, WholeCollection, collections,
     },
-    failure::operational_only,
+    operational_only::operational_only,
 };
 use crate::eval::functions::registry::{FinancialFunction, FunctionId};
 use crate::eval::host::{ArgumentCoercion, CallHost};
 use crate::eval::limits::EvalResult;
 use crate::eval::session::Session;
-use crate::eval::values::{
-    FunctionFailure, FunctionResult, OperandOrigin, VALUE_ERROR, Value, err,
-};
+use crate::eval::values::{FunctionError, FunctionResult, OperandOrigin, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellValue::Number;
 use crate::model::{CellAddress, CellValue};
@@ -34,16 +32,18 @@ fn flows(
         } else {
             (&operand.value).into()
         };
-        let value = poirot_functions::coercion::collections::coerce_cashflow_member::<
-            FunctionFailure,
-        >(scalar, origin, |input| match input {
-            poirot_functions::coercion::compatibility::DeferredNumber::Text(text) => {
-                let text = ArgumentCoercion::new(host).project_text(text)?;
-                poirot_functions::coercion::compatibility::coerce_financial_decimal_text(&text)
-                    .ok_or(VALUE_ERROR.into())
-            }
-            _ => Err(VALUE_ERROR.into()),
-        })?;
+        let value = poirot_functions::coercion::collections::coerce_cashflow_member::<FunctionError>(
+            scalar,
+            origin,
+            |input| match input {
+                poirot_functions::coercion::compatibility::DeferredNumber::Text(text) => {
+                    let text = ArgumentCoercion::new(host).project_text(text)?;
+                    poirot_functions::coercion::compatibility::coerce_financial_decimal_text(&text)
+                        .ok_or(VALUE_ERROR.into())
+                }
+                _ => Err(VALUE_ERROR.into()),
+            },
+        )?;
         if let Some(value) = value {
             host.check_values(
                 values
@@ -53,7 +53,7 @@ fn flows(
             )?;
             values
                 .try_reserve(1)
-                .map_err(|_| host.allocation_failure())?;
+                .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             // SAFETY: one additional slot was reserved immediately above.
             values.push(value);
         }
@@ -175,7 +175,7 @@ pub(super) fn execute(
     };
     match result {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
         Err(error) => Err(operational_only(error)),
     }
 }

@@ -292,7 +292,6 @@ fn modern_formula(
         address,
         formula,
         &poirot::eval::RunConfiguration::from(inputs)
-            .with_builtin_policy(poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation)
             .with_array_result_policy(poirot::eval::ArrayResultPolicy::ScalarIntersection),
         budgets,
     )

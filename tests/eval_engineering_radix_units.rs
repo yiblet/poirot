@@ -281,7 +281,7 @@ fn resource_failures_are_not_worksheet_values_and_utf16_is_checked() {
 }
 
 #[test]
-fn modern_registration_preserves_pinned_profile_and_lazy_dependencies() {
+fn modern_registration_preserves_lazy_dependencies() {
     let mut b = book();
     let s = b.sheet_mut(0).unwrap();
     s.set_value(at("A1").address, -1.).unwrap();
@@ -300,16 +300,5 @@ fn modern_registration_preserves_pinned_profile_and_lazy_dependencies() {
             run.cell(at("D1")).unwrap(),
             CellValue::Error(CellError::Num)
         );
-    }
-    for formula in ["BIN2HEX(1)", "BITAND(1,1)", "CONVERT(1,\"m\",\"m\")"] {
-        let result = run_formula_with_configuration(
-            &b,
-            0,
-            at("Z100").address,
-            formula,
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-            Default::default(),
-        );
-        assert_eq!(value(result), CellValue::Error(CellError::Name));
     }
 }

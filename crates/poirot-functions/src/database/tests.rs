@@ -122,7 +122,11 @@ fn empty_result_contracts() {
     ] {
         assert_eq!(
             run(function, &data, 1, 1.0.into(), &criteria, 1),
-            Ok(0.0.into())
+            if function == DatabaseFunction::Average {
+                Ok(CellValue::Error(CellError::Div0))
+            } else {
+                Ok(0.0.into())
+            }
         );
     }
     for function in [
@@ -281,42 +285,20 @@ fn database_average_distinguishes_empty_samples_from_zero_values() {
         let mut data = vec!["N".into()];
         data.extend(values);
         let criteria = ["N".into(), condition];
-        for function in [
+        let plan = DatabasePlan::new(
             DatabaseFunction::Average,
-            DatabaseFunction::Count,
-            DatabaseFunction::Sum,
-            DatabaseFunction::Min,
-            DatabaseFunction::Max,
-        ] {
-            let plan = DatabasePlan::new(
-                function,
-                Grid::new(data.len(), 1, &data).unwrap(),
-                &1.0.into(),
-                Grid::new(2, 1, &criteria).unwrap(),
-            )
-            .unwrap();
-            let pinned = plan.execute().unwrap();
-            assert_eq!(
-                plan.execute_with_policy(FinalizationPolicy::PinnedPoi)
-                    .unwrap(),
-                pinned
-            );
-            let modern = plan
-                .execute_with_policy(FinalizationPolicy::ExcelDocumentation)
-                .unwrap();
-            if function == DatabaseFunction::Average {
-                assert_eq!(pinned, 0.0.into());
-                assert_eq!(
-                    modern,
-                    if empty {
-                        CellValue::Error(CellError::Div0)
-                    } else {
-                        0.0.into()
-                    }
-                );
+            Grid::new(data.len(), 1, &data).unwrap(),
+            &1.0.into(),
+            Grid::new(2, 1, &criteria).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(
+            plan.execute().unwrap(),
+            if empty {
+                CellValue::Error(CellError::Div0)
             } else {
-                assert_eq!(modern, pinned);
+                0.0.into()
             }
-        }
+        );
     }
 }

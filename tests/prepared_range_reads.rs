@@ -1,6 +1,6 @@
 //! Prepared range reads preserve worksheet semantics and operational boundaries.
 use poirot::calculation::{
-    EvaluationContext, EvaluationFailure, EvaluationLimits, EvaluationTarget, ProducerPolicy,
+    EvaluationContext, EvaluationError, EvaluationLimits, EvaluationTarget, ProducerPolicy,
 };
 use poirot::eval::EvaluationPolicy;
 use poirot::eval::overlay::{Evaluation, Overlay};
@@ -21,16 +21,14 @@ fn book() -> Workbook {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Data").unwrap();
     for (address, value) in [("A1", 1.), ("A2", 2.), ("B1", 10.), ("B2", 20.)] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     for (address, formula) in [
         ("D1", "SUM(A1:A3)"),
         ("D2", "VLOOKUP(2,A1:B2,2,FALSE)"),
         ("D3", "COUNTIF(A1:A3,\">0\")"),
     ] {
-        sheet
-            .set_formula(address.parse().unwrap(), formula)
-            .unwrap();
+        sheet.set_formula(address, formula).unwrap();
     }
     book
 }
@@ -39,7 +37,7 @@ fn book() -> Workbook {
 fn range_consumers_keep_reference_coercion_and_overlay_dependencies() {
     let book = book();
     let context = EvaluationContext::default();
-    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let outputs = [target("D1"), target("D2"), target("D3")];
     assert_eq!(
         overlay
@@ -96,14 +94,14 @@ fn literal_scans_retain_results_instead_of_copying_source_into_the_memo() {
             .max_logical_memo_bytes(128),
         ..Default::default()
     };
-    let mut direct = Evaluation::with_workbook(book.model())
+    let mut direct = Evaluation::with_workbook(&book)
         .build_calculation(context.clone())
         .unwrap();
     assert_eq!(direct.cell(target("D1")).unwrap(), CellValue::Number(3.));
     assert_eq!(direct.retained_usage().cells, 1);
     assert_eq!(direct.retained_usage().bytes, 128);
     assert!(direct.values().all(|(key, _)| key != target("A1")));
-    let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
     let mut overlay_context = context.clone();
     overlay_context.retention = overlay_context.retention.without_logical_memo_bytes_limit();
     let mut cycle = overlay.calculation(&overlay_context).unwrap();
@@ -119,16 +117,13 @@ fn text_refusal_is_attributed_to_the_member_and_publication_is_atomic() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), "a literal longer than its formula")
+        .set_value("A1", "a literal longer than its formula")
         .unwrap();
-    book.sheet_mut(0)
-        .unwrap()
-        .set_formula("D4".parse().unwrap(), "1")
-        .unwrap();
+    book.sheet_mut(0).unwrap().set_formula("D4", "1").unwrap();
     let context =
         EvaluationContext::default().limits(EvaluationLimits::default().max_text_bytes(30));
     for address in ["D1", "D2", "D3"] {
-        let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+        let mut overlay = Overlay::with_workbook(&book).build().unwrap();
         let error = overlay
             .calculation(&context)
             .unwrap()
@@ -151,13 +146,10 @@ fn numeric_admission_and_each_member_read_remain_bounded() {
     let mut book = book();
     book.sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), f64::from_bits(1))
+        .set_value("A1", f64::from_bits(1))
         .unwrap();
-    book.sheet_mut(0)
-        .unwrap()
-        .set_value("B2".parse().unwrap(), -0.)
-        .unwrap();
-    let mut direct = Evaluation::with_workbook(book.model())
+    book.sheet_mut(0).unwrap().set_value("B2", -0.).unwrap();
+    let mut direct = Evaluation::with_workbook(&book)
         .build_calculation(EvaluationContext::default())
         .unwrap();
     assert_eq!(direct.cell(target("D1")).unwrap(), CellValue::Number(2.));
@@ -167,9 +159,9 @@ fn numeric_admission_and_each_member_read_remain_bounded() {
     assert_eq!(value.to_bits(), (-0.0f64).to_bits());
     book.sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), f64::INFINITY)
+        .set_value("A1", f64::INFINITY)
         .unwrap();
-    let mut direct = Evaluation::with_workbook(book.model())
+    let mut direct = Evaluation::with_workbook(&book)
         .build_calculation(EvaluationContext::default())
         .unwrap();
     assert_eq!(
@@ -178,7 +170,7 @@ fn numeric_admission_and_each_member_read_remain_bounded() {
     );
     let formula = "SUM(B1:B2)";
     let baseline = eval::run_formula(
-        book.model(),
+        &book,
         0,
         target("Z1").address,
         formula,
@@ -196,7 +188,7 @@ fn numeric_admission_and_each_member_read_remain_bounded() {
     ));
     for (limit, succeeds) in [(work, true), (work - 1, false)] {
         let outcome = eval::run_formula(
-            book.model(),
+            &book,
             0,
             target("Z1").address,
             formula,
@@ -217,7 +209,7 @@ fn numeric_admission_and_each_member_read_remain_bounded() {
 #[derive(Default)]
 struct Completions(Vec<EvaluationTarget>);
 impl CellObserver for Completions {
-    fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+    fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationError> {
         self.0.push(completion.target);
         Ok(())
     }
@@ -227,8 +219,8 @@ impl CellObserver for Completions {
 fn observer_ports_receive_every_consumed_literal_read() {
     let book = book();
     let policy = PreparationPolicy::default();
-    let plan = eval::FormulaCompiler::new().compile_workbook(book.model(), &policy);
-    let view = WorkbookView::new(book.model(), &plan, &policy).unwrap();
+    let plan = eval::FormulaCompiler::new().compile_workbook(&book, &policy);
+    let view = WorkbookView::new(&book, &plan, &policy).unwrap();
     let mut observer = Completions::default();
     let mut run = EvaluationRun::new(view, Default::default(), Default::default())
         .unwrap()
@@ -251,9 +243,9 @@ fn observer_ports_receive_every_consumed_literal_read() {
 fn saved_and_dynamic_spill_members_keep_ownership_and_formula_semantics() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("Data").unwrap();
-    sheet.set_value("E1".parse().unwrap(), 2.).unwrap();
+    sheet.set_value("E1", 2.).unwrap();
     sheet
-        .set_formula_with_cached_value("A1".parse().unwrap(), "SEQUENCE(E1)", 10.0.into())
+        .set_formula_with_cached_value("A1", "SEQUENCE(E1)", 10.0.into())
         .unwrap();
     sheet
         .set_spill_extent("A1".parse().unwrap(), "A2".parse().unwrap(), "SEQUENCE(E1)")
@@ -266,17 +258,13 @@ fn saved_and_dynamic_spill_members_keep_ownership_and_formula_semantics() {
             20.0.into(),
         )
         .unwrap();
-    sheet
-        .set_formula("C1".parse().unwrap(), "SUM(A1:A3)")
-        .unwrap();
-    sheet
-        .set_formula("C2".parse().unwrap(), "VLOOKUP(2,A1:A3,1,FALSE)")
-        .unwrap();
+    sheet.set_formula("C1", "SUM(A1:A3)").unwrap();
+    sheet.set_formula("C2", "VLOOKUP(2,A1:A3,1,FALSE)").unwrap();
     for (policy, expected) in [
         (ProducerPolicy::Compute, 3.),
         (ProducerPolicy::TrustSaved, 30.),
     ] {
-        let mut overlay = Overlay::with_workbook(book.model())
+        let mut overlay = Overlay::with_workbook(&book)
             .with_policy(EvaluationPolicy {
                 producers: policy,
                 ..Default::default()
@@ -333,7 +321,7 @@ fn depth_and_retention_refusals_do_not_publish_partial_range_results() {
             ..Default::default()
         },
     ] {
-        let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
+        let mut overlay = Overlay::with_workbook(&book).build().unwrap();
         assert!(
             overlay
                 .calculation(&context)
@@ -342,7 +330,7 @@ fn depth_and_retention_refusals_do_not_publish_partial_range_results() {
                 .is_err()
         );
         assert_eq!(overlay.cached_cells(), 0);
-        let mut direct = Evaluation::with_workbook(book.model())
+        let mut direct = Evaluation::with_workbook(&book)
             .build_calculation(context)
             .unwrap();
         assert!(direct.cell(target("D1")).is_err());
@@ -357,7 +345,7 @@ impl eval::CachedCellReader for ExternalValue {
     fn cached_cell(
         &mut self,
         key: EvaluationTarget,
-    ) -> Result<Option<std::sync::Arc<CellValue>>, EvaluationFailure> {
+    ) -> Result<Option<std::sync::Arc<CellValue>>, EvaluationError> {
         Ok((key == target("A1")).then(|| std::sync::Arc::new(CellValue::Number(100.))))
     }
 }
@@ -366,8 +354,8 @@ impl eval::CachedCellReader for ExternalValue {
 fn external_readers_still_override_authored_range_members() {
     let book = book();
     let policy = PreparationPolicy::default();
-    let plan = eval::FormulaCompiler::new().compile_workbook(book.model(), &policy);
-    let view = WorkbookView::new(book.model(), &plan, &policy).unwrap();
+    let plan = eval::FormulaCompiler::new().compile_workbook(&book, &policy);
+    let view = WorkbookView::new(&book, &plan, &policy).unwrap();
     let mut reader = ExternalValue;
     let mut run = EvaluationRun::new(view, Default::default(), Default::default())
         .unwrap()

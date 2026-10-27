@@ -11,7 +11,7 @@ fn source(last: u32) -> Workbook {
     sheet
         .set_value(CellAddress::new(5, 0).unwrap(), 2.0)
         .unwrap();
-    sheet.remove(CellAddress::new(5, 0).unwrap());
+    sheet.remove(CellAddress::new(5, 0).unwrap()).unwrap();
     sheet.create_row(6).unwrap();
     sheet.remove_row(6).unwrap();
     workbook

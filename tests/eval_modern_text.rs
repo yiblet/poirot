@@ -313,38 +313,6 @@ fn operational_limits_are_not_catchable_spreadsheet_errors() {
 }
 
 #[test]
-fn modern_text_registration_preserves_the_explicit_pinned_registry() {
-    let b = book();
-    for name in [
-        "TEXTBEFORE",
-        "TEXTAFTER",
-        "TEXTSPLIT",
-        "ARRAYTOTEXT",
-        "VALUETOTEXT",
-    ] {
-        let f = format!("{name}(\"a:b\",\":\")");
-        let result = run_formula_with_configuration(
-            &b,
-            0,
-            at("Z100").address,
-            &f,
-            &RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi),
-            Default::default(),
-        );
-        assert!(
-            matches!(
-                result,
-                EvaluationOutcome::Complete {
-                    value: CellValue::Error(CellError::Name),
-                    ..
-                }
-            ),
-            "{f}: {result:?}"
-        );
-    }
-}
-
-#[test]
 fn scalar_text_kernels_spill_child_first_with_optional_argument_arrays() {
     // Microsoft function reference defines LEN's character count, LEFT's optional
     // count, EXACT's Boolean comparison, and NUMBERVALUE's explicit separators.

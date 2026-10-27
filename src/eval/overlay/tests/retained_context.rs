@@ -1,13 +1,10 @@
 //! Behavioral obligations migrated from the retired mutable transaction cache.
-use crate::eval::config::{
-    BuiltinSemanticsPolicy, CurrencyContext, DateOrder, FormattingConfiguration,
-};
+use crate::eval::config::{CurrencyContext, DateOrder, FormattingConfiguration};
 use crate::eval::config::{EvaluationContext, EvaluationPolicy};
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{CapabilityId, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvaluationError};
 use crate::eval::overlay::incremental::Overlay;
 use crate::model::{CellValue, Workbook};
-use poirot_functions::text_units::{SourceVersion as TextSourceVersion, TextSemanticsPolicy};
 use std::{
     sync::Arc,
     time::{Duration, UNIX_EPOCH},
@@ -154,68 +151,10 @@ fn yearless_numeric_coercion_tracks_exact_clock_and_failure_never_changes_source
 }
 
 #[test]
-fn policy_switch_reexecutes_text_consumers_and_preserves_split_surrogate_units() {
-    let w = book(&[
-        "LOWER(\"ASCII\")",
-        "LEFT(\"😀\",1)",
-        "IF(FALSE,LOWER(\"Ä\"),7)",
-        "2+3",
-    ]);
-    let mut overlay = Overlay::with_workbook(&w)
-        .with_policy(EvaluationPolicy {
-            text: TextSemanticsPolicy {
-                source: TextSourceVersion::Poi7321209,
-            },
-            ..Default::default()
-        })
-        .build()
-        .unwrap();
-    let context = context();
-    let targets = (0..4).map(target).collect::<Vec<_>>();
-    let first = overlay
-        .evaluation(&context)
-        .unwrap()
-        .outputs(&targets)
-        .unwrap();
-    assert_eq!(first[0].value, CellValue::Text("ascii".into()));
-    assert_eq!(
-        first[1]
-            .value
-            .text_ref()
-            .unwrap()
-            .units()
-            .collect::<Vec<_>>(),
-        vec![0xd83d]
-    );
-    let mut policy = overlay.policy().clone();
-    policy.text.source = TextSourceVersion::Poi7321209OpenJdk21Unicode15;
-    overlay.set_policy(policy).unwrap();
-    let values = overlay
-        .evaluation(&context)
-        .unwrap()
-        .outputs(&targets)
-        .unwrap();
-    assert_eq!(
-        values[1]
-            .value
-            .text_ref()
-            .unwrap()
-            .units()
-            .collect::<Vec<_>>(),
-        vec![0xd83d]
-    );
-    assert_eq!(values[2].value, CellValue::Number(7.));
-    assert_eq!(values[3].value, CellValue::Number(5.));
-}
-
-#[test]
-fn cached_split_surrogate_budget_failure_is_operational_and_cannot_be_masked() {
+fn cached_text_budget_failure_is_operational_and_cannot_be_masked() {
     let w = book(&["IFERROR(LEFT(\"😀\",1),7)"]);
     let mut overlay = Overlay::with_workbook(&w)
         .with_policy(EvaluationPolicy {
-            text: TextSemanticsPolicy {
-                source: TextSourceVersion::Poi7321209,
-            },
             ..Default::default()
         })
         .build()
@@ -228,13 +167,13 @@ fn cached_split_surrogate_budget_failure_is_operational_and_cannot_be_masked() {
         .unwrap();
     assert_eq!(
         value.text_ref().unwrap().units().collect::<Vec<_>>(),
-        vec![0xd83d]
+        vec![0xd83d, 0xde00]
     );
     let committed = overlay.changes();
     context.limits = context.limits.max_text_bytes(0);
     assert!(matches!(
         overlay.evaluation(&context).unwrap().cell(target(0)),
-        Err(EvaluationFailure::Budget(_))
+        Err(EvaluationError::Budget(_))
     ));
     assert_eq!(overlay.changes(), committed);
 }
@@ -277,113 +216,6 @@ fn selected_branch_replacement_discards_obsolete_dependencies() {
 }
 
 #[test]
-fn documented_text_version_switch_updates_index_consumers_and_dependents() {
-    let w = book(&[
-        "LEN(\"😀\")",
-        "REPLACE(\"😀\",1,1,\"X\")",
-        "LEN(B1)",
-        "IF(FALSE,REPLACE(\"😀\",1,1,\"X\"),7)",
-    ]);
-    let mut policy = EvaluationPolicy {
-        text: TextSemanticsPolicy {
-            source: TextSourceVersion::Poi7321209,
-        },
-        ..Default::default()
-    };
-    let mut overlay = Overlay::with_workbook(&w)
-        .with_policy(policy.clone())
-        .build()
-        .unwrap();
-    let context = context();
-    let targets = (0..4).map(target).collect::<Vec<_>>();
-    let first = overlay
-        .evaluation(&context)
-        .unwrap()
-        .outputs(&targets)
-        .unwrap();
-    assert_eq!(first[0].value, CellValue::Number(2.));
-    assert_eq!(
-        first[1]
-            .value
-            .text_ref()
-            .unwrap()
-            .units()
-            .collect::<Vec<_>>(),
-        vec![88, 0xde00]
-    );
-    policy.text.source = TextSourceVersion::ExcelCompatibilityV2Documented;
-    overlay.set_policy(policy.clone()).unwrap();
-    let changed = overlay
-        .evaluation(&context)
-        .unwrap()
-        .outputs(&targets)
-        .unwrap();
-    assert_eq!(changed[0].value, CellValue::Number(1.));
-    assert_eq!(changed[1].value, CellValue::Text("X".into()));
-    assert_eq!(changed[2].value, CellValue::Number(1.));
-    assert_eq!(changed[3].value, CellValue::Number(7.));
-    policy.text.source = TextSourceVersion::Poi7321209;
-    overlay.set_policy(policy).unwrap();
-    let restored = overlay
-        .evaluation(&context)
-        .unwrap()
-        .outputs(&targets)
-        .unwrap();
-    assert_eq!(
-        restored[1]
-            .value
-            .text_ref()
-            .unwrap()
-            .units()
-            .collect::<Vec<_>>(),
-        vec![88, 0xde00]
-    );
-}
-
-#[test]
-fn builtin_policy_switch_recomputes_semantics_and_unchanged_policy_reuses() {
-    let w = book(&["PERCENTILE.INC({1,3},0.5)", "A1+1", "QUARTILE.INC({1,3},2)"]);
-    let mut overlay = Overlay::with_workbook(&w)
-        .with_policy(crate::eval::config::EvaluationPolicy {
-            builtin: crate::eval::config::BuiltinSemanticsPolicy::PinnedPoi,
-            ..Default::default()
-        })
-        .build()
-        .unwrap();
-    let context = context();
-    let targets = (0..3).map(target).collect::<Vec<_>>();
-    let first = overlay
-        .evaluation(&context)
-        .unwrap()
-        .outputs(&targets)
-        .unwrap();
-    assert_eq!(
-        first[0].value,
-        CellValue::Error(crate::model::CellError::Name)
-    );
-    let mut policy = overlay.policy().clone();
-    policy.builtin = BuiltinSemanticsPolicy::ExcelDocumentation;
-    overlay.set_policy(policy.clone()).unwrap();
-    let values = overlay
-        .evaluation(&context)
-        .unwrap()
-        .outputs(&targets)
-        .unwrap();
-    assert_eq!(
-        values.iter().map(|c| c.value.clone()).collect::<Vec<_>>(),
-        vec![
-            CellValue::Number(2.),
-            CellValue::Number(3.),
-            CellValue::Number(2.)
-        ]
-    );
-    overlay.set_policy(policy).unwrap();
-    let mut evaluation = overlay.evaluation(&context).unwrap();
-    evaluation.outputs(&targets).unwrap();
-    assert_eq!(evaluation.usage().formula_executions, 0);
-}
-
-#[test]
 fn formatted_argument_date_failure_is_operational_across_text_policy_changes() {
     let w = book(&["IFERROR(REPT(\"x\",\"1/02\"),7)"]);
     let before = w.clone();
@@ -392,17 +224,17 @@ fn formatted_argument_date_failure_is_operational_across_text_policy_changes() {
     context.as_of_time = UNIX_EPOCH + Duration::from_secs(300_000_000_000);
     assert!(matches!(
         overlay.evaluation(&context).unwrap().cell(target(0)),
-        Err(EvaluationFailure::UnsupportedCapability {
+        Err(EvaluationError::UnsupportedCapability {
             capability: CapabilityId::DateParsing,
             ..
         })
     ));
-    let mut policy = overlay.policy().clone();
-    policy.text.source = TextSourceVersion::Poi7321209;
+    let policy = overlay.policy().clone();
+
     overlay.set_policy(policy).unwrap();
     assert!(matches!(
         overlay.evaluation(&context).unwrap().cell(target(0)),
-        Err(EvaluationFailure::UnsupportedCapability {
+        Err(EvaluationError::UnsupportedCapability {
             capability: CapabilityId::DateParsing,
             ..
         })

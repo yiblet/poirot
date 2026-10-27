@@ -9,7 +9,7 @@ use super::resolved_source::ResolvedSource;
 use crate::eval::config::{ArrayResultPolicy, EvaluationInputs};
 use crate::eval::coordinates::{CellSet, EvaluationTarget};
 use crate::eval::limits::{
-    BudgetMeter, CapabilityId, EvalResult, EvaluationBudgets, EvaluationFailure,
+    BudgetMeter, CapabilityId, EvalResult, EvaluationBudgets, EvaluationError,
 };
 use crate::eval::ports::{CellCompletion, CellObserver, CellProvenance};
 use crate::eval::{session, spill};
@@ -25,7 +25,7 @@ struct RejectingObserver {
 impl CellObserver for RejectingObserver {
     fn completed(&mut self, completion: CellCompletion<'_>) -> EvalResult<()> {
         self.observed_failures.push(completion.result.is_err());
-        Err(EvaluationFailure::StalePlan)
+        Err(EvaluationError::StalePlan)
     }
 }
 
@@ -35,10 +35,10 @@ fn completion_ports_notify_aborts_and_preserve_the_original_failure() {
         sheet: 0,
         address: "A1".parse().unwrap(),
     };
-    let original = EvaluationFailure::ResourceLimit {
+    let original = EvaluationError::ResourceLimit {
         capability: CapabilityId::FormulaParsing,
-        source: Some(target),
-        detail: "original failure".into(),
+        target: Some(target),
+        reason: crate::eval::limits::EvaluationReasonError::ObserverRejected,
     };
     let mut preparation = spill::SpillPreparation::default();
     let mut budget = BudgetMeter::new(EvaluationBudgets::default()).unwrap();
@@ -49,7 +49,7 @@ fn completion_ports_notify_aborts_and_preserve_the_original_failure() {
     };
     for (result, expected) in [
         (Err(original.clone()), original),
-        (Ok(Number(6.)), EvaluationFailure::StalePlan),
+        (Ok(Number(6.)), EvaluationError::StalePlan),
     ] {
         let read = CellRead {
             attempt: CellAttempt {
@@ -61,8 +61,8 @@ fn completion_ports_notify_aborts_and_preserve_the_original_failure() {
             result,
         };
         let mut port: Option<&mut dyn CellObserver> = Some(&mut observer);
-        assert_eq!(
-            read.complete(CompletionContext {
+        let actual = read
+            .complete(CompletionContext {
                 array_result_policy: ArrayResultPolicy::ScalarIntersection,
                 settling_spills: false,
                 preparation: &mut preparation,
@@ -72,9 +72,28 @@ fn completion_ports_notify_aborts_and_preserve_the_original_failure() {
                 consumer: None,
                 observer: &mut port,
             })
-            .unwrap_err(),
-            expected
-        );
+            .unwrap_err();
+        match (actual, expected) {
+            (EvaluationError::StalePlan, EvaluationError::StalePlan) => {}
+            (
+                EvaluationError::ResourceLimit {
+                    capability,
+                    target: actual,
+                    reason: crate::eval::limits::EvaluationReasonError::ObserverRejected,
+                },
+                EvaluationError::ResourceLimit {
+                    capability: expected,
+                    target,
+                    reason: crate::eval::limits::EvaluationReasonError::ObserverRejected,
+                },
+            ) => {
+                assert_eq!(capability, expected);
+                assert_eq!(actual, target);
+            }
+            (actual, expected) => {
+                panic!("completion changed original failure: {actual:?}, {expected:?}")
+            }
+        }
     }
     assert_eq!(observer.observed_failures, [true, false]);
 }
@@ -84,7 +103,7 @@ fn recursive_depth_failure_restores_caller_attribution_and_expression_demand() {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
     let output = "A1".parse().unwrap();
-    let dependency = "B1".parse().unwrap();
+    let dependency = "B1".parse::<crate::model::CellAddress>().unwrap();
     let literal = "C1".parse().unwrap();
     sheet.set_formula(output, "B1+1").unwrap();
     sheet.set_value(dependency, 7.).unwrap();
@@ -118,7 +137,7 @@ fn recursive_depth_failure_restores_caller_attribution_and_expression_demand() {
 fn source_resolution_keeps_formula_blanks_distinct_from_incoming_spill_coordinates() {
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
-    sheet.set_formula("A1".parse().unwrap(), "{1,2}").unwrap();
+    sheet.set_formula("A1", "{1,2}").unwrap();
     sheet
         .set_spill_cached_value(
             "B1".parse().unwrap(),
@@ -127,9 +146,9 @@ fn source_resolution_keeps_formula_blanks_distinct_from_incoming_spill_coordinat
             Number(99.),
         )
         .unwrap();
-    sheet.set_formula("D1".parse().unwrap(), "\"\"").unwrap();
-    sheet.set_value("E1".parse().unwrap(), Blank).unwrap();
-    sheet.set_value("F1".parse().unwrap(), 0.).unwrap();
+    sheet.set_formula("D1", "\"\"").unwrap();
+    sheet.set_value("E1", Blank).unwrap();
+    sheet.set_value("F1", 0.).unwrap();
     let inputs = crate::eval::inputs::RunInputs::new(
         &workbook,
         [(0, "B1".parse().unwrap(), Number(7.))],
@@ -223,7 +242,7 @@ fn dynamic_spill_keeps_blank_footprint_detection_and_child_discovery() {
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());
     session.policies.array_result_policy = ArrayResultPolicy::DynamicSpill;
     assert!(
-        matches!(CellEvaluator::new(&mut session).cell(0, a), Err(EvaluationFailure::UnsupportedCapability { detail, .. }) if detail == "array result reads its own unpublished footprint")
+        matches!(CellEvaluator::new(&mut session).cell(0, a), Err(EvaluationError::UnsupportedCapability { reason, .. }) if matches!(reason, crate::eval::limits::EvaluationReasonError::ArrayResultReadsItsOwnUnpublishedFootprint))
     );
     assert!(!session.state.runtime.memo.cache.contains_key(&(0, a)));
     assert!(session.state.runtime.stack.visiting.is_empty());

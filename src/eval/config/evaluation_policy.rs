@@ -1,5 +1,4 @@
 use super::array_result_policy::ArrayResultPolicy;
-use super::builtin_semantics_policy::BuiltinSemanticsPolicy;
 use super::producer_policy::ProducerPolicy;
 use super::run_configuration::RunConfiguration;
 
@@ -12,7 +11,7 @@ use super::run_configuration::RunConfiguration;
 /// use poirot::eval::{EvaluationContext, EvaluationPolicy, overlay::Evaluation};
 /// use poirot::model::{CellValue, Workbook};
 /// let mut book = Workbook::new();
-/// book.add_sheet("Data")?.set_formula("A1".parse()?, "{2,3}")?;
+/// book.add_sheet("Data")?.set_formula("A1", "{2,3}")?;
 /// let policy = EvaluationPolicy { arrays: ArrayResultPolicy::DynamicSpill, ..Default::default() };
 /// let mut run = Evaluation::with_workbook(&book).with_policy(policy)
 ///     .build(EvaluationContext::default())?;
@@ -23,16 +22,10 @@ use super::run_configuration::RunConfiguration;
 pub struct EvaluationPolicy {
     /// Formula grammar and preparation limits.
     pub parse: poirot_parsing::formula::FormulaParsePolicy,
-    /// Selected builtin compatibility behavior.
-    pub builtin: BuiltinSemanticsPolicy,
     /// Rules for returning and publishing array results.
     pub arrays: ArrayResultPolicy,
     /// Compute possible producers or trust saved source results.
     pub producers: ProducerPolicy,
-    /// Text comparison and coercion behavior.
-    pub text: poirot_functions::text_units::TextSemanticsPolicy,
-    /// Conversion rules when exporting evaluated values into workbook caches.
-    pub materialization: crate::eval::materialization::FormulaCacheMaterializationPolicy,
 }
 
 impl Default for EvaluationPolicy {
@@ -40,11 +33,9 @@ impl Default for EvaluationPolicy {
         let configuration = RunConfiguration::default();
         Self {
             parse: Default::default(),
-            builtin: configuration.builtin_policy(),
+
             arrays: configuration.array_result_policy(),
             producers: configuration.producer_policy(),
-            text: configuration.text_policy(),
-            materialization: configuration.materialization_policy(),
         }
     }
 }

@@ -6,7 +6,7 @@ use super::support::{A1, B1, Reads, context, target, value, workbook};
 use crate::eval::compile::compiler::{
     CompilerUsage, FormulaCompiler, PreparationPolicy, PreparedFormula, RegistryIdentity,
 };
-use crate::eval::limits::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::limits::{EvaluationBudgets, EvaluationError, EvaluationOutcome};
 use crate::eval::ports::{CellCompletion, CellObserver, same_result_identity};
 use crate::eval::ports::{ContextRead, DependencyRead};
 use crate::model::{CellValue, Workbook};
@@ -22,7 +22,7 @@ fn prepared_cell_execution_borrows_plan_formula_during_dependency_reads() {
         dependency_reads: usize,
     }
     impl CellObserver for FormulaOwnership<'_> {
-        fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+        fn completed(&mut self, completion: CellCompletion<'_>) -> Result<(), EvaluationError> {
             if completion.target == target(A1) {
                 assert_eq!(completion.consumer, Some(target(B1)));
                 assert_eq!(Arc::strong_count(self.formula), self.owners);
@@ -93,7 +93,13 @@ fn repeated_runs_reuse_preparation_but_read_current_values_and_signed_zero() {
     assert_eq!(first.execution.formula_executions, 1);
     assert_eq!(first.execution.compiled_lookups, 1);
     let first = value(first.outcome)[0].value.clone();
-    workbook.sheet_mut(0).unwrap().get_mut(A1).unwrap().value = CellValue::Number(-0.);
+    workbook
+        .sheet_mut(0)
+        .unwrap()
+        .get_mut(A1)
+        .unwrap()
+        .unwrap()
+        .value = CellValue::Number(-0.);
     assert!(plan.matches(&workbook, &policy));
     let run = EvaluationRun::new(
         WorkbookView::new(&workbook, &plan, &policy).unwrap(),
@@ -135,16 +141,28 @@ fn exact_topology_and_policy_checks_detect_direct_mutation() {
         assert!(!plan.matches(workbook, &policy));
         assert!(matches!(
             WorkbookView::new(workbook, &plan, &policy),
-            Err(EvaluationFailure::StalePlan)
+            Err(EvaluationError::StalePlan)
         ));
     };
     let mut changed = original.clone();
-    changed.sheet_mut(0).unwrap().get_mut(A1).unwrap().formula = Some("4".into());
+    changed
+        .sheet_mut(0)
+        .unwrap()
+        .get_mut(A1)
+        .unwrap()
+        .unwrap()
+        .formula = Some("4".into());
     check(&changed);
     let _ = compiler.compile_workbook(&changed, &policy);
     assert_eq!(compiler.usage().parse_attempts, 3); // Sources: "Rate", name body "3", replacement "4".
     changed = original.clone();
-    changed.sheet_mut(0).unwrap().get_mut(A1).unwrap().formula = None;
+    changed
+        .sheet_mut(0)
+        .unwrap()
+        .get_mut(A1)
+        .unwrap()
+        .unwrap()
+        .formula = None;
     check(&changed);
     changed = original.clone();
     changed.sheet_mut(0).unwrap().set_formula(B1, "2").unwrap();
@@ -156,7 +174,7 @@ fn exact_topology_and_policy_checks_detect_direct_mutation() {
     changed.named_ranges[0].sheet_scope = Some(0);
     check(&changed);
     changed = original.clone();
-    changed.rename_sheet(0, "Renamed").unwrap();
+    changed.rename_sheet(0, "Renamed").apply().unwrap();
     check(&changed);
     changed = original.clone();
     changed.sheets_mut().swap(0, 1);
@@ -199,7 +217,7 @@ fn standalone_policy_mismatch_is_operational_and_parse_failure_keeps_text_budget
         }])
         .outcome,
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::StalePlan,
+            failure: EvaluationError::StalePlan,
             ..
         }
     ));
@@ -217,7 +235,7 @@ fn standalone_policy_mismatch_is_operational_and_parse_failure_keeps_text_budget
     assert!(matches!(
         outcome,
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));

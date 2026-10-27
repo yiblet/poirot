@@ -1,68 +1,41 @@
-use super::snapshot_quota_failure::SnapshotQuotaFailure;
-use std::fmt;
+use super::snapshot_quota_error::SnapshotQuotaError;
 
 /// File-envelope, codec, resource, or semantic restoration failure.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum SnapshotError {
     /// Caller-configured file or decoded-resource quota, separate from malformed input.
-    Quota(SnapshotQuotaFailure),
+    #[error("snapshot quota exceeded")]
+    Quota(#[source] SnapshotQuotaError),
     /// Recursive decoder safety guard or an invalid requested nesting ceiling.
-    EngineConstraint(&'static str),
+    #[error("snapshot engine constraint")]
+    EngineConstraint(#[source] super::snapshot_constraint_error::SnapshotConstraintError),
     /// A fallible file-buffer allocation failed; no invented byte count is reported.
-    Allocation(&'static str),
+    #[error("could not allocate snapshot file buffer")]
+    Allocation(#[source] std::io::Error),
     /// Filesystem ingress failure.
-    Io(std::io::Error),
+    #[error("could not read snapshot file")]
+    Io(#[source] std::io::Error),
     /// Unsupported, inconsistent, truncated, or oversized envelope.
-    Envelope(&'static str),
+    #[error("snapshot envelope rejected")]
+    Envelope(#[source] super::snapshot_envelope_error::SnapshotEnvelopeError),
     /// Bounded payload encoding or decoding failed.
-    Codec(postcard::Error),
+    #[error("snapshot codec rejected payload")]
+    Codec(#[source] postcard::Error),
     /// Workbook source invariants were invalid.
-    Source(crate::model::ModelError),
+    #[error("snapshot workbook source rejected")]
+    Source(#[source] crate::model::ModelError),
     /// Prepared state failed the evaluator's semantic validation.
-    Workspace(crate::eval::overlay::OverlayError),
+    #[error("snapshot prepared state rejected")]
+    Workspace(#[source] crate::eval::overlay::OverlayError),
 }
 
 impl SnapshotError {
     /// Preserve fallible file-buffer allocation failures independently of filesystem failures.
     pub(super) fn from_io(error: std::io::Error) -> Self {
         if error.kind() == std::io::ErrorKind::OutOfMemory {
-            Self::Allocation("snapshot file buffer")
+            Self::Allocation(error)
         } else {
             Self::Io(error)
-        }
-    }
-}
-
-impl fmt::Display for SnapshotError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Quota(e) => write!(
-                f,
-                "snapshot {:?} quota {} exceeded (consumed {}, requested {})",
-                e.resource, e.limit, e.consumed, e.requested
-            ),
-            Self::EngineConstraint(e) => write!(f, "snapshot engine constraint: {e}"),
-            Self::Allocation(e) => write!(f, "snapshot allocation refused: {e}"),
-            Self::Io(e) => write!(f, "snapshot file: {e}"),
-            Self::Envelope(e) => write!(f, "snapshot envelope: {e}"),
-            Self::Codec(e) => write!(f, "snapshot codec or decode budget: {e}"),
-            Self::Source(e) => write!(f, "snapshot source: {e}"),
-            Self::Workspace(e) => write!(f, "snapshot workspace: {e}"),
-        }
-    }
-}
-
-impl std::error::Error for SnapshotError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Io(e) => Some(e),
-            Self::Codec(e) => Some(e),
-            Self::Source(e) => Some(e),
-            Self::Workspace(e) => Some(e),
-            Self::Envelope(_)
-            | Self::Quota(_)
-            | Self::EngineConstraint(_)
-            | Self::Allocation(_) => None,
         }
     }
 }

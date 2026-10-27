@@ -42,6 +42,7 @@ fn stored_modern_inverse_names_roundtrip() {
                     col: 0
                 })
                 .unwrap()
+                .unwrap()
                 .formula
                 .as_deref(),
             Some(format!("_xlfn.{formula}").as_str())

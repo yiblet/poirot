@@ -6,11 +6,11 @@ use super::operand_reader::OperandReader;
 use crate::eval::config::EvaluationInputs;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::extensions::{
-    ExtensionBinding, ExtensionCapabilities, ExtensionEvaluationStrategy, ExtensionFailure,
+    ExtensionBinding, ExtensionCapabilities, ExtensionError, ExtensionEvaluationStrategy,
     ExtensionHost, ExtensionInvocation, ExtensionOperandDescription, ExtensionOperandKind,
     ExtensionOutput, ExtensionResult, ExtensionScalar,
 };
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::session::ReadRecorder;
 use crate::model::{CellAddress, CellError, CellValue};
 
@@ -22,7 +22,11 @@ struct CallbackHost<'a, 'workbook> {
 }
 
 impl CallbackHost<'_, '_> {
-    fn require(&self, allowed: bool, detail: &str) -> ExtensionResult<()> {
+    fn require(
+        &self,
+        allowed: bool,
+        reason: crate::eval::limits::EvaluationReasonError,
+    ) -> ExtensionResult<()> {
         if allowed {
             Ok(())
         } else {
@@ -30,7 +34,7 @@ impl CallbackHost<'_, '_> {
                 .inner
                 .capability_failure(
                     crate::eval::limits::CapabilityId::UserDefinedFunction,
-                    detail,
+                    reason,
                 )
                 .into())
         }
@@ -40,11 +44,11 @@ impl CallbackHost<'_, '_> {
         match self.inner.kind(index)? {
             OperandKind::Reference => self.require(
                 self.capabilities.references,
-                "provider contract does not allow reference arguments",
+                crate::eval::limits::EvaluationReasonError::ProviderContractDoesNotAllowReferenceArguments,
             ),
             OperandKind::Array => self.require(
                 self.capabilities.arrays,
-                "provider contract does not allow array arguments",
+                crate::eval::limits::EvaluationReasonError::ProviderContractDoesNotAllowArrayArguments,
             ),
             _ => Ok(()),
         }
@@ -59,7 +63,7 @@ impl ExtensionHost for CallbackHost<'_, '_> {
     fn target(&mut self) -> ExtensionResult<EvaluationTarget> {
         self.require(
             self.capabilities.context,
-            "provider contract does not allow evaluation position",
+            crate::eval::limits::EvaluationReasonError::ProviderContractDoesNotAllowEvaluationPosition,
         )?;
         Ok(self.inner.target())
     }
@@ -67,7 +71,7 @@ impl ExtensionHost for CallbackHost<'_, '_> {
     fn context(&mut self) -> ExtensionResult<EvaluationInputs> {
         self.require(
             self.capabilities.context,
-            "provider contract does not allow evaluation context",
+            crate::eval::limits::EvaluationReasonError::ProviderContractDoesNotAllowEvaluationContext,
         )?;
         Ok(self.context)
     }
@@ -128,7 +132,7 @@ pub(in crate::eval) fn execute_extension(
         .extensions
         .and_then(|r| r.implementation(binding))
     else {
-        return Err(EvaluationFailure::UnsupportedCapability { capability: crate::eval::limits::CapabilityId::UserDefinedFunction, source: Some(EvaluationTarget { sheet, address }), detail: "bound extension implementation is absent or changed; rebind against the current registry".into() });
+        return Err(EvaluationError::UnsupportedCapability { capability: crate::eval::limits::CapabilityId::UserDefinedFunction, target: Some(EvaluationTarget { sheet, address }), reason: crate::eval::limits::EvaluationReasonError::BoundExtensionImplementationIsAbsentOrChangedRebindAgainstTheCurrentRegistry });
     };
     let requested = session
         .state
@@ -187,7 +191,7 @@ pub(in crate::eval) fn execute_extension(
             ExtensionOutput::Array(rows) => {
                 host.require(
                     host.capabilities.arrays,
-                    "provider contract does not allow array output",
+                    crate::eval::limits::EvaluationReasonError::ProviderContractDoesNotAllowArrayOutput,
                 )?;
                 let width = rows.first().map_or(0, Vec::len);
                 if width == 0 || rows.iter().any(|row| row.len() != width) {
@@ -218,8 +222,8 @@ pub(in crate::eval) fn execute_extension(
     })();
     match result {
         Ok(value) => Ok(value),
-        Err(ExtensionFailure::Spreadsheet(error)) => Ok(crate::eval::values::err(error)),
-        Err(ExtensionFailure::Operational(mut failure)) => {
+        Err(ExtensionError::Spreadsheet(error)) => Ok(crate::eval::values::err(error)),
+        Err(ExtensionError::Operational(mut failure)) => {
             failure.set_target(EvaluationTarget { sheet, address });
             Err(failure)
         }

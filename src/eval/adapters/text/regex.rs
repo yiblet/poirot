@@ -1,9 +1,9 @@
 //! Modern PCRE2 functions retain operational failures and dynamic array geometry.
 use crate::eval::adapters::elementwise::{Broadcast, MemberContext, Variadic, text as shared};
 use crate::eval::functions::registry::TextFunction;
-use crate::eval::host::{ArgumentCoercion, CallHost, NumericPolicy, PolicyReads};
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
-use crate::eval::values::{FunctionFailure, FunctionResult, Value, err};
+use crate::eval::host::{ArgumentCoercion, CallHost};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
+use crate::eval::values::{FunctionError, FunctionResult, Value, err};
 use crate::model::CellValue::{Boolean, Error, Number, Text};
 use crate::model::{CellAddress, CellError, CellValue};
 use poirot_functions::text::regex::{self, Case, Extraction, Program};
@@ -15,14 +15,14 @@ struct RegexHost<'a, 'b, 'c>(&'a mut CallHost<'b, 'c>, regex::ExecutionLimits);
 impl<'a, 'b, 'c> RegexHost<'a, 'b, 'c> {
     /// Borrow the call host with the run's regex execution guards captured beside it.
     fn new(host: &'a mut CallHost<'b, 'c>) -> Self {
-        let limits = PolicyReads::new(host).regex_settings();
+        let limits = host.regex_settings();
         Self(host, limits)
     }
 }
 
 impl regex::Host for RegexHost<'_, '_, '_> {
     /// Admission failures abort execution rather than becoming spreadsheet values.
-    type Failure = EvaluationFailure;
+    type Error = EvaluationError;
 
     fn execution_limits(&self) -> regex::ExecutionLimits {
         self.1
@@ -41,26 +41,30 @@ impl regex::Host for RegexHost<'_, '_, '_> {
     }
 }
 
-fn failure(host: &CallHost<'_, '_>, failure: regex::Failure<EvaluationFailure>) -> FunctionFailure {
+fn failure(
+    host: &CallHost<'_, '_>,
+    failure: poirot_functions::text::RegexError<EvaluationError>,
+) -> FunctionError {
     match failure {
-        regex::Failure::Pattern | regex::Failure::TextLimit => CellError::Value.into(),
-        regex::Failure::NoMatch => CellError::NA.into(),
-        regex::Failure::Host(failure) => failure.into(),
-        regex::Failure::Unsupported(detail) => {
-            host.unsupported(CapabilityId::FunctionAdapter, detail)
-        }
-        regex::Failure::Resource => host.allocation_failure().into(),
-        regex::Failure::SizeOverflow => host.size_overflow().into(),
-        regex::Failure::InvalidState => host.unsupported(
+        poirot_functions::text::RegexError::Pattern(_) | poirot_functions::text::RegexError::TextLimit => CellError::Value.into(),
+        poirot_functions::text::RegexError::NoMatch => CellError::NA.into(),
+        poirot_functions::text::RegexError::Host(failure) => failure.into(),
+        error @ (poirot_functions::text::RegexError::ByteEscape | poirot_functions::text::RegexError::MatchBoundary | poirot_functions::text::RegexError::CaptureBoundary) => host.unsupported(CapabilityId::FunctionAdapter, crate::eval::limits::EvaluationReasonError::Regex(std::sync::Arc::new(error))),
+        poirot_functions::text::RegexError::Resource => host.allocation_failure().into(),
+        poirot_functions::text::RegexError::SizeOverflow => host.size_overflow().into(),
+        poirot_functions::text::RegexError::InvalidState => host.unsupported(
             CapabilityId::FunctionAdapter,
-            "PCRE2 capture geometry did not satisfy the checked adapter state",
+            crate::eval::limits::EvaluationReasonError::Pcre2CaptureGeometryDidNotSatisfyTheCheckedAdapterState,
         ),
         // PCRE2 public ABI: NOMEMORY=-48, HEAP_FAILED=121. The verified
         // pcre2-sys revision/source is recorded beside compile_failure in the domain crate.
-        regex::Failure::Native(code) => host.resource_failure(
-            if code == -48 || code == 121 { crate::eval::limits::ResourceFailureKind::Allocation } else { crate::eval::limits::ResourceFailureKind::BackendGuard },
-            format!("PCRE2 native execution guard or representation failure ({code}); native consumption unavailable"),
-        ).into(),
+        error @ poirot_functions::text::RegexError::Native(_) => {
+            let kind = match &error {
+                poirot_functions::text::RegexError::Native(source) if matches!(source.code(), -48 | 121) => crate::eval::limits::ResourceFailureKind::Allocation,
+                _ => crate::eval::limits::ResourceFailureKind::BackendGuard,
+            };
+            host.resource_failure(kind, crate::eval::limits::EvaluationReasonError::Regex(std::sync::Arc::new(error))).into()
+        },
     }
 }
 
@@ -70,9 +74,7 @@ fn text(host: &mut CallHost<'_, '_>, value: &CellValue) -> FunctionResult<String
     }
     match value {
         Error(error) => Err((*error).into()),
-        Number(value) => {
-            ArgumentCoercion::new(host).coerce_number_to_text(*value, NumericPolicy::PinnedPoi)
-        }
+        Number(value) => ArgumentCoercion::new(host).coerce_number_to_text(*value),
         _ => ArgumentCoercion::new(host).coerce_scalar_text(value),
     }
 }
@@ -201,7 +203,7 @@ pub(in crate::eval) fn execute(
     }
     match shared::expand(&mut host, address, RegexKernel(name)) {
         Ok(value) => Ok(value),
-        Err(FunctionFailure::Spreadsheet(error)) => Ok(err(error)),
-        Err(FunctionFailure::Operational(error)) => Err(error),
+        Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),
+        Err(FunctionError::Operational(error)) => Err(error),
     }
 }

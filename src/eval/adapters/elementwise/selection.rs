@@ -5,9 +5,8 @@ use super::demand::Eager;
 use super::fixed_scalar::FixedScalar;
 use super::prepared::Prepared;
 use super::with_demand::{Deferred, WithDemand};
-use crate::eval::config::BuiltinSemanticsPolicy;
-use crate::eval::host::{ArgumentCoercion, CallHost, PolicyReads, SelectionAccess};
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::host::{ArgumentCoercion, CallHost, SelectionAccess};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::values::core_projection::semantic;
 use crate::eval::values::{VALUE_ERROR, Value, err};
 use crate::eval::vm::Shape;
@@ -50,20 +49,17 @@ pub(in crate::eval::adapters) fn execute<S: Selector<N>, const N: usize>(
     selector: S,
 ) -> EvalResult<Value> {
     let ordinal = condition.role().argument();
-    let condition =
-        if PolicyReads::new(host).builtin_policy() == BuiltinSemanticsPolicy::ExcelDocumentation {
-            let value = SelectionAccess::new(host).argument(ordinal)?.1;
-            if SelectionAccess::new(host).retains_array(&value) {
-                return array(host, value, branches, selector);
-            }
-            host.select_legacy_scalar(value)?
-        } else {
-            host.scalar_argument(ordinal)?
-        };
+    let condition = {
+        let value = SelectionAccess::new(host).argument(ordinal)?.1;
+        if SelectionAccess::new(host).retains_array(&value) {
+            return array(host, value, branches, selector);
+        }
+        host.select_legacy_scalar(value)?
+    };
     match selector.select(&condition) {
         Ok(index) => prepare(
             host,
-            branches.get(index).ok_or(EvaluationFailure::StalePlan)?,
+            branches.get(index).ok_or(EvaluationError::StalePlan)?,
             &selector,
         )
         .map(Prepared::into_value),
@@ -81,7 +77,7 @@ fn array<S: Selector<N>, const N: usize>(
     let condition_shape = Shape::inspect(&condition).ok_or_else(|| {
         host.capability_failure(
             CapabilityId::FunctionAdapter,
-            "selection requires one rectangular condition",
+            crate::eval::limits::EvaluationReasonError::SelectionRequiresOneRectangularCondition,
         )
     })?;
     let mut needed = [false; N];
@@ -89,7 +85,7 @@ fn array<S: Selector<N>, const N: usize>(
         let value = reader.member(&condition, condition_shape, row, column)?;
         Ok(match selector.select(&value) {
             Ok(index) => {
-                *needed.get_mut(index).ok_or(EvaluationFailure::StalePlan)? = true;
+                *needed.get_mut(index).ok_or(EvaluationError::StalePlan)? = true;
                 Number(index as f64)
             }
             Err(error) => Error(error),
@@ -101,7 +97,7 @@ fn array<S: Selector<N>, const N: usize>(
         if !needed
             .get(index)
             .copied()
-            .ok_or(EvaluationFailure::StalePlan)?
+            .ok_or(EvaluationError::StalePlan)?
         {
             continue;
         }
@@ -109,7 +105,7 @@ fn array<S: Selector<N>, const N: usize>(
         let shape = value.shape().ok_or_else(|| {
             host.capability_failure(
                 CapabilityId::FunctionAdapter,
-                "selection requires one rectangular selected branch",
+                crate::eval::limits::EvaluationReasonError::SelectionRequiresOneRectangularSelectedBranch,
             )
         })?;
         if condition_shape.rows == 1 {
@@ -118,20 +114,18 @@ fn array<S: Selector<N>, const N: usize>(
         if condition_shape.columns == 1 {
             output.columns = output.columns.max(shape.columns);
         }
-        *prepared
-            .get_mut(index)
-            .ok_or(EvaluationFailure::StalePlan)? = Some((value, shape));
+        *prepared.get_mut(index).ok_or(EvaluationError::StalePlan)? = Some((value, shape));
     }
     SelectionAccess::new(host).array(output, |reader, row, column| {
         let index = match reader.member(&mask, condition_shape, row, column)? {
             Number(index) => index as usize,
             Error(error) => return Ok(Error(error)),
-            _ => return Err(EvaluationFailure::StalePlan),
+            _ => return Err(EvaluationError::StalePlan),
         };
         let (value, shape) = prepared
             .get(index)
             .and_then(Option::as_ref)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         if (shape.rows != 1 && row >= shape.rows) || (shape.columns != 1 && column >= shape.columns)
         {
             return Ok(Error(NA));
@@ -230,11 +224,10 @@ fn decide<S: VariadicSelector>(
     use crate::eval::vm::Selection;
     let result = match selector.test(candidate, expression) {
         SelectionTest::Match(result) => result,
-        SelectionTest::Equal => selector.comparison(semantic(ArgumentCoercion::new(host).equal(
-            expression.ok_or(EvaluationFailure::StalePlan)?,
-            candidate,
-            crate::eval::host::NumericPolicy::PinnedPoi,
-        ))?),
+        SelectionTest::Equal => selector.comparison(semantic(
+            ArgumentCoercion::new(host)
+                .equal(expression.ok_or(EvaluationError::StalePlan)?, candidate),
+        )?),
         SelectionTest::Index => {
             return Ok(
                 match semantic(SelectionAccess::new(host).number(candidate))? {
@@ -248,7 +241,7 @@ fn decide<S: VariadicSelector>(
         }
     };
     Ok(match result {
-        Ok(true) => Selection::Branch(ordinal.checked_add(1).ok_or(EvaluationFailure::StalePlan)?),
+        Ok(true) => Selection::Branch(ordinal.checked_add(1).ok_or(EvaluationError::StalePlan)?),
         Ok(false) => Selection::Pending,
         Err(error) => Selection::Error(error),
     })
@@ -262,7 +255,7 @@ pub(in crate::eval::adapters) fn variadic<S: VariadicSelector>(
     use crate::eval::vm::{Selection, broadcast};
     let layout = selector.layout(host.len());
     if layout.step == 0 {
-        return Err(EvaluationFailure::StalePlan);
+        return Err(EvaluationError::StalePlan);
     }
     let expression = if matches!(layout.candidates, CandidateRoles::Cases) {
         Some(probe(host, 0, CandidateRoles::Cases)?)
@@ -275,7 +268,10 @@ pub(in crate::eval::adapters) fn variadic<S: VariadicSelector>(
     let expression_shape = expression
         .as_ref()
         .map(|value| {
-            SelectionAccess::new(host).shape(value, "selection requires a rectangular expression")
+            SelectionAccess::new(host).shape(
+                value,
+                crate::eval::limits::EvaluationReasonError::SelectionRequiresARectangularExpression,
+            )
         })
         .transpose()?;
     let mut output = expression_shape.unwrap_or(Shape {
@@ -290,11 +286,11 @@ pub(in crate::eval::adapters) fn variadic<S: VariadicSelector>(
         let count = output
             .rows
             .checked_mul(output.columns)
-            .ok_or(EvaluationFailure::StalePlan)?;
+            .ok_or(EvaluationError::StalePlan)?;
         selected = Some(SelectionAccess::new(host).buffer(
             count,
             Selection::Pending,
-            "selection allocation failed",
+            crate::eval::limits::EvaluationReasonError::SelectionAllocationFailed,
         )?);
     }
     // SAFETY: layout.step is checked nonzero above.
@@ -315,7 +311,7 @@ pub(in crate::eval::adapters) fn variadic<S: VariadicSelector>(
             let expression = match expression.as_ref() {
                 Some(Value::Scalar(value)) => Some(value),
                 None => None,
-                _ => return Err(EvaluationFailure::StalePlan),
+                _ => return Err(EvaluationError::StalePlan),
             };
             match decide(host, &selector, &candidate, expression, ordinal)? {
                 Selection::Branch(branch) => {
@@ -333,11 +329,13 @@ pub(in crate::eval::adapters) fn variadic<S: VariadicSelector>(
         if matches!(candidate, Value::Missing) {
             return Err(host.capability_failure(
                 CapabilityId::FunctionAdapter,
-                "pinned MissingArgEval scalar coercion throws a source exception",
+                crate::eval::limits::EvaluationReasonError::SelectedOmittedArgumentScalarProjection,
             ));
         }
-        let shape = SelectionAccess::new(host)
-            .shape(&candidate, "selection requires rectangular candidates")?;
+        let shape = SelectionAccess::new(host).shape(
+            &candidate,
+            crate::eval::limits::EvaluationReasonError::SelectionRequiresRectangularCandidates,
+        )?;
         let Some(expanded) = broadcast(output, shape) else {
             return Ok(err(VALUE_ERROR));
         };
@@ -346,7 +344,7 @@ pub(in crate::eval::adapters) fn variadic<S: VariadicSelector>(
             None => SelectionAccess::new(host).buffer(
                 1,
                 Selection::Pending,
-                "selection allocation failed",
+                crate::eval::limits::EvaluationReasonError::SelectionAllocationFailed,
             )?,
         };
         let mut mask = SelectionAccess::new(host).expand(mask, output, expanded)?;
@@ -357,10 +355,10 @@ pub(in crate::eval::adapters) fn variadic<S: VariadicSelector>(
             }
             let row = index
                 .checked_div(output.columns)
-                .ok_or(EvaluationFailure::StalePlan)?;
+                .ok_or(EvaluationError::StalePlan)?;
             let column = index
                 .checked_rem(output.columns)
-                .ok_or(EvaluationFailure::StalePlan)?;
+                .ok_or(EvaluationError::StalePlan)?;
             let expression_member = match (&expression, expression_shape) {
                 (Some(value), Some(shape)) => {
                     Some(SelectionAccess::new(host).member(value, shape, row, column)?)

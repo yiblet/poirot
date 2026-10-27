@@ -1,6 +1,6 @@
 //! One command-line interface for discovery, execution and saved reports.
 use crate::{
-    Error, baseline, invalid,
+    RunnerError, baseline,
     model::{Change, digest},
     report::{self, Format},
     runner::{self, Options},
@@ -147,7 +147,7 @@ pub enum FodsCommand {
 }
 
 impl Cli {
-    pub fn execute(self, output: &mut impl Write) -> Result<bool, Error> {
+    pub fn execute(self, output: &mut impl Write) -> Result<bool, RunnerError> {
         match self.command.unwrap_or(Command::Run(self.run)) {
             Command::Run(args) => {
                 let mut options = args.inputs.options();
@@ -208,7 +208,7 @@ impl Cli {
                     .cases
                     .iter()
                     .find(|result| result.case.id == case)
-                    .ok_or_else(|| invalid(format!("case not present in saved report: {case}")))?;
+                    .ok_or_else(|| RunnerError::MissingSavedCase { case: case.clone() })?;
                 if format == Format::Json {
                     serde_json::to_writer(&mut *output, result)?;
                     writeln!(output)?;
@@ -238,9 +238,7 @@ impl Cli {
             } => {
                 let report = report::read(&results)?;
                 if digest(&std::fs::read(current)?) != report.header.baseline_digest {
-                    return Err(invalid(
-                        "baseline changed since this run; rerun before producing a candidate",
-                    ));
+                    return Err(RunnerError::BaselineChanged);
                 }
                 let baseline = baseline::candidate(&report, &reason)?;
                 baseline::write_candidate(&candidate, &baseline)?;
@@ -269,9 +267,7 @@ impl Cli {
                     },
             } => {
                 if corpus == crate::package_root().join("corpus/fods") {
-                    return Err(invalid(
-                        "extract to a separate corpus; the shared checked-in baseline is updated only through baseline update",
-                    ));
+                    return Err(RunnerError::SharedCorpusExtraction);
                 }
                 Ok(crate::fods::commands::refresh::run(
                     &crate::fods::cli::RefreshArgs {

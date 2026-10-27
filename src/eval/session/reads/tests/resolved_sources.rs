@@ -5,7 +5,7 @@ use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
 use crate::eval::config::EvaluationContext;
 use crate::eval::config::{ArrayResultPolicy, RunConfiguration};
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{EvaluationFailure, EvaluationOutcome};
+use crate::eval::limits::{EvaluationError, EvaluationOutcome};
 use crate::eval::overlay::{Evaluation, Overlay};
 use crate::eval::ports::{CellCompletion, CellObserver};
 use crate::eval::run::{EvaluationRun, WorkbookView};
@@ -85,7 +85,7 @@ fn ranged_formulas_saved_children_and_blanks_follow_effective_source_edits() {
 struct Completions(Vec<EvaluationTarget>);
 
 impl CellObserver for Completions {
-    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+    fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationError> {
         self.0.push(event.target);
         Ok(())
     }

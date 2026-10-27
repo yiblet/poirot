@@ -189,8 +189,16 @@ fn formula_suppression_created_cells_defaults_and_usage_match_plain_run() {
         }
         _ => panic!("expected complete runs"),
     }
-    assert!(w.sheet(0).unwrap().get(at(0, 0)).unwrap().formula.is_some());
-    assert!(w.sheet(0).unwrap().get(at(3, 0)).is_none());
+    assert!(
+        w.sheet(0)
+            .unwrap()
+            .get(at(0, 0))
+            .unwrap()
+            .unwrap()
+            .formula
+            .is_some()
+    );
+    assert!(w.sheet(0).unwrap().get(at(3, 0)).unwrap().is_none());
 }
 
 #[test]
@@ -259,10 +267,18 @@ fn shared_runs_share_immutable_source_and_keep_memos_isolated() {
     }
     shared.with_source(|w| {
         assert_eq!(
-            w.sheet(0).unwrap().get(at(0, 0)).unwrap().value,
+            w.sheet(0).unwrap().get(at(0, 0)).unwrap().unwrap().value,
             CellValue::Number(99.)
         );
-        assert!(w.sheet(0).unwrap().get(at(0, 0)).unwrap().formula.is_some());
+        assert!(
+            w.sheet(0)
+                .unwrap()
+                .get(at(0, 0))
+                .unwrap()
+                .unwrap()
+                .formula
+                .is_some()
+        );
     });
     let empty = shared
         .prepare_inputs(|_| Ok::<_, crate::model::ModelError>(((), vec![], 0)))
@@ -318,7 +334,7 @@ fn aborted_run_does_not_change_baseline_or_seed_next_memo() {
     ));
     shared.with_source(|w| {
         assert_eq!(
-            w.sheet(0).unwrap().get(at(0, 1)).unwrap().value,
+            w.sheet(0).unwrap().get(at(0, 1)).unwrap().unwrap().value,
             CellValue::Blank
         )
     });
@@ -375,7 +391,7 @@ fn equal_cached_assignment_still_suppresses_formula_and_stale_baseline_is_refuse
         .unwrap();
     assert!(matches!(
         SharedWorkbook::new(w, plan),
-        Err(crate::eval::limits::EvaluationFailure::StalePlan)
+        Err(crate::eval::limits::EvaluationError::StalePlan)
     ));
 }
 
@@ -396,7 +412,7 @@ fn source_bound_inputs_reject_same_topology_different_source() {
             &inputs,
             |_, _| Ok(())
         ),
-        Err(crate::eval::run::shared_run_failure::SharedRunFailure::ForeignInputs)
+        Err(crate::eval::run::shared_run_error::SharedRunError::ForeignInputs)
     ));
     assert!(
         shared
@@ -413,7 +429,7 @@ fn source_bound_inputs_reject_same_topology_different_source() {
 
 #[test]
 fn shared_source_admits_inputs_and_preserves_observed_run_results() {
-    use crate::eval::limits::{EvaluationFailure, MemoRetentionLimits};
+    use crate::eval::limits::{EvaluationError, MemoRetentionLimits};
     use crate::eval::observe::{BuiltinInvocationObserver, ExecutionEvent, ExecutionObserver};
     use crate::eval::ports::{CellCompletion, CellObserver};
     use crate::eval::ports::{DependencyReadSink, ReadEvent};
@@ -428,7 +444,7 @@ fn shared_source_admits_inputs_and_preserves_observed_run_results() {
         }
     }
     impl CellObserver for Events {
-        fn completed(&mut self, _: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+        fn completed(&mut self, _: CellCompletion<'_>) -> Result<(), EvaluationError> {
             self.0 += 1;
             Ok(())
         }
@@ -437,13 +453,13 @@ fn shared_source_admits_inputs_and_preserves_observed_run_results() {
         fn consumed(
             &mut self,
             _: crate::eval::observe::ConsumedBuiltinInvocation<'_>,
-        ) -> Result<(), EvaluationFailure> {
+        ) -> Result<(), EvaluationError> {
             self.0 += 1;
             Ok(())
         }
     }
     impl ExecutionObserver for Events {
-        fn observe(&mut self, _: ExecutionEvent<'_>) -> Result<(), EvaluationFailure> {
+        fn observe(&mut self, _: ExecutionEvent<'_>) -> Result<(), EvaluationError> {
             self.0 += 1;
             Ok(())
         }
@@ -456,7 +472,16 @@ fn shared_source_admits_inputs_and_preserves_observed_run_results() {
     let invalid = shared.prepare_inputs(|_| {
         Ok::<_, crate::model::ModelError>(((), vec![(1, at(0, 0), CellValue::Blank)], 1))
     });
-    assert!(invalid.is_err());
+    assert!(matches!(
+        invalid,
+        Err(
+            crate::eval::run::input_preparation_error::InputPreparationError::Admission(
+                crate::eval::inputs::InputError::Model(
+                    crate::model::ModelError::InvalidWorksheetIndex { index: 1 }
+                )
+            )
+        )
+    ));
     let (_, inputs) = shared
         .prepare_inputs(|_| {
             Ok::<_, crate::model::ModelError>(((), vec![(0, at(0, 0), CellValue::Number(5.))], 1))
@@ -503,7 +528,14 @@ fn shared_source_admits_inputs_and_preserves_observed_run_results() {
     );
     assert!(reads.0 > 0 && cells.0 > 0 && builtins.0 > 0 && operations.0 > 0);
     assert_eq!(
-        shared.with_source(|w| w.sheet(0).unwrap().get(at(0, 0)).unwrap().value.clone()),
+        shared.with_source(|w| w
+            .sheet(0)
+            .unwrap()
+            .get(at(0, 0))
+            .unwrap()
+            .unwrap()
+            .value
+            .clone()),
         CellValue::Number(99.)
     );
 }
@@ -589,4 +621,44 @@ fn sparse_union_exhausts_small_topologies_boundaries_and_partial_reads() {
             }
         }
     }
+}
+
+#[test]
+fn input_admission_keeps_typed_limits_duplicates_and_callback_causes() {
+    use crate::eval::inputs::InputError;
+    use crate::eval::run::input_preparation_error::InputPreparationError;
+    use std::error::Error;
+
+    let workbook = workbook();
+    let address = at(0, 0);
+    assert!(matches!(
+        RunInputs::new(&workbook, [(0, address, CellValue::Blank)], 0, Arc::new(())),
+        Err(InputError::Limit {
+            limit: 0,
+            requested: 1
+        })
+    ));
+    assert!(
+        matches!(RunInputs::new(&workbook, [(0, address, CellValue::Blank), (0, address, CellValue::Number(1.))], 2, Arc::new(())), Err(InputError::Duplicate { sheet: 0, address: duplicate }) if duplicate == address)
+    );
+
+    let plan =
+        Arc::new(FormulaCompiler::new().compile_workbook(&workbook, &PreparationPolicy::default()));
+    let shared = SharedWorkbook::new(workbook, plan).unwrap();
+    let Err(error) = shared.prepare_inputs::<(), crate::model::ModelError>(|_| {
+        Err(crate::model::ModelError::InvalidWorksheetIndex { index: 9 })
+    }) else {
+        panic!("callback failure must propagate");
+    };
+    assert!(matches!(
+        &error,
+        InputPreparationError::Preparation(crate::model::ModelError::InvalidWorksheetIndex {
+            index: 9
+        })
+    ));
+    assert!(
+        Error::source(&error)
+            .unwrap()
+            .is::<crate::model::ModelError>()
+    );
 }

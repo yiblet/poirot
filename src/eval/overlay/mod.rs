@@ -11,7 +11,7 @@
 //! use poirot::model::{CellValue, Workbook};
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let mut book = Workbook::new();
-//! book.add_sheet("Data")?.set_formula("B1".parse()?, "A1*2")?;
+//! book.add_sheet("Data")?.set_formula("B1", "A1*2")?;
 //! let mut overlay = Overlay::with_workbook(book).build()?;
 //! let input = overlay.target("Data!A1")?;
 //! let output = overlay.target("Data!B1")?;
@@ -23,7 +23,7 @@
 //! }
 //! overlay.apply_edits_to_workbook()?;
 //! let book = overlay.into_workbook();
-//! assert_eq!(book.sheet(0).and_then(|sheet| sheet.get("A1".parse().ok()?))
+//! assert_eq!(book.stored_cell("Data", "A1")?
 //!     .map(|cell| &cell.value), Some(&CellValue::Number(4.)));
 //! # Ok(())
 //! # }
@@ -33,11 +33,10 @@
 //! reports), compile (compiled plans), config (evaluation context, policy and run
 //! configuration), functions (extensions), coordinates (targets and coordinate tables),
 //! limits (budgets and failures), values (CellEvaluation outputs), spill (retained
-//! spill ownership), materialization (formula cache publication), reuse (retained
+//! spill ownership), reuse (retained
 //! results and dependency evidence), ports (consumed-read events) and inputs (sparse
 //! edits and effective workbook).
 
-/// Borrowed runtime sources captured by a snapshot.
 mod borrowed_source;
 /// Serialized retained result with its consumed dependencies.
 mod cached_value;
@@ -73,6 +72,9 @@ mod overlay_edits;
 mod overlay_error;
 /// Bounded execution borrowing an overlay's retained state.
 mod overlay_evaluation;
+/// Borrowed runtime sources captured by a snapshot.
+mod overlay_snapshot_error;
+mod overlay_target_error;
 /// Ownership of the runtime extension registry attached to a source.
 mod registry_handle;
 /// Serializable views of workbook, edits, compiled formulas, and cached results.
@@ -108,3 +110,7 @@ pub use calculation::Calculation;
 pub use compilation_usage::CompilationUsage;
 pub use evaluation_cycle::EvaluationCycle;
 pub use evaluation_report::EvaluationReport;
+
+pub use overlay_snapshot_error::OverlaySnapshotError;
+
+pub use overlay_target_error::OverlayTargetError;

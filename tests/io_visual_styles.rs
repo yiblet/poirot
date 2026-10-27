@@ -51,10 +51,7 @@ fn part(bytes: &[u8], name: &str) -> String {
 }
 /// Borrow one fixture cell.
 fn cell<'a>(book: &'a Workbook, address: &str) -> &'a Cell {
-    book.sheet(0)
-        .unwrap()
-        .get(address.parse().unwrap())
-        .unwrap()
+    book.sheet(0).unwrap().get(address).unwrap().unwrap()
 }
 #[test]
 fn handwritten_components_context_default_blank_and_formula_are_preserved() {
@@ -66,7 +63,7 @@ fn handwritten_components_context_default_blank_and_formula_are_preserved() {
         &[[255, 17, 34, 51], [255, 68, 85, 102]]
     );
     assert_eq!(book.style_context.default_style(), &cell(&book, "A1").style);
-    assert!(book.sheet(0).unwrap().get("F1".parse().unwrap()).is_none());
+    assert!(book.sheet(0).unwrap().get("F1").unwrap().is_none());
     let s = &cell(&book, "B1").style;
     assert_eq!(s.number_format.as_deref(), Some("0.000&\" kg\""));
     let v = s.visual.as_deref().unwrap();
@@ -342,7 +339,8 @@ fn missing_required_font_values_and_unsafe_xml_text_fail() {
         read_workbook_bytes::<poirot::model::Workbook>(&fixture(STYLES, SHEET, THEME)).unwrap();
     book.sheet_mut(0)
         .unwrap()
-        .get_mut("B1".parse().unwrap())
+        .get_mut("B1")
+        .unwrap()
         .unwrap()
         .style
         .number_format = Some("bad\u{0}format".into());

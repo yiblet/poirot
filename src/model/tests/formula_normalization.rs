@@ -5,7 +5,7 @@ use crate::model::{Cell, CellValue, Workbook};
 fn owned_formula_sources_keep_normalization_and_empty_rejection() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    let address = "A1".parse().unwrap();
+    let address = "A1".parse::<crate::model::CellAddress>().unwrap();
     // The documented model contract removes whitespace and one leading equals.
     for (input, constructed, stored) in [
         ("A1+$B$2", "A1+$B$2", "A1+$B$2"),
@@ -20,14 +20,17 @@ fn owned_formula_sources_keep_normalization_and_empty_rejection() {
         let cell = Cell::with_formula(input.to_owned(), CellValue::Blank).unwrap();
         assert_eq!(cell.formula.as_deref(), Some(constructed));
         sheet.set(address, cell).unwrap();
-        assert_eq!(sheet.get(address).unwrap().formula.as_deref(), Some(stored));
+        assert_eq!(
+            sheet.get(address).unwrap().unwrap().formula.as_deref(),
+            Some(stored)
+        );
     }
-    let previous = sheet.get(address).unwrap().clone();
+    let previous = sheet.get(address).unwrap().unwrap().clone();
     for input in ["", "  ", "=", " \u{2003}= \n"] {
         assert!(Cell::with_formula(input.to_owned(), CellValue::Blank).is_err());
         let mut invalid = Cell::new(1.);
         invalid.formula = Some(input.to_owned());
         assert!(sheet.set(address, invalid).is_err());
-        assert_eq!(sheet.get(address), Some(&previous));
+        assert_eq!(sheet.get(address).unwrap(), Some(&previous));
     }
 }

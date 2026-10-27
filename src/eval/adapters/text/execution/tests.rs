@@ -1,24 +1,19 @@
 use crate::eval::compile;
-use crate::eval::config::{BuiltinSemanticsPolicy, EvaluationInputs};
-use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationBudgets, EvaluationFailure};
+use crate::eval::config::EvaluationInputs;
+use crate::eval::limits::{BudgetMeter, EvalResult, EvaluationBudgets};
 use crate::eval::session::{ResultProjection, Session};
 use crate::eval::values::VALUE_ERROR;
 use crate::eval::vm::ExpressionRunner;
 use crate::model::CellError::NA;
 use crate::model::CellValue::{Error, Number, Text};
 use crate::model::{CellValue, Workbook};
-use poirot_functions::text_units::{SourceVersion as TextSourceVersion, TextSemanticsPolicy};
 use poirot_parsing::formula::parse_formula;
 
-fn evaluate(source: TextSourceVersion, formula: &str) -> EvalResult<CellValue> {
-    evaluate_with_budgets(source, formula, EvaluationBudgets::default())
+fn evaluate(formula: &str) -> EvalResult<CellValue> {
+    evaluate_with_budgets(formula, EvaluationBudgets::default())
 }
 
-fn evaluate_with_budgets(
-    source: TextSourceVersion,
-    formula: &str,
-    budgets: EvaluationBudgets,
-) -> EvalResult<CellValue> {
+fn evaluate_with_budgets(formula: &str, budgets: EvaluationBudgets) -> EvalResult<CellValue> {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();
     let mut session = Session::new(
@@ -26,15 +21,7 @@ fn evaluate_with_budgets(
         EvaluationInputs::default(),
         BudgetMeter::new(budgets)?,
     );
-    session.policies.text_policy = TextSemanticsPolicy { source };
-    session.policies.builtin_policy = if matches!(
-        source,
-        TextSourceVersion::Poi7321209 | TextSourceVersion::Poi7321209OpenJdk21Unicode15
-    ) {
-        BuiltinSemanticsPolicy::PinnedPoi
-    } else {
-        BuiltinSemanticsPolicy::ExcelDocumentation
-    };
+
     let value = ExpressionRunner::new(&mut session).expr(
         0,
         "A1".parse().unwrap(),
@@ -45,40 +32,14 @@ fn evaluate_with_budgets(
 
 #[test]
 fn formulas_select_units_without_normalizing_text() {
-    for (source, expected) in [
-        (TextSourceVersion::ExcelCompatibilityV2Documented, 4.),
-        (TextSourceVersion::Poi7321209, 5.),
-    ] {
-        assert_eq!(evaluate(source, "LEN(\"A😀é\")").unwrap(), Number(expected));
-        assert_eq!(
-            evaluate(source, "RIGHT(\"A😀é\",2)").unwrap(),
-            Text("é".into())
-        );
-    }
-    assert_eq!(
-        evaluate(
-            TextSourceVersion::ExcelCompatibilityV2Documented,
-            "LEFT(\"😀\",1)"
-        )
-        .unwrap(),
-        Text("😀".into())
-    );
-    assert_eq!(
-        evaluate(TextSourceVersion::Poi7321209, "LEFT(\"😀\",1)").unwrap(),
-        CellValue::TextUtf16(crate::model::ExcelText::from_units(vec![0xd83d]))
-    );
-    assert!(matches!(
-        evaluate(
-            TextSourceVersion::ExcelCompatibilityV2Unverified,
-            "LEN(\"abc\")"
-        ),
-        Err(EvaluationFailure::UnsupportedCapability { .. })
-    ));
+    assert_eq!(evaluate("LEN(\"A😀é\")").unwrap(), Number(4.));
+    assert_eq!(evaluate("RIGHT(\"A😀é\",2)").unwrap(), Text("é".into()));
+    assert_eq!(evaluate("LEFT(\"😀\",1)").unwrap(), Text("😀".into()));
 }
 
 #[test]
 fn concatenation_uses_spreadsheet_numeric_text_without_rounding_values() {
-    for source in [TextSourceVersion::Poi7321209, TextSourceVersion::Poi7321209] {
+    {
         for (expression, expected) in [
             ("(-0.02-0.02-0.1)*100", "-14"),
             ("123456789012345.6", "123456789012346"),
@@ -94,22 +55,22 @@ fn concatenation_uses_spreadsheet_numeric_text_without_rounding_values() {
                 format!("CONCATENATE(\"T\",{expression})"),
             ] {
                 assert_eq!(
-                    evaluate(source, &formula).unwrap(),
+                    evaluate(&formula).unwrap(),
                     Text(format!("T{expected}")),
-                    "{source:?}: {formula}"
+                    "{formula}"
                 );
             }
         }
         assert_eq!(
-            evaluate(source, "(-0.02-0.02-0.1)*100").unwrap(),
+            evaluate("(-0.02-0.02-0.1)*100").unwrap(),
             Number(-14.000000000000002)
         );
         assert_eq!(
-            evaluate(source, "\"T\"&TEXT(1.25,\"0.000\")").unwrap(),
+            evaluate("\"T\"&TEXT(1.25,\"0.000\")").unwrap(),
             Text("T1.250".into())
         );
         assert_eq!(
-            evaluate(source, "\"T\"&\"-14.000000000000002\"").unwrap(),
+            evaluate("\"T\"&\"-14.000000000000002\"").unwrap(),
             Text("T-14.000000000000002".into())
         );
     }
@@ -119,28 +80,18 @@ fn concatenation_uses_spreadsheet_numeric_text_without_rounding_values() {
 fn source_concatenation_ceiling_is_independent_of_host_budget() {
     let operand = "😀".repeat(8192);
     let operator = format!("\"{operand}\"&\"\"");
-    assert_eq!(
-        evaluate(TextSourceVersion::Poi7321209, &operator).unwrap(),
-        Text(operand.clone())
-    );
-    assert_eq!(
-        evaluate(TextSourceVersion::Poi7321209, &operator).unwrap(),
-        Text(operand.clone())
-    );
+    assert_eq!(evaluate(&operator).unwrap(), Text(operand.clone()));
+    assert_eq!(evaluate(&operator).unwrap(), Text(operand.clone()));
     let function = format!("CONCATENATE(\"{operand}\")");
+    assert_eq!(evaluate(&function).unwrap(), Text(operand));
     assert_eq!(
-        evaluate(TextSourceVersion::Poi7321209, &function).unwrap(),
-        Text(operand)
-    );
-    assert_eq!(
-        evaluate(TextSourceVersion::Poi7321209, "MID(\"abc\",2,2147483647)").unwrap(),
+        evaluate("MID(\"abc\",2,2147483647)").unwrap(),
         Text("bc".into())
     );
 }
 
 #[test]
 fn text_integer_admission_precedes_empty_text_and_index_clamping() {
-    let source = TextSourceVersion::Poi7321209;
     for formula in [
         "LEFT(\"\",2147483648)",
         "RIGHT(\"abc\",2147483648)",
@@ -149,11 +100,7 @@ fn text_integer_admission_precedes_empty_text_and_index_clamping() {
         "REPLACE(\"abc\",1,2147483648,\"x\")",
         "MID(\"abc\",1,\"2147483648\")",
     ] {
-        assert_eq!(
-            evaluate(source, formula).unwrap(),
-            Error(VALUE_ERROR),
-            "{formula}"
-        );
+        assert_eq!(evaluate(formula).unwrap(), Error(VALUE_ERROR), "{formula}");
     }
     for (formula, expected) in [
         ("LEFT(\"abc\",2147483647)", "abc"),
@@ -161,20 +108,20 @@ fn text_integer_admission_precedes_empty_text_and_index_clamping() {
         ("MID(\"abc\",1.9,2.9)", "ab"),
     ] {
         assert_eq!(
-            evaluate(source, formula).unwrap(),
+            evaluate(formula).unwrap(),
             Text(expected.into()),
             "{formula}"
         );
     }
     assert_eq!(
-        evaluate(source, "REPT(\"\",2147483648)").unwrap(),
+        evaluate("REPT(\"\",2147483648)").unwrap(),
         Error(VALUE_ERROR)
     );
     assert_eq!(
-        evaluate(source, "REPT(\"\",2147483647)").unwrap(),
+        evaluate("REPT(\"\",2147483647)").unwrap(),
         Text(String::new())
     );
     // Range admission must not move a function's negative-start validation ahead
     // of conversion of the following count argument.
-    assert_eq!(evaluate(source, "MID(\"abc\",-1,#N/A)").unwrap(), Error(NA));
+    assert_eq!(evaluate("MID(\"abc\",-1,#N/A)").unwrap(), Error(NA));
 }

@@ -82,7 +82,10 @@ fn declared_spill_without_stored_children_retains_extent_and_dynamic_metadata() 
     let sheet = restored.sheet(0).unwrap();
     assert_eq!(sheet.spill_extent(at("A1")), Some(at("A3")));
     assert_eq!(sheet.cells().len(), 1);
-    assert_eq!(sheet.get(at("A1")).unwrap().value, CellValue::Number(7.0));
+    assert_eq!(
+        sheet.get(at("A1")).unwrap().unwrap().value,
+        CellValue::Number(7.0)
+    );
 }
 
 #[test]
@@ -92,9 +95,14 @@ fn fresh_save_preserves_calculation_data_and_omits_opaque_features() {
     let sheet = book.sheet_mut(0).unwrap();
     sheet.set_value(at("A1"), 10.).unwrap();
     sheet.set_value(at("D3"), true).unwrap();
-    sheet.remove(at("A2"));
-    sheet.get_mut(at("C1")).unwrap().value = CellValue::Number(33.);
-    sheet.get_mut(at("C1")).unwrap().style.number_format = Some("0.000".into());
+    sheet.remove(at("A2")).unwrap();
+    sheet.get_mut(at("C1")).unwrap().unwrap().value = CellValue::Number(33.);
+    sheet
+        .get_mut(at("C1"))
+        .unwrap()
+        .unwrap()
+        .style
+        .number_format = Some("0.000".into());
     let output = write_xlsx_to_buffer(&book).unwrap();
     let package = parts(&output);
     for path in [
@@ -106,17 +114,26 @@ fn fresh_save_preserves_calculation_data_and_omits_opaque_features() {
     }
     let reopened = read_workbook_bytes::<poirot::model::Workbook>(&output).unwrap();
     let sheet = reopened.sheet(0).unwrap();
-    assert_eq!(sheet.get(at("A1")).unwrap().value, CellValue::Number(10.));
     assert_eq!(
-        sheet.get(at("B1")).unwrap().value,
+        sheet.get(at("A1")).unwrap().unwrap().value,
+        CellValue::Number(10.)
+    );
+    assert_eq!(
+        sheet.get(at("B1")).unwrap().unwrap().value,
         CellValue::Text("Rich text".into())
     );
     let formula = sheet.get(at("C1")).unwrap();
-    assert_eq!(formula.formula.as_deref(), Some("1+2"));
-    assert_eq!(formula.value, CellValue::Number(33.));
-    assert_eq!(formula.style.number_format.as_deref(), Some("0.000"));
-    assert_eq!(sheet.get(at("D3")).unwrap().value, CellValue::Boolean(true));
-    assert!(sheet.get(at("A2")).is_none());
+    assert_eq!(formula.unwrap().formula.as_deref(), Some("1+2"));
+    assert_eq!(formula.unwrap().value, CellValue::Number(33.));
+    assert_eq!(
+        formula.unwrap().style.number_format.as_deref(),
+        Some("0.000")
+    );
+    assert_eq!(
+        sheet.get(at("D3")).unwrap().unwrap().value,
+        CellValue::Boolean(true)
+    );
+    assert!(sheet.get(at("A2")).unwrap().is_none());
 }
 
 #[test]
@@ -138,7 +155,13 @@ fn imported_workbooks_allow_structural_edits_and_snapshot_roundtrip() {
     assert_eq!(reopened.date_system, poirot::model::DateSystem::Excel1904);
     assert_eq!(reopened.sheets().len(), 2);
     assert_eq!(
-        reopened.sheet(1).unwrap().get(at("A1")).unwrap().value,
+        reopened
+            .sheet(1)
+            .unwrap()
+            .get(at("A1"))
+            .unwrap()
+            .unwrap()
+            .value,
         CellValue::Number(42.)
     );
 }
@@ -152,13 +175,16 @@ fn styled_only_blank_retains_presence_and_raw_format() {
     sheet.set(at("B4"), blank).unwrap();
     let bytes = write_xlsx_to_buffer(&source).unwrap();
     let imported = read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();
-    let blank = imported.sheet(0).unwrap().get(at("B4")).unwrap();
+    let blank = imported.sheet(0).unwrap().get(at("B4")).unwrap().unwrap();
     assert_eq!(blank.value, CellValue::Blank);
     assert_eq!(blank.style.number_format.as_deref(), Some("0.000"));
     let reopened =
         read_workbook_bytes::<poirot::model::Workbook>(&write_xlsx_to_buffer(&imported).unwrap())
             .unwrap();
-    assert_eq!(reopened.sheet(0).unwrap().get(at("B4")), Some(blank));
+    assert_eq!(
+        reopened.sheet(0).unwrap().get(at("B4")).unwrap(),
+        Some(blank)
+    );
 }
 
 #[test]

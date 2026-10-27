@@ -1,16 +1,17 @@
 //! Authored JSON workbook scenarios, checked through normal and overlay evaluation.
 mod cli;
+mod json_error;
 pub mod schema;
 pub mod specs;
 pub use cli::{Cli, OutputFormat};
+pub use json_error::JsonError;
 
-use poirot::calculation::{CellEvaluation, EvaluationContext, EvaluationTarget};
+use poirot::calculation::{
+    CellEvaluation, Evaluation, EvaluationContext, EvaluationPolicy, EvaluationTarget, Overlay,
+};
 use poirot::editing::WorkbookChange;
 use poirot::styles::CellStyle;
 use poirot::{CellValue, Workbook};
-// The authored-style interpreter exercises component APIs unavailable on a value-only scenario.
-use poirot::eval::EvaluationPolicy;
-use poirot::eval::overlay::{Evaluation, Overlay};
 use schema::{Action, Content, Scenario, Suite};
 use serde::Serialize;
 use std::collections::BTreeSet;
@@ -45,7 +46,6 @@ pub struct CheckResult {
 pub struct ModeResult {
     pub mode: &'static str,
     /// Builtin contract used consistently by both execution modes.
-    pub builtin_policy: poirot::eval::BuiltinSemanticsPolicy,
     pub checks: Vec<CheckResult>,
     pub changes: Vec<WorkbookChange>,
     pub error: Option<String>,
@@ -82,36 +82,35 @@ impl<'a> Session<'a> {
     fn new(
         book: &'a Workbook,
         normal: bool,
-        builtin: poirot::eval::BuiltinSemanticsPolicy,
-        arrays: poirot::eval::ArrayResultPolicy,
-    ) -> Result<Self, String> {
+        arrays: poirot::calculation::ArrayResultPolicy,
+    ) -> Result<Self, JsonError> {
         let policy = EvaluationPolicy {
-            builtin,
             arrays,
             ..Default::default()
         };
         if normal {
-            Evaluation::with_workbook(book.model())
-                .with_policy(policy)
-                .build(EvaluationContext::default())
+            Evaluation::with_workbook(book)
+                .policy(policy)
+                .context(EvaluationContext::default())
+                .build()
                 .map(|e| Self::Normal(Box::new(e)))
-                .map_err(|e| format!("{e:?}"))
+                .map_err(JsonError::from)
         } else {
-            Overlay::with_workbook(book.model())
-                .with_policy(policy)
+            Overlay::with_workbook(book)
+                .policy(policy)
                 .build()
                 .map(|e| Self::Overlay(Box::new(e)))
-                .map_err(|e| format!("{e:?}"))
+                .map_err(JsonError::from)
         }
     }
-    fn target(&self, cell: &str) -> Result<EvaluationTarget, String> {
+    fn target(&self, cell: &str) -> Result<EvaluationTarget, JsonError> {
         match self {
             Self::Normal(e) => e.target(cell),
             Self::Overlay(e) => e.target(cell),
         }
-        .map_err(|e| e.to_string())
+        .map_err(JsonError::from)
     }
-    fn set(&mut self, cell: &str, content: &Content) -> Result<(), String> {
+    fn set(&mut self, cell: &str, content: &Content) -> Result<(), JsonError> {
         let target = self.target(cell)?;
         match content {
             Content::Formula(f) => match self {
@@ -126,9 +125,9 @@ impl<'a> Session<'a> {
                 }
             }
         }
-        .map_err(|e| e.to_string())
+        .map_err(JsonError::from)
     }
-    fn format(&mut self, cell: &str, number_format: &Option<String>) -> Result<(), String> {
+    fn format(&mut self, cell: &str, number_format: &Option<String>) -> Result<(), JsonError> {
         let target = self.target(cell)?;
         let style = CellStyle {
             number_format: number_format.clone(),
@@ -138,22 +137,19 @@ impl<'a> Session<'a> {
             Self::Normal(e) => e.set_style(target, style),
             Self::Overlay(e) => e.set_style(target, style),
         }
-        .map_err(|e| e.to_string())
+        .map_err(JsonError::from)
     }
-    fn output(&mut self, cell: &str) -> Result<CellEvaluation, String> {
+    fn output(&mut self, cell: &str) -> Result<CellEvaluation, JsonError> {
         let target = self.target(cell)?;
         let outputs = match self {
-            Self::Normal(e) => e.outputs(&[target]).map_err(|e| format!("{e:?}"))?,
+            Self::Normal(e) => e.outputs(&[target]).map_err(JsonError::from)?,
             Self::Overlay(e) => e
                 .evaluation(&EvaluationContext::default())
-                .map_err(|e| format!("{e:?}"))?
+                .map_err(JsonError::from)?
                 .outputs(&[target])
-                .map_err(|e| format!("{e:?}"))?,
+                .map_err(JsonError::from)?,
         };
-        outputs
-            .into_iter()
-            .next()
-            .ok_or_else(|| "output API returned no result".into())
+        outputs.into_iter().next().ok_or(JsonError::MissingOutput)
     }
     fn changes(&mut self) -> Vec<WorkbookChange> {
         match self {
@@ -164,41 +160,39 @@ impl<'a> Session<'a> {
 }
 
 /// Decode a versioned suite. Unknown fields and malformed typed values are errors.
-pub fn parse_suite(json: &str) -> Result<Suite, String> {
-    let suite: Suite = serde_json::from_str(json).map_err(|e| e.to_string())?;
+pub fn parse_suite(json: &str) -> Result<Suite, JsonError> {
+    let suite: Suite = serde_json::from_str(json).map_err(JsonError::from)?;
     if suite.schema_version != 1 {
-        return Err("unsupported schema_version; expected 1".into());
+        return Err(JsonError::UnsupportedSchema);
     }
     if suite
         .group
         .as_ref()
         .is_some_and(|group| group.trim().is_empty())
     {
-        return Err("suite group must be nonempty when provided".into());
+        return Err(JsonError::EmptyGroup);
     }
     if suite.workbook.sheets.is_empty() || suite.scenarios.is_empty() {
-        return Err("a suite needs worksheets and scenarios".into());
+        return Err(JsonError::EmptySuite);
     }
     let mut names = BTreeSet::new();
     for scenario in &suite.scenarios {
         if scenario.name.trim().is_empty() || !names.insert(&scenario.name) {
-            return Err("scenario names must be nonempty and unique within a suite".into());
+            return Err(JsonError::InvalidScenarioName);
         }
         if scenario.evidence.is_empty() || scenario.evidence.iter().any(|s| s.trim().is_empty()) {
-            return Err(format!(
-                "{}: provide evidence for expectations",
-                scenario.name
-            ));
+            return Err(JsonError::MissingEvidence {
+                scenario: scenario.name.clone(),
+            });
         }
         if !scenario
             .actions
             .iter()
             .any(|a| matches!(a, Action::Check { .. }))
         {
-            return Err(format!(
-                "{}: scenario needs at least one check",
-                scenario.name
-            ));
+            return Err(JsonError::MissingCheck {
+                scenario: scenario.name.clone(),
+            });
         }
         for action in &scenario.actions {
             match action {
@@ -216,21 +210,21 @@ pub fn parse_suite(json: &str) -> Result<Suite, String> {
                 } => {
                     expected.cell_value()?;
                     if !tolerance.is_finite() || *tolerance < 0.0 {
-                        return Err("tolerance must be finite and nonnegative".into());
+                        return Err(JsonError::InvalidTolerance);
                     }
                     if *tolerance != 0.0 && !matches!(expected, schema::Scalar::Number(_)) {
-                        return Err("tolerance is only valid for numeric expectations".into());
+                        return Err(JsonError::NonnumericTolerance);
                     }
                     if let Some(gap) = known_gap {
                         if gap.reason.trim().is_empty() {
-                            return Err("known gaps need a reason".into());
+                            return Err(JsonError::MissingGapReason);
                         }
                         if equal(
                             &gap.actual.cell_value()?,
                             &expected.cell_value()?,
                             *tolerance,
                         ) {
-                            return Err("known gap actual must differ from expected".into());
+                            return Err(JsonError::RedundantGap);
                         }
                     }
                 }
@@ -241,23 +235,20 @@ pub fn parse_suite(json: &str) -> Result<Suite, String> {
     Ok(suite)
 }
 
-fn workbook(suite: &Suite) -> Result<Workbook, String> {
+fn workbook(suite: &Suite) -> Result<Workbook, JsonError> {
     let mut book = Workbook::new();
     for sheet in &suite.workbook.sheets {
-        book.add_sheet(sheet).map_err(|e| e.to_string())?;
+        book.add_sheet(sheet).map_err(JsonError::from)?;
     }
     let changes = {
-        let mut session = Session::new(
-            &book,
-            false,
-            suite.builtin_policy,
-            suite.array_result_policy,
-        )?;
+        let mut session = Session::new(&book, false, suite.array_result_policy)?;
         let mut cells = BTreeSet::new();
         for cell in &suite.workbook.cells {
             let target = session.target(&cell.cell)?;
             if !cells.insert((target.sheet, target.address)) {
-                return Err(format!("duplicate initial cell: {}", cell.cell));
+                return Err(JsonError::DuplicateInitialCell {
+                    cell: cell.cell.clone(),
+                });
             }
             session.set(&cell.cell, &cell.content)?;
             if cell.number_format.is_some() {
@@ -266,7 +257,7 @@ fn workbook(suite: &Suite) -> Result<Workbook, String> {
         }
         session.changes()
     };
-    book.model_mut().apply(changes).map_err(|e| e.to_string())?;
+    book.apply(changes).map_err(JsonError::from)?;
     Ok(book)
 }
 
@@ -281,20 +272,18 @@ fn run_mode(
     book: &Workbook,
     scenario: &Scenario,
     normal: bool,
-    builtin_policy: poirot::eval::BuiltinSemanticsPolicy,
-    arrays: poirot::eval::ArrayResultPolicy,
+    arrays: poirot::calculation::ArrayResultPolicy,
 ) -> ModeResult {
     let mut result = ModeResult {
         mode: if normal { "normal" } else { "overlay" },
-        builtin_policy,
         checks: Vec::new(),
         changes: Vec::new(),
         error: None,
     };
-    let mut execute = || -> Result<(), String> {
-        let mut session = Session::new(book, normal, builtin_policy, arrays)?;
+    let mut execute = || -> Result<(), JsonError> {
+        let mut session = Session::new(book, normal, arrays)?;
         for (index, action) in scenario.actions.iter().enumerate() {
-            let action_result = (|| -> Result<(), String> {
+            let action_result = (|| -> Result<(), JsonError> {
                 match action {
                     Action::Set { cell, content } => session.set(cell, content)?,
                     Action::Format {
@@ -324,14 +313,14 @@ fn run_mode(
                                 actual_format.unwrap_or("General"),
                                 Default::default(),
                             )
-                            .map_err(|e| format!("{e:?}"))?;
+                            .map_err(JsonError::from)?;
                             Some(
                                 poirot::styles::render_value(
                                     &output.value,
                                     &plan,
                                     Default::default(),
                                 )
-                                .map_err(|e| format!("{e:?}"))?
+                                .map_err(JsonError::from)?
                                 .text,
                             )
                         } else {
@@ -375,20 +364,23 @@ fn run_mode(
                 }
                 Ok(())
             })();
-            action_result.map_err(|e| format!("action {index}: {e}"))?;
+            action_result.map_err(|source| JsonError::Action {
+                index,
+                source: Box::new(source),
+            })?;
         }
         result.changes = session.changes();
         Ok(())
     };
     if let Err(error) = execute() {
-        result.error = Some(error);
+        result.error = Some(crate::report::error_message(&error));
     }
     result
 }
 
 /// Run each scenario in isolation in both modes. Compare observations and the raw,
 /// ordered change lists after the last action; no extra evaluation is performed.
-pub fn run_suite(suite: &Suite, filter: Option<&str>) -> Result<Vec<ScenarioResult>, String> {
+pub fn run_suite(suite: &Suite, filter: Option<&str>) -> Result<Vec<ScenarioResult>, JsonError> {
     let names = suite
         .scenarios
         .iter()
@@ -399,27 +391,18 @@ pub fn run_suite(suite: &Suite, filter: Option<&str>) -> Result<Vec<ScenarioResu
 }
 
 /// Execute exact selected scenario names, retaining one workbook and both modes.
-pub fn run_selected(suite: &Suite, names: &BTreeSet<&str>) -> Result<Vec<ScenarioResult>, String> {
+pub fn run_selected(
+    suite: &Suite,
+    names: &BTreeSet<&str>,
+) -> Result<Vec<ScenarioResult>, JsonError> {
     let book = workbook(suite)?;
     let mut results = Vec::new();
     for scenario in &suite.scenarios {
         if !names.contains(scenario.name.as_str()) {
             continue;
         }
-        let normal = run_mode(
-            &book,
-            scenario,
-            true,
-            suite.builtin_policy,
-            suite.array_result_policy,
-        );
-        let overlay = run_mode(
-            &book,
-            scenario,
-            false,
-            suite.builtin_policy,
-            suite.array_result_policy,
-        );
+        let normal = run_mode(&book, scenario, true, suite.array_result_policy);
+        let overlay = run_mode(&book, scenario, false, suite.array_result_policy);
         results.push(compare_modes(scenario.name.clone(), normal, overlay));
     }
     Ok(results)
@@ -459,7 +442,7 @@ mod tests {
     fn mode(name: &'static str, changes: Vec<WorkbookChange>) -> ModeResult {
         ModeResult {
             mode: name,
-            builtin_policy: Default::default(),
+
             changes,
             checks: Vec::new(),
             error: None,

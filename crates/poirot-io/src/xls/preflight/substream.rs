@@ -91,7 +91,9 @@ pub(super) fn sheet_starts(
     let globals_end = rs
         .iter()
         .position(|r| r.id == 0xa)
-        .ok_or(PreflightError::Malformed("sheet boundary"))?;
+        .ok_or(PreflightError::Malformed(
+            crate::BiffStructureError::SheetBoundary,
+        ))?;
     let declared = positions
         .iter()
         .map(|position| {
@@ -123,6 +125,8 @@ pub(super) fn sheet_starts(
     if starts.len() == positions.len() {
         Ok(starts)
     } else {
-        Err(PreflightError::Malformed("sheet boundary"))
+        Err(PreflightError::Malformed(
+            crate::BiffStructureError::SheetBoundary,
+        ))
     }
 }

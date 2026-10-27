@@ -3,7 +3,7 @@ use crate::eval::adapters::elementwise::{
     Broadcast, Kernel, MemberContext, Optional, Variadic, WholeCollection,
 };
 use crate::eval::functions::registry::EngineeringFunction;
-use crate::eval::host::{ArgumentCoercion, CallHost, NumericPolicy, ScalarOperand};
+use crate::eval::host::{ArgumentCoercion, CallHost, ScalarOperand};
 use crate::eval::limits::{CapabilityId, EvalResult};
 use crate::eval::session::Session;
 use crate::eval::values::{FunctionResult, VALUE_ERROR, Value};
@@ -25,7 +25,7 @@ fn parse(host: &mut CallHost<'_, '_>, member: ScalarOperand) -> FunctionResult<P
     if member.missing {
         return Err(host.unsupported(
             CapabilityId::FunctionAdapter,
-            "complex functions have no verified omitted-argument coercion",
+            crate::eval::limits::EvaluationReasonError::ComplexFunctionsHaveNoVerifiedOmittedArgumentCoercion,
         ));
     }
     let scalar = match member.value {
@@ -75,13 +75,12 @@ fn render(host: &mut CallHost<'_, '_>, value: ComplexNumber) -> FunctionResult<C
     host.check_text(132)?;
     host.charge_work(132)?;
     let real = if value.real != 0.0 {
-        ArgumentCoercion::new(host).coerce_number_to_text(value.real, NumericPolicy::PinnedPoi)?
+        ArgumentCoercion::new(host).coerce_number_to_text(value.real)?
     } else {
         String::new()
     };
     let imaginary = if value.imaginary != 0.0 && value.imaginary != 1.0 && value.imaginary != -1.0 {
-        ArgumentCoercion::new(host)
-            .coerce_number_to_text(value.imaginary, NumericPolicy::PinnedPoi)?
+        ArgumentCoercion::new(host).coerce_number_to_text(value.imaginary)?
     } else {
         String::new()
     };

@@ -19,25 +19,27 @@ pub(super) fn array_constant(
     let columns = take(extra, 1)?
         .first()
         .map(|&columns| usize::from(columns))
-        .ok_or(PreflightError::Malformed("missing byte"))?
+        .ok_or(PreflightError::Malformed(
+            crate::BiffStructureError::MissingByte,
+        ))?
         .checked_add(1)
         .ok_or(PreflightError::Representation(
-            "array constant size overflow",
+            crate::BiffRepresentationError::ArrayConstantSizeOverflow,
         ))?;
     let count = usize::from(word(extra)?)
         .checked_add(1)
         .and_then(|rows| rows.checked_mul(columns))
         .ok_or(PreflightError::Representation(
-            "array constant size overflow",
+            crate::BiffRepresentationError::ArrayConstantSizeOverflow,
         ))?;
     *tokens = tokens
         .checked_add(count)
         .ok_or(PreflightError::Representation(
-            "formula token count overflow",
+            crate::BiffRepresentationError::FormulaTokenCountOverflow,
         ))?;
     if *tokens > budget.max_metadata_entries {
         return Err(PreflightError::Resource {
-            resource: "BIFF formula tokens",
+            resource: crate::BiffResource::BiffFormulaTokens,
             requested: *tokens as u64,
             limit: budget.max_metadata_entries as u64,
         });
@@ -48,9 +50,9 @@ pub(super) fn array_constant(
             // SAFETY: columns is a checked_add(1) result, so it is never zero.
             out.push(if index % columns == 0 { ';' } else { ',' });
         }
-        let kind = *take(extra, 1)?
-            .first()
-            .ok_or(PreflightError::Malformed("missing byte"))?;
+        let kind = *take(extra, 1)?.first().ok_or(PreflightError::Malformed(
+            crate::BiffStructureError::MissingByte,
+        ))?;
         match kind {
             // SerNil: eight reserved bytes; renders as an omitted element.
             0x00 => {
@@ -59,11 +61,9 @@ pub(super) fn array_constant(
             // SerNum: Xnum.
             0x01 => {
                 let value = take(extra, 8)?;
-                let value = f64::from_le_bytes(
-                    value
-                        .try_into()
-                        .map_err(|_| PreflightError::Malformed("array number"))?,
-                );
+                let value = f64::from_le_bytes(value.try_into().map_err(|_| {
+                    PreflightError::Malformed(crate::BiffStructureError::ArrayNumber)
+                })?);
                 out.push_str(&value.to_string());
             }
             // SerStr: XLUnicodeString (cch, fHighByte, characters).
@@ -86,16 +86,20 @@ pub(super) fn array_constant(
             // SerErr: BErr then seven reserved bytes.
             0x10 => {
                 let value = take(extra, 8)?;
-                let code = *value
-                    .first()
-                    .ok_or(PreflightError::Malformed("missing byte"))?;
+                let code = *value.first().ok_or(PreflightError::Malformed(
+                    crate::BiffStructureError::MissingByte,
+                ))?;
                 out.push_str(error_text(code)?);
             }
-            _ => return Err(PreflightError::Malformed("unknown array constant type")),
+            _ => {
+                return Err(PreflightError::Malformed(
+                    crate::BiffStructureError::UnknownArrayConstantType,
+                ));
+            }
         }
         if out.len() > budget.max_string_bytes {
             return Err(PreflightError::Resource {
-                resource: "BIFF formula bytes",
+                resource: crate::BiffResource::BiffFormulaBytes,
                 requested: out.len() as u64,
                 limit: budget.max_string_bytes as u64,
             });
@@ -181,7 +185,7 @@ mod tests {
                 }
             ),
             Err(PreflightError::Resource {
-                resource: "BIFF formula tokens",
+                resource: crate::BiffResource::BiffFormulaTokens,
                 requested: 3,
                 limit: 2,
             })
@@ -208,7 +212,7 @@ mod tests {
                 }
             ),
             Err(PreflightError::Resource {
-                resource: "BIFF formula bytes",
+                resource: crate::BiffResource::BiffFormulaBytes,
                 ..
             })
         ));
@@ -254,7 +258,9 @@ mod tests {
             bad.extend([0; 8]);
             assert_eq!(
                 decode(&ARRAY, &bad, ResourceBudget::default()),
-                Err(PreflightError::Malformed("unknown array constant type"))
+                Err(PreflightError::Malformed(
+                    crate::BiffStructureError::UnknownArrayConstantType
+                ))
             );
         }
         // Unknown SerErr codes keep the BErr validation.
@@ -264,7 +270,9 @@ mod tests {
                 &[0, 0, 0, 0x10, 0x01, 0, 0, 0, 0, 0, 0, 0],
                 ResourceBudget::default()
             ),
-            Err(PreflightError::Malformed("unknown BIFF error code"))
+            Err(PreflightError::Malformed(
+                crate::BiffStructureError::UnknownBiffErrorCode
+            ))
         );
     }
 }

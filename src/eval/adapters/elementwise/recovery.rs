@@ -52,8 +52,8 @@ pub(in crate::eval::adapters) fn execute<S: ErrorSelector>(
     host.check_values(count)?;
     let mut mask = Vec::new();
     mask.try_reserve_exact(count)
-        .map_err(|_| host.allocation_failure())?;
-    let allocation_failure = host.allocation_failure();
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
+    let allocation_target = host.target();
     let mut caught = None;
     let result = SelectionAccess::new(host).array(shape, |reader, row, column| {
         let value = source.read(reader, shape, row, column)?;
@@ -66,7 +66,7 @@ pub(in crate::eval::adapters) fn execute<S: ErrorSelector>(
         }
         if mask.len() == mask.capacity() {
             mask.try_reserve(1)
-                .map_err(|_| allocation_failure.clone())?;
+                .map_err(|reservation_source| crate::eval::limits::EvaluationError::reservation(crate::eval::limits::CapabilityId::FunctionAdapter, Some(allocation_target), crate::eval::limits::EvaluationReasonError::AllocatingAFunctionResultOrScratchBuffer, reservation_source))?;
         }
         // SAFETY: the capacity check above reserves a slot whenever none remains.
         mask.push(replace);

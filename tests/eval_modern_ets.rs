@@ -118,15 +118,12 @@ fn documented_enum_duplicate_defaults_and_positional_failures() {
 fn lifted_targets_and_options_spill_and_overlay_edits_invalidate() {
     let mut b = book();
     let s = b.sheet_mut(0).unwrap();
-    s.set_value("A1".parse().unwrap(), 7.0).unwrap();
+    s.set_value("A1", 7.0).unwrap();
+    s.set_formula("D1", "FORECAST.ETS(A1:A2,{3;5;7;9;11;13},{1;2;3;4;5;6},0)")
+        .unwrap();
+    s.set_value("A2", 8.0).unwrap();
     s.set_formula(
-        "D1".parse().unwrap(),
-        "FORECAST.ETS(A1:A2,{3;5;7;9;11;13},{1;2;3;4;5;6},0)",
-    )
-    .unwrap();
-    s.set_value("A2".parse().unwrap(), 8.0).unwrap();
-    s.set_formula(
-        "G1".parse().unwrap(),
+        "G1",
         "FORECAST.ETS.STAT({3;5;7;9;11;13},{1;2;3;4;5;6},{6,7,8},0)",
     )
     .unwrap();
@@ -158,27 +155,12 @@ fn lifted_targets_and_options_spill_and_overlay_edits_invalidate() {
     );
 }
 #[test]
-fn lazy_branches_and_pinned_profile_are_preserved() {
+fn lazy_branches_preserve_ets_behavior() {
     let b = book();
     near(
         call(&b, "IF(FALSE,FORECAST.ETS(4,{1;2;3},{1;2;3},0,2),9)"),
         9.0,
     );
-    let pinned = RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::PinnedPoi);
-    assert!(matches!(
-        run_formula_with_configuration(
-            &b,
-            0,
-            target("Z100").address,
-            "FORECAST.ETS(4,{1;2;3},{1;2;3},0)",
-            &pinned,
-            Default::default()
-        ),
-        EvaluationOutcome::Complete {
-            value: CellValue::Error(CellError::Name),
-            ..
-        }
-    ));
 }
 
 #[test]

@@ -1,4 +1,5 @@
 //! Pure reference decoding, range coercion and array constant checks.
+use super::parse_reason_error::ParseReasonError;
 use crate::formula::{BinaryOp, CellReference, Expr, ParseError, UnaryOp};
 
 /// Parse a rectangular constant and return the remaining input.
@@ -51,7 +52,7 @@ pub(super) fn partial_reference(text: &str, sheet: Option<String>) -> Option<Exp
 pub(super) fn sheet_span_bounds(
     start: Expr,
     end: Option<Expr>,
-) -> Result<(CellReference, Option<CellReference>), String> {
+) -> Result<(CellReference, Option<CellReference>), ParseReasonError> {
     let cell = |row, column, row_absolute, column_absolute| CellReference {
         row,
         column,
@@ -86,7 +87,7 @@ pub(super) fn sheet_span_bounds(
                 ..
             }),
         ) => Ok((cell(first, 0, a, true), Some(cell(last, 16383, b, true)))),
-        _ => Err("sheet spans require cells or paired whole-axis references".into()),
+        _ => Err(ParseReasonError::IncompatibleSpanEndpoints),
     }
 }
 /// Primitive cell decoding shared with the no-AST classifier. No allocation on errors.
@@ -102,7 +103,7 @@ pub struct CellCoordinates {
     pub column_absolute: bool,
 }
 /// Decode an A1 token, retaining absolute-axis flags.
-pub(super) fn cell_coordinates(text: &str) -> Result<Option<CellCoordinates>, ()> {
+pub(super) fn cell_coordinates(text: &str) -> Result<Option<CellCoordinates>, ParseReasonError> {
     let column_absolute = text.starts_with('$');
     let mut bytes = text.bytes().peekable();
     while bytes.peek() == Some(&b'$') {
@@ -147,7 +148,7 @@ pub(super) fn cell_coordinates(text: &str) -> Result<Option<CellCoordinates>, ()
             row_absolute,
             column_absolute,
         })),
-        _ => Err(()),
+        _ => Err(ParseReasonError::CellOutsideGrid),
     }
 }
 
@@ -166,16 +167,15 @@ pub(super) fn cell_reference(
                 sheet,
             })
         })
-        .map_err(|()| ParseError {
-            kind: super::ParseErrorKind::Syntax,
+        .map_err(|reason| ParseError {
             position: 0,
-            message: "cell reference exceeds Excel grid".into(),
+            reason,
         })
 }
 /// Decode a compatible primitive axis pair before admitting generic operands.
 /// POI gives a first column-shaped token lexical priority: A:OFFSET(...) is invalid,
 /// while A1:Z retains Z as a defined-name operand. No workbook lookup occurs here.
-pub(super) fn range_pair(left: Expr, right: Expr) -> Result<(Expr, Expr), String> {
+pub(super) fn range_pair(left: Expr, right: Expr) -> Result<(Expr, Expr), ParseReasonError> {
     let axis = |expr: &Expr| match expr {
         Expr::Name(name) => partial_reference(name, None),
         Expr::QualifiedName { sheet, name } => partial_reference(name, Some(sheet.clone())),
@@ -194,12 +194,12 @@ pub(super) fn range_pair(left: Expr, right: Expr) -> Result<(Expr, Expr), String
             return Ok((a, b));
         }
         (Some(Expr::Column { .. } | Expr::Row { .. }), _) => {
-            return Err("incompatible primitive range endpoints".into());
+            return Err(ParseReasonError::IncompatibleRangeEndpoints);
         }
         _ => {}
     }
     if !range_operand(&left) || !range_operand(&right) {
-        return Err("invalid range endpoint".into());
+        return Err(ParseReasonError::InvalidRangeEndpoint);
     }
     let mut right = right;
     inherit_sheet(&left, &mut right);
@@ -287,7 +287,11 @@ mod coordinate_tests {
             "A9999999999999999999999999",
             "ZZZZZZZZZZZZZZZZZZZZZZZZZ1",
         ] {
-            assert_eq!(cell_coordinates(text), Err(()), "{text}");
+            assert_eq!(
+                cell_coordinates(text),
+                Err(ParseReasonError::CellOutsideGrid),
+                "{text}"
+            );
         }
         for text in ["", "A", "1A", "A1x", "SUM", "A$", "é1", "A1é"] {
             assert_eq!(cell_coordinates(text), Ok(None), "{text}");

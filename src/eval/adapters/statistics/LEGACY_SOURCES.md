@@ -9,8 +9,7 @@ evidence only and supplied no code, data, fixtures or algorithms to these tests.
 
 Each legacy spelling has a distinct parser and registry identity. This preserves
 its actual arity, typing and stored XLSX formula spelling, independently of modern
-registration order. Availability is the ExcelDocumentation profile; PinnedPoi
-retains its prior missing-name outcomes.
+registration order. These spellings are available in the builtin catalog.
 
 | Microsoft primary contract | Worksheet selection |
 | --- | --- |

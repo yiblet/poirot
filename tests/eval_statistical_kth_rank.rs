@@ -13,25 +13,24 @@ fn book() -> Workbook {
         ("B2", CellValue::Number(2.)),
         ("B3", CellValue::Number(6.)),
     ] {
-        sheet.set_value(cell.parse().unwrap(), value).unwrap();
+        sheet.set_value(cell, value).unwrap();
     }
     book
 }
 fn at() -> CellAddress {
     CellAddress { row: 99, col: 25 }
 }
-fn config(policy: BuiltinSemanticsPolicy) -> RunConfiguration {
-    RunConfiguration::default().with_builtin_policy(policy)
+fn config() -> RunConfiguration {
+    RunConfiguration::default()
 }
 
 #[test]
 fn kth_rank_admission_handles_fractional_boundaries() {
     let book = book();
-    for builtin in [BuiltinSemanticsPolicy::ExcelDocumentation] {
-        let config = config(builtin);
+    {
+        let config = config();
         for function in ["LARGE", "SMALL"] {
-            let documented_large =
-                function == "LARGE" && builtin == BuiltinSemanticsPolicy::ExcelDocumentation;
+            let documented_large = function == "LARGE";
             for (rank, position) in [
                 ("0.1", 1),
                 ("0.999999", 1),
@@ -73,8 +72,8 @@ fn kth_rank_admission_handles_fractional_boundaries() {
                     Default::default(),
                 );
                 assert!(
-                    matches!(&result, EvaluationOutcome::Complete { value, .. } if value == &expected),
-                    "{builtin:?} {formula}: {result:?}"
+                    matches ! (& result , EvaluationOutcome :: Complete { value , .. } if value == & expected),
+                    "{formula}: {result:?}"
                 );
             }
         }
@@ -84,8 +83,8 @@ fn kth_rank_admission_handles_fractional_boundaries() {
 #[test]
 fn kth_rank_preserves_collection_error_order_and_unrelated_consumers() {
     let book = book();
-    for builtin in [BuiltinSemanticsPolicy::ExcelDocumentation] {
-        let config = config(builtin);
+    {
+        let config = config();
         for (formula, expected) in [
             ("LARGE(NA(),0.1)", CellValue::Error(CellError::NA)),
             ("LARGE(NA(),3.1)", CellValue::Error(CellError::NA)),
@@ -105,8 +104,8 @@ fn kth_rank_preserves_collection_error_order_and_unrelated_consumers() {
                 Default::default(),
             );
             assert!(
-                matches!(&result, EvaluationOutcome::Complete {value,..} if value == &expected),
-                "{builtin:?} {formula}: {result:?}"
+                matches ! (& result , EvaluationOutcome :: Complete { value ,.. } if value == & expected),
+                "{formula}: {result:?}"
             );
         }
     }
@@ -115,7 +114,7 @@ fn kth_rank_preserves_collection_error_order_and_unrelated_consumers() {
 #[test]
 fn kth_rank_admission_retains_operational_budgets() {
     let book = book();
-    let config = config(BuiltinSemanticsPolicy::ExcelDocumentation);
+    let config = config();
     for formula in [
         "IFERROR(LARGE(B1:B3,0.1),99)",
         "IFERROR(SMALL(B1:B3,1.1),99)",
@@ -135,7 +134,7 @@ fn kth_rank_admission_retains_operational_budgets() {
                 matches!(
                     run_formula_with_configuration(&book, 0, at(), formula, &config, budgets),
                     EvaluationOutcome::Aborted {
-                        failure: EvaluationFailure::Budget(_),
+                        failure: EvaluationError::Budget(_),
                         ..
                     }
                 ),

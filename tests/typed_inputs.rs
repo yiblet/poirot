@@ -4,8 +4,8 @@ use poirot::{CellAddress, CellError, CellValue, Workbook};
 fn explicit_typing_resolves_lookup_fallback_branch_sum_and_max_without_global_coercion() {
     let mut source = Workbook::new();
     let sheet = source.add_sheet("Input").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 93514.0).unwrap();
-    sheet.set_value("B1".parse().unwrap(), 2.0).unwrap();
+    sheet.set_value("A1", 93514.0).unwrap();
+    sheet.set_value("B1", 2.0).unwrap();
     for (address, value) in [
         ("F1", 0.0),
         ("G1", 1.0),
@@ -14,7 +14,7 @@ fn explicit_typing_resolves_lookup_fallback_branch_sum_and_max_without_global_co
         ("J1", 2.0),
         ("K1", 3.0),
     ] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     let inputs = [
         ("D28", "93514"),
@@ -28,12 +28,12 @@ fn explicit_typing_resolves_lookup_fallback_branch_sum_and_max_without_global_co
         legacy
             .sheet_mut(0)
             .unwrap()
-            .set_value(address.parse().unwrap(), text)
+            .set_value(address, text)
             .unwrap();
         numeric
             .sheet_mut(0)
             .unwrap()
-            .set_value(address.parse().unwrap(), text.parse::<f64>().unwrap())
+            .set_value(address, text.parse::<f64>().unwrap())
             .unwrap();
     }
     let at: CellAddress = "Z1".parse().unwrap();
@@ -76,7 +76,7 @@ fn explicit_typing_resolves_lookup_fallback_branch_sum_and_max_without_global_co
     ] {
         assert_eq!(
             match poirot::eval::run_formula(
-                legacy.model(),
+                &legacy,
                 0,
                 at,
                 formula,
@@ -91,7 +91,7 @@ fn explicit_typing_resolves_lookup_fallback_branch_sum_and_max_without_global_co
         );
         assert_eq!(
             match poirot::eval::run_formula(
-                numeric.model(),
+                &numeric,
                 0,
                 at,
                 formula,

@@ -1,6 +1,6 @@
 //! Function argument evaluation and matrix materialization.
 
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::session;
 use crate::eval::session::cells::CellEvaluator;
 use crate::eval::session::composition::Session;
@@ -65,11 +65,10 @@ impl<'s, 'a> ArgumentReader<'s, 'a> {
                 Ok(Ok(vec![vec![value]]))
             }
             Value::SheetSpan(areas) if areas.len() != 1 => {
-                Err(EvaluationFailure::UnsupportedCapability {
+                Err(EvaluationError::UnsupportedCapability {
                     capability: CapabilityId::FunctionAdapter,
-                    source: None,
-                    detail: "matrix materialization of a multi-sheet reference is not verified"
-                        .into(),
+                    target: None,
+                    reason: crate::eval::limits::EvaluationReasonError::MatrixMaterializationOfAMultiSheetReferenceIsNotVerified,
                 })
             }
             Value::SignedRefs(areas) => {
@@ -79,8 +78,8 @@ impl<'s, 'a> ArgumentReader<'s, 'a> {
                 // SAFETY: The preceding branch rejects areas.len() != 1 before selecting the first area.
                 let area = areas[0];
                 if area.positive_shape().is_none() {
-                    return Err(EvaluationFailure::UnsupportedCapability { capability: CapabilityId::FunctionAdapter, source: None,
-                        detail: "dense consumer policy for zero/negative Java source dimensions is not verified".into() });
+                    return Err(EvaluationError::UnsupportedCapability { capability: CapabilityId::FunctionAdapter, target: None,
+                        reason: crate::eval::limits::EvaluationReasonError::DenseConsumerPolicyForZeroNegativeJavaSourceDimensionsIsNotVerified });
                 }
                 self.session
                     .state
@@ -92,7 +91,7 @@ impl<'s, 'a> ArgumentReader<'s, 'a> {
                     let mut values = Vec::with_capacity(area.width() as usize);
                     for col in 0..area.width() {
                         values.push(CellEvaluator::new(self.session).signed_read(
-                            area.read(row, col).ok_or(EvaluationFailure::StalePlan)?,
+                            area.read(row, col).ok_or(EvaluationError::StalePlan)?,
                         )?);
                     }
                     rows.push(values);

@@ -2,7 +2,7 @@
 
 use crate::eval::config::ArrayResultPolicy;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::session::cells::CellEvaluator;
 use crate::eval::session::composition::Session;
 use crate::eval::spill;
@@ -47,7 +47,7 @@ impl<'s, 'a> ResultProjection<'s, 'a> {
             && area_reference
         {
             let shape =
-                crate::eval::vm::Shape::inspect(&value).ok_or(EvaluationFailure::StalePlan)?;
+                crate::eval::vm::Shape::inspect(&value).ok_or(EvaluationError::StalePlan)?;
             value = Value::Array(RectangularTraversal::new(self.session).array(
                 address,
                 shape,
@@ -85,12 +85,12 @@ impl<'s, 'a> ResultProjection<'s, 'a> {
         value: Value,
     ) -> EvalResult<CellValue> {
         if matches!(value, Value::Missing) {
-            // WorkbookEvaluator preserves MissingArgEval; HSSFFormulaEvaluator
-            // rejects this final class. It must not become a fabricated zero.
-            return Err(EvaluationFailure::UnsupportedCapability {
+            // An omitted argument has no supported worksheet publication value.
+            return Err(EvaluationError::UnsupportedCapability {
                 capability: CapabilityId::FunctionAdapter,
-                source: Some(EvaluationTarget { sheet, address }),
-                detail: "pinned MissingArgEval final result throws a source exception".into(),
+                target: Some(EvaluationTarget { sheet, address }),
+                reason:
+                    crate::eval::limits::EvaluationReasonError::SelectedOmittedArgumentPublication,
             });
         }
         self.select_legacy_scalar(address, value)

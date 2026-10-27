@@ -1,7 +1,7 @@
 use super::call_host::CallHost;
 use super::missing_policy::MissingPolicy;
 use super::scalar_operand::ScalarOperand;
-use crate::eval::values::{FunctionFailure, FunctionResult};
+use crate::eval::values::{FunctionError, FunctionResult};
 
 /// Presents one deferred argument through the function-core scalar input interface.
 /// Forcing it uses the host's memoized evaluation and preserves the chosen omission policy.
@@ -16,7 +16,7 @@ impl poirot_functions::scalar::Input for ScalarInput<'_, '_, '_> {
     type Value = ScalarOperand;
 
     /// Family failure channel preserving spreadsheet versus operational errors.
-    type Error = FunctionFailure;
+    type Error = FunctionError;
 
     fn force(&mut self) -> FunctionResult<ScalarOperand> {
         self.host.scalar_data(self.index, self.missing)

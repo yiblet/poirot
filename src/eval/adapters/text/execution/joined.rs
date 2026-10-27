@@ -40,7 +40,7 @@ impl Joined {
         host.charge_work(additional as u64)?;
         self.output
             .try_reserve(additional)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: all separator and text units were reserved immediately above.
         self.output.extend_from_slice(separator);
         // SAFETY: the local additional reservation includes every text unit.

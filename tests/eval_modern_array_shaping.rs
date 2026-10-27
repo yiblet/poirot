@@ -17,7 +17,6 @@ fn at(s: &str) -> EvaluationTarget {
 }
 fn policy() -> EvaluationPolicy {
     EvaluationPolicy {
-        builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
         ..Default::default()
     }
 }
@@ -29,8 +28,7 @@ fn formula(text: &str) -> CellValue {
         0,
         at("Z100").address,
         text,
-        &RunConfiguration::default()
-            .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation),
+        &RunConfiguration::default(),
         EvaluationBudgets::default(),
     ) {
         EvaluationOutcome::Complete { value, .. } => value,
@@ -159,8 +157,7 @@ fn budgets_abort_before_expansion_and_cannot_be_caught() {
             0,
             at("A1").address,
             "IFERROR(SUM(EXPAND(1,1000,1000,0)),99)",
-            &RunConfiguration::default()
-                .with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation),
+            &RunConfiguration::default(),
             EvaluationBudgets {
                 materialized_values: 100,
                 ..Default::default()
@@ -173,8 +170,7 @@ fn budgets_abort_before_expansion_and_cannot_be_caught() {
 fn explicit_blank_counts_remain_distinct_from_omitted_axes() {
     let mut book = Workbook::new();
     book.add_sheet("S").unwrap();
-    let config =
-        RunConfiguration::default().with_builtin_policy(BuiltinSemanticsPolicy::ExcelDocumentation);
+    let config = RunConfiguration::default();
     for (text, expected) in [
         ("SUM(TAKE({2,4;8,10},,1))", CellValue::Number(10.)),
         (

@@ -453,7 +453,7 @@ fn repeated_session_children_keep_priority_spill_references_and_complete_exports
         );
         for (cell, expected) in [("B1", 20.), ("B2", 21.), ("B3", 22.)] {
             assert_eq!(
-                sheet.get(at(cell).address).unwrap().value,
+                sheet.get(at(cell).address).unwrap().unwrap().value,
                 CellValue::Number(expected)
             );
         }

@@ -4,7 +4,7 @@ use super::projection::ResultProjection;
 use crate::eval::compile::bound::Expression;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::registry::LogicalFunction;
-use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::limits::{EvalResult, EvaluationError};
 use crate::eval::observe::{
     ArgumentOrigin, ExecutionEvent, ObservedValue, Operation, OperationId, OperationKind,
     observed_value,
@@ -38,10 +38,11 @@ impl<'s, 'a> ObservationRecorder<'s, 'a> {
             .observation_state
             .next
             .checked_add(1)
-            .ok_or_else(|| EvaluationFailure::ResourceLimit {
+            .ok_or(EvaluationError::ResourceLimit {
                 capability: crate::eval::limits::CapabilityId::ExecutionObservation,
-                source: Some(target),
-                detail: "execution operation identity exhausted".into(),
+                target: Some(target),
+                reason:
+                    crate::eval::limits::EvaluationReasonError::ExecutionOperationIdentityExhausted,
             })?;
         self.session.state.runtime.observation_state.next = next;
         let (parent, child_sequence) = match &mut self.session.state.runtime.observation_state.frame
@@ -79,7 +80,7 @@ impl<'s, 'a> ObservationRecorder<'s, 'a> {
         &mut self,
         operation: Operation,
         previous: Option<(Operation, u64)>,
-        result: Result<ObservedValue<'_>, &EvaluationFailure>,
+        result: Result<ObservedValue<'_>, &EvaluationError>,
     ) -> EvalResult<()> {
         self.session.state.runtime.observation_state.frame = previous;
         let notification = self

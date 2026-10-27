@@ -34,8 +34,8 @@ fn admits(ty: FormulaType, value: &Value) -> bool {
 fn representative_successful_expression_results_belong_to_their_possible_types() {
     let mut workbook = crate::model::Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 2.).unwrap();
-    sheet.set_value("A2".parse().unwrap(), "text").unwrap();
+    sheet.set_value("A1", 2.).unwrap();
+    sheet.set_value("A2", "text").unwrap();
     let formulas = [
         "MUNIT(2)",
         "TEXTBEFORE(\"a\",\",\",1,0,0,42)",
@@ -150,8 +150,8 @@ fn random_array_and_trim_geometry_effects_and_channels_are_truthful() {
                 .possible_reads
                 .contains(DependencyPolicy::NUMERIC_COERCION)
         );
-        // Profile-only calls retain the existing unresolved-binding opacity.
-        assert_eq!(properties.effects.external, ExternalBehavior::Opaque);
+        // Registered builtins expose their declared dependency behavior.
+        assert_eq!(properties.effects.external, ExternalBehavior::Tracked);
     }
     for (formula, reference) in [("TRIMRANGE(A1:A2)", true), ("TRIMRANGE({1,2})", false)] {
         let syntax = poirot_parsing::formula::parse_formula(formula).unwrap();

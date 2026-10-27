@@ -9,14 +9,14 @@ fn coerce_concat_utf16(host: &mut CallHost<'_, '_>, value: &CellValue) -> Functi
     if let Some(text) = value.text_ref() {
         let units = text.len_units();
         let bytes = units.checked_mul(2).ok_or_else(|| {
-            text_unsupported(poirot_functions::text_units::Unsupported::SizeOverflow)
+            text_unsupported(poirot_functions::text_units::TextSemanticsError::SizeOverflow)
         })?;
         host.check_text(bytes)?;
         host.check_values(units)?;
         let mut output = Vec::new();
         output
             .try_reserve_exact(units)
-            .map_err(|_| host.allocation_failure())?;
+            .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: units is the exact unit count reserved locally.
         output.extend(text.units());
         return Ok(output);
@@ -28,7 +28,7 @@ fn coerce_concat_utf16(host: &mut CallHost<'_, '_>, value: &CellValue) -> Functi
     let mut output = Vec::new();
     output
         .try_reserve_exact(units)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     // SAFETY: units counts exactly the same UTF-16 iterator, reserved locally.
     output.extend(rendered.encode_utf16());
     Ok(output)
@@ -42,19 +42,18 @@ pub(super) fn text_unit_operator(
 ) -> FunctionResult<CellValue> {
     let left = coerce_concat_utf16(host, left)?;
     let right = coerce_concat_utf16(host, right)?;
-    let units = left
-        .len()
-        .checked_add(right.len())
-        .ok_or_else(|| text_unsupported(poirot_functions::text_units::Unsupported::SizeOverflow))?;
-    let bytes = units
-        .checked_mul(2)
-        .ok_or_else(|| text_unsupported(poirot_functions::text_units::Unsupported::SizeOverflow))?;
+    let units = left.len().checked_add(right.len()).ok_or_else(|| {
+        text_unsupported(poirot_functions::text_units::TextSemanticsError::SizeOverflow)
+    })?;
+    let bytes = units.checked_mul(2).ok_or_else(|| {
+        text_unsupported(poirot_functions::text_units::TextSemanticsError::SizeOverflow)
+    })?;
     host.check_text(bytes)?;
     host.check_values(units)?;
     let mut output = Vec::new();
     output
         .try_reserve_exact(units)
-        .map_err(|_| host.allocation_failure())?;
+        .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
     // SAFETY: units is the locally checked sum of both appended lengths.
     output.extend_from_slice(&left);
     // SAFETY: units reserves the checked sum of both appended lengths.

@@ -16,7 +16,7 @@ fn database() -> Workbook {
         ("E2", ">1"),
         ("F1", "Group"),
     ] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     for (address, value) in [
         ("A2", 1.),
@@ -26,7 +26,7 @@ fn database() -> Workbook {
         ("B3", 4.),
         ("B4", 6.),
     ] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     book.define_name("Criteria", "Data!$E$1:$E$3", None)
         .unwrap();

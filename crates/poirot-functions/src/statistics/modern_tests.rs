@@ -105,21 +105,21 @@ fn work_and_numerical_limits_remain_distinct() {
         tails::beta(2., 3., BetaCoordinate::Lower(0.25), Tail::Lower, |_| Err(
             "stop"
         )),
-        Err(Failure::Operational("stop"))
+        Err(DistributionError::Operational("stop"))
     );
     let mut calls = 0;
     let failure = tails::gamma(128., 128., Tail::Lower, |_| {
         calls += 1;
         if calls == 7 { Err("later") } else { Ok(()) }
     });
-    assert_eq!(failure, Err(Failure::Operational("later")));
+    assert_eq!(failure, Err(DistributionError::Operational("later")));
     assert_eq!(
         tails::gamma(1e13, 1e13, Tail::Lower, meter),
-        Err(Failure::ComputationalLimit)
+        Err(DistributionError::ComputationalLimit)
     );
     assert_eq!(
         binomial(5., 4., 0.5, false, meter),
-        Err(Failure::Spreadsheet(CellError::Num))
+        Err(DistributionError::Spreadsheet(CellError::Num))
     );
 }
 #[test]

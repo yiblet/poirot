@@ -3,7 +3,7 @@
 //! a Poirot contract, not an asserted Excel tie-break.
 use crate::eval::config::EvaluationContext;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::overlay::{Evaluation, Overlay};
 use crate::eval::ports::{CellCompletion, CellObserver, CellProvenance};
 use crate::model::{CellError, CellValue, Workbook};
@@ -123,7 +123,7 @@ fn settled_supplier_displacement_produces_only_final_observer_values() {
     #[derive(Default)]
     struct Observer(Vec<(EvaluationTarget, CellProvenance, CellValue)>);
     impl CellObserver for Observer {
-        fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationFailure> {
+        fn completed(&mut self, event: CellCompletion<'_>) -> Result<(), EvaluationError> {
             if let Ok(value) = event.result {
                 self.0.push((event.target, event.provenance, value.clone()));
             }
@@ -202,7 +202,7 @@ fn oscillating_actual_geometry_refuses_to_publish_a_false_fixed_point() {
     let mut run = overlay.evaluation(&context).unwrap();
     let failure = run.cell(target("D1")).unwrap_err();
     assert!(
-        matches!(failure,EvaluationFailure::UnsupportedCapability { detail,.. } if detail.contains("does not settle"))
+        matches!(failure,EvaluationError::UnsupportedCapability { reason,.. } if matches!(reason, crate::eval::limits::EvaluationReasonError::SpillOwnershipComponentDoesNotSettle))
     );
     assert_eq!(run.values().count(), 0);
     assert!(run.result_changes().unwrap().is_empty());
@@ -267,7 +267,7 @@ fn external_effects_are_not_replayed_but_unused_external_branches_are_harmless()
                 assert_eq!(calls.load(Ordering::SeqCst), if unused { 0 } else { 2 });
             } else {
                 assert!(
-                    matches!(run.cell(target("D5")),Err(EvaluationFailure::UnsupportedCapability {detail,..}) if detail.contains("actually consumed"))
+                    matches!(run.cell(target("D5")),Err(EvaluationError::UnsupportedCapability {reason,..}) if matches!(reason, crate::eval::limits::EvaluationReasonError::SpillSettlementWouldReplayAnActuallyConsumedOpaqueOrVolatileProvider))
                 );
                 assert_eq!(calls.load(Ordering::SeqCst), 1);
                 assert_eq!(run.values().count(), 0);
@@ -406,7 +406,7 @@ fn settlement_keeps_cumulative_work_and_fails_atomically_under_a_work_limit() {
         let report = run.finish(result.map(|_| ()));
         match report.outcome {
             EvaluationOutcome::Aborted {
-                failure: EvaluationFailure::Budget(_),
+                failure: EvaluationError::Budget(_),
                 usage,
             } => {
                 aborted += 1;
@@ -448,7 +448,7 @@ fn repeated_losing_masks_with_a_larger_component_are_not_the_same_state() {
         .build(Default::default())
         .unwrap();
     assert!(
-        matches!(run.cell(target("D1")),Err(EvaluationFailure::UnsupportedCapability {detail,..}) if detail.contains("does not settle"))
+        matches!(run.cell(target("D1")),Err(EvaluationError::UnsupportedCapability {reason,..}) if matches!(reason, crate::eval::limits::EvaluationReasonError::SpillOwnershipComponentDoesNotSettle))
     );
     // Attempts execute 2, then 3, then 3, then 3 producers. The initial
     // two-producer states do not prove periodicity of the enlarged component.

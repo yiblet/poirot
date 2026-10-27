@@ -7,18 +7,31 @@ const PATTERNS: [&str; 4] = [
     "[M/dd[/yyyy]][[ ]h:m[:s][.SSS] a][[ ]H:m[:s][.SSS]]",
     "[[yyyy/]M/dd][[ ]h:m[:s][.SSS] a][[ ]H:m[:s][.SSS]]",
 ];
-/// Tentative calendar/time components rolled back together for optional parse sections.
+/// Syntactic calendar/time components collected from source-specific optional sections.
+/// `None` means that a field was not present; defaults are not supplied. Numeric
+/// ranges and consistency (including valid calendar dates) are consumer work.
+/// Values are not serial dates and have no workbook epoch attached.
 #[derive(Clone, Default)]
 pub struct SourceDateTimeFields {
+    /// Source calendar year; no two-digit-year expansion is performed.
     pub year: Option<i32>,
+    /// Numeric month token or one-based English month-name index; numeric tokens are not range checked.
     pub month: Option<i32>,
+    /// Day-of-month token, not yet validated against the month or year.
     pub day: Option<i32>,
+    /// `H` hour token intended for 24-hour interpretation, not yet range checked.
     pub hour: Option<i32>,
+    /// `h` clock-hour token intended for 1–12 interpretation, separate from `hour`.
     pub clock: Option<i32>,
+    /// Minute token, not yet restricted to 0–59.
     pub minute: Option<i32>,
+    /// Optional second token, not yet restricted to 0–59.
     pub second: Option<i32>,
+    /// Optional three-digit fractional-second token, in milliseconds.
     pub millis: Option<i32>,
+    /// English meridiem token: zero for `AM`, one for `PM`; absent when not parsed.
     pub ampm: Option<i32>,
+    /// Whether a month-name token survived the successful optional sections; this is not the complete locale-read trace.
     pub names: bool,
 }
 fn assign(slot: &mut Option<i32>, value: i32) -> bool {
@@ -162,7 +175,14 @@ fn section(
 }
 
 /// Collect source fields, preserving locale-token observations even on rejection.
-/// The consumer admits storage before this normalization and grammar pass.
+/// ASCII whitespace runs are collapsed to a space. English month names and
+/// uppercase `AM`/`PM` are case-sensitive. Optional sections roll back fields
+/// and input together. Conflicting repeated fields reject their section;
+/// leftover input rejects the complete parse.
+/// `locale_read` is only ever set to true, including attempted locale tokens
+/// in sections later rolled back or rejected. This differs from the retained
+/// [`SourceDateTimeFields::names`] flag. Calendar validation, numeric range
+/// checks, defaults and storage admission belong to the consumer.
 pub fn parse_source_fields(
     text: &str,
     locale_read: &mut bool,

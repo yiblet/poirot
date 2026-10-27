@@ -1,6 +1,6 @@
 use super::retained_value::RetainedValue;
 use crate::eval::functions::registry::LogicalFunction;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::eval::observe::execution::{Operation, OperationId};
 use crate::model::{CellError, CellValue};
 
@@ -14,7 +14,7 @@ pub enum RetainedEvent {
         /// Operation that finished.
         operation: Operation,
         /// Owned evidence or operational failure.
-        result: Result<RetainedValue, EvaluationFailure>,
+        result: Result<RetainedValue, EvaluationError>,
     },
     /// Logical handler's actual error check and fallback selection.
     MaskDecision {

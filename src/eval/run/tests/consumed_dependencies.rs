@@ -4,7 +4,7 @@ use super::super::evaluation_run::EvaluationRun;
 use super::super::workbook_view::WorkbookView;
 use super::support::{A1, B1, C1, Reads, context, target, value, workbook};
 use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy, PreparedFormula};
-use crate::eval::limits::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::limits::{EvaluationBudgets, EvaluationError, EvaluationOutcome};
 use crate::eval::ports::same_result_identity;
 use crate::eval::ports::{DependencyRead, ReadEvent};
 use crate::model::{CellAddress, CellError, CellValue};
@@ -280,7 +280,7 @@ fn selected_unknown_records_opaque_consumption_and_abort_keeps_values_unpublishe
     assert!(matches!(
         report.outcome,
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -311,7 +311,13 @@ fn indirect_parses_current_operands_at_runtime_and_honors_parse_policy() {
     let plan = compiler.compile_workbook(&workbook, &policy);
     assert_eq!(compiler.usage().parse_attempts, 1);
     for (source, expected) in [("A2", 3.), ("A3", 7.)] {
-        workbook.sheet_mut(0).unwrap().get_mut(A1).unwrap().value = CellValue::Text(source.into());
+        workbook
+            .sheet_mut(0)
+            .unwrap()
+            .get_mut(A1)
+            .unwrap()
+            .unwrap()
+            .value = CellValue::Text(source.into());
         let run = EvaluationRun::new(
             WorkbookView::new(&workbook, &plan, &policy).unwrap(),
             context(),

@@ -9,3 +9,4 @@ mod qualified_names;
 mod reference_ranges;
 mod sheet_spans;
 mod spill_references;
+mod typed_errors;

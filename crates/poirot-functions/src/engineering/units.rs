@@ -1,4 +1,5 @@
 //! Independently encoded measurement definitions; provenance is in UNIT_SOURCES.md.
+
 /// Incompatible physical quantities remain distinct even if factors coincide.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Dimension {
@@ -274,14 +275,8 @@ fn resolve(token: &str) -> Option<Unit> {
     }
     None
 }
-/// Distinguish unknown/incompatible units from arithmetic overflow.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ConversionError {
-    /// Unknown tokens, unsupported prefixes or different dimensions.
-    NotAvailable,
-    /// Nonfinite input or result.
-    Number,
-}
+
+use super::conversion_error::ConversionError;
 /// Convert a finite quantity with exact-token-first, case-sensitive unit resolution.
 pub fn convert(number: f64, from: &str, to: &str) -> std::result::Result<f64, ConversionError> {
     let from = resolve(from).ok_or(ConversionError::NotAvailable)?;

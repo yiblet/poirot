@@ -2,10 +2,8 @@
 
 use super::array_operators::ArrayOperators;
 use super::reference_operators::ReferenceOperators;
-use crate::eval::config::BuiltinSemanticsPolicy;
 use crate::eval::limits::{EvalResult, WorkKind};
-use crate::eval::ports::DependencyRead;
-use crate::eval::session::{Coercer, ReadRecorder, ResultProjection, Session};
+use crate::eval::session::{Coercer, ResultProjection, Session};
 use crate::eval::spill::SpillDemand;
 use crate::eval::values::core_projection::semantic;
 use crate::eval::values::{
@@ -54,12 +52,6 @@ impl<'s, 'a> Operators<'s, 'a> {
         // Scalar numeric consumers retain their existing coercion contract.
 
         if *op == UnaryOp::Plus {
-            ReadRecorder::new(self.session).read(DependencyRead::BuiltinPolicy);
-        }
-        if *op == UnaryOp::Plus
-            && (self.session.policies.builtin_policy == BuiltinSemanticsPolicy::ExcelDocumentation
-                || value.text_ref().is_some())
-        {
             return Ok(value.into());
         }
         Ok(

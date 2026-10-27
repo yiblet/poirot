@@ -1,6 +1,6 @@
 use super::direct_runs::execute_configuration;
 use crate::eval::compile;
-use crate::eval::limits::{EvaluationFailure, EvaluationOutcome};
+use crate::eval::limits::{EvaluationError, EvaluationOutcome};
 use crate::eval::session::ResultProjection;
 use crate::eval::values::VALUE_ERROR;
 use crate::eval::vm::ExpressionRunner;
@@ -85,9 +85,9 @@ fn decimal_rounding_matches_spreadsheet_modes_and_zero_branches() {
 fn references_names_and_sparse_columns() {
     let mut w = book();
     let s = w.sheet_mut(0).unwrap();
-    s.set_value("A1".parse().unwrap(), true).unwrap();
-    s.set_value("A2".parse().unwrap(), "2").unwrap();
-    s.set_value("A3".parse().unwrap(), 3.).unwrap();
+    s.set_value("A1", true).unwrap();
+    s.set_value("A2", "2").unwrap();
+    s.set_value("A3", 3.).unwrap();
     assert_eq!(eval(&w, "SUM(A1:A3)"), Number(3.));
     assert_eq!(eval(&w, "SUM(A1,A2,A3)"), Number(3.));
     assert_eq!(eval(&w, "SUM(A:A)"), Number(3.));
@@ -114,11 +114,11 @@ fn lazy_branches_and_cycles() {
     }
     w.sheet_mut(0)
         .unwrap()
-        .set_formula_with_cached_value("A1".parse().unwrap(), "A2", Number(9.))
+        .set_formula_with_cached_value("A1", "A2", Number(9.))
         .unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_formula_with_cached_value("A2".parse().unwrap(), "A1", Number(9.))
+        .set_formula_with_cached_value("A2", "A1", Number(9.))
         .unwrap();
     assert_eq!(
         match crate::eval::entry::direct_runs::run_cell(
@@ -140,13 +140,10 @@ fn lazy_branches_and_cycles() {
 #[test]
 fn mutations_and_recalculation() {
     let mut w = book();
+    w.sheet_mut(0).unwrap().set_value("A1", 2.).unwrap();
     w.sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), 2.)
-        .unwrap();
-    w.sheet_mut(0)
-        .unwrap()
-        .set_formula_with_cached_value("B1".parse().unwrap(), "A1*3", Number(-1.))
+        .set_formula_with_cached_value("B1", "A1*3", Number(-1.))
         .unwrap();
     assert_eq!(
         match crate::eval::entry::direct_runs::run_cell(
@@ -161,10 +158,7 @@ fn mutations_and_recalculation() {
         },
         Number(6.)
     );
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A1".parse().unwrap(), 4.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("A1", 4.).unwrap();
     assert_eq!(
         match crate::eval::entry::direct_runs::run_cell(
             &w,
@@ -187,11 +181,7 @@ fn mutations_and_recalculation() {
         outcome => panic!("evaluation aborted: {outcome:?}"),
     };
     assert_eq!(
-        w.sheet(0)
-            .unwrap()
-            .get("B1".parse().unwrap())
-            .unwrap()
-            .value,
+        w.sheet(0).unwrap().get("B1").unwrap().unwrap().value,
         Number(12.)
     );
 }
@@ -219,17 +209,11 @@ fn empty_reference_and_zero_argument_aggregates() {
 fn cross_sheet_errors_and_implicit_intersection() {
     let mut w = book();
     w.add_sheet("Other Data").unwrap();
-    w.sheet_mut(1)
-        .unwrap()
-        .set_value("A1".parse().unwrap(), 8.)
-        .unwrap();
+    w.sheet_mut(1).unwrap().set_value("A1", 8.).unwrap();
     assert_eq!(eval(&w, "'Other Data'!A1+2"), Number(10.));
     assert_eq!(eval(&w, "MissingSheet!A1"), Error(Ref));
     assert_eq!(eval(&w, "'Other Data'!A1:Sheet1!A1"), Error(Ref));
-    w.sheet_mut(0)
-        .unwrap()
-        .set_value("A20".parse().unwrap(), 7.)
-        .unwrap();
+    w.sheet_mut(0).unwrap().set_value("A20", 7.).unwrap();
     assert_eq!(eval(&w, "A1:A30"), Number(7.));
     assert_eq!(eval(&w, "A1:B30"), Error(VALUE_ERROR));
     assert_eq!(eval(&w, "SUM({1,#N/A})"), Error(NA));
@@ -242,7 +226,9 @@ fn cross_sheet_errors_and_implicit_intersection() {
 fn resource_and_function_contracts() {
     let mut w = book();
     for i in 1..=140 {
-        let a = format!("A{i}").parse().unwrap();
+        let a = format!("A{i}")
+            .parse::<crate::model::CellAddress>()
+            .unwrap();
         let f = format!("A{}", i + 1);
         w.sheet_mut(0).unwrap().set_formula(a, f).unwrap();
     }
@@ -255,7 +241,7 @@ fn resource_and_function_contracts() {
             Default::default()
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -270,7 +256,7 @@ fn resource_and_function_contracts() {
             Default::default()
         ),
         EvaluationOutcome::Aborted {
-            failure: EvaluationFailure::Budget(_),
+            failure: EvaluationError::Budget(_),
             ..
         }
     ));
@@ -286,10 +272,7 @@ fn resource_and_function_contracts() {
 fn special_numbers_are_preserved_but_numeric_comparison_refuses_them() {
     let mut w = book();
     for n in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-        w.sheet_mut(0)
-            .unwrap()
-            .set_value("A1".parse().unwrap(), n)
-            .unwrap();
+        w.sheet_mut(0).unwrap().set_value("A1", n).unwrap();
         let result = match crate::eval::entry::direct_runs::run_cell(
             &w,
             0,
@@ -305,20 +288,7 @@ fn special_numbers_are_preserved_but_numeric_comparison_refuses_them() {
         };
         assert_eq!(result.to_bits(), n.to_bits());
         for formula in ["A1=1", "A1=A1"] {
-            assert!(matches!(
-                crate::eval::entry::direct_runs::run_formula(
-                    &w,
-                    0,
-                    "Z20".parse().unwrap(),
-                    formula,
-                    Default::default(),
-                    Default::default()
-                ),
-                crate::eval::limits::EvaluationOutcome::Aborted {
-                    failure: EvaluationFailure::KnownSourceException { .. },
-                    ..
-                }
-            ));
+            assert_eq!(eval(&w, formula), Error(Num), "{formula}");
         }
         for formula in ["SUM(A1)", "A1+0", "MATCH(A1,{1,2},0)"] {
             assert_eq!(eval(&w, formula), Error(Num), "{formula}");
@@ -373,16 +343,16 @@ fn lookup_blanks_reach_consumers_before_formula_cell_publication() {
         ("E2", "zero"),
         ("E3", "text"),
     ] {
-        sheet.set_value(address.parse().unwrap(), value).unwrap();
+        sheet.set_value(address, value).unwrap();
     }
     for address in ["B2", "F2"] {
-        sheet.set_value(address.parse().unwrap(), 0.).unwrap();
+        sheet.set_value(address, 0.).unwrap();
     }
     for address in ["C2", "F3"] {
-        sheet.set_value(address.parse().unwrap(), "").unwrap();
+        sheet.set_value(address, "").unwrap();
     }
     sheet
-        .set_formula("H1".parse().unwrap(), "HLOOKUP(\"blank\",A1:C2,2,FALSE)")
+        .set_formula("H1", "HLOOKUP(\"blank\",A1:C2,2,FALSE)")
         .unwrap();
     for lookup in [
         "HLOOKUP(\"blank\",A1:C2,2,FALSE)",
@@ -467,10 +437,10 @@ fn lookup_blanks_reach_consumers_before_formula_cell_publication() {
 fn selection_preserves_types_until_the_selected_consumer() {
     let mut w = book();
     let sheet = w.sheet_mut(0).unwrap();
-    sheet.set_value("A2".parse().unwrap(), true).unwrap();
-    sheet.set_value("A3".parse().unwrap(), "12").unwrap();
-    sheet.set_value("A4".parse().unwrap(), "").unwrap();
-    sheet.set_value("A5".parse().unwrap(), Error(NA)).unwrap();
+    sheet.set_value("A2", true).unwrap();
+    sheet.set_value("A3", "12").unwrap();
+    sheet.set_value("A4", "").unwrap();
+    sheet.set_value("A5", Error(NA)).unwrap();
     // A1 is a real blank. Each selector must forward its selected value/reference
     // before the outer predicate, aggregate, arithmetic, or text consumer runs.
     for selected in [
@@ -533,7 +503,7 @@ fn blank_argument_rules_distinguish_inline_values_from_selected_cells() {
     workbook
         .sheet_mut(0)
         .unwrap()
-        .set_value("A1".parse().unwrap(), "key")
+        .set_value("A1", "key")
         .unwrap();
     for consumer in ["AVERAGE", "AVERAGEA", "MEDIAN", "MIN", "MINA"] {
         assert_eq!(
@@ -564,14 +534,14 @@ fn blank_argument_rules_distinguish_inline_values_from_selected_cells() {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_value("A2".parse().unwrap(), true)
+            .set_value("A2", true)
             .unwrap();
         assert_eq!(eval(&workbook, &format!("SUM({selected})")), Number(1.));
         assert_eq!(eval(&workbook, &format!("COUNT({selected})")), Number(1.));
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_value("A2".parse().unwrap(), "abc")
+            .set_value("A2", "abc")
             .unwrap();
         assert_eq!(
             eval(&workbook, &format!("SUM({selected})")),
@@ -580,7 +550,7 @@ fn blank_argument_rules_distinguish_inline_values_from_selected_cells() {
         workbook
             .sheet_mut(0)
             .unwrap()
-            .set_value("A2".parse().unwrap(), Blank)
+            .set_value("A2", Blank)
             .unwrap();
     }
 }

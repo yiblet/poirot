@@ -7,10 +7,8 @@ use poirot::{CellValue, Workbook};
 fn incompatible_modern_inverse_preparation_preserves_formulas_and_overlay_edits() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
-    sheet.set_value("A1".parse().unwrap(), 0.1).unwrap();
-    sheet
-        .set_formula("D1".parse().unwrap(), "BETA.INV(A1,1,1)")
-        .unwrap();
+    sheet.set_value("A1", 0.1).unwrap();
+    sheet.set_formula("D1", "BETA.INV(A1,1,1)").unwrap();
     let mut overlay = Overlay::with_workbook(book).build().unwrap();
     let input = overlay.target("S!A1").unwrap();
     let output = overlay.target("S!D1").unwrap();
@@ -45,7 +43,13 @@ fn incompatible_modern_inverse_preparation_preserves_formulas_and_overlay_edits(
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedIncompatible);
     assert_eq!(
-        workbook.sheet(0).unwrap().get(input.address).unwrap().value,
+        workbook
+            .sheet(0)
+            .unwrap()
+            .get(input.address)
+            .unwrap()
+            .unwrap()
+            .value,
         0.20.into()
     );
     let mut direct = poirot::eval::overlay::Evaluation::with_workbook(workbook)
@@ -64,7 +68,13 @@ fn incompatible_modern_inverse_preparation_preserves_formulas_and_overlay_edits(
     };
     assert_eq!(status, artifact::PreparedStatus::DiscardedByRequest);
     assert_eq!(
-        workbook.sheet(0).unwrap().get(input.address).unwrap().value,
+        workbook
+            .sheet(0)
+            .unwrap()
+            .get(input.address)
+            .unwrap()
+            .unwrap()
+            .value,
         0.20.into()
     );
 }
@@ -87,13 +97,11 @@ fn stored_modern_inverse_names_execute_after_xlsx_roundtrip() {
         ("A12", "T.INV.2T(0.5,1)", 1.),
     ];
     for (cell, formula, _) in cases {
-        sheet.set_formula(cell.parse().unwrap(), formula).unwrap();
+        sheet.set_formula(cell, formula).unwrap();
     }
+    sheet.set_formula("D1", "BETA.INV({0.25;0.5},1,1)").unwrap();
     sheet
-        .set_formula("D1".parse().unwrap(), "BETA.INV({0.25;0.5},1,1)")
-        .unwrap();
-    sheet
-        .set_formula("G1".parse().unwrap(), "BINOM.INV(4,0.5,{0.25;0.5})")
+        .set_formula("G1", "BINOM.INV(4,0.5,{0.25;0.5})")
         .unwrap();
     let bytes = book.save_xlsx().to_buffer().unwrap();
     let book = poirot_io::read_workbook_bytes::<poirot::model::Workbook>(&bytes).unwrap();

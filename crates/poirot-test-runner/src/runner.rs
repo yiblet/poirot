@@ -1,8 +1,7 @@
 //! Select and schedule suites while preserving source-specific execution contracts.
 use crate::{
-    Error,
+    RunnerError,
     baseline::Baseline,
-    invalid,
     model::{CaseMetadata, CaseResult, Change, Observation, Outcome, Source, digest},
     report::{self, Format},
     selection::Selection,
@@ -106,7 +105,7 @@ impl EvaluationReport {
     }
 }
 
-pub(crate) fn discover(options: &Options) -> Result<Vec<Box<dyn TestSuite>>, Error> {
+pub(crate) fn discover(options: &Options) -> Result<Vec<Box<dyn TestSuite>>, RunnerError> {
     let mut suites = Vec::new();
     if options.selection.source.is_empty() || options.selection.source.contains(&Source::Fods) {
         suites.extend(sources::fods(&options.fods_corpus)?);
@@ -117,33 +116,35 @@ pub(crate) fn discover(options: &Options) -> Result<Vec<Box<dyn TestSuite>>, Err
     let mut seen = BTreeSet::new();
     for case in suites.iter().flat_map(|suite| suite.cases()) {
         if !seen.insert(case.id.clone()) {
-            return Err(invalid(format!("duplicate test ID: {}", case.id)));
+            return Err(RunnerError::DuplicateTestId {
+                case: case.id.clone(),
+            });
         }
     }
     Ok(suites)
 }
 
-pub fn list(options: &Options) -> Result<Vec<CaseMetadata>, Error> {
+/// Discover selected cases, rejecting an empty selection.
+pub fn list(options: &Options) -> Result<Vec<CaseMetadata>, RunnerError> {
     let cases: Vec<_> = discover(options)?
         .into_iter()
         .flat_map(|suite| suite.cases().to_vec())
         .filter(|case| options.selection.matches(case))
         .collect();
     if cases.is_empty() {
-        return Err(invalid(
-            "no tests match the selection; use list without filters to see available groups",
-        ));
+        return Err(RunnerError::EmptySelection);
     }
     Ok(cases)
 }
 
+/// Evaluate selected suites and stream their baseline comparisons.
 pub fn run(
     options: &Options,
     output: &mut impl Write,
     format: Format,
     verbose: bool,
     quiet: bool,
-) -> Result<EvaluationReport, Error> {
+) -> Result<EvaluationReport, RunnerError> {
     let baseline = Baseline::load(&options.baseline)?;
     let suites = discover(options)?;
     let inventory: Vec<_> = suites
@@ -164,9 +165,7 @@ pub fn run(
         .map(|case| case.id.clone())
         .collect();
     if selected.is_empty() {
-        return Err(invalid(
-            "no tests match the selection; use list to preview it",
-        ));
+        return Err(RunnerError::EmptySelection);
     }
     let removed = if complete_inventory {
         let ids: BTreeSet<_> = inventory.iter().map(|case| &case.id).collect();
@@ -245,44 +244,49 @@ pub fn run(
         .thread_name(|i| format!("test-suite-{i}"))
         .build()?;
     let (sender, receiver) = std::sync::mpsc::channel();
-    std::thread::scope(|scope| -> Result<(), Error> {
-        scope.spawn(move || {
+    std::thread::scope(|scope| -> Result<(), RunnerError> {
+        let producer = scope.spawn(move || -> Result<(), RunnerError> {
             pool.install(|| {
                 work.par_iter()
-                    .for_each_with(sender, |sender, (suite, ids)| {
+                    .try_for_each_with(sender, |sender, (suite, ids)| {
                         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                             suite.run(ids)
                         }))
-                        .map_err(|_| "suite evaluator panicked".to_owned())
-                        .and_then(|result| result.map_err(|error| error.to_string()));
+                        .map_err(|_| RunnerError::SuitePanicked)
+                        .and_then(|result| result);
                         let cases = suite
                             .cases()
                             .iter()
                             .filter(|case| ids.contains(&case.id))
                             .cloned()
                             .collect::<Vec<_>>();
-                        let _ = sender.send((cases, result));
+                        sender
+                            .send((cases, result))
+                            .map_err(|_| RunnerError::ResultReceiverClosed)
                     })
             })
         });
         for (cases, result) in receiver {
             let mut results = match result {
                 Ok(results) => results,
-                Err(reason) => cases
-                    .into_iter()
-                    .map(|case| CaseResult {
-                        case,
-                        observation: Observation {
-                            outcome: Outcome::HarnessError,
-                            category: Some("suite_error".into()),
-                            fingerprint: Some(digest(reason.as_bytes())),
-                        },
-                        reason: reason.clone(),
-                        details: serde_json::Value::Null,
-                        change: Change::Unchanged,
-                        baseline: None,
-                    })
-                    .collect(),
+                Err(error) => {
+                    let reason = crate::report::error_message(&error);
+                    cases
+                        .into_iter()
+                        .map(|case| CaseResult {
+                            case,
+                            observation: Observation {
+                                outcome: Outcome::HarnessError,
+                                category: Some("suite_error".into()),
+                                fingerprint: Some(digest(reason.as_bytes())),
+                            },
+                            reason: reason.clone(),
+                            details: serde_json::Value::Null,
+                            change: Change::Unchanged,
+                            baseline: None,
+                        })
+                        .collect()
+                }
             };
             for result in &mut results {
                 baseline.compare(result);
@@ -290,6 +294,7 @@ pub fn run(
             report::suite(output, format, &results, verbose, quiet)?;
             report.cases.extend(results);
         }
+        producer.join().map_err(|_| RunnerError::SuitePanicked)??;
         Ok(())
     })?;
     report.cases.sort_by(|a, b| a.case.id.cmp(&b.case.id));

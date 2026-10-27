@@ -2,7 +2,7 @@ use super::observed_value::ObservedValue;
 use super::operation::Operation;
 use super::operation_id::OperationId;
 use crate::eval::functions::registry::LogicalFunction;
-use crate::eval::limits::EvaluationFailure;
+use crate::eval::limits::EvaluationError;
 use crate::model::{CellError, CellValue};
 
 /// An observed begin, completion, or logical error-masking decision.
@@ -16,7 +16,7 @@ pub enum ExecutionEvent<'a> {
         /// Operation that finished.
         operation: Operation,
         /// Observed result channel or failure.
-        result: Result<ObservedValue<'a>, &'a EvaluationFailure>,
+        result: Result<ObservedValue<'a>, &'a EvaluationError>,
     },
     /// The handler actually scalar-checked this source argument. A selected fallback
     /// is a later Argument operation with this handler parent and ordinal 1.

@@ -44,9 +44,9 @@ pub(super) fn add_metadata(package: &mut Package) -> Result<(), IoError> {
             ],
         ),
     ] {
-        let source = package
-            .get(path)
-            .ok_or_else(|| IoError::Xml(format!("missing generated part {path}")))?;
+        let source = package.get(path).ok_or_else(|| {
+            IoError::Xml(crate::XmlCodecError::MissingGeneratedPart { path: path.into() })
+        })?;
         let mut reader = events(source);
         let mut writer = Writer::new(Vec::new());
         loop {

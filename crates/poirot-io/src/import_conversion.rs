@@ -2,6 +2,7 @@
 use crate::data::{SheetSink, SheetSource, WorkbookSink};
 use crate::decoded_cells::{fidelity_warnings, identifier_warnings};
 use crate::xls::XlsWorkbook;
+use crate::xlsx_decode_error::XlsxDecodeError;
 use crate::{Cell, CellAddress, DateSystem};
 use crate::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
 use crate::{IoError, PreflightError, ReadOptions, ooxml};
@@ -16,7 +17,9 @@ fn read_bytes(path: &Path, options: ReadOptions) -> Result<Vec<u8>, IoError> {
             options.max_input_bytes,
             0,
             claimed,
-            path.display().to_string(),
+            crate::IoOperation::File {
+                path: path.to_owned(),
+            },
         ));
     }
     let mut contents = Vec::new();
@@ -29,7 +32,9 @@ fn read_bytes(path: &Path, options: ReadOptions) -> Result<Vec<u8>, IoError> {
             options.max_input_bytes,
             0,
             contents.len() as u64,
-            path.display().to_string(),
+            crate::IoOperation::File {
+                path: path.to_owned(),
+            },
         ));
     }
     Ok(contents)
@@ -63,7 +68,7 @@ pub fn read_workbook_bytes_with_options<W: WorkbookSink<Sheet: SheetSink>>(
             options.max_input_bytes,
             0,
             bytes.len() as u64,
-            "input buffer",
+            crate::IoOperation::InputBuffer,
         ));
     }
     if bytes.starts_with(b"PK\x03\x04") {
@@ -72,7 +77,7 @@ pub fn read_workbook_bytes_with_options<W: WorkbookSink<Sheet: SheetSink>>(
         read_xls(bytes, options)
     } else {
         Err(IoError::Unsupported(
-            "input is neither an XLSX ZIP nor an XLS compound file".into(),
+            crate::WorkbookFeatureError::UnsupportedFileSignature,
         ))
     }
 }
@@ -128,7 +133,9 @@ fn read_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
         let bytes = package.read(&identity.part)?;
         let sheet = workbook
             .sheet_by_name_mut(&identity.name)
-            .ok_or_else(|| IoError::Read("missing text worksheet".into()))?;
+            .ok_or(IoError::Read(
+                crate::WorkbookReadError::MissingTextWorksheet,
+            ))?;
         if ooxml::apply_sheet_text(&bytes, &shared, sheet, &styles.cells, &mut warnings)? {
             ooxml::apply_sheet_spills(&bytes, &identity.name, &mut workbook)?;
         }
@@ -141,30 +148,6 @@ fn read_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
     Ok(workbook)
 }
 
-/// Backend failures distinguish content needing transient adaptation from input errors.
-enum XlsxDecodeError {
-    NeedsAdapter,
-    Input(IoError),
-}
-impl XlsxDecodeError {
-    /// Convert a terminal backend failure to the public I/O error.
-    fn into_io(self) -> IoError {
-        match self {
-            Self::NeedsAdapter => IoError::Read("unsupported cell content after adaptation".into()),
-            Self::Input(error) => error,
-        }
-    }
-}
-impl From<IoError> for XlsxDecodeError {
-    fn from(error: IoError) -> Self {
-        Self::Input(error)
-    }
-}
-impl From<crate::ModelError> for XlsxDecodeError {
-    fn from(error: crate::ModelError) -> Self {
-        Self::Input(error.into())
-    }
-}
 /// Stream decoded cells directly into Poirot without allocating a second workbook.
 fn decode_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
     bytes: &[u8],
@@ -176,7 +159,8 @@ fn decode_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
             XlsxDecodeError::NeedsAdapter
         }
         calamine::XlsxError::UnexpectedNode("v, f, or is") => XlsxDecodeError::NeedsAdapter,
-        _ => XlsxDecodeError::Input(IoError::Read(error.to_string())),
+        // Calamine owns this classification; retain every unmatched dependency cause.
+        _ => XlsxDecodeError::Input(IoError::Xlsx(error)),
     };
     let mut reader = Xlsx::new(std::io::Cursor::new(bytes)).map_err(backend_error)?;
     let mut workbook = W::default();
@@ -192,7 +176,7 @@ fn decode_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
         .ne(plan.sheets.iter().map(|s| s.name.as_str()))
     {
         return Err(IoError::Read(
-            "backend worksheet inventory differs from checked OPC plan".into(),
+            crate::WorkbookReadError::BackendWorksheetInventoryDiffersFromCheckedOpcPlan,
         )
         .into());
     }
@@ -231,15 +215,15 @@ fn decode_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
             sheet.set(address, cell)?;
         }
         for (address, index) in followers {
-            let (origin, source) = masters
-                .get(&index)
-                .ok_or_else(|| IoError::Read("shared formula has no master".into()))?;
+            let (origin, source) = masters.get(&index).ok_or(IoError::Read(
+                crate::WorkbookReadError::SharedFormulaHasNoMaster,
+            ))?;
             let formula =
                 calamine::expand_shared_formula(source, *origin, (address.row, address.col))
                     .map_err(backend_error)?;
-            let cell = sheet
-                .get_mut(address)
-                .ok_or_else(|| IoError::Read("missing shared follower".into()))?;
+            let cell = sheet.get_mut(address).ok_or(IoError::Read(
+                crate::WorkbookReadError::MissingSharedFollower,
+            ))?;
             cell.formula = Some(formula);
         }
     }
@@ -265,7 +249,7 @@ fn read_xls<W: WorkbookSink<Sheet: SheetSink>>(
             identity_comparisons += 1;
             if identity_comparisons > budget.max_records as u64 {
                 return Err(PreflightError::Resource {
-                    resource: "import identifier comparisons",
+                    resource: crate::BiffResource::ImportIdentifierComparisons,
                     requested: identity_comparisons,
                     limit: budget.max_records as u64,
                 }
@@ -308,7 +292,7 @@ fn read_xls<W: WorkbookSink<Sheet: SheetSink>>(
             identity_comparisons += 1;
             if identity_comparisons > budget.max_records as u64 {
                 return Err(PreflightError::Resource {
-                    resource: "import identifier comparisons",
+                    resource: crate::BiffResource::ImportIdentifierComparisons,
                     requested: identity_comparisons,
                     limit: budget.max_records as u64,
                 }

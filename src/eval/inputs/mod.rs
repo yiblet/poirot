@@ -3,7 +3,6 @@
 //!
 //! Depends on: the workbook model only.
 
-/// One authored mutation of a cell.
 mod cell_edit;
 /// Merged column traversal of baseline and override cursors.
 mod column_traversal;
@@ -15,6 +14,8 @@ mod effective_workbook;
 mod input_cells;
 /// Column-ordered cursor over authoritative edits.
 mod input_column;
+/// One authored mutation of a cell.
+mod input_error;
 /// Merged base and overlay source iteration.
 mod overlay_cells;
 /// Bounded merged iteration for sparse range consumers.
@@ -30,3 +31,5 @@ pub(in crate::eval) use cell_edit::CellEdit;
 pub use effective_stored_cells::EffectiveStoredCells;
 pub use effective_workbook::EffectiveWorkbook;
 pub use run_inputs::RunInputs;
+
+pub use input_error::InputError;

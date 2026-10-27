@@ -80,7 +80,7 @@ fn tiny_budget_refuses_invalid_cfb_before_backend_decode() {
             }
         ),
         Err(IoError::BiffPreflight(PreflightError::Resource {
-            resource: "CFB FAT capacity",
+            resource: poirot_io::BiffResource::CfbFatCapacity,
             requested: 1,
             limit: 0
         }))
@@ -105,20 +105,27 @@ fn encrypted_xlsx_container_is_reported_as_encrypted() {
     let mut b = compound(&[]);
     name_entry(&mut b, 1, "EncryptionInfo", 2);
     name_entry(&mut b, 2, "EncryptedPackage", 2);
-    let error = read_workbook_bytes::<poirot::model::Workbook>(&b).unwrap_err();
+    let error = poirot::Workbook::from_bytes(&b).unwrap_err();
+    let cause = std::error::Error::source(&error).unwrap();
+    assert!(matches!(
+        cause.downcast_ref::<PreflightError>(),
+        Some(PreflightError::EncryptedXlsx)
+    ));
     assert_eq!(
-        error.to_string(),
+        cause.to_string(),
         "encrypted (password-protected) XLSX workbooks are not supported"
     );
     assert!(matches!(
         error,
-        IoError::BiffPreflight(PreflightError::EncryptedXlsx)
+        poirot::files::IoError::BiffPreflight(poirot::files::PreflightError::EncryptedXlsx)
     ));
 }
 #[test]
 fn compound_without_workbook_or_encrypted_package_stays_malformed() {
-    let missing = IoError::BiffPreflight(PreflightError::Malformed("missing Workbook/Book stream"))
-        .to_string();
+    let missing = IoError::BiffPreflight(PreflightError::Malformed(
+        poirot_io::BiffStructureError::MissingWorkbookBookStream,
+    ))
+    .to_string();
     let mut neither = compound(&[]);
     name_entry(&mut neither, 1, "Contents", 2);
     let mut info_only = compound(&[]);
@@ -128,11 +135,13 @@ fn compound_without_workbook_or_encrypted_package_stays_malformed() {
     name_entry(&mut free_package, 1, "EncryptionInfo", 2);
     name_entry(&mut free_package, 2, "EncryptedPackage", 0);
     for b in [neither, info_only, free_package] {
-        let error = read_workbook_bytes::<poirot::model::Workbook>(&b).unwrap_err();
+        let error = poirot::Workbook::from_bytes(&b).unwrap_err();
         assert_eq!(error.to_string(), missing);
         assert!(matches!(
             error,
-            IoError::BiffPreflight(PreflightError::Malformed("missing Workbook/Book stream"))
+            IoError::BiffPreflight(PreflightError::Malformed(
+                poirot_io::BiffStructureError::MissingWorkbookBookStream
+            ))
         ));
     }
 }
@@ -143,7 +152,7 @@ fn malformed_chain_is_typed_and_does_not_panic() {
     assert!(matches!(
         read_workbook_bytes::<poirot::model::Workbook>(&b),
         Err(IoError::BiffPreflight(PreflightError::Malformed(
-            "cyclic sector chain"
+            poirot_io::BiffStructureError::CyclicSectorChain
         )))
     ));
 }
@@ -277,7 +286,7 @@ fn row_hidden_flag_imports_as_manually_hidden_rows() {
         vec![(1, hidden), (5, hidden)]
     );
     assert_eq!(
-        sheet.get("A2".parse().unwrap()).map(|c| c.value.clone()),
+        sheet.get("A2").unwrap().map(|c| c.value.clone()),
         Some(poirot::model::CellValue::Number(4.0))
     );
 }
