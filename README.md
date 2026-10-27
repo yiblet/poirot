@@ -16,15 +16,14 @@ with IronCalc and HyperFormula using the same workloads in separate containers.
 
 ## Quick start
 
-Poirot requires Rust 1.90 or newer. Version 0.1.0 is being prepared for
-publication. Once published, add it to `Cargo.toml`:
+Poirot requires Rust 1.90 or newer. Add it to `Cargo.toml`:
 
 ```toml
 [dependencies]
 poirot = "0.1.0"
 ```
 
-Until then, use the Git dependency:
+To use the latest development version, use the Git dependency:
 
 ```toml
 [dependencies]
@@ -175,8 +174,7 @@ cargo run --example public_workbook -- input.xlsx output.xlsx
 ```
 
 Browse the API and task guide with `cargo doc -p poirot --no-deps --open`.
-After publication, the [API reference](https://docs.rs/poirot/0.1.0/poirot/)
-will also be available on docs.rs.
+The [API reference](https://docs.rs/poirot/0.1.0/poirot/) is available on docs.rs.
 See [Contributing](CONTRIBUTING.md) to work on Poirot.
 
 The application API uses `Evaluation` for direct scenarios and `Overlay` for
