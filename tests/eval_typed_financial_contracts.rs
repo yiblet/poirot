@@ -46,10 +46,8 @@ fn whole_collections_keep_schedule_blanks_and_cashflow_origins() {
 
 #[test]
 fn child_first_numeric_text_and_collection_controls_spill_in_both_evaluators() {
-    use poirot::eval::{
-        EvaluationTarget,
-        overlay::{Evaluation, EvaluationContext, Overlay},
-    };
+    use poirot::eval::overlay::{Evaluation, Overlay};
+    use poirot::eval::{EvaluationContext, EvaluationTarget};
     let mut workbook = Workbook::new();
     let sheet = workbook.add_sheet("S").unwrap();
     for (cell, formula) in [
@@ -117,9 +115,9 @@ fn child_first_numeric_text_and_collection_controls_spill_in_both_evaluators() {
 
 #[test]
 fn all_financial_catalog_shapes_match_their_typed_source_roles() {
-    use poirot::eval::registry::{FunctionId, ResultRule};
+    use poirot::eval::functions::registry::{FunctionId, ResultRule};
     let mut count = 0;
-    for descriptor in poirot::eval::registry::descriptors_for_policy(
+    for descriptor in poirot::eval::functions::registry::descriptors_for_policy(
         poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
     ) {
         if !matches!(descriptor.handler, FunctionId::Financial(_)) {

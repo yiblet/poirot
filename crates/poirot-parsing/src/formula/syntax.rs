@@ -1,5 +1,5 @@
 //! Pure canonical syntax/grouping rules shared with external encoders.
-use super::*;
+use super::{BinaryOp, Expr, ParseError, ParseErrorKind, UnaryOp, parse_formula};
 impl BinaryOp {
     /// Return operator binding strength for parsing-compatible printing.
     pub fn precedence(self) -> u8 {
@@ -326,6 +326,7 @@ fn write_expr(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::formula::{FormulaParsePolicy, parse_formula_with_policy};
     #[test]
     fn canonical_printer_preserves_semantic_grouping_and_current_precedence() {
         for text in [

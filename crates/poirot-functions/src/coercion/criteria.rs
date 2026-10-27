@@ -35,7 +35,7 @@ pub enum Cell {
 /// Admit a supplied Excel criterion after scalar selection and omission handling.
 /// An empty reference (including one forwarded by selection) requests numeric
 /// zero. Empty text remains text; candidate range members are not converted.
-pub fn coercev2_criteria_excel_operand(value: Cell) -> Cell {
+pub fn coerce_criteria_excel_operand(value: Cell) -> Cell {
     match value {
         Cell::Blank => Cell::Number(0.0),
         value => value,
@@ -45,14 +45,14 @@ pub fn coercev2_criteria_excel_operand(value: Cell) -> Cell {
 /// Admit parenthesized negative numeric criteria without changing literal text grammars.
 /// Saved Excel sumifs.xls criteria and independent Calc sibling checks establish
 /// the accounting form; the classic plain-number parser remains unchanged.
-pub fn coercev2_criteria_accounting_threshold(value: Cell) -> Cell {
+pub fn coerce_criteria_accounting_threshold(value: Cell) -> Cell {
     if let Cell::Text(text) = &value {
         let text = text.trim_matches(|c: char| c <= '\u{20}');
         if let Some(inner) = text.strip_prefix('(').and_then(|s| s.strip_suffix(')')) {
             let inner = inner.trim_matches(|c: char| c <= '\u{20}');
             if !inner.starts_with(['+', '-'])
                 && let Some(number) =
-                    crate::coercion::compatibility::coercev2_criteria_number_text(inner)
+                    crate::coercion::compatibility::coerce_criteria_number_text(inner)
                 && number >= 0.
             {
                 return Cell::Number(-number);
@@ -66,7 +66,7 @@ pub fn coercev2_criteria_accounting_threshold(value: Cell) -> Cell {
 /// number parser. Non-numeric text stays literal; operational failures escape.
 /// The consumer must select an ordered comparison (<, <=, >, >=); equality and
 /// inequality retain literal matching. Already typed operands keep their precedence.
-pub fn coercev2_criteria_ordered_threshold<E>(
+pub fn coerce_criteria_ordered_threshold<E>(
     value: Cell,
     parse: impl FnOnce(&str) -> Result<Option<f64>, E>,
 ) -> Result<Cell, E> {
@@ -80,7 +80,7 @@ pub fn coercev2_criteria_ordered_threshold<E>(
 }
 
 /// Origin-sensitive admission of an eligible subtotal member.
-pub fn coercev2_subtotal_member(
+pub fn coerce_subtotal_member(
     value: &Cell,
     referenced: bool,
     kind: i32,
@@ -89,7 +89,7 @@ pub fn coercev2_subtotal_member(
         Cell::Number(n) => Some(*n),
         Cell::Bool(b) if !referenced && kind != 2 && kind != 3 => Some(if *b { 1.0 } else { 0.0 }),
         Cell::Text(s) if !referenced && kind != 2 && kind != 3 => Some(
-            crate::coercion::compatibility::coercev2_criteria_number_text(s).ok_or(Error::Value)?,
+            crate::coercion::compatibility::coerce_criteria_number_text(s).ok_or(Error::Value)?,
         ),
         Cell::Error(e) if kind != 2 && kind != 3 => return Err(*e),
         _ => None,

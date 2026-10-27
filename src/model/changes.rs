@@ -1,5 +1,8 @@
 //! Owned workbook mutations. Cache writes preserve formulas; literal writes replace them.
-use crate::model::*;
+use crate::model::{
+    Cell, CellAddress, CellStyle, CellValue, DateSystem, ModelError, RowVisibility, Workbook,
+    Worksheet, identifiers, normalize_formula, snapshot,
+};
 use std::collections::BTreeMap;
 
 /// One workbook mutation in a batch passed to [`Workbook::apply`].
@@ -105,7 +108,7 @@ pub enum WorkbookChange {
     },
     /// Rename a sheet without changing references in formulas.
     ///
-    /// Use a [`RenameSheetPlan`] when references must follow the new name.
+    /// Use `poirot::Workbook::rename_sheet` when references must follow the new name.
     RenameSheet {
         /// Zero-based index of the worksheet to change.
         sheet: usize,
@@ -261,7 +264,11 @@ impl Workbook {
         Ok(staged)
     }
     fn apply_one(&mut self, change: WorkbookChange) -> Result<(), ModelError> {
-        use WorkbookChange::*;
+        use WorkbookChange::{
+            AddSheet, ClearSpillCache, CreateRow, DefineName, RemoveCell, RemoveName, RemoveRow,
+            RenameSheet, SetCachedValue, SetCell, SetDateSystem, SetFormula, SetRowVisibility,
+            SetSpillAnchorCachedValue, SetSpillCachedValue, SetStyle, SetValue,
+        };
         match change {
             SetValue {
                 sheet,
@@ -388,6 +395,7 @@ impl Workbook {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::ExcelText;
     fn at(s: &str) -> CellAddress {
         s.parse().unwrap()
     }
@@ -597,6 +605,7 @@ fn rejected_source_replacement_preserves_saved_spill_ownership() {
 #[cfg(test)]
 mod spill_extent_tests {
     use super::*;
+    use crate::model::MAX_ROWS;
     fn at(s: &str) -> CellAddress {
         s.parse().unwrap()
     }

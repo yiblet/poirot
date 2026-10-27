@@ -12,7 +12,6 @@
 //! consume to completion before publishing a hash or collected bindings.
 use crate::formula::references::cell_coordinates;
 use crate::formula::tokens::{identifier, identifier_character, number_token, whitespace};
-use std::hash::{Hash, Hasher};
 
 /// Coordinate representation shared with the full reference parser.
 pub use crate::formula::references::CellCoordinates;
@@ -319,10 +318,28 @@ impl<'a> Iterator for Tokens<'a> {
     }
 }
 
+/// FNV-1a 64-bit offset basis (<http://www.isthe.com/chongo/tech/comp/fnv/>).
+const FNV_OFFSET_BASIS: u64 = 0xcbf2_9ce4_8422_2325;
+
+/// FNV-1a 64-bit prime (<http://www.isthe.com/chongo/tech/comp/fnv/>).
+const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+
+/// Fold `bytes` into a 64-bit FNV-1a state.
+fn fnv1a(state: u64, bytes: &[u8]) -> u64 {
+    bytes.iter().fold(state, |state, &byte| {
+        (state ^ u64::from(byte)).wrapping_mul(FNV_PRIME)
+    })
+}
+
 /// Hash is only a bucket selector; `normalized_equal` must confirm a cache hit.
-/// The hash algorithm is process/library-local, not a persistent file format.
+///
+/// The value is persisted in prepared checkpoints, so the algorithm is fixed:
+/// 64-bit FNV-1a over the normalized token stream, where each literal token
+/// contributes byte `0`, its byte length as a little-endian `u64`, then its raw
+/// bytes, and each cell token contributes byte `1`. Changing it requires a
+/// prepared-format compatibility bump; the golden-value test pins it.
 pub fn normalized_hash(source: &str) -> Result<u64, Unsupported> {
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    let mut hash = FNV_OFFSET_BASIS;
     for token in Tokens::new(source) {
         let token = token?;
         match token.kind {
@@ -330,14 +347,19 @@ pub fn normalized_hash(source: &str) -> Result<u64, Unsupported> {
             | TokenKind::Number
             | TokenKind::Text
             | TokenKind::FixedReference => {
-                0u8.hash(&mut hasher);
-                token.raw.hash(&mut hasher);
+                // `usize` is at most 64 bits on supported targets; widening
+                // keeps the encoded length independent of the platform.
+                let length = token.raw.len() as u64;
+                hash = fnv1a(hash, &[0]);
+                hash = fnv1a(hash, &length.to_le_bytes());
+                hash = fnv1a(hash, token.raw.as_bytes());
             }
-            TokenKind::Cell(_) => 1u8.hash(&mut hasher),
+            TokenKind::Cell(_) => hash = fnv1a(hash, &[1]),
         }
     }
-    Ok(hasher.finish())
+    Ok(hash)
 }
+
 /// Exact normalized token comparison, including complete tails on both sides.
 /// Reference anchor flags/coordinates become per-instance bindings, not key bytes.
 pub fn normalized_equal(left: &str, right: &str) -> Result<bool, Unsupported> {
@@ -616,5 +638,29 @@ mod tests {
         assert!(normalized_hash("SUM(A1").is_ok());
         assert!(parse_formula("SUM(A1").is_err());
         assert_eq!(normalized_equal("SUM(A1)", "SUM(B2"), Ok(false));
+    }
+    #[test]
+    fn fnv1a_matches_published_test_vectors() {
+        // Vectors from the FNV reference test suite
+        // (<http://www.isthe.com/chongo/tech/comp/fnv/>, `fnv1a64` of "", "a", "foobar").
+        assert_eq!(fnv1a(FNV_OFFSET_BASIS, b""), 0xcbf2_9ce4_8422_2325);
+        assert_eq!(fnv1a(FNV_OFFSET_BASIS, b"a"), 0xaf63_dc4c_8601_ec8c);
+        assert_eq!(fnv1a(FNV_OFFSET_BASIS, b"foobar"), 0x8594_4171_f739_67e8);
+    }
+    #[test]
+    fn normalized_hash_values_are_pinned() {
+        // Persisted in prepared checkpoints: a change here needs a compatibility bump.
+        // Expected values were computed independently from the documented encoding
+        // (FNV-1a 64; literal = 0, u64 LE length, bytes; cell = 1).
+        for (source, expected) in [
+            ("A1", 0xaf63_bc4c_8601_b62c),
+            ("1", 0xd668_c36e_8c5c_165d),
+            ("SUM(A1,$B$2)", 0x991b_a86d_c27d_ac4b),
+            ("SUM(Z9,C3)", 0x991b_a86d_c27d_ac4b),
+            ("IF(A1>0,\"yes\",Sheet2!B$3)", 0x6724_7e86_7282_43ee),
+            ("A:A+TRUE", 0x62fb_6349_34db_58d0),
+        ] {
+            assert_eq!(normalized_hash(source), Ok(expected), "{source}");
+        }
     }
 }

@@ -1,13 +1,20 @@
 //! Observed prepared-source error replacement over a completed member mask.
-use super::{ArgumentRole, Broadcast, Deferred, Prepared};
-use crate::eval::execution_observation::OperationId;
-use crate::eval::host::CallHost;
-use crate::eval::*;
+use super::argument_role::ArgumentRole;
+use super::broadcast::Broadcast;
+use super::prepared::Prepared;
+use super::with_demand::Deferred;
+use crate::eval::host::{CallHost, SelectionAccess};
+use crate::eval::limits::EvalResult;
+use crate::eval::observe::OperationId;
+use crate::eval::values::{FunctionResult, VALUE_ERROR, Value};
+use crate::model::CellValue::Error;
+use crate::model::{CellError, CellValue};
 
 /// Catch policy and observation hooks independent of member traversal and geometry.
 pub(in crate::eval::adapters) trait ErrorSelector {
     /// Decide whether this spreadsheet error requires the fallback source.
     fn catches(&self, error: CellError) -> bool;
+
     /// Publish an uncaught source check without evaluating the fallback.
     fn uncaught(
         &self,
@@ -15,6 +22,7 @@ pub(in crate::eval::adapters) trait ErrorSelector {
         source: Option<OperationId>,
         checked: &Value,
     ) -> EvalResult<()>;
+
     /// Prepare the demanded fallback while retaining its observation identity.
     fn fallback(
         &self,
@@ -34,9 +42,9 @@ pub(in crate::eval::adapters) fn execute<S: ErrorSelector>(
     fallback: Deferred<Broadcast>,
     selector: S,
 ) -> FunctionResult<Value> {
-    let (operation, value) = host.selected_argument(source.argument())?;
+    let (operation, value) = SelectionAccess::new(host).argument(source.argument())?;
     let source = Prepared::<Broadcast>::new(value);
-    let shape = source.shape(host).ok_or(VALUE_ERROR)?;
+    let shape = source.shape().ok_or(VALUE_ERROR)?;
     let count = shape
         .rows
         .checked_mul(shape.columns)
@@ -47,7 +55,7 @@ pub(in crate::eval::adapters) fn execute<S: ErrorSelector>(
         .map_err(|_| host.allocation_failure())?;
     let allocation_failure = host.allocation_failure();
     let mut caught = None;
-    let result = host.selected_array(shape, |reader, row, column| {
+    let result = SelectionAccess::new(host).array(shape, |reader, row, column| {
         let value = source.read(reader, shape, row, column)?;
         let replace = matches!(value, Error(error) if selector.catches(error));
         if replace

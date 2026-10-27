@@ -2,7 +2,8 @@
 // Specifications retain owned model snapshots and exercise engine policy updates directly.
 use poirot::calculation::EvaluationContext;
 use poirot::eval;
-use poirot::eval::overlay::{Evaluation, EvaluationPolicy, Overlay};
+use poirot::eval::EvaluationPolicy;
+use poirot::eval::overlay::{Evaluation, Overlay};
 use poirot::model;
 use schema::{Cell, Currency, EvidenceKind, Name, Scalar, SettingsUpdate, TextPolicy};
 

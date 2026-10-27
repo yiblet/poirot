@@ -3,31 +3,31 @@
 //! This crate is for function implementations. A conversion request selects the
 //! accepted value types and how to treat missing arguments, text, and cell references.
 //!
-//! Use [`Input`](crate::coercion::Input) to describe an argument and [`coercev2_args`](crate::coercion::coercev2_args) to convert it. Requests
+//! Use [`Input`](crate::coercion::Input) to describe an argument and [`coerce_args`](crate::coercion::coerce_args) to convert it. Requests
 //! such as [`DecimalNumber`](crate::coercion::DecimalNumber) and [`ExactText`](crate::coercion::ExactText) state what the function accepts. The caller
-//! supplies a [`CoercionV2Context`](crate::coercion::CoercionV2Context) to track conversion work and text allocation.
+//! supplies a [`CoercionContext`](crate::coercion::CoercionContext) to track conversion work and text allocation.
 //!
 //! Most workbook applications should use [poirot](https://docs.rs/poirot).
 //!
 //! ```
 //! use poirot_functions::coercion::{
-//!     CellValue, CoercionV2Context, DecimalNumber, ExactText, FirstOf, Choice,
-//!     Input, coercev2_args,
+//!     CellValue, CoercionContext, DecimalNumber, ExactText, FirstOf, Choice,
+//!     Input, coerce_args,
 //! };
 //! let left = CellValue::Text("2.5".into());
 //! let right = CellValue::Number(3.0);
 //! type DecimalPair = (DecimalNumber, DecimalNumber);
-//! let mut context = CoercionV2Context::default();
-//! let (a, b) = coercev2_args::<DecimalPair>(
+//! let mut context = CoercionContext::default();
+//! let (a, b) = coerce_args::<DecimalPair>(
 //!     &[Input::direct(&left), Input::direct(&right)], &mut context,
 //! )?;
 //! assert_eq!(a + b, 5.5);
 //!
 //! // Exact text has priority over interpreting numeric-looking text.
 //! type Accepted = FirstOf<((ExactText,), (DecimalNumber,))>;
-//! let result = coercev2_args::<Accepted>(&[Input::direct(&left)], &mut context)?;
+//! let result = coerce_args::<Accepted>(&[Input::direct(&left)], &mut context)?;
 //! assert!(matches!(result, Choice::First(_)));
-//! # Ok::<(), poirot_functions::coercion::CoercionV2Failure>(())
+//! # Ok::<(), poirot_functions::coercion::CoercionFailure>(())
 //! ```
 
 mod context;
@@ -37,9 +37,9 @@ mod request;
 mod scalar;
 
 pub use crate::scalar::{CellError, CellValue, Origin, TextRef};
-pub use context::{CoercionV2Context, CoercionV2Failure, Limits, Mismatch, Resource, Usage};
+pub use context::{CoercionContext, CoercionFailure, Limits, Mismatch, Resource, Usage};
 pub use input::Input;
-pub use request::{Choice, CoerceV2, FirstOf, Signature, coercev2, coercev2_args};
+pub use request::{Choice, Coerce, FirstOf, Signature, coerce, coerce_args};
 pub use scalar::{
     ArrayMember, DecimalNumber, Direct, ExactBoolean, ExactError, ExactNumber, ExactText,
     FormulaText, Identity, LogicalBoolean, Optional, Referenced, TextCount,
@@ -68,7 +68,7 @@ pub mod collections;
 pub mod numeric_text;
 
 mod formatted_number;
-pub use formatted_number::coercev2_formatted_number;
+pub use formatted_number::coerce_formatted_number;
 
 /// Complex-number argument grammars and computed result spelling.
 pub mod complex;
@@ -88,7 +88,7 @@ pub mod series;
 /// Publish a completed worksheet formula member without changing empty text.
 /// Intermediate expressions and physical empty cells must not request this policy.
 // TODO(coercion-non-argument): [LOW] Worksheet publication intentionally loses blank identity; invoking it during expression evaluation would change predicates and selection.
-pub fn coerce_worksheet_formula_result(value: &mut CellValue) {
+pub fn convert_worksheet_formula_result(value: &mut CellValue) {
     if matches!(value, CellValue::Blank) {
         *value = CellValue::Number(0.0);
     }

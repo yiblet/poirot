@@ -1,5 +1,5 @@
 use poirot::eval::{
-    EvaluationBudgets, EvaluationInputs, EvaluationOutcome, bound::FormulaPlan, run_plan,
+    EvaluationBudgets, EvaluationInputs, EvaluationOutcome, compile::bound::FormulaPlan, run_plan,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 

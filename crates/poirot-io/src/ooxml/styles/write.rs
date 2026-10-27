@@ -1,11 +1,17 @@
 //! Canonical style identities registered during the existing backend traversal.
-use super::{codec::*, validate_theme};
+use super::{
+    codec::{Token, valid},
+    validate_theme,
+};
 use crate::ooxml::{
     budget::{SizeCounter, next_total},
     package::Package,
     xml::{events, write_event, xml},
 };
-use crate::*;
+use crate::{
+    Alignment, Borders, CellStyle, ColorSource, FontStyle, PatternFill, PatternType, StyleColor,
+    StyleContext, TextRotation,
+};
 use crate::{IoError, WriteOptions};
 use quick_xml::{
     Writer,

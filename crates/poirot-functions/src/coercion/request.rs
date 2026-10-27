@@ -1,41 +1,41 @@
-use crate::coercion::{CoercionV2Context, CoercionV2Failure, Input, Mismatch};
+use crate::coercion::{CoercionContext, CoercionFailure, Input, Mismatch};
 
 /// A named scalar rule with a statically known output, possibly borrowed.
-pub trait CoerceV2<'a> {
+pub trait Coerce<'a> {
     type Output;
 
-    fn coercev2_input(
+    fn coerce_input(
         input: Input<'a>,
-        context: &mut CoercionV2Context,
-    ) -> Result<Self::Output, CoercionV2Failure>;
+        context: &mut CoercionContext,
+    ) -> Result<Self::Output, CoercionFailure>;
 }
 
 /// A whole argument signature, rather than independent per-argument alternatives.
 pub trait Signature<'a> {
     type Output;
 
-    fn coercev2_inputs(
+    fn coerce_inputs(
         inputs: &[Input<'a>],
-        context: &mut CoercionV2Context,
-    ) -> Result<Self::Output, CoercionV2Failure>;
+        context: &mut CoercionContext,
+    ) -> Result<Self::Output, CoercionFailure>;
 }
 
 /// Request one scalar rule. Existing values are never rewritten by an attempt.
-pub fn coercev2<'a, R: CoerceV2<'a>>(
+pub fn coerce<'a, R: Coerce<'a>>(
     input: Input<'a>,
-    context: &mut CoercionV2Context,
-) -> Result<R::Output, CoercionV2Failure> {
+    context: &mut CoercionContext,
+) -> Result<R::Output, CoercionFailure> {
     context.charge(1)?;
-    R::coercev2_input(input, context)
+    R::coerce_input(input, context)
 }
 
 /// Request a typed tuple or an ordered signature choice.
-pub fn coercev2_args<'a, S: Signature<'a>>(
+pub fn coerce_args<'a, S: Signature<'a>>(
     inputs: &[Input<'a>],
-    context: &mut CoercionV2Context,
-) -> Result<S::Output, CoercionV2Failure> {
+    context: &mut CoercionContext,
+) -> Result<S::Output, CoercionFailure> {
     context.charge(1)?;
-    S::coercev2_inputs(inputs, context)
+    S::coerce_inputs(inputs, context)
 }
 
 /// A statically typed choice of complete signatures, tried left to right.
@@ -52,14 +52,14 @@ pub enum Choice<A, B> {
 impl<'a, A: Signature<'a>, B: Signature<'a>> Signature<'a> for FirstOf<(A, B)> {
     type Output = Choice<A::Output, B::Output>;
 
-    fn coercev2_inputs(
+    fn coerce_inputs(
         inputs: &[Input<'a>],
-        context: &mut CoercionV2Context,
-    ) -> Result<Self::Output, CoercionV2Failure> {
-        match coercev2_args::<A>(inputs, context) {
+        context: &mut CoercionContext,
+    ) -> Result<Self::Output, CoercionFailure> {
+        match coerce_args::<A>(inputs, context) {
             Ok(value) => Ok(Choice::First(value)),
-            Err(CoercionV2Failure::Mismatch(_)) => {
-                coercev2_args::<B>(inputs, context).map(Choice::Second)
+            Err(CoercionFailure::Mismatch(_)) => {
+                coerce_args::<B>(inputs, context).map(Choice::Second)
             }
             Err(failure) => Err(failure),
         }
@@ -69,14 +69,11 @@ impl<'a, A: Signature<'a>, B: Signature<'a>> Signature<'a> for FirstOf<(A, B)> {
 impl Signature<'_> for () {
     type Output = ();
 
-    fn coercev2_inputs(
-        inputs: &[Input<'_>],
-        _: &mut CoercionV2Context,
-    ) -> Result<(), CoercionV2Failure> {
+    fn coerce_inputs(inputs: &[Input<'_>], _: &mut CoercionContext) -> Result<(), CoercionFailure> {
         if inputs.is_empty() {
             Ok(())
         } else {
-            Err(CoercionV2Failure::Mismatch(Mismatch::Arity {
+            Err(CoercionFailure::Mismatch(Mismatch::Arity {
                 expected: 0,
                 actual: inputs.len(),
             }))
@@ -86,20 +83,20 @@ impl Signature<'_> for () {
 
 macro_rules! tuple_signature {
     ($count:expr; $( $rule:ident $value:ident $index:expr ),*) => {
-        impl<'a, $( $rule: CoerceV2<'a> ),*> Signature<'a> for ($( $rule, )*) {
+        impl<'a, $( $rule: Coerce<'a> ),*> Signature<'a> for ($( $rule, )*) {
             type Output = ($( $rule::Output, )*);
 
-            fn coercev2_inputs(
+            fn coerce_inputs(
                 inputs: &[Input<'a>],
-                context: &mut CoercionV2Context,
-            ) -> Result<Self::Output, CoercionV2Failure> {
+                context: &mut CoercionContext,
+            ) -> Result<Self::Output, CoercionFailure> {
                 let [$( $value, )*] = inputs else {
-                    return Err(CoercionV2Failure::Mismatch(Mismatch::Arity {
+                    return Err(CoercionFailure::Mismatch(Mismatch::Arity {
                         expected: $count,
                         actual: inputs.len(),
                     }));
                 };
-                Ok(($( coercev2::<$rule>(*$value, context)
+                Ok(($( coerce::<$rule>(*$value, context)
                     .map_err(|error| error.at_argument($index))?, )*))
             }
         }

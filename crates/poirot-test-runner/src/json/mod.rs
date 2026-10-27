@@ -9,7 +9,8 @@ use poirot::editing::WorkbookChange;
 use poirot::styles::CellStyle;
 use poirot::{CellValue, Workbook};
 // The authored-style interpreter exercises component APIs unavailable on a value-only scenario.
-use poirot::eval::overlay::{Evaluation, EvaluationPolicy, Overlay};
+use poirot::eval::EvaluationPolicy;
+use poirot::eval::overlay::{Evaluation, Overlay};
 use schema::{Action, Content, Scenario, Suite};
 use serde::Serialize;
 use std::collections::BTreeSet;

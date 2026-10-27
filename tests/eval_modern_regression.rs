@@ -1,8 +1,6 @@
 //! Regression contracts derived from the exact systems in REGRESSION_SOURCES.md.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn book() -> Workbook {
     let mut b = Workbook::new();

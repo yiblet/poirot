@@ -23,7 +23,9 @@ fn old_complex_preparation_recovers_authored_source_and_edits() {
         overlay.evaluation(&context).unwrap().cell(output).unwrap(),
         "3+6j".into()
     );
-    let mut bytes = overlay.save_snapshot().to_buffer().unwrap();
+    let mut bytes = poirot::eval::artifact::SnapshotSaveBuilder::checkpoint(overlay.snapshot())
+        .to_buffer()
+        .unwrap();
     let previous = poirot::eval::overlay::snapshot::COMPATIBILITY_REVISION - 1;
     bytes[16..24].copy_from_slice(&previous.to_le_bytes());
     assert!(

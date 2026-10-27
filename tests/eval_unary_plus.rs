@@ -1,6 +1,7 @@
 //! Pinned POI unary plus retains text and coerces other selected scalar types.
-use poirot::eval::overlay::{EvaluationContext, EvaluationPolicy, Overlay};
+use poirot::eval::overlay::Overlay;
 use poirot::eval::*;
+use poirot::eval::{EvaluationContext, EvaluationPolicy};
 use poirot::model::{CellError, CellValue, ExcelText, Workbook};
 
 fn target(cell: &str) -> EvaluationTarget {
@@ -90,9 +91,10 @@ fn unary_plus_retains_text_and_consumes_other_scalar_types() {
             ("SUM(+{1,#N/A})", CellValue::Error(CellError::NA)),
         ] {
             let prepared = compiler.compile_formula(formula, &policy);
-            let bound =
-                bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap())
-                    .unwrap();
+            let bound = compile::bound::FormulaPlan::bind(
+                &poirot_parsing::formula::parse_formula(formula).unwrap(),
+            )
+            .unwrap();
             assert_eq!(
                 run.evaluate_formula(target("F2"), &prepared).unwrap(),
                 expected,

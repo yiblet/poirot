@@ -1,9 +1,9 @@
-use poirot_functions::coercion::coercev2_formatted_number;
+use poirot_functions::coercion::coerce_formatted_number;
 use poirot_functions::coercion::compatibility::NumericTextDecision;
 use poirot_functions::scalar::CellError;
 use poirot_parsing::number::NumberLocale;
 fn parse(text: &str, locale: &NumberLocale) -> Option<Result<f64, CellError>> {
-    match coercev2_formatted_number(text, locale, |_, _| Ok::<_, ()>(())).unwrap() {
+    match coerce_formatted_number(text, locale, |_, _| Ok::<_, ()>(())).unwrap() {
         NumericTextDecision::Number(value) => Some(value),
         NumericTextDecision::DateTime => None,
     }
@@ -126,7 +126,7 @@ fn empty_or_overlapping_tokens_cannot_create_nonadvancing_parsers() {
 #[test]
 fn admission_failure_precedes_any_grammar_or_normalization() {
     let mut calls = 0;
-    let result = coercev2_formatted_number("1,234.5%", &NumberLocale::EN_US, |bytes, work| {
+    let result = coerce_formatted_number("1,234.5%", &NumberLocale::EN_US, |bytes, work| {
         calls += 1;
         assert!(bytes >= 8 && work >= 8);
         Err("budget denied")

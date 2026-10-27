@@ -1,6 +1,16 @@
 //! Seeded random arrays and blank-border selection over existing host services.
-use super::*;
-use crate::eval::registry::MatrixFunction as F;
+use crate::eval::adapters::elementwise::matrices;
+use crate::eval::functions::registry::MatrixFunction;
+use crate::eval::host::{CallHost, OperandKind, OperandReader, RandomDraws};
+use crate::eval::limits::{CapabilityId, EvalResult};
+use crate::eval::session::Session;
+use crate::eval::values::{
+    Area, AreaKind, FunctionFailure, FunctionResult, ReferenceAreas, VALUE_ERROR, Value, err,
+};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::Ref;
+use crate::model::CellValue::{Blank, Number};
+use crate::model::{CellAddress, CellError, MAX_COLUMNS, MAX_ROWS};
 use poirot_functions::matrix::{TrimBounds, TrimMode, TrimRectangle};
 
 fn number(host: &mut CallHost<'_, '_>, index: usize, default: f64) -> FunctionResult<f64> {
@@ -10,6 +20,7 @@ fn number(host: &mut CallHost<'_, '_>, index: usize, default: f64) -> FunctionRe
     .scalars(host, index)?
     .get(0)
 }
+
 fn random(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<Value> {
     // Options are forced once, left to right, before output member draws.
     let rows = number(host, 0, 1.0)?;
@@ -38,7 +49,7 @@ fn random(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<V
             return Err(VALUE_ERROR.into());
         }
         Some(
-            crate::eval::random::Interval::new(bottom, top).ok_or_else(|| {
+            crate::eval::config::random::Interval::new(bottom, top).ok_or_else(|| {
                 host.unsupported(
                     CapabilityId::FunctionAdapter,
                     "RANDARRAY integer bounds exceed the exactly representable integer envelope",
@@ -51,7 +62,7 @@ fn random(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<V
     let rows = rows.trunc() as usize;
     let columns = columns.trunc() as usize;
     matrices::generate(host, rows, columns, address, |host, _, _| {
-        let draw = host.random_draw(interval)?;
+        let draw = RandomDraws::new(host).draw(interval)?;
         let value = if integer {
             draw
         } else {
@@ -74,15 +85,16 @@ fn mode(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<TrimMode> {
     }
     TrimMode::new(value.trunc() as u8).ok_or(VALUE_ERROR.into())
 }
+
 fn trim(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<Value> {
-    let shape = host.describe(0)?;
+    let shape = OperandReader::new(host).describe(0)?;
     if shape.missing || shape.sheets != 1 {
         return Err(VALUE_ERROR.into());
     }
     let rows = mode(host, 1)?;
     let columns = mode(host, 2)?;
-    let mut bounds =
-        TrimBounds::new(shape.rows, shape.columns).map_err(|error| modern::failure(host, error))?;
+    let mut bounds = TrimBounds::new(shape.rows, shape.columns)
+        .map_err(|error| matrices::failure(host, error))?;
     if rows != TrimMode::None || columns != TrimMode::None {
         matrices::visit(host, 0, |host, row, column, operand| {
             if operand.value != Blank {
@@ -116,8 +128,8 @@ fn trim(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<Val
             .checked_add(column)
             .ok_or(VALUE_ERROR)?;
         Ok(
-            poirot_functions::coercion::compatibility::coercev2_array_member(
-                host.read_cell(0, row, column)?.value,
+            poirot_functions::coercion::compatibility::coerce_array_member(
+                OperandReader::new(host).read_cell(0, row, column)?.value,
             ),
         )
     })
@@ -154,7 +166,7 @@ fn crop_reference(
         }
         Value::SignedRefs(areas) if areas.len() == 1 => {
             let area = *areas.first().ok_or(VALUE_ERROR)?;
-            let crop = crate::eval::signed_reference::SignedArea::new(
+            let crop = crate::eval::values::signed_reference::SignedArea::new(
                 AreaKind::Area,
                 area.sheet,
                 (
@@ -186,17 +198,18 @@ fn crop_reference(
         _ => Err(VALUE_ERROR.into()),
     }
 }
+
 /// Dispatch the two array producers without changing pinned-profile membership.
 pub(in crate::eval) fn execute(
-    function: F,
+    function: MatrixFunction,
     session: &mut Session<'_>,
     sheet: usize,
     address: CellAddress,
     args: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
     let valid = match function {
-        F::Randarray => args.len() <= 5,
-        F::Trimrange => (1..=3).contains(&args.len()),
+        MatrixFunction::Randarray => args.len() <= 5,
+        MatrixFunction::Trimrange => (1..=3).contains(&args.len()),
         _ => false,
     };
     if !valid {
@@ -207,11 +220,11 @@ pub(in crate::eval) fn execute(
         sheet,
         address,
         args,
-        usize::from(function == F::Trimrange),
+        usize::from(function == MatrixFunction::Trimrange),
     );
     let result = match function {
-        F::Randarray => random(&mut host, address),
-        F::Trimrange => trim(&mut host, address),
+        MatrixFunction::Randarray => random(&mut host, address),
+        MatrixFunction::Trimrange => trim(&mut host, address),
         _ => Err(VALUE_ERROR.into()),
     };
     match result {

@@ -1,10 +1,8 @@
 //! Independent complex arithmetic identities and documented Microsoft contracts.
 //! See each /excel/functions/im*-function page; expected coefficients derive
 //! directly from Cartesian arithmetic and principal branch definitions.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, ExcelText, Workbook};
 fn at(cell: &str) -> EvaluationTarget {
     EvaluationTarget {

@@ -1,10 +1,8 @@
 //! Independent Microsoft contracts and mathematical identities; no corpus-derived cases.
 //! https://support.microsoft.com/en-us/excel/functions/acot-function and corresponding
 //! utility function pages; currency rates are independently recorded in the pure kernel.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, DateSystem, Workbook};
 fn at(cell: &str) -> EvaluationTarget {
     EvaluationTarget {

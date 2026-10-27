@@ -46,7 +46,7 @@ pub struct FunctionPolicy {
 impl Function {
     /// Return the dependency and reference contract of this function.
     pub fn policy(self) -> FunctionPolicy {
-        use ReferenceFunction::*;
+        use ReferenceFunction::Indirect;
         let dependency = match self {
             Self::Reference(Indirect) => DependencyPolicy::DynamicReference,
             _ => DependencyPolicy::Ordinary,
@@ -71,7 +71,7 @@ pub struct CallPlan {
 impl CallPlan {
     /// Validate a typed call's arity and capture its execution policy.
     pub fn prepare(function: Function, count: usize) -> Result<Self, Failure> {
-        use ReferenceFunction::*;
+        use ReferenceFunction::Indirect;
         let valid = match function {
             Function::Reference(Indirect) => count >= 1,
             Function::Search(Search::Lookup) => (2..=3).contains(&count),

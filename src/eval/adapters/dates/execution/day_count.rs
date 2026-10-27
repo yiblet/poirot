@@ -1,5 +1,6 @@
-use super::calendar::{Date, epoch, leap, month_days};
-use crate::eval::{CellError, CellError::Num};
+use crate::model::CellError;
+use crate::model::CellError::Num;
+use poirot_functions::coercion::dates::calendar::{Date, epoch, leap, month_days};
 
 /// Compute a 360-day difference under the selected US or European convention.
 pub(super) fn days360(a: Date, b: Date, european: bool) -> i64 {
@@ -22,6 +23,7 @@ pub(super) fn days360(a: Date, b: Date, european: bool) -> i64 {
     }
     (by - a.y) * 360 + (bm - a.m) * 30 + bd - ad
 }
+
 /// Compute YEARFRAC under the selected day-count basis and source calendar rules.
 pub(super) fn yearfrac(
     start: f64,

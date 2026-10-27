@@ -1,5 +1,13 @@
 //! Tests of the consumed_dependencies contract.
-use super::*;
+use super::super::evaluation_probe::EvaluationProbe;
+use super::super::evaluation_run::EvaluationRun;
+use super::super::workbook_view::WorkbookView;
+use super::support::{A1, B1, C1, Reads, context, target, value, workbook};
+use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy, PreparedFormula};
+use crate::eval::limits::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::ports::same_result_identity;
+use crate::eval::ports::{DependencyRead, ReadEvent};
+use crate::model::{CellAddress, CellError, CellValue};
 
 #[test]
 fn shared_probes_report_dependency_edges_even_when_memoized() {
@@ -45,6 +53,7 @@ fn shared_probes_report_dependency_edges_even_when_memoized() {
         }));
     }
 }
+
 #[test]
 fn skipped_opaque_and_invalid_name_bodies_remain_deferred() {
     let mut workbook = workbook();
@@ -111,6 +120,7 @@ fn skipped_opaque_and_invalid_name_bodies_remain_deferred() {
     let _ = compiler.compile_workbook(&workbook, &policy);
     assert_eq!(compiler.usage().parse_attempts, before);
 }
+
 #[test]
 fn names_are_reused_and_namespace_selection_is_read_at_execution() {
     let mut workbook = workbook();
@@ -151,6 +161,7 @@ fn names_are_reused_and_namespace_selection_is_read_at_execution() {
     workbook.named_ranges.swap(0, 1);
     assert!(!plan.matches(&workbook, &policy));
 }
+
 #[test]
 fn sparse_membership_covers_future_insertions_and_actual_cells() {
     let mut workbook = workbook();
@@ -208,6 +219,7 @@ fn sparse_membership_covers_future_insertions_and_actual_cells() {
         CellValue::Number(7.)
     );
 }
+
 #[test]
 fn selected_unknown_records_opaque_consumption_and_abort_keeps_values_unpublished() {
     let mut workbook = workbook();

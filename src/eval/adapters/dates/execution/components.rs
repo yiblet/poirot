@@ -1,9 +1,11 @@
-use super::calendar::{
-    Date, civil, date, epoch, excel_serial_weekday, month_days, pinned_gregorian_weekday, serial,
-    valid,
+use crate::eval::config::calendar::{
+    date, excel_serial_weekday, pinned_gregorian_weekday, serial, valid,
 };
-use crate::eval::{CellError, CellError::Num, DateFunction, VALUE_ERROR};
-use crate::model::DateSystem;
+use crate::eval::functions::registry::DateFunction;
+use crate::eval::values::VALUE_ERROR;
+use crate::model::CellError::Num;
+use crate::model::{CellError, DateSystem};
+use poirot_functions::coercion::dates::calendar::{Date, civil, epoch, month_days};
 
 /// Normalize DATE components before validating the resulting workbook serial.
 /// Boundary rules and tests adapted from ClosedXML (MIT), revision
@@ -35,7 +37,7 @@ pub(super) fn excel_date(x: f64, y: f64, z: f64, system: DateSystem) -> Result<f
         m: (month - year_adjustment * 12.) as i64,
         d: 1,
     };
-    let serial = super::calendar::serial_day(first, system)
+    let serial = crate::eval::config::calendar::serial_day(first, system)
         .checked_add(day as i64)
         .and_then(|serial| serial.checked_sub(1))
         .ok_or(Num)?;
@@ -59,7 +61,7 @@ pub(super) fn iso_week(d: Date) -> f64 {
 
 /// Construct DATE or TIME using pinned source normalization and error rules.
 // TODO(coercion-non-argument): [MEDIUM] Numeric fidelity policy can replace subnormals with zero or nonfinite numbers with errors before a downstream consumer sees them.
-pub(super) fn coerce_numeric_outcome(
+pub(super) fn convert_numeric_outcome(
     name: DateFunction,
     x: i64,
     y: i64,

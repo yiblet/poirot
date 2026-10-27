@@ -1,8 +1,11 @@
 //! Exercise production-only execution, without the unit-test tree oracle.
+use poirot::eval::compile::bytecode;
+use poirot::eval::overlay::Overlay;
+use poirot::eval::overlay::snapshot::Snapshot;
 use poirot::eval::{
-    EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationRun, EvaluationTarget,
-    FormulaCompiler, PreparationPolicy, PreparedFormula, WorkbookView, bytecode,
-    overlay::{EvaluationContext as JobContext, Overlay, snapshot::Snapshot},
+    EvaluationBudgets, EvaluationContext as JobContext, EvaluationFailure, EvaluationInputs,
+    EvaluationRun, EvaluationTarget, FormulaCompiler, PreparationPolicy, PreparedFormula,
+    WorkbookView,
 };
 use poirot::model::{CellError, CellValue, Workbook};
 use std::sync::Arc;
@@ -80,7 +83,7 @@ fn explicit_lowering_failure_is_an_operational_abort_when_reached() {
     assert!(matches!(
         run.evaluate_formula(at("A1"), &failure),
         Err(EvaluationFailure::ResourceLimit {
-            capability: poirot::eval::budget::CapabilityId::FormulaCompilation,
+            capability: poirot::eval::CapabilityId::FormulaCompilation,
             ..
         })
     ));

@@ -28,7 +28,7 @@ pub enum ParseFailure {
 }
 
 /// Parse numeric text using explicit decimal and grouping separators.
-pub fn coercev2_number_value(text: &str, decimal: u16, grouping: u16) -> Result<f64, ParseFailure> {
+pub fn coerce_number_value(text: &str, decimal: u16, grouping: u16) -> Result<f64, ParseFailure> {
     let value_error = || ParseFailure::Spreadsheet(Error::Value);
     // These characters have special or invalid meanings inside Java's [x] regex.
     // A lone caret leaves an unclosed negated character class in Java.
@@ -102,7 +102,7 @@ pub fn coercev2_number_value(text: &str, decimal: u16, grouping: u16) -> Result<
 /// separators remain operationally unsupported pending native evidence. Omitted ones
 /// use the supplied numeric locale. The host admits text allocation and work
 /// before calling this kernel. Normalization never grows beyond the input bytes.
-pub fn coercev2_number_value_excel(
+pub fn coerce_number_value_excel(
     text: &str,
     locale: &poirot_parsing::number::NumberLocale,
     decimal_argument: Option<&str>,
@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn documented_numbervalue_enforces_converted_input_range_and_locale_tokens() {
         let locale = poirot_parsing::number::NumberLocale::EN_US;
-        let parse = |s| coercev2_number_value_excel(s, &locale, None, None);
+        let parse = |s| coerce_number_value_excel(s, &locale, None, None);
         assert_eq!(
             parse("1.23456789e308"),
             Err(ParseFailure::Spreadsheet(Error::Value))
@@ -241,17 +241,17 @@ mod tests {
         let synthetic =
             poirot_parsing::number::NumberLocale::new("::", Some("__"), None, "%", "|").unwrap();
         assert_eq!(
-            coercev2_number_value_excel("1__234::5", &synthetic, None, None),
+            coerce_number_value_excel("1__234::5", &synthetic, None, None),
             Ok(1234.5)
         );
         assert_eq!(
-            coercev2_number_value_excel("1.5", &synthetic, None, None),
+            coerce_number_value_excel("1.5", &synthetic, None, None),
             Err(ParseFailure::Spreadsheet(Error::Value))
         );
     }
     #[test]
     fn separators_spaces_percent_and_trailing_split() {
-        let parse = |s| coercev2_number_value(s, '.' as u16, ',' as u16);
+        let parse = |s| coerce_number_value(s, '.' as u16, ',' as u16);
         assert_eq!(parse(" 3,0 00.25%%"), Ok(0.300025));
         assert_eq!(parse("12.."), Ok(12.));
         assert_eq!(parse("1.2,3"), Err(ParseFailure::Spreadsheet(Error::Value)));

@@ -1,8 +1,6 @@
 //! Positional IF selection shares rectangular traversal without changing pinned scalar semantics.
-use poirot::eval::{
-    overlay::{EvaluationContext, EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::Overlay;
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn target(cell: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -389,10 +387,8 @@ fn deferred_if_omission_and_condition_errors_do_not_prepare_branches() {
 
 #[test]
 fn deferred_if_observation_keeps_branch_order_and_member_dependencies() {
-    use poirot::eval::execution_observation::OperationKind;
-    use poirot::eval::execution_retention::{
-        BoundedExecutionTrace, RetainedEvent, RetentionLimits,
-    };
+    use poirot::eval::observe::OperationKind;
+    use poirot::eval::observe::{BoundedExecutionTrace, RetainedEvent, RetentionLimits};
     /// Retain exact dependency reads to compare observation modes and masks.
     #[derive(Default)]
     struct Reads(Vec<ReadEvent>);

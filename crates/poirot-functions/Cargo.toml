@@ -1,5 +1,6 @@
 [package]
 name = "poirot-functions"
+autotests = false
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -25,3 +26,7 @@ num-bigint = { workspace = true }
 
 [lints]
 workspace = true
+
+[[test]]
+name = "integration"
+path = "tests/main.rs"

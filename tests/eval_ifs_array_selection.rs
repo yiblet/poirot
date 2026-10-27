@@ -1,8 +1,6 @@
 //! First-true array selection follows the existing lazy argument contract.
-use poirot::eval::{
-    overlay::{EvaluationContext, EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::Overlay;
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn target(cell: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -311,10 +309,8 @@ fn condition_and_selected_result_dimensions_bound_child_first_spills() {
 
 #[test]
 fn computed_selector_probes_execute_once_with_selected_member_reads() {
-    use poirot::eval::execution_observation::OperationKind;
-    use poirot::eval::execution_retention::{
-        BoundedExecutionTrace, RetainedEvent, RetentionLimits,
-    };
+    use poirot::eval::observe::OperationKind;
+    use poirot::eval::observe::{BoundedExecutionTrace, RetainedEvent, RetentionLimits};
     /// Record every read, including repeated reads of the same physical cell.
     #[derive(Default)]
     struct Reads(Vec<ReadEvent>);

@@ -2,4 +2,4 @@
 /// Shared numeric parsing, comparison, and formatting used by database predicates.
 pub use crate::numeric::compare;
 
-pub use crate::coercion::compatibility::coercev2_number_to_text;
+pub use crate::coercion::compatibility::coerce_number_to_text;

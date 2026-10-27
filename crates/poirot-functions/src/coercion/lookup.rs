@@ -35,7 +35,7 @@ pub enum Scalar {
 }
 
 /// Convert a lookup option, including omitted-as-false source behavior.
-pub fn coercev2_lookup_boolean(v: Scalar) -> Result<bool, Error> {
+pub fn coerce_lookup_boolean(v: Scalar) -> Result<bool, Error> {
     match v {
         Scalar::Bool(b) => Ok(b),
         Scalar::Number(n) => Ok(n != 0.0),
@@ -48,7 +48,7 @@ pub fn coercev2_lookup_boolean(v: Scalar) -> Result<bool, Error> {
 }
 
 /// Blank lookup key representation selected by matching policy.
-pub fn coercev2_lookup_blank_key(tolerant: bool) -> Scalar {
+pub fn coerce_lookup_blank_key(tolerant: bool) -> Scalar {
     if tolerant {
         Scalar::Text(String::new())
     } else {
@@ -57,7 +57,7 @@ pub fn coercev2_lookup_blank_key(tolerant: bool) -> Scalar {
 }
 
 /// Lookup numbers preserve existing nonfinite values; missing numeric arguments fail.
-pub fn coercev2_lookup_number<E: From<Error>>(
+pub fn coerce_lookup_number<E: From<Error>>(
     value: Scalar,
     parse: impl FnOnce(&str) -> Result<f64, E>,
 ) -> Result<f64, E> {
@@ -71,11 +71,11 @@ pub fn coercev2_lookup_number<E: From<Error>>(
     }
 }
 /// Finite signed-32 lookup ordinal with the requested floor/truncate rule.
-pub fn coercev2_lookup_integer(number: f64, floor: bool) -> Result<i32, Error> {
-    crate::coercion::compatibility::coercev2_integer(number, floor).map_err(|_| Error::Num)
+pub fn coerce_lookup_integer(number: f64, floor: bool) -> Result<i32, Error> {
+    crate::coercion::compatibility::coerce_integer(number, floor).map_err(|_| Error::Num)
 }
 /// Lookup text supports omitted-as-empty and a fallible, metered number renderer.
-pub fn coercev2_lookup_text<E: From<Error>>(
+pub fn coerce_lookup_text<E: From<Error>>(
     value: &Scalar,
     render: impl FnOnce(f64) -> Result<String, E>,
 ) -> Result<String, E> {
@@ -100,7 +100,7 @@ pub enum IndexAreaDefault {
 /// Admit a zero-based area selection before selecting any source representation.
 /// Explicit area ordinals truncate toward zero; zero/negative values are VALUE,
 /// positive out-of-range values are REF. Legacy unions require an explicit area.
-pub fn coercev2_index_area(
+pub fn coerce_index_area(
     number: Option<f64>,
     count: usize,
     default_area: IndexAreaDefault,
@@ -127,30 +127,30 @@ mod index_tests {
     #[test]
     fn area_admission_distinguishes_default_zero_fraction_and_exhausted_areas() {
         assert_eq!(
-            coercev2_index_area(None, 2, IndexAreaDefault::FirstArea),
+            coerce_index_area(None, 2, IndexAreaDefault::FirstArea),
             Ok(0)
         );
         assert_eq!(
-            coercev2_index_area(None, 2, IndexAreaDefault::SingleArea),
+            coerce_index_area(None, 2, IndexAreaDefault::SingleArea),
             Err(CellError::Value)
         );
         for number in [-1., 0., 0.9] {
             assert_eq!(
-                coercev2_index_area(Some(number), 2, IndexAreaDefault::FirstArea),
+                coerce_index_area(Some(number), 2, IndexAreaDefault::FirstArea),
                 Err(CellError::Value)
             );
         }
         assert_eq!(
-            coercev2_index_area(Some(1.9), 2, IndexAreaDefault::FirstArea),
+            coerce_index_area(Some(1.9), 2, IndexAreaDefault::FirstArea),
             Ok(0)
         );
         assert_eq!(
-            coercev2_index_area(Some(2.), 2, IndexAreaDefault::FirstArea),
+            coerce_index_area(Some(2.), 2, IndexAreaDefault::FirstArea),
             Ok(1)
         );
         for number in [3., f64::INFINITY, f64::NAN] {
             assert_eq!(
-                coercev2_index_area(Some(number), 2, IndexAreaDefault::FirstArea),
+                coerce_index_area(Some(number), 2, IndexAreaDefault::FirstArea),
                 Err(CellError::Ref)
             );
         }

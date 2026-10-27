@@ -1,4 +1,5 @@
 use super::*;
+use crate::format::{Section, format_value};
 fn render(plan: &FormatPlan, n: f64) -> String {
     render_value(&CellValue::Number(n), plan, FormatRenderContext::default())
         .unwrap()

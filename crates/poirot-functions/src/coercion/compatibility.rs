@@ -1,14 +1,14 @@
 //! Explicit compatibility profiles for existing argument consumers.
 use crate::numeric::number_text::render;
 use crate::scalar::{CellError, CellValue, Scalar, TextRef};
-pub fn coercev2_criteria_number_text(s: &str) -> Option<f64> {
+pub fn coerce_criteria_number_text(s: &str) -> Option<f64> {
     poirot_parsing::number::parse_criteria_number(s)
 }
 
-pub fn coercev2_financial_decimal_text(text: &str) -> Option<f64> {
+pub fn coerce_financial_decimal_text(text: &str) -> Option<f64> {
     poirot_parsing::number::parse_financial_decimal(text)
 }
-pub fn coercev2_statistics_decimal_text(text: &str) -> Option<f64> {
+pub fn coerce_statistics_decimal_text(text: &str) -> Option<f64> {
     poirot_parsing::number::parse_statistics_decimal(text)
 }
 
@@ -70,7 +70,7 @@ pub enum DeferredNumber<'a> {
 }
 /// Central scalar dispatch with a metered host continuation for text/omission.
 /// The continuation is never called for numeric, logical, blank, or error inputs.
-pub fn coercev2_number<'a, E: From<CellError>>(
+pub fn coerce_number<'a, E: From<CellError>>(
     value: ScalarRef<'a>,
     policy: NumberPolicy,
     mut deferred: impl FnMut(DeferredNumber<'a>) -> Result<f64, E>,
@@ -90,7 +90,7 @@ pub fn coercev2_number<'a, E: From<CellError>>(
     }
 }
 /// Legacy Unicode-trimmed, finite Rust numeric grammar.
-pub fn coercev2_arithmetic_text(text: &str) -> Result<f64, CellError> {
+pub fn coerce_arithmetic_text(text: &str) -> Result<f64, CellError> {
     poirot_parsing::number::parse_rust_float(text.trim())
         .filter(|n| n.is_finite())
         .ok_or(CellError::Value)
@@ -105,7 +105,7 @@ pub struct BooleanPolicy {
 }
 /// Convert admitted boolean input without projecting malformed UTF16 to Unicode.
 /// `None` represents an omitted slot; it is never substituted for a blank.
-pub fn coercev2_boolean(
+pub fn coerce_boolean(
     value: ScalarRef<'_>,
     policy: BooleanPolicy,
 ) -> Result<Option<bool>, CellError> {
@@ -140,8 +140,8 @@ pub fn coercev2_boolean(
     }
 }
 /// Logical function condition policy, including source NaN rejection.
-pub fn coercev2_logical_test(value: &CellValue) -> Result<bool, CellError> {
-    coercev2_boolean(
+pub fn coerce_logical_test(value: &CellValue) -> Result<bool, CellError> {
+    coerce_boolean(
         value.into(),
         BooleanPolicy {
             reject_nan: true,
@@ -151,7 +151,7 @@ pub fn coercev2_logical_test(value: &CellValue) -> Result<bool, CellError> {
     .ok_or(CellError::Value)
 }
 /// Shared source number spelling; callers admit their required output bound first.
-pub fn coercev2_number_to_text(number: f64) -> String {
+pub fn coerce_number_to_text(number: f64) -> String {
     render(number)
 }
 /// Minimum rank admission for the existing ceiling-based kth selection consumer.
@@ -165,7 +165,7 @@ pub enum KthRankPolicy {
 
 /// Admit a finite kth rank before collection acquisition, retaining the source bound.
 /// This policy does not apply to percentile interpolation or other integer arguments.
-pub fn coercev2_statistics_kth_rank(number: f64, policy: KthRankPolicy) -> Result<f64, CellError> {
+pub fn coerce_statistics_kth_rank(number: f64, policy: KthRankPolicy) -> Result<f64, CellError> {
     let invalid_minimum = match policy {
         KthRankPolicy::PinnedPoi => number < 1.0,
         KthRankPolicy::DocumentedLarge => number <= 0.0,
@@ -178,7 +178,7 @@ pub fn coercev2_statistics_kth_rank(number: f64, policy: KthRankPolicy) -> Resul
 }
 
 /// Source floor-to-int conversion, retaining Java's NaN-to-zero cast behavior.
-pub fn coercev2_floor_i32(number: f64) -> Result<i32, CellError> {
+pub fn coerce_floor_i32(number: f64) -> Result<i32, CellError> {
     let number = number.floor();
     if number < i32::MIN as f64 || number > i32::MAX as f64 {
         Err(CellError::Num)
@@ -187,7 +187,7 @@ pub fn coercev2_floor_i32(number: f64) -> Result<i32, CellError> {
     }
 }
 /// Numeric database channel: text, blank, and errors are deliberately not admitted.
-pub fn coercev2_database_number(value: &CellValue) -> Option<f64> {
+pub fn coerce_database_number(value: &CellValue) -> Option<f64> {
     match value {
         CellValue::Number(n) => Some(*n),
         CellValue::Boolean(b) => Some(f64::from(u8::from(*b))),
@@ -205,7 +205,7 @@ pub enum TextFailure {
     Missing,
 }
 /// Shared scalar text rule. Number spelling is supplied by the selected source profile.
-pub fn coercev2_text(
+pub fn coerce_text(
     value: ScalarRef<'_>,
     number: impl FnOnce(f64) -> String,
 ) -> Result<String, TextFailure> {
@@ -232,7 +232,7 @@ pub enum DeferredText<'a> {
     Missing,
 }
 /// Central text dispatch with ordered, fallible host effects.
-pub fn coercev2_text_with<'a, E: From<CellError>>(
+pub fn coerce_text_with<'a, E: From<CellError>>(
     value: ScalarRef<'a>,
     mut deferred: impl FnMut(DeferredText<'a>) -> Result<String, E>,
 ) -> Result<String, E> {
@@ -246,7 +246,7 @@ pub fn coercev2_text_with<'a, E: From<CellError>>(
     }
 }
 /// NumberEval's public string view canonicalizes nonfinite inputs for this profile.
-pub fn coercev2_statistics_number_text(number: f64, pinned: bool) -> String {
+pub fn coerce_statistics_number_text(number: f64, pinned: bool) -> String {
     if pinned && !number.is_finite() {
         if number.is_nan() {
             "2.6965397022935E+308".into()
@@ -254,11 +254,11 @@ pub fn coercev2_statistics_number_text(number: f64, pinned: bool) -> String {
             "1.7976931348623E+308".into()
         }
     } else {
-        coercev2_number_to_text(number)
+        coerce_number_to_text(number)
     }
 }
 /// Finite signed-32 conversion with optional flooring before bounds validation.
-pub fn coercev2_integer(number: f64, floor: bool) -> Result<i32, CellError> {
+pub fn coerce_integer(number: f64, floor: bool) -> Result<i32, CellError> {
     let number = if floor { number.floor() } else { number };
     if !number.is_finite() || number < i32::MIN as f64 || number > i32::MAX as f64 {
         Err(CellError::Num)
@@ -267,8 +267,8 @@ pub fn coercev2_integer(number: f64, floor: bool) -> Result<i32, CellError> {
     }
 }
 /// INDEX uses the signed source bound, then rejects negative ordinals with VALUE.
-pub fn coercev2_index_ordinal(number: f64) -> Result<usize, CellError> {
-    let number = coercev2_integer(number, true)?;
+pub fn coerce_index_ordinal(number: f64) -> Result<usize, CellError> {
+    let number = coerce_integer(number, true)?;
     if number < 0 {
         Err(CellError::Value)
     } else {
@@ -276,7 +276,7 @@ pub fn coercev2_index_ordinal(number: f64) -> Result<usize, CellError> {
     }
 }
 /// Truncate a date component only within the original finite signed-32 range.
-pub fn coercev2_date_integer(number: f64) -> Result<i64, CellError> {
+pub fn coerce_date_integer(number: f64) -> Result<i64, CellError> {
     if number.is_finite() && number >= f64::from(i32::MIN) && number <= f64::from(i32::MAX) {
         Ok(number.trunc() as i64)
     } else {
@@ -284,7 +284,7 @@ pub fn coercev2_date_integer(number: f64) -> Result<i64, CellError> {
     }
 }
 /// N converts logical values to numbers and nonnumeric, nonerror values to zero.
-pub fn coercev2_information_n(value: CellValue) -> CellValue {
+pub fn coerce_information_n(value: CellValue) -> CellValue {
     match value {
         CellValue::Number(_) | CellValue::Error(_) => value,
         CellValue::Boolean(b) => CellValue::Number(f64::from(u8::from(b))),
@@ -292,14 +292,14 @@ pub fn coercev2_information_n(value: CellValue) -> CellValue {
     }
 }
 /// T retains text/errors and converts the remaining scalar kinds to empty text.
-pub fn coercev2_information_t(value: CellValue) -> CellValue {
+pub fn coerce_information_t(value: CellValue) -> CellValue {
     match value {
         CellValue::Text(_) | CellValue::TextUtf16(_) | CellValue::Error(_) => value,
         _ => CellValue::Text(String::new()),
     }
 }
 /// Equality's numeric channel admits a blank only against an existing number.
-pub fn coercev2_equality_numeric_pair(left: &CellValue, right: &CellValue) -> Option<(f64, f64)> {
+pub fn coerce_equality_numeric_pair(left: &CellValue, right: &CellValue) -> Option<(f64, f64)> {
     match (left, right) {
         (CellValue::Number(a), CellValue::Number(b)) => Some((*a, *b)),
         (CellValue::Blank, CellValue::Number(b)) => Some((0., *b)),
@@ -308,7 +308,7 @@ pub fn coercev2_equality_numeric_pair(left: &CellValue, right: &CellValue) -> Op
     }
 }
 /// Blank comparison operands borrow the representation selected by their counterpart.
-pub fn coercev2_comparison_blank<'a>(
+pub fn coerce_comparison_blank<'a>(
     value: &'a CellValue,
     counterpart: &CellValue,
     zero: &'a CellValue,
@@ -326,7 +326,7 @@ pub fn coercev2_comparison_blank<'a>(
     }
 }
 /// Classic lookup treats a blank key as zero without changing the stored input.
-pub fn coercev2_classic_lookup_blank_key<'a>(
+pub fn coerce_classic_lookup_blank_key<'a>(
     value: &'a CellValue,
     zero: &'a CellValue,
 ) -> &'a CellValue {
@@ -344,7 +344,7 @@ pub enum NumericTextDecision {
     DateTime,
 }
 /// Source-compatible recognition before a context-aware date fallback.
-pub fn coercev2_numeric_text(text: &str) -> NumericTextDecision {
+pub fn coerce_numeric_text(text: &str) -> NumericTextDecision {
     use nom::Parser;
     let trimmed = text.trim_matches(|c: char| (c as u32) <= 32);
     if nom::combinator::all_consuming(poirot_parsing::number::source_float)
@@ -362,7 +362,7 @@ pub fn coercev2_numeric_text(text: &str) -> NumericTextDecision {
 }
 
 /// Delimiter omission has an empty-text default; ordinary string arguments defer it.
-pub fn coercev2_text_argument<'a, E: From<CellError>>(
+pub fn coerce_text_argument<'a, E: From<CellError>>(
     value: ScalarRef<'a>,
     delimiter: bool,
     deferred: impl FnMut(DeferredText<'a>) -> Result<String, E>,
@@ -370,17 +370,17 @@ pub fn coercev2_text_argument<'a, E: From<CellError>>(
     if delimiter && matches!(value, ScalarRef::Missing) {
         Ok(String::new())
     } else {
-        coercev2_text_with(value, deferred)
+        coerce_text_with(value, deferred)
     }
 }
 /// Legacy CONCAT renders omitted members like blank, after traversal preserves
 /// omission separately from the stored value. Other text consumers keep their
 /// own omission policy (including pinned POI's unsupported MissingArgEval).
-pub fn coercev2_concat_member_text<'a, E: From<CellError>>(
+pub fn coerce_concat_member_text<'a, E: From<CellError>>(
     value: ScalarRef<'a>,
     deferred: impl FnMut(DeferredText<'a>) -> Result<String, E>,
 ) -> Result<String, E> {
-    coercev2_text_with(
+    coerce_text_with(
         if matches!(value, ScalarRef::Missing) {
             ScalarRef::Blank
         } else {
@@ -403,7 +403,7 @@ pub enum TextFormatPolicy {
 /// The continuation returns `None` for rejected text, preserving the original value;
 /// operational failures escape. The host supplies the selected contextual grammar
 /// and checked UTF16 projection without duplicating TEXT's value admission rules.
-pub fn coercev2_text_format_value<E>(
+pub fn coerce_text_format_value<E>(
     value: CellValue,
     policy: TextFormatPolicy,
     project: impl FnOnce(TextRef<'_>) -> Result<Option<f64>, E>,
@@ -411,7 +411,7 @@ pub fn coercev2_text_format_value<E>(
     match value {
         CellValue::Blank => Ok((CellValue::Number(0.), true)),
         CellValue::Text(ref text) if policy == TextFormatPolicy::PinnedPoi => {
-            match coercev2_arithmetic_text(text) {
+            match coerce_arithmetic_text(text) {
                 Ok(n) => Ok((CellValue::Number(n), true)),
                 Err(_) => Ok((value, false)),
             }
@@ -442,7 +442,7 @@ pub enum MissingScalarPolicy {
     Reject,
 }
 /// Requested scalar representation of an omitted slot.
-pub fn coercev2_missing_scalar(policy: MissingScalarPolicy) -> Result<CellValue, CellError> {
+pub fn coerce_missing_scalar(policy: MissingScalarPolicy) -> Result<CellValue, CellError> {
     match policy {
         MissingScalarPolicy::Blank => Ok(CellValue::Blank),
         MissingScalarPolicy::Zero => Ok(CellValue::Number(0.)),
@@ -450,7 +450,7 @@ pub fn coercev2_missing_scalar(policy: MissingScalarPolicy) -> Result<CellValue,
     }
 }
 /// Selected rendering profile and finite admission for numeric string arguments.
-pub fn coercev2_number_text_finite(value: f64) -> Result<String, CellError> {
+pub fn coerce_number_text_finite(value: f64) -> Result<String, CellError> {
     if value.is_finite() {
         Ok(render(value))
     } else {
@@ -458,19 +458,19 @@ pub fn coercev2_number_text_finite(value: f64) -> Result<String, CellError> {
     }
 }
 /// Existing numeric operator operands retain their bits before outcome handling.
-pub fn coercev2_arithmetic_operand<'a, E: From<CellError>>(
+pub fn coerce_arithmetic_operand<'a, E: From<CellError>>(
     value: ScalarRef<'a>,
     deferred: impl FnMut(DeferredNumber<'a>) -> Result<f64, E>,
 ) -> Result<f64, E> {
     if let ScalarRef::Number(n) = value {
         Ok(n)
     } else {
-        coercev2_number(value, NumberPolicy::Finite, deferred)
+        coerce_number(value, NumberPolicy::Finite, deferred)
     }
 }
 
 /// Date numeric text rejects nonfinite parses before considering date fallback.
-pub fn coercev2_date_numeric_text(text: &str) -> NumericTextDecision {
+pub fn coerce_date_numeric_text(text: &str) -> NumericTextDecision {
     match poirot_parsing::number::parse_rust_float(text.trim()) {
         Some(n) => NumericTextDecision::Number(if n.is_finite() {
             Ok(n)
@@ -481,17 +481,17 @@ pub fn coercev2_date_numeric_text(text: &str) -> NumericTextDecision {
     }
 }
 /// Source-visible decimal text converted back to a truncated logical-function index.
-pub fn coercev2_truncated_text(text: &str) -> Result<f64, CellError> {
+pub fn coerce_truncated_text(text: &str) -> Result<f64, CellError> {
     poirot_parsing::number::parse_rust_float(text)
         .map(f64::trunc)
         .ok_or(CellError::Num)
 }
 /// Number rendering with an explicit source profile, following host admission.
-pub fn coercev2_render_number(value: f64) -> String {
+pub fn coerce_render_number(value: f64) -> String {
     render(value)
 }
 /// Reject nonfinite input before asking the host to reserve rendering resources.
-pub fn coercev2_render_finite_number<E: From<CellError>>(
+pub fn coerce_render_finite_number<E: From<CellError>>(
     value: f64,
     admit: impl FnOnce() -> Result<(), E>,
 ) -> Result<String, E> {
@@ -503,8 +503,8 @@ pub fn coercev2_render_finite_number<E: From<CellError>>(
 }
 
 /// Source database field rounding and bounds.
-pub fn coercev2_database_field_index(value: &CellValue, columns: usize) -> Option<usize> {
-    let value = coercev2_database_number(value)?;
+pub fn coerce_database_field_index(value: &CellValue, columns: usize) -> Option<usize> {
+    let value = coerce_database_number(value)?;
     if !value.is_finite() {
         return None;
     }
@@ -517,11 +517,11 @@ pub fn coercev2_database_field_index(value: &CellValue, columns: usize) -> Optio
     (column >= 0. && column < columns as f64).then_some(column as usize)
 }
 /// Source database criteria header floor and bounds.
-pub fn coercev2_database_criteria_header_index(
+pub fn coerce_database_criteria_header_index(
     value: &CellValue,
     columns: usize,
 ) -> Result<Option<usize>, CellError> {
-    let index = coercev2_database_number(value)
+    let index = coerce_database_number(value)
         .ok_or(CellError::Value)?
         .floor();
     if !index.is_finite() || index < i32::MIN as f64 || index > i32::MAX as f64 {
@@ -536,11 +536,11 @@ pub fn coercev2_database_criteria_header_index(
 }
 
 /// Java numeric syntax, including hex and suffixes, selected explicitly by its consumers.
-pub fn coercev2_java_number_text(text: &str) -> Option<f64> {
+pub fn coerce_java_number_text(text: &str) -> Option<f64> {
     poirot_parsing::java_number::parse_java_number(text)
 }
 /// Optional numeric argument defaults only omitted slots, never blank cells.
-pub fn coercev2_optional_number<E>(
+pub fn coerce_optional_number<E>(
     value: Scalar,
     default: f64,
     convert: impl FnOnce(Scalar) -> Result<f64, E>,
@@ -555,18 +555,18 @@ pub fn coercev2_optional_number<E>(
 /// positional Missing to numeric zero.
 /// Arity admission separately rejects absent required positions. Blank and other
 /// scalar values continue through the consumer's numeric policy.
-pub fn coercev2_financial_payment_number<E>(
+pub fn coerce_financial_payment_number<E>(
     value: Option<Scalar>,
     convert: impl FnOnce(Scalar) -> Result<f64, E>,
 ) -> Result<f64, E> {
     match value {
-        Some(value) => coercev2_optional_number(value, 0.0, convert),
+        Some(value) => coerce_optional_number(value, 0.0, convert),
         None => Ok(0.0),
     }
 }
 /// Documented IPMT/PPMT timing admits exactly end (zero) or beginning (one).
 /// Numeric parsing and omission defaults are selected before this policy.
-pub fn coercev2_financial_payment_timing(value: f64) -> Result<bool, CellError> {
+pub fn coerce_financial_payment_timing(value: f64) -> Result<bool, CellError> {
     match value {
         0.0 => Ok(false),
         1.0 => Ok(true),
@@ -574,11 +574,11 @@ pub fn coercev2_financial_payment_timing(value: f64) -> Result<bool, CellError> 
     }
 }
 /// Documented boolean options use false for omission and preserve their other restrictions.
-pub fn coercev2_boolean_default(
+pub fn coerce_boolean_default(
     value: ScalarRef<'_>,
     policy: BooleanPolicy,
 ) -> Result<bool, CellError> {
-    Ok(coercev2_boolean(value, policy)?.unwrap_or(false))
+    Ok(coerce_boolean(value, policy)?.unwrap_or(false))
 }
 
 /// Owned text requests let adapters transfer existing buffers without another allocation.
@@ -591,7 +591,7 @@ pub enum OwnedDeferredText {
     Missing,
 }
 /// The owned counterpart of scalar text dispatch; it does not clone text inputs.
-pub fn coercev2_owned_text<E: From<CellError>>(
+pub fn coerce_owned_text<E: From<CellError>>(
     value: Scalar,
     mut deferred: impl FnMut(OwnedDeferredText) -> Result<String, E>,
 ) -> Result<String, E> {
@@ -616,7 +616,7 @@ pub enum TextIntegerPolicy {
 /// Admit a signed-32 text integer argument while preserving its fractional value.
 /// Sign/minimum checks and truncation remain ordered by the consuming text algorithm.
 /// In particular, an empty-text shortcut must not bypass this target-range check.
-pub fn coercev2_text_integer_number(
+pub fn coerce_text_integer_number(
     number: f64,
     policy: TextIntegerPolicy,
 ) -> Result<f64, CellError> {
@@ -638,8 +638,8 @@ pub fn coercev2_text_integer_number(
 /// Admit a documented FIND/SEARCH start as a zero-based position in the text.
 /// Fractional starts truncate before the last-character bound. The text source
 /// supplies its own character/unit length; pinned source domains stay separate.
-pub fn coercev2_text_search_start(number: f64, length: usize) -> Result<usize, CellError> {
-    let number = coercev2_text_integer_number(number, TextIntegerPolicy::Checked)?.trunc();
+pub fn coerce_text_search_start(number: f64, length: usize) -> Result<usize, CellError> {
+    let number = coerce_text_integer_number(number, TextIntegerPolicy::Checked)?.trunc();
     if number < 1. || number > length as f64 {
         return Err(CellError::Value);
     }
@@ -648,7 +648,7 @@ pub fn coercev2_text_search_start(number: f64, length: usize) -> Result<usize, C
 
 /// VALUE consumes numeric/blank inputs without rendering them first, rejects
 /// booleans and requests admitted Unicode projection for existing text.
-pub fn coercev2_value_number<'a, E: From<CellError>>(
+pub fn coerce_value_number<'a, E: From<CellError>>(
     value: ScalarRef<'a>,
     project: impl FnOnce(TextRef<'a>) -> Result<f64, E>,
 ) -> Result<f64, E> {
@@ -672,7 +672,7 @@ pub enum DateSerialPolicy {
 }
 /// Request a date serial while leaving text, context and resource effects to
 /// the host continuation. Existing scalar errors are preserved by the modern policy.
-pub fn coercev2_date_serial<'a, E: From<CellError>>(
+pub fn coerce_date_serial<'a, E: From<CellError>>(
     value: ScalarRef<'a>,
     policy: DateSerialPolicy,
     deferred: impl FnMut(DeferredNumber<'a>) -> Result<f64, E>,
@@ -682,21 +682,21 @@ pub fn coercev2_date_serial<'a, E: From<CellError>>(
     {
         return Err(CellError::Value.into());
     }
-    coercev2_number(value, NumberPolicy::Finite, deferred)
+    coerce_number(value, NumberPolicy::Finite, deferred)
 }
 /// WEEKDAY's modern option retains conversion errors; valid numeric options
 /// are truncated before the calendar algorithm checks the documented modes.
-pub fn coercev2_weekday_option<'a, E: From<CellError>>(
+pub fn coerce_weekday_option<'a, E: From<CellError>>(
     value: ScalarRef<'a>,
     deferred: impl FnMut(DeferredNumber<'a>) -> Result<f64, E>,
 ) -> Result<i64, E> {
-    coercev2_date_integer(coercev2_number(value, NumberPolicy::Finite, deferred)?)
+    coerce_date_integer(coerce_number(value, NumberPolicy::Finite, deferred)?)
         .map_err(|_| CellError::Num.into())
 }
 
 /// Admit a mixed-value modern array member, exposing empty cells as numeric zero.
 /// Text representations and embedded spreadsheet errors pass through unchanged.
-pub fn coercev2_array_member(value: CellValue) -> CellValue {
+pub fn coerce_array_member(value: CellValue) -> CellValue {
     match value {
         CellValue::Blank => CellValue::Number(0.0),
         value => value,

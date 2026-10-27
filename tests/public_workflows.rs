@@ -201,7 +201,7 @@ fn flushed_sources_export_materialized_formula_and_spill_caches_to_xlsx() {
         .set_value(at("A1").address, 2.)
         .unwrap();
     let mut overlay = Overlay::with_workbook(model.into_model())
-        .with_policy(poirot::eval::overlay::EvaluationPolicy {
+        .with_policy(poirot::eval::EvaluationPolicy {
             builtin: eval::BuiltinSemanticsPolicy::ExcelDocumentation,
             arrays: eval::ArrayResultPolicy::DynamicSpill,
             ..Default::default()

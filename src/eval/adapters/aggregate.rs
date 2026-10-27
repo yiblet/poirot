@@ -1,6 +1,12 @@
 //! Shared one-shot source traversal for aggregate admission policies.
+use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::host::{CallHost, HostOperand, ScalarOperand};
-use crate::eval::*;
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure, ResourceFailureKind};
+use crate::eval::session::Session;
+use crate::eval::values::core_projection::semantic;
+use crate::eval::values::{Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellAddress;
 use std::{collections::TryReserveError, ops::ControlFlow};
 
 /// A typed accumulator and admission rule over sparse aggregate members.

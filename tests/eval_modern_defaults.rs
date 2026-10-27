@@ -1,6 +1,7 @@
 //! Public modern defaults and the shared boundaries repaired by the regression audit.
-use poirot::eval::overlay::{EvaluationContext, EvaluationPolicy, Overlay};
+use poirot::eval::overlay::Overlay;
 use poirot::eval::*;
+use poirot::eval::{EvaluationContext, EvaluationPolicy};
 use poirot::model::{CellError, CellValue, ExcelText, Workbook};
 
 fn target(address: &str) -> EvaluationTarget {
@@ -151,9 +152,10 @@ fn text_and_unary_regressions_work_in_prepared_bound_and_overlay_paths() {
             },
         };
         let prepared = compiler.compile_formula(formula, &policy);
-        let bound =
-            bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap())
-                .unwrap();
+        let bound = compile::bound::FormulaPlan::bind(
+            &poirot_parsing::formula::parse_formula(formula).unwrap(),
+        )
+        .unwrap();
         assert_eq!(
             complete(run_formula(
                 &book,

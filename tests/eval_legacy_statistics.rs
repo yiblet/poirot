@@ -1,8 +1,6 @@
 //! Legacy contracts checked with elementary probability equations and counts.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn target(cell: &str) -> EvaluationTarget {
     EvaluationTarget {

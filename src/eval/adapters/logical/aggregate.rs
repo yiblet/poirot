@@ -1,7 +1,13 @@
 //! Logical reduction policy over shared checked aggregate traversal.
 use crate::eval::adapters::aggregate::{self, AggregatePolicy};
-use crate::eval::host::{CallHost, OperandOrigin, ScalarOperand};
-use crate::eval::*;
+use crate::eval::functions::registry::LogicalFunction;
+use crate::eval::host::{CallHost, ScalarOperand};
+use crate::eval::limits::EvalResult;
+use crate::eval::session::Session;
+use crate::eval::values::{OperandOrigin, VALUE_ERROR, Value, core_projection, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellValue::{Blank, Boolean, Text};
+use crate::model::{CellAddress, CellError, CellValue};
 use poirot_functions::logical::{LogicalReduction, LogicalReductionState};
 use std::{collections::TryReserveError, ops::ControlFlow};
 
@@ -46,7 +52,7 @@ impl AggregatePolicy for LogicalAggregate {
         if collection && matches!(member.value, Text(_) | CellValue::TextUtf16(_) | Blank) {
             return ControlFlow::Continue(());
         }
-        match core_projection::coercev2_operand_boolean(&member.value) {
+        match core_projection::coerce_operand_boolean(&member.value) {
             Ok(boolean) => self.truth.push(boolean),
             Err(error) => self.error = Some(error),
         }

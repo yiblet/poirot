@@ -1,14 +1,13 @@
 use model::{CellError, CellValue};
-use poirot::eval;
-use poirot::model;
+use poirot::{eval, model};
 fn target(address: &str) -> eval::EvaluationTarget {
     eval::EvaluationTarget {
         sheet: 0,
         address: address.parse().unwrap(),
     }
 }
-fn policy() -> poirot::eval::overlay::EvaluationPolicy {
-    poirot::eval::overlay::EvaluationPolicy {
+fn policy() -> poirot::eval::EvaluationPolicy {
+    poirot::eval::EvaluationPolicy {
         builtin: eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         arrays: eval::ArrayResultPolicy::DynamicSpill,
         ..Default::default()
@@ -93,7 +92,7 @@ impl SpillCase<'_> {
     }
     fn set_policy(
         &mut self,
-        policy: poirot::eval::overlay::EvaluationPolicy,
+        policy: poirot::eval::EvaluationPolicy,
     ) -> Result<(), poirot::calculation::OverlayError> {
         self.results.clear();
         self.overlay.set_policy(policy)
@@ -101,7 +100,7 @@ impl SpillCase<'_> {
     fn set_budgets(&mut self, budgets: eval::EvaluationBudgets) {
         self.context.limits = budgets.into();
     }
-    fn set_retention_limits(&mut self, limits: eval::run::MemoRetentionLimits) {
+    fn set_retention_limits(&mut self, limits: eval::MemoRetentionLimits) {
         self.context.retention = limits;
     }
     fn reset(&mut self) {
@@ -221,7 +220,7 @@ fn edits_shrink_and_policy_changes_clear_old_children() {
     assert_eq!(value(&ctx, "D1"), CellValue::Number(8.));
     ctx.set_input(target("A1"), CellValue::Boolean(true))
         .unwrap();
-    ctx.set_policy(poirot::eval::overlay::EvaluationPolicy {
+    ctx.set_policy(poirot::eval::EvaluationPolicy {
         arrays: eval::ArrayResultPolicy::ScalarIntersection,
         ..Default::default()
     })
@@ -270,11 +269,11 @@ fn self_footprint_reads_are_explicitly_unsupported() {
 fn retention_admits_the_whole_spill_or_none() {
     let w = source(model(&[("D1", "{1,2;3,4}")])).unwrap();
     for limits in [
-        eval::run::MemoRetentionLimits {
+        eval::MemoRetentionLimits {
             cells: 3,
             bytes: 1_000_000,
         },
-        eval::run::MemoRetentionLimits {
+        eval::MemoRetentionLimits {
             cells: 100,
             bytes: 1,
         },
@@ -292,7 +291,7 @@ fn retention_admits_the_whole_spill_or_none() {
         assert!(ctx.results.is_empty());
     }
     let mut ctx = context(&w);
-    ctx.set_retention_limits(eval::run::MemoRetentionLimits {
+    ctx.set_retention_limits(eval::MemoRetentionLimits {
         cells: 4,
         bytes: 1_000_000,
     });
@@ -669,7 +668,7 @@ fn exhausted_non_singleton_axes_use_poi_value_errors_and_at_stays_scalar() {
     }
     let w = model(&[("D1", "{1,2}+1")]);
     let mut ctx = context(&w);
-    ctx.set_policy(poirot::eval::overlay::EvaluationPolicy {
+    ctx.set_policy(poirot::eval::EvaluationPolicy {
         arrays: eval::ArrayResultPolicy::ScalarIntersection,
         ..Default::default()
     })
@@ -957,5 +956,39 @@ fn authored_scalar_blockers_survive_reads_and_become_spill_children_after_remova
         complete(&mut ctx, &["D1", "A1"]);
         assert_eq!(value(&ctx, "D1"), CellValue::Number(198.));
         assert_eq!(value(&ctx, "A1"), CellValue::Error(CellError::Spill));
+    }
+}
+
+/// Whole-collection text functions skip absent cells, so generated spill cells
+/// must still be read, including spills from a producer above the range.
+#[test]
+fn sparse_text_collections_read_generated_spill_cells() {
+    let mut book = poirot::Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    // Excel spills an array constant from its anchor: D1:D3 hold a, b, c.
+    sheet
+        .set_formula("D1".parse().unwrap(), "{\"a\";\"b\";\"c\"}")
+        .unwrap();
+    for (at, formula) in [
+        ("F1", "CONCAT(D:D)"),
+        ("F2", "CONCAT(D2:D5)"),
+        ("F3", "TEXTJOIN(\"-\",TRUE,D:D)"),
+        ("F4", "TEXTJOIN(\"-\",FALSE,D2:D5)"),
+    ] {
+        sheet.set_formula(at.parse().unwrap(), formula).unwrap();
+    }
+    let mut evaluation = book.evaluation().build().unwrap();
+    for (at, expected) in [
+        ("F1", "abc"),
+        ("F2", "bc"),
+        ("F3", "a-b-c"),
+        ("F4", "b-c--"),
+    ] {
+        let output = evaluation.target(&format!("S!{at}")).unwrap();
+        assert_eq!(
+            evaluation.cell(output).unwrap(),
+            CellValue::Text(expected.into()),
+            "{at}"
+        );
     }
 }

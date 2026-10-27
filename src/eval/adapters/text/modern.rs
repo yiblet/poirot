@@ -5,9 +5,14 @@ use crate::eval::adapters::elementwise::{
     self, ArgumentRole, Broadcast, Deferred, FixedScalar, Kernel, MemberContext, Optional,
     WholeCollection, collections,
 };
-use crate::eval::host::{CallHost, NumericPolicy, OperandDescription, ScalarOperand};
-use crate::eval::*;
-use crate::model::ExcelText;
+use crate::eval::functions::registry::TextFunction;
+use crate::eval::host::{
+    ArgumentCoercion, CallHost, NumericPolicy, OperandDescription, OperandReader, ScalarOperand,
+};
+use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::values::{FunctionFailure, FunctionResult, Value, core_projection, err};
+use crate::model::CellValue::{Error, Number};
+use crate::model::{CellAddress, CellError, CellValue, ExcelText};
 use poirot_functions::text::modern::{self, Case, Side, Split};
 
 fn failure(host: &CallHost<'_, '_>, error: modern::Error) -> FunctionFailure {
@@ -20,12 +25,14 @@ fn failure(host: &CallHost<'_, '_>, error: modern::Error) -> FunctionFailure {
         modern::Error::InvalidGeometry => EvaluationFailure::StalePlan.into(),
     }
 }
+
 fn admit_text(host: &mut CallHost<'_, '_>, units: usize) -> EvalResult<()> {
     let bytes = units.checked_mul(2).ok_or_else(|| host.size_overflow())?;
     host.check_text(bytes)?;
     host.check_values(units)
 }
-fn coercev2_text_units(
+
+fn coerce_text_units(
     host: &mut CallHost<'_, '_>,
     value: &CellValue,
     errors: bool,
@@ -37,25 +44,30 @@ fn coercev2_text_units(
     let text = match value {
         Error(error) if errors => error.to_string(),
         Error(error) => return Err((*error).into()),
-        Number(number) => host.coercev2_number_to_text(*number, NumericPolicy::PinnedPoi)?,
-        _ => host.coercev2_scalar_text(value)?,
+        Number(number) => {
+            ArgumentCoercion::new(host).coerce_number_to_text(*number, NumericPolicy::PinnedPoi)?
+        }
+        _ => ArgumentCoercion::new(host).coerce_scalar_text(value)?,
     };
     admit_text(host, text.encode_utf16().count())?;
     Ok(text.encode_utf16().collect())
 }
+
 fn text_value(units: Vec<u16>) -> CellValue {
     CellValue::TextUtf16(ExcelText::from_units(units))
 }
+
 pub(super) fn description(
     host: &mut CallHost<'_, '_>,
     index: usize,
 ) -> FunctionResult<OperandDescription> {
-    let shape = host.describe(index)?;
+    let shape = OperandReader::new(host).describe(index)?;
     if shape.sheets != 1 || shape.rows == 0 || shape.columns == 0 {
         return Err(CellError::Value.into());
     }
     Ok(shape)
 }
+
 pub(super) fn number(
     host: &mut CallHost<'_, '_>,
     operand: ScalarOperand,
@@ -64,9 +76,10 @@ pub(super) fn number(
     if operand.missing {
         Ok(default)
     } else {
-        host.coercev2_scalar_number(&operand.value, NumericPolicy::PinnedPoi)
+        ArgumentCoercion::new(host).coerce_scalar_number(&operand.value, NumericPolicy::PinnedPoi)
     }
 }
+
 fn mode(n: f64) -> FunctionResult<Case> {
     match n {
         0. => Ok(Case::Sensitive),
@@ -74,6 +87,7 @@ fn mode(n: f64) -> FunctionResult<Case> {
         _ => Err(CellError::Value.into()),
     }
 }
+
 fn bool_mode(n: f64) -> FunctionResult<bool> {
     match n {
         0. => Ok(false),
@@ -81,6 +95,7 @@ fn bool_mode(n: f64) -> FunctionResult<bool> {
         _ => Err(CellError::Value.into()),
     }
 }
+
 pub(super) fn shape_admission(
     host: &mut CallHost<'_, '_>,
     rows: usize,
@@ -95,9 +110,11 @@ pub(super) fn shape_admission(
     host.check_values(count)?;
     Ok(host.check_values(rows)?)
 }
+
 /// TEXTBEFORE or TEXTAFTER kernel with a deferred not-found fallback.
 /// The fallback is selected only when extraction fails and does not enlarge the initial broadcast rectangle.
 struct ExtractionKernel(TextFunction);
+
 impl elementwise::text::FallbackKernel for ExtractionKernel {
     type Signature = (
         Broadcast,
@@ -107,9 +124,11 @@ impl elementwise::text::FallbackKernel for ExtractionKernel {
         Optional<Broadcast>,
         Optional<Deferred<Broadcast>>,
     );
+
     fn fallback(arguments: &Self::Signature) -> Option<&Deferred<Broadcast>> {
         arguments.5.0.as_ref()
     }
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -118,8 +137,8 @@ impl elementwise::text::FallbackKernel for ExtractionKernel {
         use elementwise::text::Selection;
         let input = arguments.0.read(context)?;
         let delimiter = arguments.1.read(context)?;
-        let text = coercev2_text_units(context.host, &input.value, false)?;
-        let delimiter = coercev2_text_units(context.host, &delimiter.value, false)?;
+        let text = coerce_text_units(context.host, &input.value, false)?;
+        let delimiter = coerce_text_units(context.host, &delimiter.value, false)?;
         let mut options = [1.0, 0.0, 0.0];
         for (index, role) in [&arguments.2, &arguments.3, &arguments.4]
             .into_iter()
@@ -165,6 +184,7 @@ impl elementwise::text::FallbackKernel for ExtractionKernel {
         }
     }
 }
+
 /// Materialize a delimiter set through the shared checked collection fold.
 fn delimiters(
     host: &mut CallHost<'_, '_>,
@@ -175,9 +195,11 @@ fn delimiters(
     }
     elementwise::text::collection_units(host, [*role])
 }
+
 /// TEXTSPLIT kernel that builds a result rectangle from delimiter collections and fixed options.
 /// The text source must contain one value; delimiter collections do not contribute broadcast dimensions.
 struct SplitKernel;
+
 impl elementwise::text::ExpansionKernel for SplitKernel {
     type Signature = (
         WholeCollection,
@@ -187,6 +209,7 @@ impl elementwise::text::ExpansionKernel for SplitKernel {
         Optional<FixedScalar>,
         Optional<FixedScalar>,
     );
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -198,7 +221,7 @@ impl elementwise::text::ExpansionKernel for SplitKernel {
             return Err(CellError::Value.into());
         }
         let input = arguments.0.read(host, 0)?;
-        let text = coercev2_text_units(host, &input.value, false)?;
+        let text = coerce_text_units(host, &input.value, false)?;
         let columns = delimiters(host, &arguments.1)?;
         let rows = arguments
             .2
@@ -213,7 +236,7 @@ impl elementwise::text::ExpansionKernel for SplitKernel {
                 if operand.missing {
                     false
                 } else {
-                    core_projection::coercev2_operand_boolean(&operand.value)?
+                    core_projection::coerce_operand_boolean(&operand.value)?
                 }
             }
             None => false,
@@ -244,7 +267,7 @@ impl elementwise::text::ExpansionKernel for SplitKernel {
                 if operand.missing {
                     Error(CellError::NA)
                 } else {
-                    poirot_functions::coercion::compatibility::coercev2_array_member(operand.value)
+                    poirot_functions::coercion::compatibility::coerce_array_member(operand.value)
                 }
             }
             None => Error(CellError::NA),
@@ -283,12 +306,13 @@ impl elementwise::text::ExpansionKernel for SplitKernel {
         })
     }
 }
+
 fn serialize_member(
     host: &mut CallHost<'_, '_>,
     value: &CellValue,
     strict: bool,
 ) -> FunctionResult<Vec<u16>> {
-    let text = coercev2_text_units(host, value, true)?;
+    let text = coerce_text_units(host, value, true)?;
     let quoted = strict && value.text_ref().is_some();
     let count = modern::escaped_len(&text, quoted).map_err(|e| failure(host, e))?;
     if count > 32767 {
@@ -297,6 +321,7 @@ fn serialize_member(
     admit_text(host, count)?;
     modern::escape(&text, quoted).map_err(|e| failure(host, e))
 }
+
 fn append(host: &mut CallHost<'_, '_>, output: &mut Vec<u16>, text: &[u16]) -> FunctionResult<()> {
     let size = output
         .len()
@@ -315,11 +340,14 @@ fn append(host: &mut CallHost<'_, '_>, output: &mut Vec<u16>, text: &[u16]) -> F
     output.extend_from_slice(text);
     Ok(())
 }
+
 /// VALUETOTEXT kernel that serializes each broadcast member, including spreadsheet errors.
 /// Its optional format control chooses ordinary or strict spelling.
 struct ValueKernel;
+
 impl Kernel for ValueKernel {
     type Signature = (Broadcast, Optional<Broadcast>);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -340,11 +368,14 @@ impl Kernel for ValueKernel {
         )?))
     }
 }
+
 /// ARRAYTOTEXT kernel that serializes an entire source rectangle into one text result.
 /// It preserves row and column boundaries while traversing the collection in order.
 struct ArrayKernel;
+
 impl collections::CollectionKernel for ArrayKernel {
     type Signature = (WholeCollection, Optional<FixedScalar>);
+
     fn apply(
         &self,
         host: &mut CallHost<'_, '_>,
@@ -395,6 +426,7 @@ impl collections::CollectionKernel for ArrayKernel {
         Ok(text_value(output).into())
     }
 }
+
 /// Evaluate modern text functions with typed array results and operational failures.
 pub(in crate::eval) fn execute(
     name: TextFunction,
@@ -429,6 +461,12 @@ pub(in crate::eval) fn execute(
 #[cfg(test)]
 mod resource_mapping_tests {
     use super::*;
+    use crate::eval::coordinates::EvaluationTarget;
+    use crate::eval::limits::ResourceFailureKind;
+    use crate::eval::session::Session;
+    use crate::eval::vm::ArgumentsRef;
+    use crate::model::Workbook;
+
     #[test]
     fn text_size_allocation_and_stale_geometry_are_distinct_operational_failures() {
         let book = Workbook::new();

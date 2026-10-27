@@ -11,9 +11,9 @@
 // <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
 // Typed database aggregation, following POI DStarRunner and its twelve algorithms.
 // All grid cells have reference origin: blanks remain blanks, and numeric text
-// is ignored by aggregators. Boolean cells are coercev2_database_number (POI NumericValueEval).
+// is ignored by aggregators. Boolean cells are coerce_database_number (POI NumericValueEval).
 #[cfg(test)]
-use crate::coercion::compatibility::coercev2_java_number_text;
+use crate::coercion::compatibility::coerce_java_number_text;
 use crate::scalar::{CellError, CellValue};
 mod aggregation;
 /// Finalization for records already selected by a host.
@@ -27,8 +27,8 @@ mod selection;
 pub use criteria::{condition_matches, condition_matches_metered};
 // Database criteria and field-selection helpers shared with host adapters.
 pub use selection::{
-    coercev2_database_criteria_header_index, coercev2_database_field_index,
-    coercev2_database_number, coercev2_database_text, equal_ignore_case,
+    coerce_database_criteria_header_index, coerce_database_field_index, coerce_database_number,
+    coerce_database_text, equal_ignore_case,
 };
 
 /// D-function aggregate applied after header and row selection.

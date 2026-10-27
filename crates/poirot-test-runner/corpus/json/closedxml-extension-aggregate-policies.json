@@ -20,7 +20,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L780: MinA",
         "Expected behavior adapted from this upstream assertion. MinA. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -46,7 +46,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L860: StDevA",
         "Expected behavior adapted from this upstream assertion. StDevA. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -72,7 +72,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L1063: VarA",
         "Expected behavior adapted from this upstream assertion. VarA. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -98,7 +98,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L41: AverageA",
         "Expected behavior adapted from this upstream assertion. AverageA. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -125,7 +125,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L125: Count",
         "Expected behavior adapted from this upstream assertion. Count. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -151,7 +151,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L200: CountA_on_examples_from_spec",
         "Expected behavior adapted from this upstream assertion. CountA on examples from spec. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -177,7 +177,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L469: Geomean",
         "Expected behavior adapted from this upstream assertion. Geomean. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -203,7 +203,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L537: Devsq_is_calculated_from_numbers",
         "Expected behavior adapted from this upstream assertion. Devsq is calculated from numbers. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -230,7 +230,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L631: MaxA",
         "Expected behavior adapted from this upstream assertion. MaxA. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -257,7 +257,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L720: Median_uses_only_numbers",
         "Expected behavior adapted from this upstream assertion. Median uses only numbers. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -284,7 +284,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L752: Min",
         "Expected behavior adapted from this upstream assertion. Min. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -310,7 +310,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L780: MinA",
         "Expected behavior adapted from this upstream assertion. MinA. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -337,7 +337,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L889: StDevP",
         "Expected behavior adapted from this upstream assertion. StDevP. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -364,7 +364,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L1023: Var",
         "Expected behavior adapted from this upstream assertion. Var. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -390,7 +390,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L1092: VarP",
         "Expected behavior adapted from this upstream assertion. VarP. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -416,7 +416,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/StatisticalTests.cs#L537: Devsq_is_calculated_from_numbers",
         "Expected behavior adapted from this upstream assertion. Devsq is calculated from numbers. Not derived from Poirot output.",
         "LibreOffice 26.2.6.3 620(Build:3): every retained expected value was independently recalculated on 2026-10-17 through fresh OOXML snapshots and typed cached results. See ../evidence/closedxml-extension-libreoffice.json. This is a Calc reproduction, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {

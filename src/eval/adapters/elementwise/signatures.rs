@@ -1,18 +1,26 @@
 //! Declarative numeric coercion and allocation-free homogeneous role binding.
-use super::{
-    ArgumentRole, Broadcast, Lift, MemberContext, PreparedSignature, Signature, WholeCollection,
-};
-use crate::eval::host::CallHost;
-use crate::eval::*;
+use super::argument_role::ArgumentRole;
+use super::broadcast::Broadcast;
+use super::lift::Lift;
+use super::member_context::MemberContext;
+use super::tuple_signature::{PreparedSignature, Signature};
+use super::whole_collection::WholeCollection;
+use crate::eval::host::{ArgumentCoercion, CallHost, ScalarOperand};
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR};
+use crate::model::CellError::Num;
+use crate::model::CellValue;
+use crate::model::CellValue::{Blank, Error, Number, Text};
 use std::marker::PhantomData;
 
 /// Signature wrapper that prepares eager source expressions in order before planning broadcast output.
 /// Evaluation follows source positions even when only some roles contribute output dimensions.
 pub(in crate::eval::adapters) struct PreparedSources<S>(pub(in crate::eval::adapters) S);
+
 impl<S: PreparedSignature> Signature for PreparedSources<S> {
     fn bind(present: usize) -> Self {
         Self(S::bind(present))
     }
+
     fn admit(host: &mut CallHost<'_, '_>) -> FunctionResult<(Lift, Self)> {
         let roles = Self::bind(host.len());
         roles.0.prepare(host)?;
@@ -20,6 +28,7 @@ impl<S: PreparedSignature> Signature for PreparedSources<S> {
         Ok((lift, roles))
     }
 }
+
 /// Homogeneous argument roles bound by source position for variadic functions.
 /// Roles are created on demand from the count and starting slot, without reading arguments or allocating a role list.
 pub(in crate::eval::adapters) struct Variadic<R> {
@@ -27,20 +36,24 @@ pub(in crate::eval::adapters) struct Variadic<R> {
     start: usize,
     role: PhantomData<R>,
 }
+
 impl<R: ArgumentRole> Variadic<R> {
     /// Return the number of supplied source arguments, including explicit omissions.
     pub(in crate::eval::adapters) fn len(&self) -> usize {
         self.count
     }
+
     /// Bind one present source role while preserving its original ordinal.
     pub(in crate::eval::adapters) fn get(&self, index: usize) -> Option<R> {
         (index < self.count).then(|| R::bind(self.start.saturating_add(index), index, true))
     }
+
     /// Bind present roles in source order without evaluating their operands.
     pub(in crate::eval::adapters) fn iter(&self) -> impl ExactSizeIterator<Item = R> {
         (0..self.count).map(|index| R::bind(self.start.saturating_add(index), index, true))
     }
 }
+
 impl<R: ArgumentRole> Signature for Variadic<R> {
     fn bind(present: usize) -> Self {
         Self {
@@ -49,12 +62,14 @@ impl<R: ArgumentRole> Signature for Variadic<R> {
             role: PhantomData,
         }
     }
+
     fn admit(host: &mut CallHost<'_, '_>) -> FunctionResult<(Lift, Self)> {
         let count = host.len();
         let lifted = if R::BROADCAST && R::EAGER { count } else { 0 };
         Ok((Lift::new(host, lifted)?, Self::bind(count)))
     }
 }
+
 /// NPV signature with one broadcast rate followed by whole cash-flow collections.
 /// Only the rate contributes output dimensions; each output consumes the collections in source order.
 pub(in crate::eval::adapters) struct BroadcastCollections {
@@ -63,6 +78,7 @@ pub(in crate::eval::adapters) struct BroadcastCollections {
     /// Remaining arguments consumed as complete ordered collections.
     pub(in crate::eval::adapters) collections: Variadic<WholeCollection>,
 }
+
 impl Signature for BroadcastCollections {
     fn bind(present: usize) -> Self {
         Self {
@@ -74,6 +90,7 @@ impl Signature for BroadcastCollections {
             },
         }
     }
+
     fn admit(host: &mut CallHost<'_, '_>) -> FunctionResult<(Lift, Self)> {
         Ok((
             Lift::new(host, usize::from(host.len() > 0))?,
@@ -81,8 +98,10 @@ impl Signature for BroadcastCollections {
         ))
     }
 }
+
 impl Signature for () {
     fn bind(_present: usize) -> Self {}
+
     fn admit(host: &mut CallHost<'_, '_>) -> FunctionResult<(Lift, Self)> {
         Ok((Lift::new(host, 0)?, ()))
     }
@@ -95,6 +114,7 @@ pub(in crate::eval::adapters) enum NumericDefault {
     Constant(f64),
     Prior(usize),
 }
+
 /// Scalar conversion applied before a pure numeric kernel receives its arguments.
 #[derive(Clone, Copy)]
 enum NumericCoercion {
@@ -105,6 +125,7 @@ enum NumericCoercion {
     CalendarSerial,
     DecimalNumber,
 }
+
 /// Conversion of a present omitted numeric slot, independently of absent defaults.
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum NumericOmission {
@@ -113,6 +134,7 @@ enum NumericOmission {
     /// Convert the omitted slot as an actual blank value.
     Blank,
 }
+
 /// Conversion and omission policy for one numeric kernel parameter.
 /// It can also restrict integer selectors to a declared set of choices before the family algorithm runs.
 #[derive(Clone, Copy)]
@@ -122,6 +144,7 @@ pub(in crate::eval::adapters) struct NumericParameter {
     choices: Option<&'static [i32]>,
     omission: NumericOmission,
 }
+
 impl NumericParameter {
     /// Declare ordinary numeric coercion with a chosen omission rule.
     pub(in crate::eval::adapters) const fn new(default: NumericDefault) -> Self {
@@ -132,11 +155,13 @@ impl NumericParameter {
             omission: NumericOmission::Default,
         }
     }
+
     /// Coerce a present omitted slot as blank while retaining the absent default.
     pub(in crate::eval::adapters) const fn missing_as_blank(mut self) -> Self {
         self.omission = NumericOmission::Blank;
         self
     }
+
     /// Reject a truncated numeric selector outside the declared finite choices.
     pub(in crate::eval::adapters) const fn integer_choices(
         mut self,
@@ -145,18 +170,22 @@ impl NumericParameter {
         self.choices = Some(choices);
         self
     }
+
     /// Reject absent or explicitly omitted operands.
     pub(in crate::eval::adapters) const fn required() -> Self {
         Self::new(NumericDefault::Required)
     }
+
     /// Replace absence or explicit omission with a constant, leaving blanks intact.
     pub(in crate::eval::adapters) const fn constant(value: f64) -> Self {
         Self::new(NumericDefault::Constant(value))
     }
+
     /// Default to an already coerced earlier parameter from the same output member.
     pub(in crate::eval::adapters) const fn prior(index: usize) -> Self {
         Self::new(NumericDefault::Prior(index))
     }
+
     /// Reject text values while retaining ordinary numeric and blank coercion.
     pub(in crate::eval::adapters) const fn nontext() -> Self {
         Self {
@@ -166,6 +195,7 @@ impl NumericParameter {
             omission: NumericOmission::Default,
         }
     }
+
     /// Require finite decimal text or an existing number, rejecting logical and blank inputs.
     pub(in crate::eval::adapters) const fn decimal() -> Self {
         Self {
@@ -175,6 +205,7 @@ impl NumericParameter {
             omission: NumericOmission::Default,
         }
     }
+
     /// Convert a required calendar date to its workbook serial value.
     pub(in crate::eval::adapters) const fn calendar_date() -> Self {
         Self {
@@ -184,6 +215,7 @@ impl NumericParameter {
             omission: NumericOmission::Default,
         }
     }
+
     /// Convert a calendar serial, treating omission as zero and preserving date-domain errors.
     pub(in crate::eval::adapters) const fn date_serial() -> Self {
         Self {
@@ -193,6 +225,7 @@ impl NumericParameter {
             omission: NumericOmission::Default,
         }
     }
+
     /// Coerce a logical selector, substituting a default only for omission.
     pub(in crate::eval::adapters) const fn boolean_default(value: bool) -> Self {
         Self {
@@ -202,6 +235,7 @@ impl NumericParameter {
             omission: NumericOmission::Default,
         }
     }
+
     /// Coerce a required logical selector to numeric zero or one.
     pub(in crate::eval::adapters) const fn boolean() -> Self {
         Self {
@@ -218,11 +252,13 @@ pub(in crate::eval::adapters) struct NumericArguments {
     values: [f64; 12],
     len: usize,
 }
+
 impl NumericArguments {
     /// Borrow the initialized numeric argument prefix.
     pub(in crate::eval::adapters) fn as_slice(&self) -> &[f64] {
         self.values.get(..self.len).unwrap_or(&[])
     }
+
     /// Read one initialized parameter through a checked ordinal.
     pub(in crate::eval::adapters) fn get(&self, index: usize) -> FunctionResult<f64> {
         self.as_slice()
@@ -248,6 +284,7 @@ pub(in crate::eval::adapters) struct NumericSignature<'a> {
     parameters: &'a [NumericParameter],
     errors: NumericErrorAdmission,
 }
+
 impl<'a> NumericSignature<'a> {
     /// Retain a declarative, source-ordered parameter table.
     pub(in crate::eval::adapters) const fn new(parameters: &'a [NumericParameter]) -> Self {
@@ -256,6 +293,7 @@ impl<'a> NumericSignature<'a> {
             errors: NumericErrorAdmission::Ordinal,
         }
     }
+
     /// Select when eager source errors take precedence over conversion errors.
     pub(in crate::eval::adapters) const fn with_error_admission(
         mut self,
@@ -264,6 +302,7 @@ impl<'a> NumericSignature<'a> {
         self.errors = errors;
         self
     }
+
     /// Coerce supplied members and apply omitted defaults in source order.
     pub(in crate::eval::adapters) fn numbers(
         &self,
@@ -272,6 +311,7 @@ impl<'a> NumericSignature<'a> {
     ) -> FunctionResult<NumericArguments> {
         self.numbers_roles(context, arguments.iter().map(Some))
     }
+
     /// Coerce selected tuple roles without admitting intervening collection geometry.
     /// A missing role uses its table default; supplied roles retain their source ordinals.
     pub(in crate::eval::adapters) fn numbers_roles<I>(
@@ -305,6 +345,7 @@ impl<'a> NumericSignature<'a> {
                 .transpose()
         })
     }
+
     /// Coerce fixed scalar slots in source order without admitting their collection geometry.
     pub(in crate::eval::adapters) fn scalars(
         &self,
@@ -316,9 +357,12 @@ impl<'a> NumericSignature<'a> {
             if index >= host.len() {
                 return Ok(None);
             }
-            super::FixedScalar::at(index).read(host).map(Some)
+            super::fixed_scalar::FixedScalar::at(index)
+                .read(host)
+                .map(Some)
         })
     }
+
     /// Apply one coercion/default protocol to fixed and broadcast operand readers.
     fn read(
         &self,
@@ -349,6 +393,7 @@ impl<'a> NumericSignature<'a> {
             Ok(prepared.get_mut(index).ok_or(VALUE_ERROR)?.take())
         })
     }
+
     /// Convert admitted operands and defaults without re-reading eager sources.
     fn coerce(
         &self,
@@ -378,39 +423,43 @@ impl<'a> NumericSignature<'a> {
                     NumericCoercion::NonTextNumber if matches!(operand.value, Text(_)) => {
                         return Err(VALUE_ERROR.into());
                     }
-                    NumericCoercion::Number | NumericCoercion::NonTextNumber => host
-                        .coercev2_scalar_number(
+                    NumericCoercion::Number | NumericCoercion::NonTextNumber => {
+                        ArgumentCoercion::new(host).coerce_scalar_number(
                             &operand.value,
                             crate::eval::host::NumericPolicy::PinnedPoi,
-                        )?,
+                        )?
+                    }
                     NumericCoercion::DecimalNumber => match operand.value {
                         Number(value) if value.is_finite() => value,
                         Error(error) => return Err(error.into()),
                         value if value.text_ref().is_some() => {
-                            let text = host.project_text(value.text_ref().ok_or(VALUE_ERROR)?)?;
-                            poirot_functions::coercion::compatibility::coercev2_financial_decimal_text(&text)
+                            let text = ArgumentCoercion::new(host)
+                                .project_text(value.text_ref().ok_or(VALUE_ERROR)?)?;
+                            poirot_functions::coercion::compatibility::coerce_financial_decimal_text(&text)
                                 .ok_or(VALUE_ERROR)?
                         }
                         _ => return Err(VALUE_ERROR.into()),
                     },
                     NumericCoercion::CalendarSerial => {
-                        host.coercev2_calendar_date(&operand.value)?
+                        ArgumentCoercion::new(host).coerce_calendar_date(&operand.value)?
                     }
                     NumericCoercion::CalendarDate => {
                         if let Error(error) = operand.value {
                             return Err(error.into());
                         }
-                        host.coercev2_calendar_date(&operand.value).map_err(
-                            |error| match error {
+                        ArgumentCoercion::new(host)
+                            .coerce_calendar_date(&operand.value)
+                            .map_err(|error| match error {
                                 FunctionFailure::Spreadsheet(_) => {
                                     FunctionFailure::Spreadsheet(VALUE_ERROR)
                                 }
                                 other => other,
-                            },
-                        )?
+                            })?
                     }
                     NumericCoercion::Boolean => f64::from(
-                        crate::eval::core_projection::coercev2_operand_boolean(&operand.value)?,
+                        crate::eval::values::core_projection::coerce_operand_boolean(
+                            &operand.value,
+                        )?,
                     ),
                 },
                 _ => match parameter.default {
@@ -434,6 +483,7 @@ impl<'a> NumericSignature<'a> {
         Ok(result)
     }
 }
+
 impl Variadic<Broadcast> {
     /// Apply a shared numeric signature to this output member's broadcast roles.
     pub(in crate::eval::adapters) fn numbers(
@@ -443,12 +493,91 @@ impl Variadic<Broadcast> {
     ) -> FunctionResult<NumericArguments> {
         NumericSignature::new(parameters).numbers(context, self)
     }
+
+    /// Materialize source-ordered scalar members with shared error propagation.
+    pub(in crate::eval::adapters) fn scalar_values(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+    ) -> FunctionResult<Vec<CellValue>> {
+        context.host.check_values(self.len())?;
+        let mut values = Vec::new();
+        values
+            .try_reserve_exact(self.len())
+            .map_err(|_| context.host.allocation_failure())?;
+        for role in self.iter() {
+            let operand = role.read(context)?;
+            if let Error(error) = operand.value {
+                return Err(error.into());
+            }
+            values
+                .try_reserve(1)
+                .map_err(|_| context.host.allocation_failure())?;
+            // SAFETY: one additional slot was reserved immediately above.
+            values.push(operand.value);
+        }
+        Ok(values)
+    }
+
+    /// Coerce a numeric option without truncating selector values before validation.
+    pub(in crate::eval::adapters) fn number(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        index: usize,
+        default: Option<f64>,
+    ) -> FunctionResult<f64> {
+        match self.get(index) {
+            Some(role) => role.number(context, default),
+            None => default.ok_or(VALUE_ERROR.into()),
+        }
+    }
+
+    /// Read one present typed role in the current output coordinate.
+    pub(in crate::eval::adapters) fn operand(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        index: usize,
+    ) -> FunctionResult<ScalarOperand> {
+        self.get(index).ok_or(VALUE_ERROR)?.read(context)
+    }
+
+    /// Render a typed role without losing unpaired UTF-16 units.
+    pub(in crate::eval::adapters) fn text_units(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        index: usize,
+    ) -> FunctionResult<Vec<u16>> {
+        let operand = self.operand(context, index)?;
+        super::text::units(context.host, &operand)
+    }
+
+    /// Coerce an omitted integer slot as zero; only an absent slot uses the default.
+    pub(in crate::eval::adapters) fn text_integer(
+        &self,
+        context: &mut MemberContext<'_, '_, '_>,
+        index: usize,
+        default: Option<i32>,
+    ) -> FunctionResult<i32> {
+        let parameter = default
+            .map_or_else(NumericParameter::required, |value| {
+                NumericParameter::constant(f64::from(value))
+            })
+            .missing_as_blank();
+        let numbers =
+            NumericSignature::new(&[parameter]).numbers_roles(context, [self.get(index)])?;
+        super::text::integer(numbers.get(0)?)
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::{Deferred, WholeCollection};
+    use super::super::whole_collection::WholeCollection;
+    use super::super::with_demand::Deferred;
     use super::*;
+    use crate::eval::compile;
+    use crate::eval::config::EvaluationInputs;
+    use crate::eval::session::Session;
+    use crate::model::CellError::Div0;
+    use crate::model::{CellAddress, Workbook};
 
     fn numbers(sources: &[&str], parameters: &[NumericParameter]) -> FunctionResult<Vec<f64>> {
         let mut workbook = Workbook::new();
@@ -457,9 +586,9 @@ mod tests {
             .iter()
             .map(|source| {
                 if source.is_empty() {
-                    bound::Expression::Missing
+                    compile::bound::Expression::Missing
                 } else {
-                    bound::bind(&poirot_parsing::formula::parse_formula(source).unwrap())
+                    compile::bound::bind(&poirot_parsing::formula::parse_formula(source).unwrap())
                 }
             })
             .collect();
@@ -551,7 +680,7 @@ mod tests {
     fn variadic_binding_and_nonbroadcast_admission_do_not_force_sources() {
         let mut workbook = Workbook::new();
         workbook.add_sheet("S").unwrap();
-        let sources = vec![bound::bind(
+        let sources = vec![compile::bound::bind(
             &poirot_parsing::formula::parse_formula("RAND()").unwrap(),
         )];
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
@@ -573,6 +702,14 @@ mod tests {
             assert_eq!(lazy.get(0).unwrap().argument(), 0);
             assert_eq!(<()>::admit(&mut host).unwrap().0.dimensions(), (1, 1));
         }
-        assert!(session.budget.usage.random_accesses.is_empty());
+        assert!(
+            session
+                .state
+                .runtime
+                .budget
+                .usage
+                .random_accesses
+                .is_empty()
+        );
     }
 }

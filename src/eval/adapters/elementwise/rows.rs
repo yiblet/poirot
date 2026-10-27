@@ -1,7 +1,15 @@
 //! Shared bounded conditional selection, payload demand, and result reduction.
-use super::{ArgumentRole, Broadcast, Lift, WholeCollection};
-use crate::eval::host::{CallHost, OperandKind, ScalarOperand};
-use crate::eval::*;
+use super::argument_role::ArgumentRole;
+use super::broadcast::Broadcast;
+use super::lift::Lift;
+use super::whole_collection::WholeCollection;
+use crate::eval::host::{CallHost, OperandKind, OperandReader, ScalarOperand, SubtotalReader};
+use crate::eval::limits::CapabilityId;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, finite};
+use crate::model::CellError::{Div0, Num};
+use crate::model::CellValue::{Error, Number};
+use crate::model::{CellAddress, CellValue};
+use poirot_functions::criteria::AggregateKind;
 
 /// Whether a conditional source consists of cells or headed database records.
 #[derive(Clone, Copy)]
@@ -9,6 +17,7 @@ pub(in crate::eval::adapters) enum Layout {
     Cells,
     Records,
 }
+
 /// Describes conditional source traversal before any payload is selected.
 /// It can exclude a database header and later restrict iteration to stored positions when predicates prove blank cells irrelevant.
 #[derive(Clone)]
@@ -18,6 +27,7 @@ pub(in crate::eval::adapters) struct Rows {
     first: usize,
     stored: Option<Vec<(usize, usize)>>,
 }
+
 impl Rows {
     /// Bind an array or reference, excluding a leading header when requested.
     pub(in crate::eval::adapters) fn bind(
@@ -31,7 +41,7 @@ impl Rows {
         ) {
             return Err(VALUE_ERROR.into());
         }
-        let (rows, columns) = host.shape(argument)?;
+        let (rows, columns) = OperandReader::new(host).shape(argument)?;
         if columns == 0 || rows == 0 {
             return Err(VALUE_ERROR.into());
         }
@@ -43,6 +53,7 @@ impl Rows {
             stored: None,
         })
     }
+
     /// Require aligned criteria geometry before visiting any member.
     pub(in crate::eval::adapters) fn align(
         &self,
@@ -55,20 +66,23 @@ impl Rows {
         }
         Ok(())
     }
+
     /// Return the admitted rectangle.
     pub(in crate::eval::adapters) fn shape(&self) -> (usize, usize) {
         (self.rows, self.columns)
     }
+
     /// Exclude implicit blanks only after the first predicate proves them irrelevant.
     pub(in crate::eval::adapters) fn sparse(
         &mut self,
         host: &mut CallHost<'_, '_>,
         argument: usize,
     ) -> FunctionResult<()> {
-        self.stored = host.stored_positions(argument)?;
+        self.stored = OperandReader::new(host).stored_positions(argument)?;
         Ok(())
     }
 }
+
 /// Selected payload role, read only after a row has passed its predicates.
 pub(in crate::eval::adapters) enum Field {
     /// Counting requires no payload read.
@@ -78,6 +92,7 @@ pub(in crate::eval::adapters) enum Field {
     /// Read a fixed database column, or an omitted count field.
     Column(Option<usize>),
 }
+
 /// How spreadsheet predicate failures affect selection.
 #[derive(Clone, Copy)]
 pub(in crate::eval::adapters) enum PredicateErrors {
@@ -86,6 +101,7 @@ pub(in crate::eval::adapters) enum PredicateErrors {
     /// Database criteria expose invalid conditions as VALUE.
     Value,
 }
+
 /// Reduce selected payloads, optionally finishing early without additional reads.
 pub(in crate::eval::adapters) trait Reducer {
     /// Consume one accepted payload; return a result to stop traversal early.
@@ -94,9 +110,11 @@ pub(in crate::eval::adapters) trait Reducer {
         host: &mut CallHost<'_, '_>,
         value: CellValue,
     ) -> FunctionResult<Option<CellValue>>;
+
     /// Assemble the result after all accepted payloads have been consumed.
     fn finish(self, host: &mut CallHost<'_, '_>) -> FunctionResult<CellValue>;
 }
+
 /// Traverse one bounded row set with lazy predicates and selected payload demand.
 pub(in crate::eval::adapters) fn select<R: Reducer>(
     host: &mut CallHost<'_, '_>,
@@ -147,8 +165,14 @@ pub(in crate::eval::adapters) fn select<R: Reducer>(
         }
         let value = match field {
             Field::Count | Field::Column(None) => Number(0.),
-            Field::Relative(argument) => host.read_relative_cell(argument, row, column)?.value,
-            Field::Column(Some(column)) => host.read_cell(0, row, column)?.value,
+            Field::Relative(argument) => {
+                OperandReader::new(host)
+                    .read_relative_cell(argument, row, column)?
+                    .value
+            }
+            Field::Column(Some(column)) => {
+                OperandReader::new(host).read_cell(0, row, column)?.value
+            }
         };
         if let Some(result) = reducer.push(host, value)? {
             return Ok(result);
@@ -156,19 +180,19 @@ pub(in crate::eval::adapters) fn select<R: Reducer>(
     }
     reducer.finish(host)
 }
-/// Reuse the pure criteria domain's aggregation vocabulary for selected rows.
-pub(in crate::eval::adapters) use poirot_functions::criteria::AggregateKind as Numeric;
+
 /// Incremental numeric reduction over payloads accepted by conditional row selection.
 /// SUM, COUNT, AVERAGE, MIN, and MAX share this fixed-size state instead of collecting selected values.
 pub(in crate::eval::adapters) struct Numbers {
-    operation: Numeric,
+    operation: AggregateKind,
     sum: f64,
     count: usize,
     extremum: Option<f64>,
 }
+
 impl Numbers {
     /// Start a selected-value numerical reduction.
-    pub(in crate::eval::adapters) fn new(operation: Numeric) -> Self {
+    pub(in crate::eval::adapters) fn new(operation: AggregateKind) -> Self {
         Self {
             operation,
             sum: 0.,
@@ -177,13 +201,14 @@ impl Numbers {
         }
     }
 }
+
 impl Reducer for Numbers {
     fn push(
         &mut self,
         _: &mut CallHost<'_, '_>,
         value: CellValue,
     ) -> FunctionResult<Option<CellValue>> {
-        if matches!(self.operation, Numeric::Count) {
+        if matches!(self.operation, AggregateKind::Count) {
             self.count = self.count.checked_add(1).ok_or(Num)?;
             return Ok(None);
         }
@@ -201,21 +226,25 @@ impl Reducer for Numbers {
         };
         self.extremum = Some(match self.extremum {
             None => number,
-            Some(old) if matches!(self.operation, Numeric::Min) => old.min(number),
+            Some(old) if matches!(self.operation, AggregateKind::Min) => old.min(number),
             Some(old) => old.max(number),
         });
         Ok(None)
     }
+
     fn finish(self, _: &mut CallHost<'_, '_>) -> FunctionResult<CellValue> {
         Ok(match self.operation {
-            Numeric::Count => Number(self.count as f64),
-            Numeric::Sum => finite(self.sum),
-            Numeric::Average | Numeric::AverageIf if self.count == 0 => Error(Div0),
-            Numeric::Average | Numeric::AverageIf => finite(self.sum / self.count as f64),
-            Numeric::Min | Numeric::Max => finite(self.extremum.unwrap_or(0.)),
+            AggregateKind::Count => Number(self.count as f64),
+            AggregateKind::Sum => finite(self.sum),
+            AggregateKind::Average | AggregateKind::AverageIf if self.count == 0 => Error(Div0),
+            AggregateKind::Average | AggregateKind::AverageIf => {
+                finite(self.sum / self.count as f64)
+            }
+            AggregateKind::Min | AggregateKind::Max => finite(self.extremum.unwrap_or(0.)),
         })
     }
 }
+
 /// Admit wildcard scratch and meter matching states without losing domain errors.
 pub(in crate::eval::adapters) fn matching<E: From<FunctionFailure>>(
     host: &mut CallHost<'_, '_>,
@@ -228,6 +257,7 @@ pub(in crate::eval::adapters) fn matching<E: From<FunctionFailure>>(
     let mut visited = 0;
     test(&mut || host.wildcard_step(&mut visited).map_err(E::from))
 }
+
 /// Fold source cells while applying workbook visibility before reading their values.
 pub(in crate::eval::adapters) fn visible_fold<T>(
     host: &mut CallHost<'_, '_>,
@@ -237,11 +267,13 @@ pub(in crate::eval::adapters) fn visible_fold<T>(
     mut step: impl FnMut(&mut CallHost<'_, '_>, &mut T, ScalarOperand) -> FunctionResult<()>,
 ) -> FunctionResult<T> {
     for argument in start..host.len() {
-        let len = host.collection_len(argument)?;
+        let len = OperandReader::new(host).collection_len(argument)?;
         host.check_values(len)?;
         host.charge_work(len as u64)?;
         for offset in 0..len {
-            if let Some(value) = host.subtotal_cell(argument, offset, hidden)? {
+            if let Some(value) =
+                SubtotalReader::new(host).subtotal_cell(argument, offset, hidden)?
+            {
                 step(host, &mut state, value)?;
             }
         }
@@ -283,6 +315,7 @@ pub(in crate::eval::adapters) enum PairLayout {
     /// A payload followed by repeated collection/control pairs.
     LeadingPayload,
 }
+
 /// Pairs condition ranges with their control arguments for conditional aggregation.
 /// It checks range alignment once and lets only broadcast controls determine the output rectangle.
 pub(in crate::eval::adapters) struct PairedCollections<R: ArgumentRole = Broadcast> {
@@ -291,6 +324,7 @@ pub(in crate::eval::adapters) struct PairedCollections<R: ArgumentRole = Broadca
     source: Rows,
     lift: Lift,
 }
+
 impl<R: ArgumentRole> PairedCollections<R> {
     /// Admit source-ordered roles and aligned collection shapes without reading members.
     pub(in crate::eval::adapters) fn admit(
@@ -347,7 +381,7 @@ impl<R: ArgumentRole> PairedCollections<R> {
                 .filter(|&index| index < len)
                 .ok_or(VALUE_ERROR)?;
             Rows::bind(host, index, Layout::Cells)?;
-            host.describe(control)?;
+            OperandReader::new(host).describe(control)?;
             // SAFETY: count pairs and control indices were reserved before this count-iteration loop.
             pairs.push((
                 WholeCollection::bind(index, 0, true),
@@ -357,7 +391,7 @@ impl<R: ArgumentRole> PairedCollections<R> {
             controls.push(control);
         }
         if single && len == 3 {
-            host.describe(2)?;
+            OperandReader::new(host).describe(2)?;
         }
         let source = Rows::bind(host, start, Layout::Cells)?;
         for (range, _) in &pairs {
@@ -376,15 +410,18 @@ impl<R: ArgumentRole> PairedCollections<R> {
             lift: Lift::new_selected(host, &controls)?,
         })
     }
+
     /// Borrow the bound ordered collection/control associations.
     pub(in crate::eval::adapters) fn pairs(&self) -> &[(WholeCollection, R)] {
         &self.pairs
     }
+
     /// Select the declared lazy payload role, or count without reading a payload.
     pub(in crate::eval::adapters) fn field(&self) -> Field {
         self.payload
             .map_or(Field::Count, |role| Field::Relative(role.argument()))
     }
+
     /// Clone only source geometry, optionally excluding proven-irrelevant implicit blanks.
     pub(in crate::eval::adapters) fn source(
         &self,
@@ -397,6 +434,7 @@ impl<R: ArgumentRole> PairedCollections<R> {
         }
         Ok(source)
     }
+
     /// Map typed controls into domain predicates and assemble each bounded output member.
     pub(in crate::eval::adapters) fn evaluate<P>(
         &self,

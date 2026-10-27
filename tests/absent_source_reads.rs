@@ -200,7 +200,7 @@ fn absent_reads_and_retained_results_survive_snapshot_without_authoring_cells() 
 fn blank_spill_children_publish_zero_without_authoring_the_blank_input() {
     let source = book();
     let context = EvaluationContext::default();
-    let policy = poirot::eval::overlay::EvaluationPolicy {
+    let policy = poirot::eval::EvaluationPolicy {
         builtin: poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
         arrays: poirot::eval::ArrayResultPolicy::DynamicSpill,
         ..Default::default()

@@ -187,17 +187,17 @@ pub use crate::coercion::collections::MatrixCollection;
 
 /// Admit a numeric matrix without changing coordinates under `SquareNumeric`. Other
 /// policies preserve pinned POI compaction and padding of skipped members.
-pub fn coercev2_matrix_collection(
+pub fn coerce_matrix_collection(
     area: &Matrix<Cell>,
     policy: MatrixCollection,
     budget: Budget,
 ) -> Result<Matrix<f64>> {
-    collection::coercev2_matrix_collection(area, policy, budget)
+    collection::coerce_matrix_collection(area, policy, budget)
 }
 
 /// TREND rejects any non NumericValueEval (including source error values).
-pub fn coercev2_trend_collection(area: &Matrix<Cell>, budget: Budget) -> Result<Matrix<f64>> {
-    collection::coercev2_trend_collection(area, budget)
+pub fn coerce_trend_collection(area: &Matrix<Cell>, budget: Budget) -> Result<Matrix<f64>> {
+    collection::coerce_trend_collection(area, budget)
 }
 
 /// Multiply corresponding admitted elements and sum their products.
@@ -368,29 +368,29 @@ mod tests {
         )
         .unwrap();
         assert_eq!(
-            coercev2_matrix_collection(&a, MatrixCollection::Multiply, B).unwrap(),
+            coerce_matrix_collection(&a, MatrixCollection::Multiply, B).unwrap(),
             m(2, 2, &[2., 3., 0., 0.])
         );
         assert_eq!(
-            coercev2_matrix_collection(&a, MatrixCollection::Determinant, B),
+            coerce_matrix_collection(&a, MatrixCollection::Determinant, B),
             Err(Error::Formula(CellError::Value))
         );
         assert_eq!(
-            coercev2_matrix_collection(&a, MatrixCollection::Transpose, B).unwrap(),
+            coerce_matrix_collection(&a, MatrixCollection::Transpose, B).unwrap(),
             m(2, 2, &[2., 3., 0., 0.])
         );
         assert_eq!(
-            coercev2_trend_collection(&a, B),
+            coerce_trend_collection(&a, B),
             Err(Error::Formula(CellError::Value))
         );
         let one = Matrix::new(1, 1, vec![Cell::Number(2.)]).unwrap();
         assert_eq!(
-            coercev2_matrix_collection(&one, MatrixCollection::Inverse, B),
+            coerce_matrix_collection(&one, MatrixCollection::Inverse, B),
             Err(Error::Formula(CellError::Value))
         );
         let error = Matrix::new(1, 1, vec![Cell::Error(CellError::NA)]).unwrap();
         assert_eq!(
-            coercev2_trend_collection(&error, B),
+            coerce_trend_collection(&error, B),
             Err(Error::Formula(CellError::Value))
         );
     }
@@ -408,7 +408,7 @@ mod tests {
         )
         .unwrap();
         let admitted =
-            coercev2_matrix_collection(&valid, MatrixCollection::SquareNumeric, B).unwrap();
+            coerce_matrix_collection(&valid, MatrixCollection::SquareNumeric, B).unwrap();
         assert_eq!(admitted, m(2, 2, &[0., 2., 3., 4.]));
         assert_eq!(determinant(&admitted, B), Ok(-6.));
         for invalid in [
@@ -423,19 +423,19 @@ mod tests {
                 cells[index] = invalid.clone();
                 let input = Matrix::new(2, 2, cells).unwrap();
                 assert_eq!(
-                    coercev2_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
+                    coerce_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
                     Err(Error::Formula(CellError::Value))
                 );
             }
         }
         let singleton = Matrix::new(1, 1, vec![Cell::Number(2.)]).unwrap();
         let admitted =
-            coercev2_matrix_collection(&singleton, MatrixCollection::SquareNumeric, B).unwrap();
+            coerce_matrix_collection(&singleton, MatrixCollection::SquareNumeric, B).unwrap();
         assert_eq!(determinant(&admitted, B), Ok(2.));
         assert_eq!(inverse(&admitted, B), Ok(m(1, 1, &[0.5])));
         for policy in [MatrixCollection::Determinant, MatrixCollection::Inverse] {
             assert_eq!(
-                coercev2_matrix_collection(&singleton, policy, B),
+                coerce_matrix_collection(&singleton, policy, B),
                 Err(Error::Formula(CellError::Value))
             );
         }
@@ -459,7 +459,7 @@ mod tests {
             Err(Error::Formula(CellError::Value))
         );
         assert_eq!(
-            coercev2_matrix_collection(
+            coerce_matrix_collection(
                 &valid,
                 MatrixCollection::SquareNumeric,
                 Budget {
@@ -470,7 +470,7 @@ mod tests {
             Err(Error::BudgetExceeded)
         );
         assert_eq!(
-            coercev2_matrix_collection(
+            coerce_matrix_collection(
                 &valid,
                 MatrixCollection::SquareNumeric,
                 Budget {
@@ -499,7 +499,7 @@ mod tests {
         ] {
             let input = Matrix::new(2, 2, cells).unwrap();
             assert_eq!(
-                coercev2_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
+                coerce_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
                 Err(Error::Formula(CellError::Value))
             );
         }
@@ -519,7 +519,7 @@ mod tests {
             )
             .unwrap();
             assert_eq!(
-                coercev2_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
+                coerce_matrix_collection(&input, MatrixCollection::SquareNumeric, B),
                 Err(Error::Formula(first))
             );
         }

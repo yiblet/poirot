@@ -2,8 +2,15 @@
 use crate::eval::adapters::elementwise::{
     Broadcast, Kernel, MemberContext, Optional, Variadic, WholeCollection,
 };
-use crate::eval::host::{CallHost, NumericPolicy, ScalarOperand};
-use crate::eval::*;
+use crate::eval::functions::registry::EngineeringFunction;
+use crate::eval::host::{ArgumentCoercion, CallHost, NumericPolicy, ScalarOperand};
+use crate::eval::limits::{CapabilityId, EvalResult};
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionResult, VALUE_ERROR, Value};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::Num;
+use crate::model::CellValue::{Blank, Boolean, Error, Number, Text};
+use crate::model::{CellAddress, CellValue};
 use poirot_functions::coercion::complex::{self as coercion, ComplexNumber, ComplexSuffix};
 use poirot_functions::engineering::complex::{self as kernel, Unary};
 
@@ -13,6 +20,7 @@ struct Parsed {
     value: ComplexNumber,
     unit: Option<ComplexSuffix>,
 }
+
 fn parse(host: &mut CallHost<'_, '_>, member: ScalarOperand) -> FunctionResult<Parsed> {
     if member.missing {
         return Err(host.unsupported(
@@ -27,7 +35,8 @@ fn parse(host: &mut CallHost<'_, '_>, member: ScalarOperand) -> FunctionResult<P
             poirot_functions::scalar::Scalar::Text(text)
         }
         CellValue::TextUtf16(text) => {
-            let text = host.project_text(crate::model::TextRef::Utf16(text.units()))?;
+            let text = ArgumentCoercion::new(host)
+                .project_text(crate::model::TextRef::Utf16(text.units()))?;
             host.charge_work((text.len() as u64).saturating_add(1))?;
             poirot_functions::scalar::Scalar::Text(text)
         }
@@ -45,9 +54,10 @@ fn parse(host: &mut CallHost<'_, '_>, member: ScalarOperand) -> FunctionResult<P
         }
         _ => None,
     };
-    let value = coercion::coercev2_complex_scalar(scalar)?.ok_or(VALUE_ERROR)?;
+    let value = coercion::coerce_complex_scalar(scalar)?.ok_or(VALUE_ERROR)?;
     Ok(Parsed { value, unit })
 }
+
 fn combine_unit(
     first: Option<ComplexSuffix>,
     next: Option<ComplexSuffix>,
@@ -58,22 +68,24 @@ fn combine_unit(
         _ => Ok(None),
     }
 }
+
 fn render(host: &mut CallHost<'_, '_>, value: ComplexNumber) -> FunctionResult<CellValue> {
     // Each finite binary64 component has bounded formatting scratch. Admit the
     // complete existing renderer's bound before allocating concatenated output.
     host.check_text(132)?;
     host.charge_work(132)?;
     let real = if value.real != 0.0 {
-        host.coercev2_number_to_text(value.real, NumericPolicy::PinnedPoi)?
+        ArgumentCoercion::new(host).coerce_number_to_text(value.real, NumericPolicy::PinnedPoi)?
     } else {
         String::new()
     };
     let imaginary = if value.imaginary != 0.0 && value.imaginary != 1.0 && value.imaginary != -1.0 {
-        host.coercev2_number_to_text(value.imaginary, NumericPolicy::PinnedPoi)?
+        ArgumentCoercion::new(host)
+            .coerce_number_to_text(value.imaginary, NumericPolicy::PinnedPoi)?
     } else {
         String::new()
     };
-    let text = coercion::coerce_complex_result(value, |number| {
+    let text = coercion::convert_complex_result(value, |number| {
         if number.to_bits() == value.real.to_bits() {
             real.clone()
         } else {
@@ -83,8 +95,12 @@ fn render(host: &mut CallHost<'_, '_>, value: ComplexNumber) -> FunctionResult<C
     host.check_text(text.len())?;
     Ok(Text(text))
 }
+
 fn unary(function: EngineeringFunction) -> Option<Unary> {
-    use EngineeringFunction::*;
+    use EngineeringFunction::{
+        Imconjugate, Imcos, Imcosh, Imcot, Imcsc, Imcsch, Imexp, Imln, Imlog2, Imlog10, Imsec,
+        Imsech, Imsin, Imsinh, Imsqrt, Imtan,
+    };
     Some(match function {
         Imconjugate => Unary::Conjugate,
         Imcos => Unary::Cos,
@@ -105,13 +121,16 @@ fn unary(function: EngineeringFunction) -> Option<Unary> {
         _ => return None,
     })
 }
+
 /// IMSUM or IMPRODUCT kernel that reduces ordered collections once before returning its scalar result.
 struct Reduction {
     product: bool,
     result: Option<CellValue>,
 }
+
 impl Kernel for Reduction {
     type Signature = Variadic<WholeCollection>;
+
     fn prepare(
         &mut self,
         host: &mut CallHost<'_, '_>,
@@ -141,6 +160,7 @@ impl Kernel for Reduction {
         self.result = Some(render(host, result)?);
         Ok(())
     }
+
     fn apply(
         &self,
         _context: &mut MemberContext<'_, '_, '_>,
@@ -149,17 +169,20 @@ impl Kernel for Reduction {
         self.result.clone().ok_or(VALUE_ERROR.into())
     }
 }
+
 /// Complex-function kernel that reads broadcast operands and applies operation-specific parsing and suffix rules.
 /// Optional operands stay distinct so unary operations do not require binary inputs.
 struct Complex(EngineeringFunction);
+
 impl Kernel for Complex {
     type Signature = (Broadcast, Optional<Broadcast>, Optional<Broadcast>);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use EngineeringFunction::*;
+        use EngineeringFunction::{Imabs, Imaginary, Imargument, Imdiv, Impower, Imreal, Imsub};
         if self.0 == EngineeringFunction::Complex {
             let real = arguments.0.number(context, None)?;
             let imaginary = arguments
@@ -174,8 +197,9 @@ impl Kernel for Complex {
                     if member.missing {
                         return Err(VALUE_ERROR.into());
                     }
-                    let text = context.host.coercev2_scalar_text(&member.value)?;
-                    coercion::coercev2_complex_suffix(&text)?
+                    let text =
+                        ArgumentCoercion::new(context.host).coerce_scalar_text(&member.value)?;
+                    coercion::coerce_complex_suffix(&text)?
                 }
                 None => ComplexSuffix::I,
             };
@@ -218,6 +242,7 @@ impl Kernel for Complex {
         render(context.host, result)
     }
 }
+
 /// Execute complex operations using the shared typed executor.
 pub(super) fn execute(
     session: &mut Session<'_>,
@@ -230,7 +255,7 @@ pub(super) fn execute(
         function,
         EngineeringFunction::Imsum | EngineeringFunction::Improduct
     ) {
-        super::run(
+        super::dispatch::run(
             session,
             sheet,
             address,
@@ -242,7 +267,7 @@ pub(super) fn execute(
             },
         )
     } else {
-        super::run(
+        super::dispatch::run(
             session,
             sheet,
             address,

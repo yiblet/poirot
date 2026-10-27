@@ -40,13 +40,13 @@ pub fn approximate(n: f64) -> f64 {
         return n;
     }
     // TODO(coercion-non-argument): [LOW] Decimal normalization round-trips a numeric intermediate through 15-digit text and can discard binary64 precision.
-    crate::coercion::compatibility::coercev2_number_to_text(n)
+    crate::coercion::compatibility::coerce_number_to_text(n)
         .parse()
         .unwrap_or(f64::NAN)
 }
 fn decimal(n: f64) -> Result<BigDecimal, CellError> {
     // TODO(coercion-non-argument): [LOW] Decimal normalization round-trips a numeric intermediate through 15-digit text and can discard binary64 precision.
-    BigDecimal::from_str(&crate::coercion::compatibility::coercev2_number_to_text(n))
+    BigDecimal::from_str(&crate::coercion::compatibility::coerce_number_to_text(n))
         .map_err(|_| CellError::Num)
 }
 fn truncate(n: f64) -> f64 {
@@ -253,7 +253,7 @@ pub fn combina_metered<E: From<CellError>>(
     visit: &mut impl FnMut() -> Result<(), E>,
 ) -> Result<f64, E> {
     use bigdecimal::{FromPrimitive, num_bigint::BigUint};
-    let (n, k) = crate::coercion::combinations::coercev2_combina_counts(n, k)?;
+    let (n, k) = crate::coercion::combinations::coerce_combina_counts(n, k)?;
     if n == 0.0 {
         return Ok(0.0);
     }

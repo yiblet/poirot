@@ -1,8 +1,6 @@
 //! Exact predicate types and rectangular demand are independent of numeric coercion.
-use poirot::eval::{
-    overlay::{EvaluationContext, EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::Overlay;
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, ExcelText, Workbook};
 fn target(cell: &str) -> EvaluationTarget {
     EvaluationTarget {

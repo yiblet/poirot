@@ -2,13 +2,13 @@
 use crate::coercion::{CellError, TextRef, compatibility::ScalarRef};
 
 /// Pinned POI requires two operands; documented Excel admits an omitted form.
-pub fn coercev2_roman_arity(count: usize, documented: bool) -> bool {
+pub fn coerce_roman_arity(count: usize, documented: bool) -> bool {
     count == 2 || (documented && count == 1)
 }
 
 /// Preserve omission and logical identity until the ROMAN form consumer asks.
 /// Other scalars continue through the host's contextual numeric conversion.
-pub fn coercev2_roman_form_default(
+pub fn coerce_roman_form_default(
     missing: bool,
     boolean: Option<bool>,
     documented: bool,
@@ -24,7 +24,7 @@ pub fn coercev2_roman_form_default(
 
 /// ARABIC accepts text and empty cells, preserving source errors and omission.
 /// It does not turn numbers or logical values into Roman text.
-pub fn coercev2_arabic_scalar(value: ScalarRef<'_>) -> Result<TextRef<'_>, CellError> {
+pub fn coerce_arabic_scalar(value: ScalarRef<'_>) -> Result<TextRef<'_>, CellError> {
     match value {
         ScalarRef::Text(text) => Ok(text),
         ScalarRef::Blank => Ok(TextRef::Utf8("")),
@@ -38,7 +38,7 @@ pub fn coercev2_arabic_scalar(value: ScalarRef<'_>) -> Result<TextRef<'_>, CellE
 /// immediately following larger symbol; other symbols add. This deliberately
 /// avoids imposing the formatter's canonical grammar. Undocumented noncanonical
 /// spellings are an arithmetic extension, not a claim of native Excel parity.
-pub fn coercev2_arabic_text(text: &str) -> Result<i32, CellError> {
+pub fn coerce_arabic_text(text: &str) -> Result<i32, CellError> {
     if text.encode_utf16().take(256).count() > 255 {
         return Err(CellError::Value);
     }
@@ -96,20 +96,17 @@ mod tests {
             ("IC", 99),
             ("IM", 999),
         ] {
-            assert_eq!(coercev2_arabic_text(text), Ok(expected), "{text}");
+            assert_eq!(coerce_arabic_text(text), Ok(expected), "{text}");
         }
-        assert_eq!(coercev2_arabic_text(&"M".repeat(255)), Ok(255000));
+        assert_eq!(coerce_arabic_text(&"M".repeat(255)), Ok(255000));
         for text in [
             "+I", "-", "--I", "- I", "I I", "I-", "\tI", "I\n", "Ⅳ", "N", "\u{a0}I",
         ] {
-            assert_eq!(coercev2_arabic_text(text), Err(CellError::Value), "{text}");
+            assert_eq!(coerce_arabic_text(text), Err(CellError::Value), "{text}");
         }
+        assert_eq!(coerce_arabic_text(&"M".repeat(256)), Err(CellError::Value));
         assert_eq!(
-            coercev2_arabic_text(&"M".repeat(256)),
-            Err(CellError::Value)
-        );
-        assert_eq!(
-            coercev2_arabic_text(&format!(" {}", "M".repeat(255))),
+            coerce_arabic_text(&format!(" {}", "M".repeat(255))),
             Err(CellError::Value)
         );
     }
@@ -118,7 +115,7 @@ mod tests {
         // These spellings have no native Excel oracle. Verify only totality
         // and the bound, without freezing a particular undocumented value.
         for text in ["IIV", "XIL", "VV", "IXC", "XIXI"] {
-            if let Ok(value) = coercev2_arabic_text(text) {
+            if let Ok(value) = coerce_arabic_text(text) {
                 assert!(value.abs() <= 1000 * text.len() as i32);
             }
         }

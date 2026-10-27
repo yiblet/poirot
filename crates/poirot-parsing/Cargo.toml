@@ -1,5 +1,6 @@
 [package]
 name = "poirot-parsing"
+autotests = false
 version.workspace = true
 edition.workspace = true
 description = "Spreadsheet formula and text parsing"
@@ -19,3 +20,7 @@ allocation-counter.workspace = true
 
 [lints]
 workspace = true
+
+[[test]]
+name = "integration"
+path = "tests/main.rs"

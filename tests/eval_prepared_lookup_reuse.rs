@@ -2,10 +2,8 @@
 //! https://support.microsoft.com/en-us/office/match-function-e8dffd45-c762-47d6-bf89-533f4a37673a
 //! https://support.microsoft.com/en-us/office/vlookup-function-0bbc8083-26fe-4963-8ab8-93a18ad188a1
 //! Unicode simple folding, typed blank/error distinctions and reuse lifetime are Poirot contracts.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, ExcelText, Workbook};
 
 fn at(sheet: usize, address: &str) -> EvaluationTarget {

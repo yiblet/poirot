@@ -5,16 +5,25 @@ use crate::eval::adapters::elementwise::selection::{
 use crate::eval::adapters::elementwise::{
     Broadcast, Deferred, Eager, FixedScalar, Signature, WithDemand,
 };
+use crate::eval::functions::registry::{FunctionId, LogicalFunction};
 use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::session::Session;
+use crate::eval::values::{VALUE_ERROR, Value, core_projection, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::NA;
+use crate::model::CellValue::{Blank, Boolean, Error};
+use crate::model::{CellAddress, CellError, CellValue};
 
 /// CHOOSE policy for the shared deferred branch selector.
 /// A numeric position chooses one result argument, leaving other branches unforced.
 struct Choose;
+
 impl VariadicSelector for Choose {
     fn omitted(&self) -> Value {
         Blank.into()
     }
+
     fn layout(&self, count: usize) -> VariadicLayout {
         VariadicLayout {
             first: 0,
@@ -25,9 +34,11 @@ impl VariadicSelector for Choose {
             results: 1..count,
         }
     }
+
     fn test(&self, _: &CellValue, _: Option<&CellValue>) -> SelectionTest {
         SelectionTest::Index
     }
+
     fn position(&self, index: f64, count: usize) -> Result<usize, CellError> {
         if index >= 1. && index.trunc() < count as f64 {
             Ok(index as usize)
@@ -40,6 +51,7 @@ impl VariadicSelector for Choose {
 /// IFS policy that selects the first true condition through shared deferred branch traversal.
 /// Condition coercion errors propagate before any later condition or result is read.
 struct Ifs;
+
 impl VariadicSelector for Ifs {
     fn layout(&self, count: usize) -> VariadicLayout {
         VariadicLayout {
@@ -51,21 +63,25 @@ impl VariadicSelector for Ifs {
             results: 1..count,
         }
     }
+
     fn test(&self, value: &CellValue, _: Option<&CellValue>) -> SelectionTest {
-        SelectionTest::Match(poirot_functions::logical::coercev2_logical_test(value))
+        SelectionTest::Match(poirot_functions::logical::coerce_logical_test(value))
     }
 }
 
 /// SWITCH policy that selects the first equal case through shared deferred branch traversal.
 /// Expression and case errors become #N/A, while failed equality conversion counts as a nonmatch.
 struct Switch;
+
 impl VariadicSelector for Switch {
     fn expression_error(&self, _: CellError) -> CellError {
         NA
     }
+
     fn comparison(&self, result: Result<bool, CellError>) -> Result<bool, CellError> {
         Ok(result.unwrap_or(false))
     }
+
     fn layout(&self, count: usize) -> VariadicLayout {
         let default = count.is_multiple_of(2).then(|| count.saturating_sub(1));
         VariadicLayout {
@@ -77,6 +93,7 @@ impl VariadicSelector for Switch {
             results: 2..default.unwrap_or(count),
         }
     }
+
     fn test(&self, value: &CellValue, expression: Option<&CellValue>) -> SelectionTest {
         if matches!(value, Error(_)) || matches!(expression, Some(Error(_))) {
             SelectionTest::Match(Err(NA))
@@ -126,10 +143,12 @@ pub(super) fn execute_if(
 /// IF policy that chooses a deferred result branch from a boolean condition.
 /// An absent result defaults to FALSE, while an explicitly omitted result defaults to blank.
 struct If;
+
 impl Selector<2> for If {
     fn select(&self, value: &CellValue) -> Result<usize, CellError> {
-        core_projection::coercev2_operand_boolean(value).map(|value| usize::from(!value))
+        core_projection::coerce_operand_boolean(value).map(|value| usize::from(!value))
     }
+
     fn omitted(&self, absent: bool) -> Value {
         if absent {
             Boolean(false).into()

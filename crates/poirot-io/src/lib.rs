@@ -88,19 +88,27 @@ pub mod styles;
 pub mod value_wire;
 mod workbook_records;
 mod worksheet_records;
-pub use address::*;
+pub use address::{CellAddress, MAX_COLUMNS, MAX_ROWS};
 pub use cell::{Cell, CellStyle, SharedFormula, SharedFormulaId};
-pub use file_metadata::*;
-pub use numeric_bits::*;
-pub use numeric_fidelity::*;
+pub use file_metadata::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
+pub use numeric_bits::{CommonsConvergence, IeeeNumberBits, IeeeNumberClass, KnownSourceException};
+pub use numeric_fidelity::{
+    FiniteNumericRepresentationPolicy, NumericFidelityReason, NumericFidelityRefusal,
+    NumericFileFormat, NumericLocation,
+};
 pub use poirot_functions::scalar::{
     CellError, CellValue, DateSystem, ExcelText, TextRef, TextUnits, TextUnitsError,
     ValueError as ModelError,
 };
-pub use rows_records::*;
-pub use styles::*;
-pub use workbook_records::*;
-pub use worksheet_records::*;
+pub use rows_records::RowVisibility;
+pub use styles::{
+    Alignment, BorderLine, BorderSide, Borders, ColorSource, FontFamily, FontScheme, FontSize,
+    FontStyle, HorizontalAlignment, IndexedColor, PatternFill, PatternType, ReadingOrder,
+    RotationDegrees, StyleColor, StyleContext, TextRotation, ThemeColor, Tint, Underline,
+    VerticalAlignment, VisualStyle,
+};
+pub use workbook_records::NamedRange;
+pub use worksheet_records::{SheetPresentation, SheetVisibility};
 
 /// Borrowed export and direct streaming import contracts.
 pub mod data;

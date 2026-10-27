@@ -1,6 +1,12 @@
 //! Logical functions use shared kernels and deferred selection.
+use crate::eval::functions::registry::{FunctionId, LogicalFunction};
 use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::limits::EvalResult;
+use crate::eval::session::Session;
+use crate::eval::values::core_projection::semantic;
+use crate::eval::values::{VALUE_ERROR, Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellAddress;
 
 /// Execute logical tests and selected branches, preserving operational failures.
 pub(in crate::eval) fn execute(
@@ -10,7 +16,7 @@ pub(in crate::eval) fn execute(
     function: LogicalFunction,
     args: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    use LogicalFunction::*;
+    use LogicalFunction::{And, Choose, If, Ifs, Or, Switch, Xor};
     let arity = FunctionId::Logical(function).descriptor().arity;
     if !arity.accepts(args.len()) {
         return Ok(err(VALUE_ERROR));

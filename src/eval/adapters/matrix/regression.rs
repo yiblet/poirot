@@ -1,11 +1,20 @@
 //! Modern regression shape admission and typed worksheet presentation.
-use super::*;
+use crate::eval::adapters::elementwise::matrices;
 use crate::eval::adapters::elementwise::matrices::array;
-use crate::eval::registry::MatrixFunction as F;
+use crate::eval::adapters::failure::operational_only;
+use crate::eval::functions::registry::MatrixFunction;
+use crate::eval::host::{CallHost, OperandReader};
+use crate::eval::limits::EvalResult;
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::Num;
+use crate::model::CellValue::{Error, Number};
+use crate::model::{CellAddress, CellError, CellValue};
 use poirot_functions::matrix::{self as kernel, Intercept, Matrix, Statistic};
 
 fn collect(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<Option<Matrix<f64>>> {
-    let shape = host.describe(index)?;
+    let shape = OperandReader::new(host).describe(index)?;
     if shape.missing {
         return Ok(None);
     }
@@ -20,6 +29,7 @@ fn option(host: &mut CallHost<'_, '_>, index: usize, default: bool) -> FunctionR
     .get(0)?
         != 0.0)
 }
+
 /// Normalize worksheet observation axes without filtering or rearranging member associations.
 fn predictors(y: &Matrix<f64>, x: Matrix<f64>) -> kernel::Result<Matrix<f64>> {
     let n = y.values().len();
@@ -40,10 +50,12 @@ fn predictors(y: &Matrix<f64>, x: Matrix<f64>) -> kernel::Result<Matrix<f64>> {
         Matrix::new(n, 1, x.into_values())
     }
 }
+
 const UNLIMITED: kernel::Budget = kernel::Budget {
     max_cells: usize::MAX,
     max_work: usize::MAX,
 };
+
 fn admit(
     host: &mut CallHost<'_, '_>,
     n: usize,
@@ -52,31 +64,34 @@ fn admit(
     stats: bool,
 ) -> FunctionResult<()> {
     let (cells, work) =
-        kernel::regression_budget(n, p, m, stats).map_err(|e| modern::failure(host, e))?;
+        kernel::regression_budget(n, p, m, stats).map_err(|e| matrices::failure(host, e))?;
     host.check_values(cells)?;
     Ok(host.charge_work(work as u64)?)
 }
+
 fn value(stat: Statistic) -> CellValue {
     match stat {
         Ok(v) => Number(v),
         Err(e) => Error(e),
     }
 }
+
 fn exponential(stat: Statistic) -> Statistic {
     stat.and_then(|v| {
         let v = v.exp();
         if v.is_finite() { Ok(v) } else { Err(Num) }
     })
 }
+
 fn evaluate(
     host: &mut CallHost<'_, '_>,
-    function: F,
+    function: MatrixFunction,
     length: usize,
     address: CellAddress,
 ) -> FunctionResult<Value> {
     let y = collect(host, 0)?.ok_or(FunctionFailure::Spreadsheet(VALUE_ERROR))?;
     let x = if length > 1 { collect(host, 1)? } else { None };
-    let prediction = matches!(function, F::Growth | F::Trend);
+    let prediction = matches!(function, MatrixFunction::Growth | MatrixFunction::Trend);
     let nx = if prediction && length > 2 {
         collect(host, 2)?
     } else {
@@ -113,7 +128,7 @@ fn evaluate(
     };
     admit(host, n, predictors_count, prediction_bound, stats)?;
     let x = match x {
-        Some(x) => predictors(&y, x).map_err(|e| modern::failure(host, e))?,
+        Some(x) => predictors(&y, x).map_err(|e| matrices::failure(host, e))?,
         None => kernel::sequence(n, 1, 1.0, 1.0, UNLIMITED)
             .map_err(|error| matrices::failure(host, error))?,
     };
@@ -126,14 +141,17 @@ fn evaluate(
                     output_shape = (nx.rows(), nx.cols());
                     Some(
                         Matrix::new(nx.values().len(), 1, nx.into_values())
-                            .map_err(|e| modern::failure(host, e))?,
+                            .map_err(|e| matrices::failure(host, e))?,
                     )
                 } else if y.rows() == 1 {
                     if nx.rows() != p {
                         return Err(CellError::Ref.into());
                     }
                     output_shape = (1, nx.cols());
-                    Some(kernel::transpose(&nx, UNLIMITED).map_err(|e| modern::failure(host, e))?)
+                    Some(
+                        kernel::transpose(&nx, UNLIMITED)
+                            .map_err(|e| matrices::failure(host, e))?,
+                    )
                 } else {
                     if nx.cols() != p {
                         return Err(CellError::Ref.into());
@@ -154,7 +172,7 @@ fn evaluate(
     };
 
     let mut response = y.into_values();
-    let logarithmic = matches!(function, F::Growth | F::Logest);
+    let logarithmic = matches!(function, MatrixFunction::Growth | MatrixFunction::Logest);
     if logarithmic {
         for v in &mut response {
             if *v <= 0.0 {
@@ -173,14 +191,14 @@ fn evaluate(
         },
         UNLIMITED,
     )
-    .map_err(|e| modern::failure(host, e))?;
+    .map_err(|e| matrices::failure(host, e))?;
     if prediction {
-        let predicted = if function == F::Trend {
+        let predicted = if function == MatrixFunction::Trend {
             fit.predict_trend(nx.as_ref().unwrap_or(&x), UNLIMITED)
         } else {
             fit.predict(nx.as_ref().unwrap_or(&x), UNLIMITED)
         }
-        .map_err(|e| modern::failure(host, e))?;
+        .map_err(|e| matrices::failure(host, e))?;
         let values = predicted.into_values();
         return array(
             host,
@@ -208,7 +226,7 @@ fn evaluate(
         .map_err(|_| host.allocation_failure())?;
     for coefficient in fit
         .coefficients()
-        .map_err(|e| modern::failure(host, e))?
+        .map_err(|e| matrices::failure(host, e))?
         .into_iter()
         .rev()
         .chain(std::iter::once(fit.intercept()))
@@ -223,7 +241,7 @@ fn evaluate(
     if stats {
         let d = fit
             .diagnostics(UNLIMITED)
-            .map_err(|e| modern::failure(host, e))?;
+            .map_err(|e| matrices::failure(host, e))?;
         for se in d
             .standard_errors
             .into_iter()
@@ -250,9 +268,10 @@ fn evaluate(
     }
     array(host, rows, width, values.into_iter(), address)
 }
+
 /// Run modern fit and prediction functions with admitted scratch and uncatchable host failures.
 pub(super) fn execute(
-    function: F,
+    function: MatrixFunction,
     session: &mut Session<'_>,
     sheet: usize,
     address: CellAddress,
@@ -262,7 +281,7 @@ pub(super) fn execute(
     if !(1..=4).contains(&length) {
         return Ok(err(VALUE_ERROR));
     }
-    let arrays = if matches!(function, F::Growth | F::Trend) {
+    let arrays = if matches!(function, MatrixFunction::Growth | MatrixFunction::Trend) {
         3
     } else {
         2

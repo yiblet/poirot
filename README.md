@@ -80,7 +80,7 @@ for modes, cycle boundaries, lifecycle operations and snapshot recovery.
 
 The component crates let you use formula parsing, file codecs, or pure function
 algorithms and display formatting independently. Register custom functions through
-[`poirot::eval::extensions`](src/eval/extensions.rs); existing built-in functions
+[`poirot::eval::functions::extensions`](src/eval/functions/extensions/mod.rs); existing built-in functions
 keep their implementations.
 
 ## Excel compatibility

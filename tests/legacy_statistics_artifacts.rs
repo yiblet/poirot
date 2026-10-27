@@ -87,7 +87,9 @@ fn legacy_prepared_and_cold_artifacts_recover_all_contracts() {
             e,
         );
     }
-    let bytes = overlay.save_snapshot().to_buffer().unwrap();
+    let bytes = poirot::eval::artifact::SnapshotSaveBuilder::checkpoint(overlay.snapshot())
+        .to_buffer()
+        .unwrap();
     let restored = poirot::eval::artifact::SnapshotLoadBuilder::default()
         .from_bytes(&bytes)
         .unwrap();

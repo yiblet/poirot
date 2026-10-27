@@ -1,5 +1,5 @@
 use crate::lookup::operands::{
-    Arguments, charge, checked_product, coercev2_lookup_integer, missing, num, preflight_value,
+    Arguments, charge, checked_product, coerce_lookup_integer, missing, num, preflight_value,
     scalar,
 };
 use crate::lookup::table::Table;
@@ -23,7 +23,7 @@ fn modes(
     } {
         None => 0,
         Some(v) if missing(&v) => 0,
-        Some(v) => coercev2_lookup_integer(scalar(&v, c, w)?, true, w)?,
+        Some(v) => coerce_lookup_integer(scalar(&v, c, w)?, true, w)?,
     };
     let mode = match mode {
         -1 => MatchMode::Smaller,
@@ -39,7 +39,7 @@ fn modes(
     } {
         None => 1,
         Some(v) if missing(&v) => 1,
-        Some(v) => coercev2_lookup_integer(scalar(&v, c, w)?, true, w)?,
+        Some(v) => coerce_lookup_integer(scalar(&v, c, w)?, true, w)?,
     };
     let search = match search {
         -2 => SearchMode::BinaryDescending,
@@ -125,7 +125,7 @@ pub(super) fn search(
             let key = match key {
                 Scalar::Number(n) if mode == MatchMode::Wildcard => {
                     charge(w, Work::SearchText, 32)?;
-                    Scalar::Text(w.coercev2_number_to_text(n)?)
+                    Scalar::Text(w.coerce_number_to_text(n)?)
                 }
                 value => value,
             };

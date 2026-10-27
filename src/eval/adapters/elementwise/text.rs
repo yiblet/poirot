@@ -1,8 +1,11 @@
 //! Shared lossless text coercion, integer selection, and output admission.
-use super::{Broadcast, MemberContext, NumericParameter, NumericSignature, Variadic};
-use crate::eval::host::{CallHost, ScalarOperand};
-use crate::eval::*;
-use crate::model::ExcelText;
+use super::broadcast::Broadcast;
+use super::member_context::MemberContext;
+use crate::eval::host::{ArgumentCoercion, CallHost, ScalarOperand, SelectionAccess};
+use crate::eval::values::{ArrayView, FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::model::CellError::{NA, Num};
+use crate::model::CellValue::{Blank, Error};
+use crate::model::{CellAddress, CellError, CellValue, ExcelText};
 use poirot_functions::text::units;
 
 /// Convert a selected member to UTF-16 without a lossy UTF-8 projection.
@@ -10,16 +13,18 @@ pub(in crate::eval::adapters) fn units(
     host: &mut CallHost<'_, '_>,
     operand: &ScalarOperand,
 ) -> FunctionResult<Vec<u16>> {
-    host.coercev2_text_units(&operand.value)
+    ArgumentCoercion::new(host).coerce_text_units(&operand.value)
 }
+
 /// Coerce a modern Excel integer, retaining checked bounds before truncation.
 pub(in crate::eval::adapters) fn integer(number: f64) -> FunctionResult<i32> {
-    poirot_functions::coercion::compatibility::coercev2_text_integer_number(
+    poirot_functions::coercion::compatibility::coerce_text_integer_number(
         number,
         poirot_functions::coercion::compatibility::TextIntegerPolicy::Checked,
     )?;
     Ok(number.floor() as i32)
 }
+
 /// Translate an independent text planner's failure into evaluator channels.
 pub(in crate::eval::adapters) fn plan<T>(
     host: &CallHost<'_, '_>,
@@ -30,6 +35,7 @@ pub(in crate::eval::adapters) fn plan<T>(
         _ => host.size_overflow().into(),
     })
 }
+
 /// Admit the buffers and work requested by a pure UTF-16 planner.
 pub(in crate::eval::adapters) fn reserve(
     host: &mut CallHost<'_, '_>,
@@ -40,10 +46,12 @@ pub(in crate::eval::adapters) fn reserve(
     host.charge_work(reservation.work as u64)?;
     Ok(())
 }
+
 /// Assemble lossless text without implicitly allocating a UTF-8 copy.
 pub(in crate::eval::adapters) fn value(output: Vec<u16>) -> CellValue {
     CellValue::TextUtf16(ExcelText::from_units(output))
 }
+
 /// Copy one admitted UTF-16 selection into a result cell.
 pub(in crate::eval::adapters) fn copied(
     host: &mut CallHost<'_, '_>,
@@ -59,76 +67,6 @@ pub(in crate::eval::adapters) fn copied(
     output.extend_from_slice(text);
     Ok(value(output))
 }
-impl Variadic<Broadcast> {
-    /// Materialize source-ordered scalar members with shared error propagation.
-    pub(in crate::eval::adapters) fn scalar_values(
-        &self,
-        context: &mut MemberContext<'_, '_, '_>,
-    ) -> FunctionResult<Vec<CellValue>> {
-        context.host.check_values(self.len())?;
-        let mut values = Vec::new();
-        values
-            .try_reserve_exact(self.len())
-            .map_err(|_| context.host.allocation_failure())?;
-        for role in self.iter() {
-            let operand = role.read(context)?;
-            if let Error(error) = operand.value {
-                return Err(error.into());
-            }
-            values
-                .try_reserve(1)
-                .map_err(|_| context.host.allocation_failure())?;
-            // SAFETY: one additional slot was reserved immediately above.
-            values.push(operand.value);
-        }
-        Ok(values)
-    }
-    /// Coerce a numeric option without truncating selector values before validation.
-    pub(in crate::eval::adapters) fn number(
-        &self,
-        context: &mut MemberContext<'_, '_, '_>,
-        index: usize,
-        default: Option<f64>,
-    ) -> FunctionResult<f64> {
-        match self.get(index) {
-            Some(role) => role.number(context, default),
-            None => default.ok_or(VALUE_ERROR.into()),
-        }
-    }
-    /// Read one present typed role in the current output coordinate.
-    pub(in crate::eval::adapters) fn operand(
-        &self,
-        context: &mut MemberContext<'_, '_, '_>,
-        index: usize,
-    ) -> FunctionResult<ScalarOperand> {
-        self.get(index).ok_or(VALUE_ERROR)?.read(context)
-    }
-    /// Render a typed role without losing unpaired UTF-16 units.
-    pub(in crate::eval::adapters) fn text_units(
-        &self,
-        context: &mut MemberContext<'_, '_, '_>,
-        index: usize,
-    ) -> FunctionResult<Vec<u16>> {
-        let operand = self.operand(context, index)?;
-        units(context.host, &operand)
-    }
-    /// Coerce an omitted integer slot as zero; only an absent slot uses the default.
-    pub(in crate::eval::adapters) fn text_integer(
-        &self,
-        context: &mut MemberContext<'_, '_, '_>,
-        index: usize,
-        default: Option<i32>,
-    ) -> FunctionResult<i32> {
-        let parameter = default
-            .map_or_else(NumericParameter::required, |value| {
-                NumericParameter::constant(f64::from(value))
-            })
-            .missing_as_blank();
-        let numbers =
-            NumericSignature::new(&[parameter]).numbers_roles(context, [self.get(index)])?;
-        integer(numbers.get(0)?)
-    }
-}
 
 /// A row-major rectangle produced by one text or regex calculation.
 /// Shared publication checks its dimensions and converts it into a scalar or array result.
@@ -137,10 +75,12 @@ pub(in crate::eval::adapters) struct Expansion {
     pub(in crate::eval::adapters) rows: usize,
     pub(in crate::eval::adapters) columns: usize,
 }
+
 /// A typed member algorithm whose result may expand along either output axis.
 pub(in crate::eval::adapters) trait ExpansionKernel {
     /// Source roles admitted before this algorithm reads members.
-    type Signature: super::Signature;
+    type Signature: super::tuple_signature::Signature;
+
     /// Produce a checked flat result in row-major order for one selected member.
     fn apply(
         &self,
@@ -148,6 +88,7 @@ pub(in crate::eval::adapters) trait ExpansionKernel {
         arguments: &Self::Signature,
     ) -> FunctionResult<Expansion>;
 }
+
 /// Assemble a row-major rectangle with checked geometry and fallible storage.
 pub(in crate::eval::adapters) fn rectangle(
     host: &mut CallHost<'_, '_>,
@@ -198,13 +139,14 @@ pub(in crate::eval::adapters) fn rectangle(
     }
     Ok(Value::Array(ArrayView::anchored(result, Some(address))))
 }
+
 /// Expand a scalar source or broadcast single-cell results, rejecting nested arrays.
 pub(in crate::eval::adapters) fn expand<K: ExpansionKernel>(
     host: &mut CallHost<'_, '_>,
     address: CellAddress,
     kernel: K,
 ) -> FunctionResult<Value> {
-    use super::Signature;
+    use super::tuple_signature::Signature;
     let (lift, arguments) = K::Signature::admit(host)?;
     if lift.dimensions() == (1, 1) {
         let output = kernel.apply(
@@ -240,12 +182,15 @@ pub(in crate::eval::adapters) enum Selection {
     Value(CellValue),
     Fallback,
 }
+
 /// Typed extraction with a fallback that may enlarge the output rectangle.
 pub(in crate::eval::adapters) trait FallbackKernel {
     /// Source roles admitted before this algorithm reads members.
-    type Signature: super::Signature;
+    type Signature: super::tuple_signature::Signature;
+
     /// Return the deferred fallback role without preparing its source.
-    fn fallback(arguments: &Self::Signature) -> Option<&super::Deferred<Broadcast>>;
+    fn fallback(arguments: &Self::Signature) -> Option<&super::with_demand::Deferred<Broadcast>>;
+
     /// Preserve an original result channel when no member needs the fallback.
     fn retained(
         &self,
@@ -254,6 +199,7 @@ pub(in crate::eval::adapters) trait FallbackKernel {
     ) -> FunctionResult<Option<Value>> {
         Ok(None)
     }
+
     /// Compute one extraction while leaving fallback evaluation deferred.
     fn apply(
         &self,
@@ -261,14 +207,15 @@ pub(in crate::eval::adapters) trait FallbackKernel {
         arguments: &Self::Signature,
     ) -> FunctionResult<Selection>;
 }
+
 /// Complete the extraction mask before evaluating and broadcasting a needed fallback.
 pub(in crate::eval::adapters) fn fallback<K: FallbackKernel>(
     host: &mut CallHost<'_, '_>,
     address: CellAddress,
     kernel: K,
 ) -> FunctionResult<Value> {
-    use super::Signature;
-    use crate::eval::array_operator::Shape;
+    use super::tuple_signature::Signature;
+    use crate::eval::vm::Shape;
     let (lift, arguments) = K::Signature::admit(host)?;
     let (rows, columns) = lift.dimensions();
     let count = rows
@@ -316,20 +263,20 @@ pub(in crate::eval::adapters) fn fallback<K: FallbackKernel>(
 /// A scalar source selecting its fallback preserves the original result channel.
 pub(in crate::eval::adapters) fn resolve_fallback(
     host: &mut CallHost<'_, '_>,
-    source_shape: crate::eval::array_operator::Shape,
+    source_shape: crate::eval::vm::Shape,
     result: Value,
     mask: &[bool],
-    prepared: Option<super::Prepared<Broadcast>>,
+    prepared: Option<super::prepared::Prepared<Broadcast>>,
 ) -> FunctionResult<Value> {
-    use crate::eval::array_operator::Shape;
+    use crate::eval::vm::Shape;
     if source_shape.rows == 1 && source_shape.columns == 1 && mask.first() == Some(&true) {
         return Ok(prepared
-            .map(super::Prepared::into_value)
+            .map(super::prepared::Prepared::into_value)
             .unwrap_or_else(|| err(NA)));
     }
     let branch = prepared
         .map(|value| {
-            let shape = value.shape(host).ok_or(VALUE_ERROR)?;
+            let shape = value.shape().ok_or(VALUE_ERROR)?;
             Ok::<_, FunctionFailure>((value, shape))
         })
         .transpose()?;
@@ -338,25 +285,26 @@ pub(in crate::eval::adapters) fn resolve_fallback(
         rows: rows.max(branch.rows),
         columns: columns.max(branch.columns),
     });
-    host.selected_array(shape, |reader, row, column| {
-        let source_row = if rows == 1 { 0 } else { row };
-        let source_column = if columns == 1 { 0 } else { column };
-        let index = source_row
-            .checked_mul(columns)
-            .and_then(|n| n.checked_add(source_column));
-        if source_row >= rows || source_column >= columns {
-            return Ok(Error(NA));
-        }
-        if index.and_then(|i| mask.get(i)).copied().unwrap_or(false) {
-            match &branch {
-                Some((value, shape)) => value.read(reader, *shape, row, column),
-                None => Ok(Error(NA)),
+    SelectionAccess::new(host)
+        .array(shape, |reader, row, column| {
+            let source_row = if rows == 1 { 0 } else { row };
+            let source_column = if columns == 1 { 0 } else { column };
+            let index = source_row
+                .checked_mul(columns)
+                .and_then(|n| n.checked_add(source_column));
+            if source_row >= rows || source_column >= columns {
+                return Ok(Error(NA));
             }
-        } else {
-            reader.member(&result, source_shape, row, column)
-        }
-    })
-    .map_err(Into::into)
+            if index.and_then(|i| mask.get(i)).copied().unwrap_or(false) {
+                match &branch {
+                    Some((value, shape)) => value.read(reader, *shape, row, column),
+                    None => Ok(Error(NA)),
+                }
+            } else {
+                reader.member(&result, source_shape, row, column)
+            }
+        })
+        .map_err(Into::into)
 }
 
 /// Render a checked positional scalar argument through shared text coercion.
@@ -365,8 +313,9 @@ pub(in crate::eval::adapters) fn argument(
     arguments: &[CellValue],
     index: usize,
 ) -> FunctionResult<String> {
-    host.coercev2_scalar_text(arguments.get(index).ok_or(VALUE_ERROR)?)
+    ArgumentCoercion::new(host).coerce_scalar_text(arguments.get(index).ok_or(VALUE_ERROR)?)
 }
+
 /// Coerce a bounded Excel integer argument while retaining its fractional value.
 pub(in crate::eval::adapters) fn integer_argument(
     host: &mut CallHost<'_, '_>,
@@ -374,8 +323,8 @@ pub(in crate::eval::adapters) fn integer_argument(
     index: usize,
 ) -> FunctionResult<f64> {
     let value = arguments.get(index).ok_or(VALUE_ERROR)?;
-    let number = host.selected_number(value)?;
-    poirot_functions::coercion::compatibility::coercev2_text_integer_number(
+    let number = SelectionAccess::new(host).number(value)?;
+    poirot_functions::coercion::compatibility::coerce_text_integer_number(
         number,
         poirot_functions::coercion::compatibility::TextIntegerPolicy::Checked,
     )
@@ -385,7 +334,7 @@ pub(in crate::eval::adapters) fn integer_argument(
 /// Materialize text collections in source order without reducing a delimiter set.
 pub(in crate::eval::adapters) fn collection_units(
     host: &mut CallHost<'_, '_>,
-    roles: impl IntoIterator<Item = super::WholeCollection>,
+    roles: impl IntoIterator<Item = super::whole_collection::WholeCollection>,
 ) -> FunctionResult<Vec<Vec<u16>>> {
     super::collections::fold(host, roles, Vec::new(), |host, values, operand| {
         let text = units(host, &operand)?;

@@ -1,13 +1,28 @@
 //! Typed date kernels with broadcast controls and fixed holiday collections.
-use super::*;
+use super::business_days::weekend_policy;
+use super::components::{component, convert_numeric_outcome, month, week};
+use super::day_count::{days360, yearfrac};
+use super::text_coercion::{coerce_date_text, coerce_time_text};
+use super::{business_days, components};
 use crate::eval::adapters::elementwise::{
-    Broadcast, Kernel, MemberContext, NumericParameter as P, NumericSignature, Optional, Variadic,
+    Broadcast, Kernel, MemberContext, NumericParameter, NumericSignature, Optional, Variadic,
     WholeCollection, execute as execute_kernel,
 };
-use crate::eval::host::{CallHost, OperandOrigin};
+use crate::eval::config::calendar::{calendar_date, max_serial, serial};
+use crate::eval::functions::registry::{DateFunction, FunctionId};
+use crate::eval::host::{ArgumentCoercion, CallHost, ContextReads, SelectionAccess};
+use crate::eval::limits::{EvalResult, EvaluationFailure, WorkKind};
+use crate::eval::values::{
+    FunctionFailure, FunctionResult, OperandOrigin, VALUE_ERROR, Value, err,
+};
+use crate::model::CellError::Num;
+use crate::model::CellValue::{Blank, Number};
+use crate::model::{CellError, CellValue};
+use poirot_functions::coercion::compatibility::coerce_date_integer;
+use poirot_functions::coercion::dates::calendar::Date;
 use poirot_functions::coercion::{
     Origin,
-    collections::{HolidayPolicy, WeekendConsumer, coercev2_holiday_member, coercev2_weekend_mask},
+    collections::{HolidayPolicy, WeekendConsumer, coerce_holiday_member, coerce_weekend_mask},
     date_time::CalendarEpoch,
 };
 
@@ -25,42 +40,61 @@ fn modern_date(serial: f64, system: crate::model::DateSystem) -> Result<Date, Ce
         d: i64::from(date.day),
     })
 }
+
 /// Applies the selected numeric date function to each broadcast output member.
 /// The workbook date system supplies the calendar interpretation for the independent date algorithms.
 struct NumericDate {
     function: DateFunction,
     system: crate::model::DateSystem,
 }
+
 impl Kernel for NumericDate {
     type Signature = Variadic<Broadcast>;
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         args: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use DateFunction::*;
+        use DateFunction::{
+            Date, Day, Days, Days360, EDate, EOMonth, Hour, IsoWeekNum, Minute, Month, Second,
+            Time, WeekDay, WeekNum, Year,
+        };
         let (function, system) = (self.function, self.system);
-        let parameters: &[P] = match function {
-            Date | Time => &[P::required(), P::required(), P::required()],
-            Days360 => &[
-                P::date_serial(),
-                P::date_serial(),
-                P::boolean_default(false),
+        let parameters: &[NumericParameter] = match function {
+            Date | Time => &[
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
             ],
-            Days => &[P::date_serial(), P::date_serial()],
-            EDate | EOMonth => &[P::date_serial(), P::required()],
-            WeekDay | WeekNum => &[P::date_serial(), P::constant(1.).missing_as_blank()],
-            _ => &[P::date_serial()],
+            Days360 => &[
+                NumericParameter::date_serial(),
+                NumericParameter::date_serial(),
+                NumericParameter::boolean_default(false),
+            ],
+            Days => &[
+                NumericParameter::date_serial(),
+                NumericParameter::date_serial(),
+            ],
+            EDate | EOMonth => &[
+                NumericParameter::date_serial(),
+                NumericParameter::required(),
+            ],
+            WeekDay | WeekNum => &[
+                NumericParameter::date_serial(),
+                NumericParameter::constant(1.).missing_as_blank(),
+            ],
+            _ => &[NumericParameter::date_serial()],
         };
         let numbers = args.numbers(context, parameters)?;
         let start = numbers.get(0)?;
         let result = match function {
             Date => components::excel_date(start, numbers.get(1)?, numbers.get(2)?, system)?,
-            Time => coerce_numeric_outcome(
+            Time => convert_numeric_outcome(
                 Time,
-                coercev2_date_integer(start.floor())?,
-                coercev2_date_integer(numbers.get(1)?.floor())?,
-                coercev2_date_integer(numbers.get(2)?.floor())?,
+                coerce_date_integer(start.floor())?,
+                coerce_date_integer(numbers.get(1)?.floor())?,
+                coerce_date_integer(numbers.get(2)?.floor())?,
                 system,
             )?,
             Days => start - numbers.get(1)?,
@@ -73,15 +107,15 @@ impl Kernel for NumericDate {
                 function,
                 start,
                 modern_date(start, system)?,
-                coercev2_date_integer(numbers.get(1)?)?,
+                coerce_date_integer(numbers.get(1)?)?,
                 system,
             )?,
             WeekDay => {
-                components::excel_weekday(start, coercev2_date_integer(numbers.get(1)?)?, system)?
+                components::excel_weekday(start, coerce_date_integer(numbers.get(1)?)?, system)?
             }
             WeekNum => {
                 let d = modern_date(start, system)?;
-                let mode = coercev2_date_integer(numbers.get(1)?)?;
+                let mode = coerce_date_integer(numbers.get(1)?)?;
                 if mode == 21 {
                     components::iso_week(d)
                 } else {
@@ -99,12 +133,15 @@ impl Kernel for NumericDate {
         Ok(Number(result))
     }
 }
+
 /// NOW or TODAY kernel that reads the captured clock without any source arguments.
 struct ClockDate(DateFunction);
+
 impl Kernel for ClockDate {
     type Signature = ();
+
     fn apply(&self, context: &mut MemberContext<'_, '_, '_>, _: &()) -> FunctionResult<CellValue> {
-        let value = context.host.clock_serial()?;
+        let value = ContextReads::new(context.host).clock_serial()?;
         Ok(Number(if self.0 == DateFunction::Today {
             value.floor()
         } else {
@@ -112,14 +149,17 @@ impl Kernel for ClockDate {
         }))
     }
 }
+
 /// DATEVALUE or TIMEVALUE kernel for broadcast text operands.
 /// Parsing requests localization and clock fields only when the input needs them.
 struct TextDate {
     function: DateFunction,
     system: crate::model::DateSystem,
 }
+
 impl Kernel for TextDate {
     type Signature = (Broadcast,);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -129,41 +169,46 @@ impl Kernel for TextDate {
         if operand.missing {
             return Err(VALUE_ERROR.into());
         }
-        let text = context.host.coercev2_scalar_text(&operand.value)?;
+        let text = ArgumentCoercion::new(context.host).coerce_scalar_text(&operand.value)?;
         Ok(if self.function == DateFunction::DateValue {
             Number(serial(
-                coercev2_date_text(context.host, &text, self.system)?,
+                coerce_date_text(context.host, &text, self.system)?,
                 self.system,
             )?)
         } else if text.is_empty() {
             Blank
         } else {
-            Number(coercev2_time_text(context.host, &text)?)
+            Number(coerce_time_text(context.host, &text)?)
         })
     }
 }
+
 /// YEARFRAC or DATEDIF kernel over broadcast endpoints.
 /// It keeps numeric basis selection and textual interval selection on their distinct coercion paths.
 struct IntervalDate {
     function: DateFunction,
     system: crate::model::DateSystem,
 }
+
 impl Kernel for IntervalDate {
     type Signature = (Broadcast, Broadcast, Optional<Broadcast>);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         (start, end, selector): &Self::Signature,
     ) -> FunctionResult<CellValue> {
         if self.function == DateFunction::YearFrac {
-            let basis = NumericSignature::new(&[P::constant(0.).integer_choices(&[0, 1, 2, 3, 4])])
-                .numbers_roles(context, [selector.0])?
-                .get(0)?;
-            let basis = coercev2_date_integer(basis.floor())?;
+            let basis = NumericSignature::new(&[
+                NumericParameter::constant(0.).integer_choices(&[0, 1, 2, 3, 4])
+            ])
+            .numbers_roles(context, [selector.0])?
+            .get(0)?;
+            let basis = coerce_date_integer(basis.floor())?;
             if !(0..=4).contains(&basis) {
                 return Err(Num.into());
             }
-            let dates = NumericSignature::new(&[P::date_serial(); 2])
+            let dates = NumericSignature::new(&[NumericParameter::date_serial(); 2])
                 .numbers_roles(context, [Some(*start), Some(*end)])?;
             let (start, end) = (dates.get(0)?, dates.get(1)?);
             return Ok(Number(yearfrac(
@@ -174,22 +219,23 @@ impl Kernel for IntervalDate {
                 basis,
             )?));
         }
-        let dates = NumericSignature::new(&[P::date_serial(); 2])
+        let dates = NumericSignature::new(&[NumericParameter::date_serial(); 2])
             .numbers_roles(context, [Some(*start), Some(*end)])?;
         let unit = selector.0.as_ref().ok_or(VALUE_ERROR)?.read(context)?;
-        let unit = context.host.coercev2_scalar_text(&unit.value)?;
+        let unit = ArgumentCoercion::new(context.host).coerce_scalar_text(&unit.value)?;
         let epoch = epoch_for(self.system);
         use poirot_functions::coercion::dates::interval::{
-            coercev2_datedif_day, coercev2_datedif_unit,
+            coerce_datedif_day, coerce_datedif_unit,
         };
         Ok(Number(poirot_functions::dates::datedif(
-            coercev2_datedif_day(dates.get(0)?, epoch)?,
-            coercev2_datedif_day(dates.get(1)?, epoch)?,
-            coercev2_datedif_unit(&unit)?,
+            coerce_datedif_day(dates.get(0)?, epoch)?,
+            coerce_datedif_day(dates.get(1)?, epoch)?,
+            coerce_datedif_unit(&unit)?,
             epoch,
         )?))
     }
 }
+
 /// Convert a workbook calendar to the independent date algorithm's epoch.
 fn epoch_for(system: crate::model::DateSystem) -> CalendarEpoch {
     match system {
@@ -197,6 +243,7 @@ fn epoch_for(system: crate::model::DateSystem) -> CalendarEpoch {
         crate::model::DateSystem::Excel1904 => CalendarEpoch::Excel1904,
     }
 }
+
 /// Business-day kernel that broadcasts endpoints and weekend options over a shared holiday list.
 /// The list is read and converted once when first needed, then reused for later output members.
 struct BusinessDate {
@@ -204,6 +251,7 @@ struct BusinessDate {
     system: crate::model::DateSystem,
     holidays: std::cell::RefCell<Option<Vec<i64>>>,
 }
+
 impl BusinessDate {
     /// Prepare the fixed holiday source independently of broadcast source ordinals.
     fn holidays(
@@ -257,8 +305,8 @@ impl BusinessDate {
                     OperandOrigin::ArrayElement => Origin::Array,
                     OperandOrigin::ReferencedCell => Origin::Reference,
                 };
-                if let Some(day) = coercev2_holiday_member((&value).into(), origin, policy, || {
-                    host.coercev2_calendar_date(&value)
+                if let Some(day) = coerce_holiday_member((&value).into(), origin, policy, || {
+                    ArgumentCoercion::new(host).coerce_calendar_date(&value)
                 })? {
                     if holidays.len() == holidays.capacity() {
                         holidays
@@ -281,6 +329,7 @@ impl BusinessDate {
         Ok(())
     }
 }
+
 impl Kernel for BusinessDate {
     type Signature = (
         Broadcast,
@@ -288,6 +337,7 @@ impl Kernel for BusinessDate {
         Optional<Broadcast>,
         Optional<WholeCollection>,
     );
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -298,11 +348,11 @@ impl Kernel for BusinessDate {
             DateFunction::NetworkDays | DateFunction::NetworkDaysIntl
         );
         let numbers = NumericSignature::new(&[
-            P::date_serial(),
+            NumericParameter::date_serial(),
             if network {
-                P::date_serial()
+                NumericParameter::date_serial()
             } else {
-                P::required()
+                NumericParameter::required()
             },
         ])
         .numbers_roles(context, [Some(*first), Some(*second)])?;
@@ -312,8 +362,8 @@ impl Kernel for BusinessDate {
             if member.missing {
                 weekend_policy(1)?
             } else if let Some(text) = member.value.text_ref() {
-                let text = context.host.project_text(text)?;
-                coercev2_weekend_mask(
+                let text = ArgumentCoercion::new(context.host).project_text(text)?;
+                coerce_weekend_mask(
                     &text,
                     if network {
                         WeekendConsumer::NetworkDays
@@ -322,8 +372,8 @@ impl Kernel for BusinessDate {
                     },
                 )?
             } else {
-                weekend_policy(coercev2_date_integer(
-                    context.host.selected_number(&member.value)?,
+                weekend_policy(coerce_date_integer(
+                    SelectionAccess::new(context.host).number(&member.value)?,
                 )?)?
             }
         } else {
@@ -344,7 +394,7 @@ impl Kernel for BusinessDate {
                 holidays,
             )?));
         }
-        let mut count = coercev2_date_integer(numbers.get(1)?)?;
+        let mut count = coerce_date_integer(numbers.get(1)?)?;
         let direction = if count < 0 { -1 } else { 1 };
         count = count.checked_abs().ok_or(Num)?;
         if count > max_serial(self.system) {
@@ -365,11 +415,14 @@ impl Kernel for BusinessDate {
         Ok(Number(day as f64))
     }
 }
+
 /// Adapts WORKDAY and NETWORKDAYS to the international business-day kernel.
 /// It places the optional holiday collection in the shared signature while leaving the weekend option absent.
 struct StandardBusiness(BusinessDate);
+
 impl Kernel for StandardBusiness {
     type Signature = (Broadcast, Broadcast, Optional<WholeCollection>);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -383,6 +436,7 @@ impl Kernel for StandardBusiness {
         self.0.apply(context, &args)
     }
 }
+
 /// Execute the selected typed date signature with shared failure handling.
 pub(super) fn execute(host: &mut CallHost<'_, '_>, function: DateFunction) -> EvalResult<Value> {
     if !FunctionId::Date(function)
@@ -398,7 +452,7 @@ pub(super) fn execute(host: &mut CallHost<'_, '_>, function: DateFunction) -> Ev
     ) {
         crate::model::DateSystem::Excel1900
     } else {
-        host.selected_date_system()
+        ContextReads::new(host).selected_date_system()
     };
     let at = host.target().address;
     let result = match function {

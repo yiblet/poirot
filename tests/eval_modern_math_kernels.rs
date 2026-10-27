@@ -2,10 +2,8 @@
 //! Microsoft function definitions and spill behavior:
 //! https://support.microsoft.com/en-us/excel/functions/math-and-trigonometry-functions-reference
 //! https://support.microsoft.com/en-us/excel/formulas-and-functions/dynamic-array-formulas-and-spilled-array-behavior
-use poirot::eval::{
-    EvaluationTarget,
-    overlay::{Evaluation, EvaluationContext, Overlay},
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::{EvaluationContext, EvaluationTarget};
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
 /// Build a single-sheet arithmetic workbook.

@@ -55,7 +55,7 @@ impl<'a> Value<'a> {
 }
 /// Field adapter that preserves numeric bits and exact UTF-16 with every Serde codec.
 pub mod value_serde {
-    use super::*;
+    use super::{CellValue, Deserialize, Serialize, Value};
     /// Serialize cell values through the lossless snapshot encoding.
     pub fn serialize<S: serde::Serializer>(
         value: &CellValue,

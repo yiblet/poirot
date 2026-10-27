@@ -128,31 +128,31 @@ pub(super) fn scalar(
     }
 }
 /// Coerce an admitted operand to a lookup numeric value.
-pub(super) fn coercev2_lookup_number(v: Scalar, w: &mut impl Workbook) -> Result<f64, Failure> {
-    crate::coercion::lookup::coercev2_lookup_number(v, |text| w.coercev2_numeric_text(text))
+pub(super) fn coerce_lookup_number(v: Scalar, w: &mut impl Workbook) -> Result<f64, Failure> {
+    crate::coercion::lookup::coerce_lookup_number(v, |text| w.coerce_numeric_text(text))
 }
 /// Apply the family's integer conversion and range checks.
-pub(super) fn coercev2_lookup_integer(
+pub(super) fn coerce_lookup_integer(
     v: Scalar,
     floor: bool,
     w: &mut impl Workbook,
 ) -> Result<i32, Failure> {
-    let number = coercev2_lookup_number(v, w)?;
-    crate::coercion::lookup::coercev2_lookup_integer(number, floor).map_err(Into::into)
+    let number = coerce_lookup_number(v, w)?;
+    crate::coercion::lookup::coerce_lookup_integer(number, floor).map_err(Into::into)
 }
 /// Convert an admitted operand to lookup text.
-pub(super) fn coercev2_lookup_text(v: &Scalar, w: &mut impl Workbook) -> Result<String, Failure> {
+pub(super) fn coerce_lookup_text(v: &Scalar, w: &mut impl Workbook) -> Result<String, Failure> {
     if let Scalar::Text(text) = v {
         charge(w, Work::SearchText, text.len())?;
     }
-    crate::coercion::lookup::coercev2_lookup_text(v, |number| {
+    crate::coercion::lookup::coerce_lookup_text(v, |number| {
         charge(w, Work::SearchText, 32)?;
-        w.coercev2_number_to_text(number)
+        w.coerce_number_to_text(number)
     })
 }
 /// Coerce an admitted operand into a logical option.
-pub(super) fn coercev2_lookup_boolean(v: Scalar) -> Result<bool, Failure> {
-    crate::coercion::lookup::coercev2_lookup_boolean(v).map_err(Into::into)
+pub(super) fn coerce_lookup_boolean(v: Scalar) -> Result<bool, Failure> {
+    crate::coercion::lookup::coerce_lookup_boolean(v).map_err(Into::into)
 }
 /// Test the omitted-argument channel without collapsing it to blank.
 pub(super) fn missing(v: &Value) -> bool {

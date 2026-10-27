@@ -1,8 +1,8 @@
 //! Common workbook persistence paths share builders and preserve source provenance.
 use poirot::calculation::EvaluationContext;
+use poirot::eval::EvaluationPolicy;
 use poirot::eval::artifact;
 use poirot::eval::overlay::Evaluation;
-use poirot::eval::overlay::EvaluationPolicy;
 use poirot::eval::overlay::Overlay;
 use poirot::files::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
 use poirot::{CellValue, Workbook};
@@ -143,7 +143,8 @@ fn source_snapshots_preserve_typed_metadata_and_never_recalculate() {
                 .from_bytes(&bytes)
                 .unwrap()
                 .into_artifact()
-                .workbook
+                .into_parts()
+                .0
         ),
         book
     );
@@ -153,7 +154,8 @@ fn source_snapshots_preserve_typed_metadata_and_never_recalculate() {
                 .open(&path)
                 .unwrap()
                 .into_artifact()
-                .workbook
+                .into_parts()
+                .0
         ),
         book
     );
@@ -161,8 +163,11 @@ fn source_snapshots_preserve_typed_metadata_and_never_recalculate() {
         .from_bytes(&bytes)
         .unwrap();
     assert_eq!(restored.prepared_status, artifact::PreparedStatus::Absent);
-    assert!(restored.workspace.is_none());
-    assert_eq!(restored.workbook.file_metadata, book.model().file_metadata);
+    assert_eq!(
+        restored.workbook().file_metadata,
+        book.model().file_metadata
+    );
+    assert!(restored.into_parts().1.is_none());
     let limits = artifact::SnapshotLimits {
         max_file_bytes: 1,
         ..Default::default()
@@ -197,9 +202,13 @@ fn overlay_checkpoints_restore_warm_state_without_detached_attachment() {
         overlay.evaluation(&context).unwrap().cell(output).unwrap(),
         CellValue::Number(60.)
     );
-    let bytes = overlay.save_snapshot().to_buffer().unwrap();
+    let bytes = poirot::eval::artifact::SnapshotSaveBuilder::checkpoint(overlay.snapshot())
+        .to_buffer()
+        .unwrap();
     let path = dir.0.join("checkpoint.poirot");
-    overlay.save_snapshot().write_file(&path).unwrap();
+    poirot::eval::artifact::SnapshotSaveBuilder::checkpoint(overlay.snapshot())
+        .write_file(&path)
+        .unwrap();
     for restored in [
         poirot::eval::artifact::SnapshotLoadBuilder::default()
             .from_bytes(&bytes)
@@ -209,7 +218,7 @@ fn overlay_checkpoints_restore_warm_state_without_detached_attachment() {
             .unwrap(),
     ] {
         assert_eq!(restored.prepared_status, artifact::PreparedStatus::Restored);
-        assert_eq!(restored.workbook.file_metadata, Some(metadata()));
+        assert_eq!(restored.workbook().file_metadata, Some(metadata()));
         let artifact::RestoredCheckpoint::Prepared(mut restored) =
             restored.into_checkpoint().unwrap()
         else {
@@ -228,7 +237,9 @@ fn incompatible_checkpoints_recover_edits_with_an_explicit_typed_outcome() {
     let mut overlay = Overlay::with_workbook(book.model()).build().unwrap();
     let input = overlay.target("Inputs!A1").unwrap();
     overlay.set_value(input, 30.).unwrap();
-    let mut bytes = overlay.save_snapshot().to_buffer().unwrap();
+    let mut bytes = poirot::eval::artifact::SnapshotSaveBuilder::checkpoint(overlay.snapshot())
+        .to_buffer()
+        .unwrap();
     bytes[16..24].copy_from_slice(&u64::MAX.to_le_bytes());
     assert!(
         poirot::eval::artifact::SnapshotLoadBuilder::default()
@@ -267,7 +278,9 @@ fn direct_restore_reports_preparation_status_and_accepts_explicit_recovery_polic
     let input = evaluation.target("Inputs!A1").unwrap();
     evaluation.set_value(input, 30.).unwrap();
     evaluation.compile_all();
-    let bytes = evaluation.save_snapshot().to_buffer().unwrap();
+    let bytes = poirot::eval::artifact::SnapshotSaveBuilder::checkpoint(evaluation.snapshot())
+        .to_buffer()
+        .unwrap();
     let mut restored = poirot::eval::artifact::SnapshotLoadBuilder::default()
         .from_bytes(&bytes)
         .unwrap()

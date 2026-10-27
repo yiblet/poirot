@@ -1,7 +1,7 @@
 //! Terminal, JSONL and offline HTML views of the same typed observations.
 use crate::{
     Error, invalid,
-    model::*,
+    model::{CaseResult, Change, Outcome},
     runner::{EvaluationReport, Header, Summary},
 };
 use clap::ValueEnum;

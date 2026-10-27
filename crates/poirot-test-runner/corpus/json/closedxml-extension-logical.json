@@ -21,7 +21,7 @@
         "Expected behavior adapted from this upstream assertion. If MissingValues ReturnBlank. Not derived from Poirot output.",
         "LogicalTests.cs If_2_Params_false explicitly asserts IF(1=2,\"T\") is logical FALSE. This contrasts an omitted false argument with an explicitly missing selected result; expected values are taken from the two upstream assertions.",
         "LibreOffice 26.2.6.3 independently corroborates the explicit missing-result assertion; both final controls are rechecked in ../evidence/closedxml-extension-libreoffice.json.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {

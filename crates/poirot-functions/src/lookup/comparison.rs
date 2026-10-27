@@ -44,16 +44,16 @@ fn compare_inner(
             }
         }
         (Scalar::Blank, _) if tolerant => {
-            compare(&coercev2_lookup_blank_key(true), item, true, wildcard, w)?
+            compare(&coerce_lookup_blank_key(true), item, true, wildcard, w)?
         }
-        (Scalar::Blank, _) => compare(&coercev2_lookup_blank_key(false), item, false, false, w)?,
+        (Scalar::Blank, _) => compare(&coerce_lookup_blank_key(false), item, false, false, w)?,
         // TolerantStringLookupComparer retains the StringEval class check on candidates.
         (Scalar::Number(_), Scalar::Text(b)) if tolerant && wildcard => {
             let Scalar::Number(number) = key else {
                 return Ok(None);
             };
             charge(w, Work::SearchText, 32)?;
-            let a = w.coercev2_number_to_text(*number)?;
+            let a = w.coerce_number_to_text(*number)?;
             {
                 charge(
                     w,
@@ -72,6 +72,6 @@ fn has_wildcards(pattern: &str) -> bool {
     pattern.contains(['*', '?', '~'])
 }
 
-fn coercev2_lookup_blank_key(tolerant: bool) -> Scalar {
-    crate::coercion::lookup::coercev2_lookup_blank_key(tolerant)
+fn coerce_lookup_blank_key(tolerant: bool) -> Scalar {
+    crate::coercion::lookup::coerce_lookup_blank_key(tolerant)
 }

@@ -1,9 +1,7 @@
 //! Colon envelopes follow pinned ClosedXML ReferenceOperatorsTests and independent
 //! Calc probes. Cross-sheet rejection and blank publication retain project policy.
-use poirot::eval::{
-    overlay::{EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::Overlay;
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 
 fn book(cell_named_sheet: bool) -> Workbook {

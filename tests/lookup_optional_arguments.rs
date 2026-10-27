@@ -1,8 +1,8 @@
 //! Optional lookup operands preserve absence independently of blank values.
 use poirot::calculation::EvaluationContext;
 use poirot::eval::BuiltinSemanticsPolicy;
+use poirot::eval::EvaluationPolicy;
 use poirot::eval::overlay::Evaluation;
-use poirot::eval::overlay::EvaluationPolicy;
 use poirot::eval::overlay::Overlay;
 use poirot::model::Workbook;
 use poirot::{CellError, CellValue};

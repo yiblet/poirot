@@ -4,7 +4,7 @@ use super::{
 
 /// Admit a numeric matrix without changing coordinates under `SquareNumeric`. Other
 /// policies preserve pinned POI compaction and padding of skipped members.
-pub(super) fn coercev2_matrix_collection(
+pub(super) fn coerce_matrix_collection(
     area: &Matrix<Cell>,
     policy: MatrixCollection,
     budget: Budget,
@@ -15,13 +15,13 @@ pub(super) fn coercev2_matrix_collection(
         crate::coercion::collections::MatrixAdmission::new(policy, area.rows, area.cols);
     for cell in &area.values {
         if let Some(number) = admission
-            .coercev2_matrix_member(cell.into())
+            .coerce_matrix_member(cell.into())
             .map_err(Error::Formula)?
         {
             numbers.push(number);
         }
     }
-    admission.coercev2_finish().map_err(Error::Formula)?;
+    admission.coerce_finish().map_err(Error::Formula)?;
     if policy != MatrixCollection::SquareNumeric {
         numbers.resize(area.values.len(), 0.0);
     }
@@ -29,23 +29,19 @@ pub(super) fn coercev2_matrix_collection(
 }
 
 /// TREND rejects any non NumericValueEval (including source error values).
-pub(super) fn coercev2_trend_collection(
-    area: &Matrix<Cell>,
-    budget: Budget,
-) -> Result<Matrix<f64>> {
+pub(super) fn coerce_trend_collection(area: &Matrix<Cell>, budget: Budget) -> Result<Matrix<f64>> {
     budget.check(Some(area.values.len()), Some(area.values.len()))?;
     let mut numbers = Vec::with_capacity(area.values.len());
     for cell in &area.values {
         numbers.push(
-            crate::coercion::collections::coercev2_trend_member(cell.into())
+            crate::coercion::collections::coerce_trend_member(cell.into())
                 .map_err(Error::Formula)?,
         );
     }
     Matrix::new(area.rows, area.cols, numbers)
 }
-fn coercev2_sumproduct_term(c: &Cell, scalar: bool) -> Result<f64> {
-    crate::coercion::collections::coercev2_sumproduct_member(c.into(), scalar)
-        .map_err(Error::Formula)
+fn coerce_sumproduct_term(c: &Cell, scalar: bool) -> Result<f64> {
+    crate::coercion::collections::coerce_sumproduct_member(c.into(), scalar).map_err(Error::Formula)
 }
 /// Multiply corresponding admitted elements and sum their products.
 pub(super) fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
@@ -65,7 +61,7 @@ pub(super) fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
                 Input::Area(m) if m.values.len() == 1 => &m.values[0],
                 _ => return value(),
             };
-            product *= coercev2_sumproduct_term(c, true)?;
+            product *= coerce_sumproduct_term(c, true)?;
         }
         finite(&[product])?;
         return Ok(product);
@@ -106,7 +102,7 @@ pub(super) fn sumproduct(args: &[Input], budget: Budget) -> Result<f64> {
         let mut p = 1.0;
         for arg in args {
             let Input::Area(m) = arg else { return value() };
-            p *= coercev2_sumproduct_term(
+            p *= coerce_sumproduct_term(
                 m.values.get(i).ok_or(Error::Formula(CellError::Value))?,
                 false,
             )?;

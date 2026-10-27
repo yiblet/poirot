@@ -1,8 +1,6 @@
 //! Public ETS contracts from primary documentation and independently exact models.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn book() -> Workbook {
     let mut b = Workbook::new();

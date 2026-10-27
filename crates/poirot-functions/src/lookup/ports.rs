@@ -33,9 +33,9 @@ pub trait Workbook {
     fn argument(&mut self, index: usize, context: Context) -> Result<Value, Failure>;
 
     /// Shared POI numeric text coercion, including its date/time fallback.
-    fn coercev2_numeric_text(&mut self, text: &str) -> Result<f64, Failure>;
+    fn coerce_numeric_text(&mut self, text: &str) -> Result<f64, Failure>;
     /// Excel/POI NumberToTextConverter rendering; never a locale formatter.
-    fn coercev2_number_to_text(&mut self, number: f64) -> Result<String, Failure>;
+    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, Failure>;
     /// Read a source coordinate while recording its consumed dependency.
     fn cell(
         &mut self,

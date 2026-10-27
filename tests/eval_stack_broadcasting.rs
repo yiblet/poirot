@@ -1,8 +1,8 @@
 //! Generic stack operations follow singleton-axis broadcasting and Excel's lazy IF rules.
+use poirot::eval::overlay::Overlay;
 use poirot::eval::{
-    ArrayResultPolicy, EvaluationRun, EvaluationTarget, FormulaCompiler, PreparationPolicy,
-    PreparedFormula, RunConfiguration, WorkbookView,
-    overlay::{EvaluationContext, EvaluationPolicy, Overlay},
+    ArrayResultPolicy, EvaluationContext, EvaluationPolicy, EvaluationRun, EvaluationTarget,
+    FormulaCompiler, PreparationPolicy, PreparedFormula, RunConfiguration, WorkbookView,
 };
 use poirot::model::{CellError, CellValue, Workbook};
 

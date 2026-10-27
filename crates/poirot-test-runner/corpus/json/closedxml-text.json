@@ -20,7 +20,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L564: Mid_start_must_be_at_least_one_and_at_most_max_int",
         "Adapted from the cited assertion. MID start index domain. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -45,7 +45,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L574: Mid_length_must_be_at_least_zero_and_at_most_max_int",
         "Adapted from the cited assertion. MID length domain. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -70,7 +70,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L732: Rept_returns_error_when_count_is_negative_or_greater_than_max_int",
         "Adapted from the cited assertion. REPT rejects invalid count even for empty text. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -95,7 +95,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L389: Find_Arguments_Are_Converted_To_Expected_Types",
         "Adapted from the cited assertion. Find Arguments Are Converted To Expected Types. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -120,7 +120,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L796: Search_Empty_Pattern_And_Empty_Text",
         "Adapted from the cited assertion. Search Empty Pattern And Empty Text. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -145,7 +145,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L128: Concat_concatenates_array_values",
         "Adapted from the cited assertion. Concat concatenates array values. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
         "CONCAT member traversal verified by the source-hash-bound ../evidence/concat-traversal-libreoffice.json report; legacy scalar expression demand is retained independently of member collection."
       ],
       "actions": [
@@ -171,7 +171,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L34: Char_number_must_be_between_1_and_255",
         "Adapted from the cited assertion. CHAR code domain. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -196,7 +196,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L80: Code_returns_win1252_codepoint_of_first_character",
         "Adapted from the cited assertion. CODE reads first Windows-1252 character. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -221,7 +221,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L508: Left_takes_specified_number_of_characters",
         "Adapted from the cited assertion. LEFT fractional counts and surrogate pairs. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -246,7 +246,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L790: Right_takes_specified_number_of_characters",
         "Adapted from the cited assertion. RIGHT zero counts truncation and surrogate pairs. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -271,7 +271,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L530: Lower_en",
         "Adapted from the cited assertion. LOWER Unicode case mapping: Converts even non-latin chars. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -296,7 +296,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L564: Mid_start_must_be_at_least_one_and_at_most_max_int",
         "Adapted from the cited assertion. MID start index domain. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -321,7 +321,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L574: Mid_length_must_be_at_least_zero_and_at_most_max_int",
         "Adapted from the cited assertion. MID length domain. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -346,7 +346,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L586: Mid_returns_substring",
         "Adapted from the cited assertion. MID zero length and end boundary. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -371,7 +371,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L669: Proper_upper_cases_first_letter_and_lower_cases_next_letters",
         "Adapted from the cited assertion. PROPER word and Unicode boundaries. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -396,7 +396,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L698: Replace_replaces_value",
         "Adapted from the cited assertion. REPLACE insertion clipping and append positions. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -421,7 +421,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L732: Rept_returns_error_when_count_is_negative_or_greater_than_max_int",
         "Adapted from the cited assertion. REPT rejects invalid count even for empty text. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -446,7 +446,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L748: Rept_Value",
         "Adapted from the cited assertion. REPT truncates fractional count or returns empty text. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -471,7 +471,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L1143: Trim_trims_spaces_and_removes_multi_spaces_from_inside_text",
         "Adapted from the cited assertion. TRIM space handling. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -496,7 +496,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L341: Find_Looks_Only_From_Start_Position_Onward",
         "Adapted from the cited assertion. Find Looks Only From Start Position Onward. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -521,7 +521,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L353: Find_Start_Position_Too_Small",
         "Adapted from the cited assertion. Find Start Position Too Small. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -546,7 +546,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L371: Find_Case_Sensitive_String_Not_Found",
         "Adapted from the cited assertion. Find Case Sensitive String Not Found. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -571,7 +571,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L378: Find_Value",
         "Adapted from the cited assertion. Find Value. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -596,7 +596,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L389: Find_Arguments_Are_Converted_To_Expected_Types",
         "Adapted from the cited assertion. Find Arguments Are Converted To Expected Types. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -621,7 +621,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L809: Search_Looks_Only_From_Start_Position_Onward",
         "Adapted from the cited assertion. Search Looks Only From Start Position Onward. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -646,7 +646,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L846: Search_Value",
         "Adapted from the cited assertion. Search Value. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -671,7 +671,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L866: Search_Tilde_Escapes_Next_Char",
         "Adapted from the cited assertion. Search Tilde Escapes Next Char. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -696,7 +696,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L940: Substitute_is_case_sensitive",
         "Adapted from the cited assertion. Substitute is case sensitive. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -721,7 +721,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L947: Substitute_returns_original_string_when_occurrence_is_not_found",
         "Adapted from the cited assertion. Substitute returns original string when occurrence is not found. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -746,7 +746,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L962: Substitute_occurence_must_be_between_one_and_max_int",
         "Adapted from the cited assertion. Substitute occurence must be between one and max int. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -771,7 +771,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L418: Fixed_coercion",
         "Adapted from the cited assertion. Fixed coercion. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -796,7 +796,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L738: Rept_limits_output_text_length_to_32767",
         "Adapted from the cited assertion. Rept limits output text length to 32767. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -821,7 +821,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L175: Concat_treats_blanks_as_empty_string",
         "Adapted from the cited assertion. Concat treats blanks as empty string. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -846,7 +846,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L508: Left_takes_specified_number_of_characters",
         "Adapted from the cited assertion. LEFT fractional counts and surrogate pairs: Paired surrogate. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -871,7 +871,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L790: Right_takes_specified_number_of_characters",
         "Adapted from the cited assertion. RIGHT zero counts truncation and surrogate pairs. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -896,7 +896,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L564: Mid_start_must_be_at_least_one_and_at_most_max_int",
         "Adapted from the cited assertion. MID start index domain. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -921,7 +921,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L586: Mid_returns_substring",
         "Adapted from the cited assertion. MID zero length and end boundary. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -946,7 +946,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L669: Proper_upper_cases_first_letter_and_lower_cases_next_letters",
         "Adapted from the cited assertion. PROPER word and Unicode boundaries. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -971,7 +971,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L698: Replace_replaces_value",
         "Adapted from the cited assertion. REPLACE insertion clipping and append positions. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -996,7 +996,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L732: Rept_returns_error_when_count_is_negative_or_greater_than_max_int",
         "Adapted from the cited assertion. REPT rejects invalid count even for empty text. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -1021,7 +1021,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L748: Rept_Value",
         "Adapted from the cited assertion. REPT truncates fractional count or returns empty text. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -1046,7 +1046,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L1143: Trim_trims_spaces_and_removes_multi_spaces_from_inside_text",
         "Adapted from the cited assertion. TRIM space handling. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -1071,7 +1071,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L846: Search_Value",
         "Adapted from the cited assertion. Search Value. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -1096,7 +1096,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L866: Search_Tilde_Escapes_Next_Char",
         "Adapted from the cited assertion. Search Tilde Escapes Next Char. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -1121,7 +1121,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L962: Substitute_occurence_must_be_between_one_and_max_int",
         "Adapted from the cited assertion. Substitute occurence must be between one and max int. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -1146,7 +1146,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L418: Fixed_coercion",
         "Adapted from the cited assertion. Fixed coercion. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -1171,7 +1171,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L508: Left_takes_specified_number_of_characters",
         "Adapted from the cited assertion. LEFT fractional counts and surrogate pairs: Paired surrogate. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -1196,7 +1196,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L790: Right_takes_specified_number_of_characters",
         "Adapted from the cited assertion. RIGHT zero counts truncation and surrogate pairs: Smiley emoji. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -1221,7 +1221,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L669: Proper_upper_cases_first_letter_and_lower_cases_next_letters",
         "Adapted from the cited assertion. PROPER word and Unicode boundaries. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {
@@ -1246,7 +1246,7 @@
       "evidence": [
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/TextTests.cs#L698: Replace_replaces_value",
         "Adapted from the cited assertion. REPLACE insertion clipping and append positions. Expected values are authored from upstream, not Poirot.",
-        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercionv2-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
+        "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/coercion-text-integers-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim."
       ],
       "actions": [
         {

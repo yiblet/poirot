@@ -1,6 +1,6 @@
 //! Scalar helpers for spreadsheet logical functions.
 //!
-//! Use [`coercev2_logical_test`](crate::logical::coercev2_logical_test) to convert a value into a logical condition and
+//! Use [`coerce_logical_test`](crate::logical::coerce_logical_test) to convert a value into a logical condition and
 //! [`error_type`](crate::logical::error_type) to obtain an `ERROR.TYPE` code.
 //!
 //! The caller selects branches and evaluates arguments, including short-circuit
@@ -8,8 +8,8 @@
 use crate::scalar::{CellError, CellValue};
 
 /// Coerce an admitted scalar into a logical condition under the kernel rules.
-pub fn coercev2_logical_test(value: &CellValue) -> Result<bool, CellError> {
-    crate::coercion::compatibility::coercev2_logical_test(value)
+pub fn coerce_logical_test(value: &CellValue) -> Result<bool, CellError> {
+    crate::coercion::compatibility::coerce_logical_test(value)
 }
 
 /// Return the documented ERROR.TYPE code, including GETTING_DATA as code eight.

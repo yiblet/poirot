@@ -53,6 +53,8 @@ fn whole_columns_preserve_order_and_enforce_work_limits() {
         let outcome = run(&book, formula, EvaluationBudgets::default());
         let work = outcome.usage().work_units;
         assert_eq!(complete(outcome), expected, "{formula}");
+        // Whole columns charge for stored cells, not every absent row.
+        assert!(work < 1_000, "{formula} charged {work} work units");
         assert_eq!(
             complete(run(
                 &book,

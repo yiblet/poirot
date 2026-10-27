@@ -1,6 +1,6 @@
 //! Original public-facade contracts with explicit caller-provided saved results.
 use poirot::calculation::{EvaluationContext, ProducerPolicy};
-use poirot::eval::overlay::EvaluationPolicy;
+use poirot::eval::EvaluationPolicy;
 use poirot::{CellValue, Workbook};
 #[test]
 fn workbook_policy_controls_recalculation_and_xlsx_keeps_saved_values() {

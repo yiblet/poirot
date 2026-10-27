@@ -1,7 +1,8 @@
 //! Original public tests for Poirot's caller-trusted saved-result contract.
 //! Array layout uses row-major literals; expected saved numbers are supplied explicitly,
 //! rather than inferred from evaluation. No upstream tests or fixtures were reused.
-use poirot::eval::overlay::{Evaluation, EvaluationContext, EvaluationPolicy, Overlay};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::{EvaluationContext, EvaluationPolicy};
 use poirot::eval::{EvaluationOutcome, EvaluationTarget, ProducerPolicy, RunConfiguration};
 use poirot::model::{CellError, CellValue, Workbook};
 
@@ -596,9 +597,7 @@ fn scalar_intersection_ignores_trust_and_changed_anchor_uses_its_own_cache() {
 fn explicit_shared_inputs_at_anchor_or_child_never_restore_old_children() {
     let book = saved();
     let plan = poirot::eval::FormulaCompiler::new().compile_workbook(&book, &Default::default());
-    let shared =
-        poirot::eval::shared_workbook::SharedWorkbook::new(book, std::sync::Arc::new(plan))
-            .unwrap();
+    let shared = poirot::eval::SharedWorkbook::new(book, std::sync::Arc::new(plan)).unwrap();
     let configuration =
         RunConfiguration::default().with_producer_policy(ProducerPolicy::TrustSaved);
     for (address, input, aborts) in [

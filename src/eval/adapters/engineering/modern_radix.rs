@@ -1,7 +1,14 @@
 //! Typed signed conversion and elementwise engineering arithmetic.
 use crate::eval::adapters::elementwise::{Broadcast, Kernel, MemberContext, Optional};
-use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::functions::registry::EngineeringFunction;
+use crate::eval::host::{ArgumentCoercion, CallHost};
+use crate::eval::limits::EvalResult;
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::{NA, Num};
+use crate::model::CellValue::{Error, Number, Text};
+use crate::model::{CellAddress, CellValue};
 use poirot_functions::engineering::{
     radix::{self, BitOperation, Radix, Shift},
     units,
@@ -9,7 +16,10 @@ use poirot_functions::engineering::{
 
 /// Identify the modern engineering operations handled in this module.
 pub(super) fn handles(function: EngineeringFunction) -> bool {
-    use EngineeringFunction::*;
+    use EngineeringFunction::{
+        Bin2dec, Bin2hex, Bin2oct, Bitand, Bitlshift, Bitor, Bitrshift, Bitxor, Convert, Dec2bin,
+        Dec2hex, Dec2oct, Hex2bin, Hex2dec, Hex2oct, Oct2bin, Oct2dec, Oct2hex,
+    };
     matches!(
         function,
         Bin2dec
@@ -32,14 +42,18 @@ pub(super) fn handles(function: EngineeringFunction) -> bool {
             | Oct2hex
     )
 }
+
 fn domain(error: poirot_functions::engineering::EngineeringError) -> FunctionFailure {
     match error {
         poirot_functions::engineering::EngineeringError::Num => Num.into(),
         poirot_functions::engineering::EngineeringError::Value => VALUE_ERROR.into(),
     }
 }
+
 fn destination(function: EngineeringFunction) -> Option<Radix> {
-    use EngineeringFunction::*;
+    use EngineeringFunction::{
+        Bin2hex, Bin2oct, Dec2bin, Dec2hex, Dec2oct, Hex2bin, Hex2oct, Oct2bin, Oct2hex,
+    };
     match function {
         Bin2hex | Oct2hex | Dec2hex => Some(Radix::Hexadecimal),
         Dec2bin => Some(Radix::Binary),
@@ -48,26 +62,32 @@ fn destination(function: EngineeringFunction) -> Option<Radix> {
         _ => None,
     }
 }
-fn coercev2_engineering_text(
+
+fn coerce_engineering_text(
     host: &mut CallHost<'_, '_>,
     value: &CellValue,
 ) -> FunctionResult<String> {
-    let text = host.coercev2_scalar_text(value)?;
+    let text = ArgumentCoercion::new(host).coerce_scalar_text(value)?;
     host.check_text(text.len())?;
     host.charge_work((text.len() as u64).saturating_add(1))?;
     Ok(text)
 }
+
 /// Formats a signed binary, octal, or hexadecimal result for each broadcast member.
 /// It converts the optional width before calling the independent radix encoder.
 struct Conversion(EngineeringFunction);
+
 impl Kernel for Conversion {
     type Signature = (Broadcast, Optional<Broadcast>);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use EngineeringFunction::*;
+        use EngineeringFunction::{
+            Bin2hex, Bin2oct, Dec2bin, Dec2hex, Dec2oct, Hex2bin, Hex2oct, Oct2bin, Oct2hex,
+        };
         let target = destination(self.0).ok_or(VALUE_ERROR)?;
         let number = if matches!(self.0, Dec2oct | Dec2bin | Dec2hex) {
             target
@@ -78,7 +98,7 @@ impl Kernel for Conversion {
             if member.missing {
                 return Err(VALUE_ERROR.into());
             }
-            let text = coercev2_engineering_text(context.host, &member.value)?;
+            let text = coerce_engineering_text(context.host, &member.value)?;
             let source = match self.0 {
                 Bin2hex | Bin2oct => Radix::Binary,
                 Hex2bin | Hex2oct => Radix::Hexadecimal,
@@ -99,7 +119,7 @@ impl Kernel for Conversion {
                 if member.missing {
                     None
                 } else {
-                    Some(context.host.coercev2_scalar_number(
+                    Some(ArgumentCoercion::new(context.host).coerce_scalar_number(
                         &member.value,
                         crate::eval::host::NumericPolicy::PinnedPoi,
                     )?)
@@ -111,23 +131,28 @@ impl Kernel for Conversion {
         target.encode(number, places).map(Text).map_err(domain)
     }
 }
+
 /// Engineering kernel for bit arithmetic, unit conversion, and signed radix decoding.
 /// Typed operands preserve each operation's numeric or text coercion order within shared broadcast traversal.
 struct Arithmetic(EngineeringFunction);
+
 impl Kernel for Arithmetic {
     type Signature = (Broadcast, Optional<Broadcast>, Optional<Broadcast>);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use EngineeringFunction::*;
+        use EngineeringFunction::{
+            Bin2dec, Bitand, Bitlshift, Bitor, Bitrshift, Bitxor, Convert, Hex2dec, Oct2dec,
+        };
         if matches!(self.0, Bin2dec | Hex2dec | Oct2dec) {
             let member = arguments.0.read(context)?;
             if member.missing {
                 return Err(VALUE_ERROR.into());
             }
-            let text = coercev2_engineering_text(context.host, &member.value)?;
+            let text = coerce_engineering_text(context.host, &member.value)?;
             let source = match self.0 {
                 Bin2dec => Radix::Binary,
                 Hex2dec => Radix::Hexadecimal,
@@ -144,7 +169,7 @@ impl Kernel for Arithmetic {
             let from = second.read(context)?;
             let from = match from.value {
                 value @ (Text(_) | CellValue::TextUtf16(_)) => {
-                    coercev2_engineering_text(context.host, &value)?
+                    coerce_engineering_text(context.host, &value)?
                 }
                 Error(error) => return Err(error.into()),
                 _ => return Err(VALUE_ERROR.into()),
@@ -152,7 +177,7 @@ impl Kernel for Arithmetic {
             let to = arguments.2.0.as_ref().ok_or(VALUE_ERROR)?.read(context)?;
             let to = match to.value {
                 value @ (Text(_) | CellValue::TextUtf16(_)) => {
-                    coercev2_engineering_text(context.host, &value)?
+                    coerce_engineering_text(context.host, &value)?
                 }
                 Error(error) => return Err(error.into()),
                 _ => return Err(VALUE_ERROR.into()),
@@ -175,6 +200,7 @@ impl Kernel for Arithmetic {
         }))
     }
 }
+
 /// Execute signed conversion and arithmetic through shared typed argument admission.
 pub(super) fn execute(
     session: &mut Session<'_>,
@@ -184,7 +210,7 @@ pub(super) fn execute(
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
     if destination(function).is_some() {
-        super::run(
+        super::dispatch::run(
             session,
             sheet,
             address,
@@ -193,7 +219,7 @@ pub(super) fn execute(
             Conversion(function),
         )
     } else {
-        super::run(
+        super::dispatch::run(
             session,
             sheet,
             address,

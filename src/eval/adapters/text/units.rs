@@ -1,9 +1,16 @@
 //! Lossless text kernels use shared typed broadcast and collection traversal.
-use super::*;
+
 use crate::eval::adapters::elementwise::{
     self, Broadcast, Kernel, MemberContext, Variadic, WholeCollection, collections, text as shared,
 };
+use crate::eval::functions::registry::{FunctionId, TextFunction};
+use crate::eval::host::{CallHost, PolicyReads};
+use crate::eval::limits::{CapabilityId, EvalResult};
+use crate::eval::values::{FunctionResult, VALUE_ERROR, Value, err};
+use crate::model::CellValue::Number;
+use crate::model::{CellAddress, CellValue};
 use poirot_functions::text::{java_case, units};
+use poirot_functions::text_units::SourceVersion as TextSourceVersion;
 
 /// Runs UTF-16 text operations for each broadcast member.
 /// The selected text-index policy determines whether supported operations count surrogate pairs together.
@@ -11,8 +18,10 @@ struct TextKernel {
     name: TextFunction,
     paired: bool,
 }
+
 impl Kernel for TextKernel {
     type Signature = Variadic<Broadcast>;
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -117,7 +126,7 @@ impl Kernel for TextKernel {
                 } else {
                     hay.len()
                 };
-                let start = poirot_functions::coercion::compatibility::coercev2_text_search_start(
+                let start = poirot_functions::coercion::compatibility::coerce_text_search_start(
                     f64::from(start),
                     hay_length,
                 )?;
@@ -174,21 +183,26 @@ impl Kernel for TextKernel {
         }
     }
 }
+
 /// CONCAT kernel that folds ordered source collections into one UTF-16 result.
 /// Shared traversal preserves read order and stops when a consumed operand fails.
 struct ConcatKernel;
+
 impl collections::CollectionKernel for ConcatKernel {
     type Signature = Variadic<WholeCollection>;
+
     fn apply(
         &self,
         host: &mut CallHost<'_, '_>,
         arguments: &Self::Signature,
         _address: CellAddress,
     ) -> FunctionResult<Value> {
-        let output = collections::fold(
+        // Absent cells concatenate as empty text, so only stored cells are read.
+        let output = collections::fold_stored(
             host,
             arguments.iter(),
             Vec::<u16>::new(),
+            |_, _, _| Ok(()),
             |host, output, operand| {
                 let text = shared::units(host, &operand)?;
                 let size = output
@@ -208,13 +222,14 @@ impl collections::CollectionKernel for ConcatKernel {
         Ok(shared::value(output).into())
     }
 }
+
 /// Execute text operations using typed roles and current Excel UTF-16 semantics.
 pub(in crate::eval) fn execute(
     mut host: CallHost<'_, '_>,
     name: TextFunction,
     length: usize,
 ) -> EvalResult<Value> {
-    host.selection_builtin_policy();
+    PolicyReads::new(&mut host).builtin_policy();
     if !FunctionId::Text(name).descriptor().arity.accepts(length) {
         return Ok(err(VALUE_ERROR));
     }
@@ -222,13 +237,9 @@ pub(in crate::eval) fn execute(
     let result = if name == TextFunction::Concat {
         collections::execute(&mut host, address, ConcatKernel)
     } else {
-        let paired =
-            host.text_policy_snapshot().source == TextSourceVersion::ExcelCompatibilityV2Documented;
+        let paired = PolicyReads::new(&mut host).text_policy_snapshot().source
+            == TextSourceVersion::ExcelCompatibilityV2Documented;
         elementwise::execute(&mut host, address, TextKernel { name, paired })
     };
-    super::finish(result)
+    super::outcome::finish(result)
 }
-
-#[cfg(test)]
-#[path = "units_tests.rs"]
-mod tests;

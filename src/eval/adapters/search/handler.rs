@@ -1,6 +1,14 @@
 //! Deferred classic lookup admission and result projection over checked host services.
 use super::execution::LookupTable;
-use crate::eval::*;
+use crate::eval::adapters::search::execution::{SearchAxis, SearchMode};
+use crate::eval::functions::registry::{FunctionId, SearchFunction};
+use crate::eval::host;
+use crate::eval::host::{LookupService, SelectionAccess};
+use crate::eval::limits::EvalResult;
+use crate::eval::values::core_projection::{coerce_logical_boolean, semantic};
+use crate::eval::values::{FunctionFailure, VALUE_ERROR, Value, err};
+use crate::model::CellError::{NA, Ref};
+use crate::model::CellValue::{Blank, Error, Number};
 
 /// Execute classic search calls in their source operand forcing order.
 pub(in crate::eval) fn execute(
@@ -26,7 +34,7 @@ pub(in crate::eval) fn execute(
         if value == Blank {
             SearchMode::Ascending
         } else {
-            match semantic(host.selected_number(&value))? {
+            match semantic(SelectionAccess::new(host).number(&value))? {
                 Ok(n) => SearchMode::from_number(n),
                 Err(_) => return Ok(err(Ref)),
             }
@@ -43,10 +51,10 @@ pub(in crate::eval) fn execute(
         && let Value::Scalar(value) | Value::SelectedScalar(value, _) = &table_value
         && value.text_ref().is_some()
     {
-        let parsed = semantic(host.selected_number(value))?;
+        let parsed = semantic(SelectionAccess::new(host).number(value))?;
         return Ok(err(if parsed.is_ok() { NA } else { VALUE_ERROR }));
     }
-    let table = match host::LookupTable::admit(table_value, kind) {
+    let table = match LookupTable::admit(table_value, kind) {
         Ok(t) => t,
         Err(e) => return Ok(err(e)),
     };
@@ -71,7 +79,7 @@ pub(in crate::eval) fn execute(
     let mode = if is_match {
         match_mode
     } else if host.len() == 4 {
-        match coercev2_logical_boolean(&host.scalar_argument(3)?) {
+        match coerce_logical_boolean(&host.scalar_argument(3)?) {
             Ok(true) => SearchMode::Ascending,
             Ok(false) => SearchMode::Exact,
             Err(e) => return Ok(err(e)),
@@ -79,7 +87,7 @@ pub(in crate::eval) fn execute(
     } else {
         SearchMode::Ascending
     };
-    let found = host.lookup_index(&table, axis, &key, mode, kind);
+    let found = LookupService::new(host).lookup_index(&table, axis, &key, mode, kind);
     let index = match found {
         Ok(Some(i)) => i,
         Ok(None) => return Ok(err(NA)),
@@ -91,19 +99,19 @@ pub(in crate::eval) fn execute(
     }
     // Vlookup.java/Hlookup.java defer the result index until selection succeeds.
     let value = host.scalar_argument(2)?;
-    let result_index = match semantic(host.selected_number(&value))? {
+    let result_index = match semantic(SelectionAccess::new(host).number(&value))? {
         Ok(n) if n.floor() >= 1. => n.floor() as usize - 1,
         Ok(_) => return Ok(err(VALUE_ERROR)),
         Err(_) => return Ok(err(Ref)),
     };
-    let value = match host.lookup_result(&table, axis, result_index, index) {
+    let value = match LookupService::new(host).lookup_result(&table, axis, result_index, index) {
         Ok(value) => value,
         Err(FunctionFailure::Spreadsheet(error)) => return Ok(err(error)),
         Err(FunctionFailure::Operational(failure)) => return Err(failure),
     };
     let origin = match &table {
-        LookupTable::Array(_) => host::OperandOrigin::ArrayElement,
-        _ => host::OperandOrigin::ReferencedCell,
+        LookupTable::Array(_) => crate::eval::values::OperandOrigin::ArrayElement,
+        _ => crate::eval::values::OperandOrigin::ReferencedCell,
     };
     Ok(Value::SelectedScalar(value, origin))
 }

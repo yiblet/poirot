@@ -66,7 +66,7 @@ pub enum PairCollection {
     /// Retain pairs whose members are both numeric.
     NumericOnly,
     /// Apply numeric conversion before retaining aligned pairs.
-    NumericCoercionV2,
+    NumericCoercion,
 }
 /// Positionally matched numeric X/Y vectors after pair filtering.
 /// `original_len` preserves the pre-filter length for source algorithms whose
@@ -94,7 +94,7 @@ impl NumericPairs {
 /// Admit an aligned observation only when both coordinates are already numbers.
 /// Error precedence belongs to the acquisition protocol before this membership test.
 /// Numeric-looking text and booleans remain excluded; numeric zero remains included.
-pub fn coercev2_statistics_numeric_pair(left: Value, right: Value) -> Option<(f64, f64)> {
+pub fn coerce_statistics_numeric_pair(left: Value, right: Value) -> Option<(f64, f64)> {
     match (left, right) {
         (Value::Number(left), Value::Number(right)) => Some((left, right)),
         _ => None,
@@ -112,7 +112,7 @@ fn finite(values: &[f64]) -> Result<(), CellError> {
     values.iter().try_for_each(|v| checked(*v).map(|_| ()))
 }
 /// Row-major operands preserve source kind even after reference resolution.
-pub fn coercev2_statistics_collection(
+pub fn coerce_statistics_collection(
     policy: Collection,
     operands: &[Operand],
 ) -> std::result::Result<Vec<f64>, CellError> {
@@ -206,7 +206,7 @@ pub fn coercev2_statistics_collection(
     Ok(values)
 }
 /// Fully inspect X before Y, matching POI's pair error precedence.
-pub fn coercev2_statistics_pairs(
+pub fn coerce_statistics_pairs(
     policy: PairCollection,
     x: &[Value],
     y: &[Value],
@@ -219,13 +219,13 @@ pub fn coercev2_statistics_pairs(
             return Err(*error);
         }
     }
-    fn coercev2_pair_number(policy: PairCollection, value: Value) -> Option<f64> {
+    fn coerce_pair_number(policy: PairCollection, value: Value) -> Option<f64> {
         match value {
             Value::Number(n) => Some(n),
-            Value::Boolean(b) if policy == PairCollection::NumericCoercionV2 => {
+            Value::Boolean(b) if policy == PairCollection::NumericCoercion => {
                 Some(f64::from(u8::from(b)))
             }
-            Value::Text { numeric } if policy == PairCollection::NumericCoercionV2 => numeric,
+            Value::Text { numeric } if policy == PairCollection::NumericCoercion => numeric,
             _ => None,
         }
     }
@@ -235,10 +235,7 @@ pub fn coercev2_statistics_pairs(
         original_len: x.len(),
     };
     for (&a, &b) in x.iter().zip(y) {
-        if let (Some(a), Some(b)) = (
-            coercev2_pair_number(policy, a),
-            coercev2_pair_number(policy, b),
-        ) {
+        if let (Some(a), Some(b)) = (coerce_pair_number(policy, a), coerce_pair_number(policy, b)) {
             finite(&[a, b])?;
             pairs.x.push(a);
             pairs.y.push(b);

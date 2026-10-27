@@ -1,8 +1,6 @@
 //! DAVERAGE finalization is opt-in; database candidate admission stays pinned.
-use poirot::eval::{
-    overlay::{EvaluationContext, EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::Overlay;
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 
 fn target(cell: &str) -> EvaluationTarget {
@@ -107,7 +105,7 @@ fn database_policy_and_criteria_edits_invalidate_retained_results() {
         .set_formula(target("Z1").address, "DAVERAGE(A1:A4,1,E1:E2)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
-        .with_policy(poirot::eval::overlay::EvaluationPolicy {
+        .with_policy(poirot::eval::EvaluationPolicy {
             builtin: poirot::eval::BuiltinSemanticsPolicy::PinnedPoi,
             ..Default::default()
         })

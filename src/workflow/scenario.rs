@@ -1,13 +1,15 @@
 //! Workbook-owned entry points for scenarios and effective-state export.
-use crate::workflow::{EvaluationContext, OverlayError, Workbook, WorkbookError, eval, io, model};
-use crate::workflow::{EvaluationCycle, EvaluationFailure, EvaluationReport, EvaluationTarget};
+use crate::workflow::{
+    EvaluationContext, EvaluationCycle, EvaluationFailure, EvaluationReport, EvaluationTarget,
+    OverlayError, Workbook, WorkbookError, eval, io, model,
+};
 use model::{CellValue, ModelError, WorkbookChange};
 use std::{
     borrow::{Borrow, BorrowMut},
     path::Path,
 };
 
-pub use eval::overlay::EvaluationPolicy;
+pub use eval::EvaluationPolicy;
 pub use eval::{NumberLocale, PreparationPolicy};
 
 /// Configure a direct evaluation over a borrowed or owned source without copying it.
@@ -199,7 +201,7 @@ impl<'a, W: Borrow<model::Workbook>> Evaluation<'a, W> {
         self.inner.values()
     }
     /// Inspect retained memo storage independently of profiling.
-    pub fn retained_usage(&self) -> eval::run::MemoRetentionUsage {
+    pub fn retained_usage(&self) -> eval::MemoRetentionUsage {
         self.inner.retained_usage()
     }
     /// Count successful results retained in this cycle.
@@ -216,7 +218,7 @@ impl<'a, W: Borrow<model::Workbook>> Evaluation<'a, W> {
     }
     /// Configure native persistence without calculating or ending the cycle.
     pub fn save_snapshot(&self) -> eval::artifact::SnapshotSaveBuilder<'_> {
-        self.inner.save_snapshot()
+        eval::artifact::SnapshotSaveBuilder::checkpoint(self.inner.snapshot())
     }
 
     /// Add file export to an existing borrowed, owned, or shared calculation without copying it.
@@ -413,7 +415,7 @@ impl<'a, W: Borrow<model::Workbook>> Overlay<'a, W> {
         self.inner.compile_all()
     }
     /// Inspect retained memo storage independently of profiling.
-    pub fn retained_usage(&mut self) -> eval::run::MemoRetentionUsage {
+    pub fn retained_usage(&mut self) -> eval::MemoRetentionUsage {
         self.inner.retained_usage()
     }
     /// Count current valid formula results and spill children.
@@ -434,7 +436,7 @@ impl<'a, W: Borrow<model::Workbook>> Overlay<'a, W> {
     }
     /// Configure native persistence without calculating or clearing warm state.
     pub fn save_snapshot(&self) -> eval::artifact::SnapshotSaveBuilder<'_> {
-        self.inner.save_snapshot()
+        eval::artifact::SnapshotSaveBuilder::checkpoint(self.inner.snapshot())
     }
     /// Borrow source, edits and reusable results for native serialization.
     pub fn snapshot(&self) -> eval::overlay::snapshot::Snapshot<'_> {

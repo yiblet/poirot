@@ -1,5 +1,5 @@
 //! Parser-independent, atomic application of source edit plans.
-use crate::model::*;
+use crate::model::{CellAddress, CellValue, ModelError, Workbook, normalize_formula};
 
 /// The location of a formula in a cell or defined name.
 ///
@@ -21,7 +21,7 @@ pub enum FormulaSource {
 }
 /// A formula replacement that checks the existing text before applying a change.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FormulaReplacement {
+pub(crate) struct FormulaReplacement {
     /// Location of the cell or defined-name formula to update.
     pub source: FormulaSource,
     /// Exact source required before applying the replacement.
@@ -32,7 +32,7 @@ pub struct FormulaReplacement {
 /// A validated sheet rename and the formula rewrites needed to preserve references.
 /// Application rejects a changed source snapshot before mutating the workbook.
 #[derive(Debug, Clone, PartialEq)]
-pub struct RenameSheetPlan {
+pub(crate) struct RenameSheetPlan {
     expected: Workbook,
     sheet: usize,
     name: String,
@@ -52,7 +52,7 @@ pub struct EditOutcome {
 }
 impl RenameSheetPlan {
     /// Validate a parser-produced replacement set without mutating the workbook.
-    pub fn new(
+    pub(crate) fn new(
         workbook: &Workbook,
         sheet: usize,
         name: String,
@@ -82,16 +82,9 @@ impl RenameSheetPlan {
             replacements,
         })
     }
-    /// Return the worksheet index captured during edit planning.
-    pub fn sheet(&self) -> usize {
-        self.sheet
-    }
-    /// Borrow the validated destination sheet spelling.
-    pub fn new_name(&self) -> &str {
-        &self.name
-    }
     /// Borrow checked formula rewrites to apply atomically with the rename.
-    pub fn replacements(&self) -> &[FormulaReplacement] {
+    #[cfg(test)]
+    pub(crate) fn replacements(&self) -> &[FormulaReplacement] {
         &self.replacements
     }
 }
@@ -131,7 +124,7 @@ impl Workbook {
     ///
     /// Rejects a stale plan before changing the workbook. Stored results and styles
     /// are preserved.
-    pub fn apply_rename_sheet_plan(
+    pub(crate) fn apply_rename_sheet_plan(
         &mut self,
         plan: &RenameSheetPlan,
     ) -> Result<EditOutcome, ModelError> {
@@ -178,5 +171,62 @@ impl Workbook {
             new_name: plan.name.clone(),
             changed_sources: plan.replacements.iter().map(|e| e.source.clone()).collect(),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::{Cell, SharedFormula, SharedFormulaId};
+    fn at(text: &str) -> CellAddress {
+        text.parse().unwrap()
+    }
+    fn shared() -> SharedFormula {
+        SharedFormula {
+            group: SharedFormulaId(7),
+            origin: at("B1"),
+        }
+    }
+    fn workbook() -> Workbook {
+        let mut book = Workbook::new();
+        let sheet = book.add_sheet("S").unwrap();
+        for (address, formula) in [("B1", "A1+1"), ("B2", "A2+1")] {
+            let mut cell = Cell::with_formula(formula, CellValue::Number(2.)).unwrap();
+            cell.shared_formula = Some(shared());
+            sheet.set(at(address), cell).unwrap();
+        }
+        book
+    }
+    #[test]
+    fn rename_formula_rewrites_detach_changed_sources_and_check_provenance() {
+        let mut book = workbook();
+        let edits = vec![FormulaReplacement {
+            source: FormulaSource::Cell {
+                sheet: 0,
+                address: at("B1"),
+            },
+            expected: "A1+1".into(),
+            replacement: "A1+2".into(),
+        }];
+        let plan = RenameSheetPlan::new(&book, 0, "Renamed".into(), edits).unwrap();
+        let mut stale = book.clone();
+        stale
+            .sheet_mut(0)
+            .unwrap()
+            .get_mut(at("B2"))
+            .unwrap()
+            .shared_formula = None;
+        let before = stale.clone();
+        assert!(stale.apply_rename_sheet_plan(&plan).is_err());
+        assert_eq!(stale, before);
+        book.apply_rename_sheet_plan(&plan).unwrap();
+        assert_eq!(
+            book.sheet(0).unwrap().get(at("B1")).unwrap().shared_formula,
+            None
+        );
+        assert_eq!(
+            book.sheet(0).unwrap().get(at("B2")).unwrap().shared_formula,
+            Some(shared())
+        );
     }
 }

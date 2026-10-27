@@ -1,10 +1,8 @@
 //! Independent examples from Microsoft's GROUPBY and PERCENTOF contracts and arithmetic.
 //! https://support.microsoft.com/en-us/excel/functions/groupby-function
 //! https://support.microsoft.com/en-us/excel/functions/percentof-function
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn target(cell: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -359,9 +357,9 @@ fn independent_program_arguments_use_the_explicit_aggregation_compiler() {
     for (index, source) in ["{1;1}", "{2;8}", "SUM", "0", "0"].into_iter().enumerate() {
         let syntax = poirot_parsing::formula::parse_formula(source).unwrap();
         args.push(if index == 2 {
-            bytecode::compile_aggregation_argument(&syntax).unwrap()
+            compile::bytecode::compile_aggregation_argument(&syntax).unwrap()
         } else {
-            bytecode::compile(&syntax).unwrap()
+            compile::bytecode::compile(&syntax).unwrap()
         });
     }
     let arguments: ParamVec<_> = args.into_iter().collect();
@@ -485,7 +483,7 @@ fn pinned_profile_and_registered_constructor_extensions_remain_separate() {
             "{source}"
         );
     }
-    use poirot::eval::extensions::*;
+    use poirot::eval::functions::extensions::*;
     let mut registry = ExtensionRegistry::new();
     registry
         .register(
@@ -493,7 +491,7 @@ fn pinned_profile_and_registered_constructor_extensions_remain_separate() {
             "HSTACK",
             "group007-test",
             ExtensionContract {
-                arity: registry::Arity {
+                arity: functions::registry::Arity {
                     minimum: 1,
                     maximum: 255,
                 },
@@ -513,15 +511,15 @@ fn pinned_profile_and_registered_constructor_extensions_remain_separate() {
     let syntax =
         poirot_parsing::formula::parse_formula("GROUPBY({1;1},{2;8},HSTACK(SUM,AVERAGE),0,0)")
             .unwrap();
-    let program = bytecode::compile_with_registry(&syntax, Some(&registry)).unwrap();
+    let program = compile::bytecode::compile_with_registry(&syntax, Some(&registry)).unwrap();
     assert!(program.template.aggregations.is_empty());
     let ordinary = poirot_parsing::formula::parse_formula("HSTACK(1)").unwrap();
     assert!(matches!(
-        bytecode::compile_with_registry(&ordinary, Some(&registry))
+        compile::bytecode::compile_with_registry(&ordinary, Some(&registry))
             .unwrap()
             .calls[0]
             .target,
-        bytecode::CallTarget::Extension(_)
+        compile::bytecode::CallTarget::Extension(_)
     ));
 }
 

@@ -1,7 +1,8 @@
 //! Typed clocks stay exact through execution, provider contexts, and restored caches.
+use poirot::eval::EvaluationContext;
 use poirot::eval::EvaluationTarget;
-use poirot::eval::extensions::*;
-use poirot::eval::overlay::{Evaluation, EvaluationContext, Overlay};
+use poirot::eval::functions::extensions::*;
+use poirot::eval::overlay::{Evaluation, Overlay};
 use poirot::model::{CellValue, Workbook};
 use std::time::{Duration, UNIX_EPOCH};
 
@@ -68,7 +69,7 @@ fn extension_and_retained_context_identity_preserve_single_nanosecond_changes() 
             "NANOS",
             "nanos/v1",
             ExtensionContract {
-                arity: poirot::eval::registry::Arity {
+                arity: poirot::eval::functions::registry::Arity {
                     minimum: 0,
                     maximum: 0,
                 },

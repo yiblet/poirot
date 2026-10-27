@@ -1,5 +1,5 @@
 //! Actual dispatch regressions for DStarRunner coercion and short circuit branches.
-use poirot::eval::bound::FormulaPlan;
+use poirot::eval::compile::bound::FormulaPlan;
 use poirot::model::{CellAddress, CellError as E, CellValue as V, Workbook};
 
 fn check(formula: &str, expected: V) {

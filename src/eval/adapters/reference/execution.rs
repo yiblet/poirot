@@ -3,8 +3,14 @@ use crate::eval::adapters::elementwise::controls::{
     OffsetControls, OffsetValues, OrdinalControls, Ordinals,
 };
 use crate::eval::adapters::elementwise::{Prepared, SourceIdentity, source};
-use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::compile;
+use crate::eval::functions::registry::{FunctionId, ReferenceFunction};
+use crate::eval::host::{CallHost, ContextReads, PolicyReads};
+use crate::eval::limits::EvalResult;
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::model::CellError::Ref;
+use crate::model::{CellAddress, CellError, MAX_COLUMNS, MAX_ROWS};
 
 /// Route reference selectors through shared typed preparation and publication.
 pub(in crate::eval) fn execute(
@@ -18,7 +24,7 @@ pub(in crate::eval) fn execute(
     {
         return Ok(err(VALUE_ERROR));
     }
-    host.selection_builtin_policy();
+    PolicyReads::new(host).builtin_policy();
     let result = match name {
         ReferenceFunction::Index => source::execute(
             host,
@@ -26,7 +32,7 @@ pub(in crate::eval) fn execute(
             IndexProjection(IndexForm::from_arity(host.len())),
         ),
         ReferenceFunction::Offset => {
-            host.record_volatile(FunctionId::Reference(name));
+            ContextReads::new(host).record_volatile(FunctionId::Reference(name));
             source::execute(host, OffsetControls::new(host.len()), OffsetProjection)
         }
         ReferenceFunction::Single => source::execute(host, (), Intersection),
@@ -39,6 +45,7 @@ pub(in crate::eval) fn execute(
         Err(FunctionFailure::Operational(error)) => Err(error),
     }
 }
+
 /// Apply modern implicit intersection to an already evaluated unary-operator source.
 pub(in crate::eval) fn intersect(
     session: &mut Session<'_>,
@@ -46,7 +53,7 @@ pub(in crate::eval) fn intersect(
     at: CellAddress,
     value: Value,
 ) -> EvalResult<Value> {
-    let arguments: &[bytecode::Compiled] = &[];
+    let arguments: &[compile::bytecode::Compiled] = &[];
     let mut host = CallHost::new(session, sheet, at, arguments);
     match source::project(
         &mut host,
@@ -59,9 +66,11 @@ pub(in crate::eval) fn intersect(
         Err(FunctionFailure::Operational(error)) => Err(error),
     }
 }
+
 /// Translates INDEX controls into a rectangle within the selected source area.
 /// The shared source executor evaluates controls and publishes the resulting value or reference.
 struct IndexProjection(IndexForm);
+
 impl source::Selector<Ordinals> for IndexProjection {
     fn select(
         &self,
@@ -78,9 +87,11 @@ impl source::Selector<Ordinals> for IndexProjection {
         })
     }
 }
+
 /// Translates OFFSET displacement and dimensions into a bounded reference rectangle.
 /// The shared source executor retains reference identity and publishes the selected area.
 struct OffsetProjection;
+
 impl source::Selector<OffsetValues> for OffsetProjection {
     fn select(
         &self,
@@ -107,13 +118,16 @@ impl source::Selector<OffsetValues> for OffsetProjection {
         })
     }
 }
+
 /// Implicit-intersection policy that selects one item using caller coordinates.
 /// It leaves source evaluation and result publication to the shared source executor.
 struct Intersection;
+
 impl source::Selector<()> for Intersection {
     fn work(&self, source: &Prepared<SourceIdentity>) -> usize {
         source.reference_work()
     }
+
     fn select(
         &self,
         source: &Prepared<SourceIdentity>,
@@ -123,9 +137,11 @@ impl source::Selector<()> for Intersection {
         source.intersection(at)
     }
 }
+
 /// Spill-reference policy that requests the source anchor's finalized spill footprint.
 /// The shared source executor obtains and validates that footprint through the host service.
 struct Spill;
+
 impl source::Selector<()> for Spill {
     fn select(
         &self,
@@ -136,12 +152,14 @@ impl source::Selector<()> for Spill {
         Ok(source::Projection::Spill)
     }
 }
+
 /// INDEX argument form controlling row/column defaults and vector selection.
 #[derive(Clone, Copy)]
 enum IndexForm {
     Vector,
     RowColumn,
 }
+
 impl IndexForm {
     /// Bind vector versus row/column selection from the admitted call shape.
     fn from_arity(arity: usize) -> Self {
@@ -174,7 +192,14 @@ fn index_selection(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use poirot_functions::coercion::compatibility::coercev2_index_ordinal;
+    use crate::eval::config::EvaluationInputs;
+    use crate::eval::limits::EvaluationFailure;
+    use crate::eval::vm::ExpressionRunner;
+    use crate::model::CellError::{Div0, Num};
+    use crate::model::CellValue::{Error, Number};
+    use crate::model::Workbook;
+    use poirot_functions::coercion::compatibility::coerce_index_ordinal;
+
     #[test]
     fn index_evaluates_later_operands_before_returning_semantic_errors() {
         let mut workbook = Workbook::new();
@@ -183,19 +208,25 @@ mod tests {
             r#"INDEX(A1:B3,1/0,INDIRECT("[missing.xlsx]Sheet1!A1"))"#,
             r#"INDEX(1/0,1,INDIRECT("[missing.xlsx]Sheet1!A1"))"#,
         ] {
-            let plan =
-                bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap())
-                    .unwrap();
+            let plan = compile::bound::FormulaPlan::bind(
+                &poirot_parsing::formula::parse_formula(formula).unwrap(),
+            )
+            .unwrap();
             let mut session = Session::with_context(&workbook, EvaluationInputs::default());
             assert!(
                 matches!(
-                    session.expr(0, CellAddress { row: 0, col: 0 }, &plan.expression()),
+                    ExpressionRunner::new(&mut session).expr(
+                        0,
+                        CellAddress { row: 0, col: 0 },
+                        &plan.expression()
+                    ),
                     Err(EvaluationFailure::UnsupportedCapability { .. })
                 ),
                 "later operational failure must survive: {formula}"
             );
         }
     }
+
     #[test]
     fn index_pure_selection_keeps_zero_dimensions_and_rejects_two_dimensional_vectors() {
         assert_eq!(index_selection(IndexForm::Vector, 3, 2, 2, 1), Err(Ref));
@@ -211,10 +242,11 @@ mod tests {
             Ok((2, 0))
         );
         assert_eq!(index_selection(IndexForm::RowColumn, 3, 2, 4, 0), Err(Ref));
-        assert_eq!(coercev2_index_ordinal(-0.1), Err(VALUE_ERROR));
-        assert_eq!(coercev2_index_ordinal(2.9), Ok(2));
-        assert_eq!(coercev2_index_ordinal(2147483648.), Err(Num));
+        assert_eq!(coerce_index_ordinal(-0.1), Err(VALUE_ERROR));
+        assert_eq!(coerce_index_ordinal(2.9), Ok(2));
+        assert_eq!(coerce_index_ordinal(2147483648.), Err(Num));
     }
+
     #[test]
     fn index_keeps_reference_coordinates_and_whole_selected_areas() {
         let mut workbook = Workbook::new();
@@ -258,31 +290,31 @@ mod tests {
             ("SUM(INDEX({1,10;2,20},0,2))", Number(30.)),
         ] {
             assert_eq!(
-                match crate::eval::run_plan(
+                match crate::eval::entry::run_plan(
                     &workbook,
                     0,
                     at,
-                    &bound::FormulaPlan::bind(
+                    &compile::bound::FormulaPlan::bind(
                         &poirot_parsing::formula::parse_formula(formula).unwrap()
                     )
                     .unwrap(),
                     Default::default(),
                     Default::default()
                 ) {
-                    crate::eval::EvaluationOutcome::Complete { value, .. } => value,
+                    crate::eval::limits::EvaluationOutcome::Complete { value, .. } => value,
                     outcome => panic!("evaluation aborted: {outcome:?}"),
                 },
                 expected,
                 "{formula}"
             );
         }
-        let plan = bound::FormulaPlan::bind(
+        let plan = compile::bound::FormulaPlan::bind(
             &poirot_parsing::formula::parse_formula("INDEX(A1:B3,2,2)").unwrap(),
         )
         .unwrap();
         let mut session = Session::with_context(&workbook, EvaluationInputs::default());
         assert!(
-            matches!(session.expr(0,at,&plan.expression()).unwrap(),Value::Refs(areas) if areas.len()==1 && areas[0].r0==1 && areas[0].c0==1)
+            matches!(ExpressionRunner::new(&mut session).expr(0,at,&plan.expression()).unwrap(),Value::Refs(areas) if areas.len()==1 && areas[0].r0==1 && areas[0].c0==1)
         );
     }
 }

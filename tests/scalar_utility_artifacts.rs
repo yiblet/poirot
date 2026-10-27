@@ -20,7 +20,9 @@ fn old_preparation_recovers_utility_source_and_recalculates() {
         overlay.evaluation(&context).unwrap().cell(output).unwrap(),
         20.0.into()
     );
-    let mut bytes = overlay.save_snapshot().to_buffer().unwrap();
+    let mut bytes = poirot::eval::artifact::SnapshotSaveBuilder::checkpoint(overlay.snapshot())
+        .to_buffer()
+        .unwrap();
     let previous = poirot::eval::overlay::snapshot::COMPATIBILITY_REVISION - 1;
     bytes[16..24].copy_from_slice(&previous.to_le_bytes());
     assert!(

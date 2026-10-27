@@ -297,7 +297,7 @@ fn earlier_sheet_error_prevents_evaluating_later_operational_failure() {
 
 #[test]
 fn prepared_span_metadata_retains_ordered_endpoints_and_anchors() {
-    use poirot::eval::compiler::{PotentialReference, PreparedFormula};
+    use poirot::eval::compile::compiler::{PotentialReference, PreparedFormula};
     let prepared = poirot::eval::FormulaCompiler::default().compile_formula(
         "IF(FALSE,SUM(Sheet1:Sheet3!$A1:B$2),7)",
         &poirot::eval::PreparationPolicy::default(),
@@ -321,9 +321,8 @@ fn prepared_span_metadata_retains_ordered_endpoints_and_anchors() {
 
 #[test]
 fn selected_span_consumes_ordered_layout_and_endpoints_but_lazy_span_does_not() {
-    use poirot::eval::run::{
-        DependencyRead, DependencyReadSink, EvaluationRun, ReadEvent, WorkbookView,
-    };
+    use poirot::eval::run::{EvaluationRun, WorkbookView};
+    use poirot::eval::{DependencyRead, DependencyReadSink, ReadEvent};
     #[derive(Default)]
     /// Records sheet layout and endpoint reads from selected span expressions.
     struct Reads(Vec<DependencyRead>);

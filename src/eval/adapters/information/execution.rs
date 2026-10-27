@@ -2,26 +2,37 @@
 use crate::eval::adapters::elementwise::{
     Broadcast, Kernel, MemberContext, SourceIdentity, execute as execute_kernel,
 };
+use crate::eval::functions::registry::{FunctionId, InformationFunction};
 use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::limits::{EvalResult, EvaluationFailure};
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::NA;
+use crate::model::CellValue::{Blank, Boolean, Error, Number, Text};
+use crate::model::{CellAddress, CellValue};
 
 /// Information-function kernel for broadcast predicates and N/T conversion.
 /// Spreadsheet errors remain inspectable values until the selected operation handles them.
 struct Information(InformationFunction);
+
 impl Kernel for Information {
     type Signature = (Broadcast,);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         (argument,): &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use InformationFunction::*;
+        use InformationFunction::{
+            IsBlank, IsErr, IsError, IsLogical, IsNa, IsNonText, IsNumber, IsText, N, Na, T, Type,
+        };
         let operand = match argument.read(context) {
             Ok(operand) => operand,
             Err(FunctionFailure::Spreadsheet(error)) => crate::eval::host::ScalarOperand {
                 value: Error(error),
                 missing: false,
-                origin: crate::eval::host::OperandOrigin::Direct,
+                origin: crate::eval::values::OperandOrigin::Direct,
             },
             Err(error) => return Err(error),
         };
@@ -36,17 +47,20 @@ impl Kernel for Information {
             IsBlank => Boolean(present && value == Blank),
             IsLogical => Boolean(present && matches!(value, Boolean(_))),
             IsNonText => Boolean(!present || value.text_ref().is_none()),
-            N => poirot_functions::coercion::compatibility::coercev2_information_n(value),
-            T => poirot_functions::coercion::compatibility::coercev2_information_t(value),
+            N => poirot_functions::coercion::compatibility::coerce_information_n(value),
+            T => poirot_functions::coercion::compatibility::coerce_information_t(value),
             Type | Na => return Err(EvaluationFailure::StalePlan.into()),
         })
     }
 }
+
 /// TYPE kernel that distinguishes arrays and multicell references before selecting a scalar value.
 /// Source identity prevents scalar intersection from erasing the array result code.
 struct TypeInformation;
+
 impl Kernel for TypeInformation {
     type Signature = (SourceIdentity,);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -75,14 +89,18 @@ impl Kernel for TypeInformation {
         }))
     }
 }
+
 /// NA kernel that emits the constant #N/A value with no argument reads.
 struct NotAvailable;
+
 impl Kernel for NotAvailable {
     type Signature = ();
+
     fn apply(&self, _: &mut MemberContext<'_, '_, '_>, _: &()) -> FunctionResult<CellValue> {
         Ok(Error(NA))
     }
 }
+
 /// Execute information predicates and conversions over the admitted rectangle.
 pub(in crate::eval) fn execute(
     session: &mut Session<'_>,

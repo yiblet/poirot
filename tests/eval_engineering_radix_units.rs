@@ -1,8 +1,6 @@
 //! Public engineering contracts from Microsoft syntax and positional arithmetic.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, ExcelText, Workbook};
 fn at(cell: &str) -> EvaluationTarget {
     EvaluationTarget {

@@ -1,5 +1,17 @@
 //! Tests of the admission_preparation contract.
-use super::*;
+use super::super::evaluation_probe::EvaluationProbe;
+use super::super::evaluation_run::EvaluationRun;
+use super::super::workbook_view::WorkbookView;
+use super::support::{A1, B1, Reads, context, target, value, workbook};
+use crate::eval::compile::compiler::{
+    CompilerUsage, FormulaCompiler, PreparationPolicy, PreparedFormula, RegistryIdentity,
+};
+use crate::eval::limits::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::ports::{CellCompletion, CellObserver, same_result_identity};
+use crate::eval::ports::{ContextRead, DependencyRead};
+use crate::model::{CellValue, Workbook};
+use std::sync::Arc;
+use std::time::{Duration, UNIX_EPOCH};
 
 #[test]
 fn prepared_cell_execution_borrows_plan_formula_during_dependency_reads() {
@@ -105,6 +117,7 @@ fn repeated_runs_reuse_preparation_but_read_current_values_and_signed_zero() {
         }
     );
 }
+
 #[test]
 fn exact_topology_and_policy_checks_detect_direct_mutation() {
     let mut original = workbook();
@@ -158,6 +171,7 @@ fn exact_topology_and_policy_checks_detect_direct_mutation() {
     };
     assert!(!plan.matches(&original, &other_policy));
 }
+
 #[test]
 fn standalone_policy_mismatch_is_operational_and_parse_failure_keeps_text_budget() {
     let workbook = workbook();
@@ -189,7 +203,7 @@ fn standalone_policy_mismatch_is_operational_and_parse_failure_keeps_text_budget
             ..
         }
     ));
-    let outcome = crate::eval::run_formula(
+    let outcome = crate::eval::entry::run_formula(
         &workbook,
         0,
         A1,
@@ -208,6 +222,7 @@ fn standalone_policy_mismatch_is_operational_and_parse_failure_keeps_text_budget
         }
     ));
 }
+
 #[test]
 fn source_deduplication_and_context_changes_do_not_reprepare() {
     let mut workbook = workbook();

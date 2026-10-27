@@ -1,7 +1,10 @@
 //! Replay independent scenarios with persistent, reset, or fresh overlays.
 //! Input/output contents stay private; stdout contains only timings, counts and hashes.
-use poirot::{CellValue, Workbook};
+mod serde;
+mod snapshot;
+
 use poirot::calculation::{EvaluationContext, EvaluationTarget, Overlay};
+use poirot::{CellValue, Workbook};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -122,7 +125,13 @@ fn scenario(book: &Workbook, value: &Value) -> Result<Scenario> {
         expected: None,
     })
 }
-fn apply(overlay: &mut Overlay<'_>, book: &Workbook, key: Key, input: &Input) -> Result<()> {
+/// Apply an authored override while preserving baseline formula-cache semantics.
+fn apply<W: std::borrow::Borrow<poirot::model::Workbook>>(
+    overlay: &mut Overlay<'_, W>,
+    book: &Workbook,
+    key: Key,
+    input: &Input,
+) -> Result<()> {
     match input {
         Input::Literal(value) => overlay.set_value(target(key), value.clone())?,
         Input::Formula(formula) => overlay.set_formula(target(key), formula.clone())?,
@@ -145,7 +154,12 @@ fn apply(overlay: &mut Overlay<'_>, book: &Workbook, key: Key, input: &Input) ->
     }
     Ok(())
 }
-fn restore(overlay: &mut Overlay<'_>, book: &Workbook, key: Key) -> Result<()> {
+/// Restore one omitted input to its original source content.
+fn restore<W: std::borrow::Borrow<poirot::model::Workbook>>(
+    overlay: &mut Overlay<'_, W>,
+    book: &Workbook,
+    key: Key,
+) -> Result<()> {
     let at = target(key);
     if let Some(cell) = book
         .sheet(at.sheet)
@@ -262,11 +276,17 @@ fn load_requests(book: &Workbook, path: &str, limit: usize) -> Result<Vec<Scenar
 }
 fn main() -> Result<()> {
     let args = std::env::args().skip(1).collect::<Vec<_>>();
+    if args.first().map(String::as_str) == Some("snapshot") {
+        return snapshot::run(&args);
+    }
+    if args.first().map(String::as_str) == Some("serde") {
+        return serde::run(&args);
+    }
     let mode = match args.first().map(String::as_str) {
         Some("persistent") => Mode::Persistent,
         Some("reset") => Mode::Reset,
         Some("fresh") => Mode::Fresh,
-        _ => return Err("usage: replay persistent|reset|fresh workbook.xlsx requests.jsonl [limit] OR --synthetic CASE [limit]".into()),
+        _ => return Err("usage: replay persistent|reset|fresh|snapshot workbook.xlsx requests.jsonl [limit] OR serde workbook.xlsx [repetitions] OR MODE --synthetic CASE [limit]".into()),
     };
     let input = args.get(1).ok_or("missing workbook or --synthetic")?;
     let requests = args

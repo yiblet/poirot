@@ -1,7 +1,9 @@
 //! Formula-level coverage of deferred lookup execution.
 //! SINGLE follows modern scalar/range intersection, independently specified by Microsoft:
 //! https://support.microsoft.com/en-us/excel/implicit-intersection-operator
-use poirot::eval::{EvaluationBudgets, EvaluationInputs, EvaluationOutcome, bound::FormulaPlan};
+use poirot::eval::{
+    EvaluationBudgets, EvaluationInputs, EvaluationOutcome, compile::bound::FormulaPlan,
+};
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 fn workbook() -> Workbook {
     let mut workbook = Workbook::new();

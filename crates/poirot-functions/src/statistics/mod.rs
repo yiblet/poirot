@@ -44,7 +44,7 @@ pub use paired::{forecast, paired, paired_with_policy, regression};
 /// Percentile rank with an explicit inclusive/exclusive endpoint contract.
 pub use percent_rank::percent_rank;
 // Origin-sensitive admission of scalar and paired statistical inputs.
-pub use crate::coercion::statistics::{coercev2_statistics_collection, coercev2_statistics_pairs};
+pub use crate::coercion::statistics::{coerce_statistics_collection, coerce_statistics_pairs};
 
 /// Scalar statistical result or spreadsheet error for an unmetered kernel call.
 pub type Result = std::result::Result<f64, CellError>;

@@ -19,9 +19,15 @@
 //! assert_eq!(cell.value, CellValue::Number(5.));
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
-use crate::model::*;
+use crate::model::{
+    Cell, CellAddress, CellStyle, CellValue, DateSystem, ExcelText, FileMetadata, MAX_ROWS,
+    ModelError, NamedRange, RowVisibility, SavedSpillExtent, SharedFormula, SheetPresentation,
+    SpillCell, StyleContext, VisualStyle, Workbook,
+};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Source snapshot wire revision, checked by the public artifact envelope before decoding.
 /// Bump whenever the serialized source layout changes; provide an explicit migration or
@@ -60,6 +66,42 @@ struct Sheet<'a> {
     spill_extents: Vec<(CellAddress, SavedSpillExtent)>,
 }
 pub use poirot_io::value_wire::{Value, value_serde};
+
+/// Cheap style lookup key: the number format text plus the shared visual style's pointer.
+/// Equal keys imply equal styles, so a hit can reuse the canonical id without deep hashing.
+/// Pointers stay valid and unique because the captured workbook is borrowed for `'a`.
+type StyleIdentity<'a> = (Option<&'a str>, Option<*const VisualStyle>);
+
+/// Return the canonical table index for `style`, appending it on first sight.
+/// `last` short-circuits runs of cells sharing a style. Identity lookup skips deep-hashing shared visual styles; a miss falls back to deep
+/// equality so equal styles behind distinct `Arc`s still share one table entry.
+fn intern_style<'a>(
+    style: &'a CellStyle,
+    last: &mut Option<(StyleIdentity<'a>, usize)>,
+    by_identity: &mut HashMap<StyleIdentity<'a>, usize>,
+    by_value: &mut HashMap<&'a CellStyle, usize>,
+    styles: &mut Vec<Cow<'a, CellStyle>>,
+) -> usize {
+    let identity = (
+        style.number_format.as_deref(),
+        style.visual.as_ref().map(Arc::as_ptr),
+    );
+    if let Some((previous, id)) = last
+        && *previous == identity
+    {
+        return *id;
+    }
+    let id = *by_identity.entry(identity).or_insert_with(|| {
+        let next = styles.len();
+        *by_value.entry(style).or_insert_with(|| {
+            styles.push(Cow::Borrowed(style));
+            next
+        })
+    });
+    *last = Some((identity, id));
+    id
+}
+
 impl<'a> Snapshot<'a> {
     /// Compare source and saved-cache identity, including exact numeric bits.
     /// File metadata is excluded because import diagnostics do not affect evaluation.
@@ -96,7 +138,9 @@ impl<'a> Snapshot<'a> {
     }
     /// Borrow source records for serialization without requiring Workbook itself to implement Serde.
     pub fn capture(workbook: &'a Workbook) -> Self {
-        let mut style_ids = std::collections::HashMap::new();
+        let mut last = None;
+        let mut by_identity = HashMap::new();
+        let mut by_value = HashMap::new();
         let mut styles = Vec::new();
         Self {
             sheets: workbook
@@ -123,11 +167,13 @@ impl<'a> Snapshot<'a> {
                         .cells()
                         .into_iter()
                         .map(|(a, c)| {
-                            let next = styles.len();
-                            let style_id = *style_ids.entry(&c.style).or_insert_with(|| {
-                                styles.push(Cow::Borrowed(&c.style));
-                                next
-                            });
+                            let style_id = intern_style(
+                                &c.style,
+                                &mut last,
+                                &mut by_identity,
+                                &mut by_value,
+                                &mut styles,
+                            );
                             (
                                 *a,
                                 match &c.value {
@@ -327,6 +373,7 @@ impl<'a> Snapshot<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::{FileFormat, ImportDiagnostic, ImportDiagnosticKind};
     #[test]
     fn capture_borrows_text_units_formulas_styles_and_names() {
         let mut w = Workbook::new();
@@ -546,5 +593,154 @@ mod style_reference_tests {
         let mut snapshot = Snapshot::capture(&book).into_owned();
         snapshot.sheets[0].cells[0].3 = snapshot.styles.len();
         assert!(snapshot.restore().is_err());
+    }
+}
+
+#[cfg(test)]
+mod style_interning_tests {
+    use super::*;
+    use crate::model::FontStyle;
+
+    /// Build a bold or italic visual style behind a fresh `Arc`.
+    fn visual(bold: bool) -> Arc<VisualStyle> {
+        Arc::new(VisualStyle {
+            font: Some(FontStyle {
+                bold,
+                italic: !bold,
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+    }
+
+    /// Two sheets mixing shared `Arc`s, equal-but-distinct `Arc`s, and distinct styles.
+    /// With `share` false every cell gets its own `Arc`; `italic_last` changes one style.
+    fn book(share: bool, italic_last: bool) -> Workbook {
+        let bold = visual(true);
+        let pick = |shared: &Arc<VisualStyle>| {
+            if share {
+                shared.clone()
+            } else {
+                Arc::new(shared.as_ref().clone())
+            }
+        };
+        let mut book = Workbook::new();
+        let first = book.add_sheet("A").unwrap();
+        let styles = [
+            CellStyle {
+                number_format: None,
+                visual: Some(pick(&bold)),
+            },
+            CellStyle {
+                number_format: None,
+                visual: Some(pick(&bold)),
+            },
+            // Equal content behind a separate allocation must reuse the first entry.
+            CellStyle {
+                number_format: None,
+                visual: Some(visual(true)),
+            },
+            CellStyle {
+                number_format: Some("0.00".into()),
+                visual: Some(pick(&bold)),
+            },
+            CellStyle {
+                number_format: Some("0.00".into()),
+                visual: None,
+            },
+            CellStyle {
+                number_format: None,
+                visual: Some(visual(false)),
+            },
+            CellStyle::default(),
+        ];
+        for (row, style) in styles.into_iter().enumerate() {
+            first
+                .set_value(
+                    CellAddress {
+                        row: row as u32,
+                        col: 0,
+                    },
+                    row as f64,
+                )
+                .unwrap();
+            first
+                .set_style(
+                    CellAddress {
+                        row: row as u32,
+                        col: 0,
+                    },
+                    style,
+                )
+                .unwrap();
+        }
+        let second = book.add_sheet("B").unwrap();
+        second
+            .set_style(
+                CellAddress { row: 0, col: 0 },
+                CellStyle {
+                    number_format: Some("0.00".into()),
+                    visual: Some(visual(true)),
+                },
+            )
+            .unwrap();
+        second
+            .set_style(
+                CellAddress { row: 1, col: 0 },
+                CellStyle {
+                    number_format: None,
+                    visual: Some(if italic_last {
+                        visual(false)
+                    } else {
+                        pick(&bold)
+                    }),
+                },
+            )
+            .unwrap();
+        book
+    }
+
+    /// Encode a capture after replacing its style table with deep-equality-only interning.
+    fn deep_only_encoding(book: &Workbook) -> Vec<u8> {
+        let mut snapshot = Snapshot::capture(book);
+        let mut ids: HashMap<&CellStyle, usize> = HashMap::new();
+        let mut styles = Vec::new();
+        for (sheet, captured) in book.sheets().iter().zip(&mut snapshot.sheets) {
+            for ((_, cell), entry) in sheet.cells().into_iter().zip(&mut captured.cells) {
+                let next = styles.len();
+                entry.3 = *ids.entry(&cell.style).or_insert_with(|| {
+                    styles.push(Cow::Borrowed(&cell.style));
+                    next
+                });
+            }
+        }
+        snapshot.styles = styles;
+        postcard::to_allocvec(&snapshot).unwrap()
+    }
+
+    #[test]
+    fn identity_interning_encodes_like_deep_interning() {
+        for share in [true, false] {
+            let book = book(share, false);
+            let snapshot = Snapshot::capture(&book);
+            assert_eq!(snapshot.styles.len(), 5);
+            assert_eq!(
+                postcard::to_allocvec(&snapshot).unwrap(),
+                deep_only_encoding(&book)
+            );
+        }
+        assert_eq!(
+            postcard::to_allocvec(&Snapshot::capture(&book(true, false))).unwrap(),
+            postcard::to_allocvec(&Snapshot::capture(&book(false, false))).unwrap()
+        );
+    }
+
+    #[test]
+    fn matches_ignores_style_sharing_but_not_style_values() {
+        let shared = Snapshot::capture(&book(true, false)).into_owned();
+        assert!(shared.matches(&book(false, false)));
+        assert!(Snapshot::capture(&book(false, false)).matches(&book(true, false)));
+        assert!(!shared.matches(&book(true, true)));
+        assert!(!shared.matches(&book(false, true)));
     }
 }

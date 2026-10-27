@@ -1,12 +1,20 @@
 //! Date-aware rectangular operands for irregular coupons and French depreciation.
 use crate::eval::adapters::{
     elementwise::{
-        self, Broadcast, Kernel, MemberContext, NumericParameter as P, NumericSignature, Variadic,
+        self, Broadcast, Kernel, MemberContext, NumericParameter, NumericSignature, Variadic,
     },
     failure::operational_only,
 };
+use crate::eval::functions::registry::{FinancialFunction, FunctionId};
 use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::limits::{CapabilityId, EvalResult};
+use crate::eval::ports::DependencyRead;
+use crate::eval::session::{ReadRecorder, Session};
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::{Div0, Num};
+use crate::model::CellValue::Number;
+use crate::model::{CellAddress, CellValue};
 use poirot_functions::coercion::date_time::CalendarEpoch;
 use poirot_functions::financial::{
     FinancialError,
@@ -14,6 +22,7 @@ use poirot_functions::financial::{
     odd::{self as kernel, Amortization, OddFirst, OddLast},
     securities::{Basis, Day, Frequency},
 };
+
 fn spreadsheet(error: FinancialError) -> FunctionFailure {
     match error {
         FinancialError::Num => Num,
@@ -22,6 +31,7 @@ fn spreadsheet(error: FinancialError) -> FunctionFailure {
     }
     .into()
 }
+
 fn failure<E: Into<FunctionFailure>>(
     host: &CallHost<'_, '_>,
     error: Failure<E>,
@@ -35,63 +45,67 @@ fn failure<E: Into<FunctionFailure>>(
         ),
     }
 }
+
 /// Identify the six date-aware irregular financial operations.
 pub(super) fn handles(function: FinancialFunction) -> bool {
-    use FinancialFunction::*;
+    use FinancialFunction::{Amordegrc, Amorlinc, Oddfprice, Oddfyield, Oddlprice, Oddlyield};
     matches!(
         function,
         Amordegrc | Amorlinc | Oddfprice | Oddfyield | Oddlprice | Oddlyield
     )
 }
+
 /// Adapts irregular-coupon and amortization functions to broadcast execution.
 /// It converts date and numeric parameters under the workbook epoch before calling independent financial algorithms.
 struct OddKernel {
     function: FinancialFunction,
     epoch: CalendarEpoch,
 }
+
 impl Kernel for OddKernel {
     type Signature = Variadic<Broadcast>;
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use FinancialFunction::*;
+        use FinancialFunction::{Amordegrc, Amorlinc, Oddfprice, Oddfyield, Oddlprice};
         let function = self.function;
         let epoch = self.epoch;
         let amortization = matches!(function, Amordegrc | Amorlinc);
-        let parameters: &[P] = if amortization {
+        let parameters: &[NumericParameter] = if amortization {
             &[
-                P::calendar_date(),
-                P::calendar_date(),
-                P::required(),
-                P::required(),
-                P::required(),
-                P::required(),
-                P::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
             ]
         } else if matches!(function, Oddfprice | Oddfyield) {
             &[
-                P::calendar_date(),
-                P::calendar_date(),
-                P::calendar_date(),
-                P::calendar_date(),
-                P::required(),
-                P::required(),
-                P::required(),
-                P::required().integer_choices(&[1, 2, 4]),
-                P::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required().integer_choices(&[1, 2, 4]),
+                NumericParameter::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
             ]
         } else {
             &[
-                P::calendar_date(),
-                P::calendar_date(),
-                P::calendar_date(),
-                P::required(),
-                P::required(),
-                P::required(),
-                P::required().integer_choices(&[1, 2, 4]),
-                P::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required().integer_choices(&[1, 2, 4]),
+                NumericParameter::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
             ]
         };
         let values = if amortization {
@@ -192,6 +206,7 @@ impl Kernel for OddKernel {
         Ok(Number(value))
     }
 }
+
 /// Coerce rectangular inputs, retain date context reads, and publish lifted numerical results.
 pub(super) fn execute(
     session: &mut Session<'_>,
@@ -207,8 +222,10 @@ pub(super) fn execute(
     {
         return Ok(err(VALUE_ERROR));
     }
-    session.read(DependencyRead::ContextField(run::ContextRead::DateSystem));
-    let epoch = match session.workbook.date_system {
+    ReadRecorder::new(session).read(DependencyRead::ContextField(
+        crate::eval::ports::ContextRead::DateSystem,
+    ));
+    let epoch = match session.sources.workbook.date_system {
         crate::model::DateSystem::Excel1900 => CalendarEpoch::Excel1900,
         crate::model::DateSystem::Excel1904 => CalendarEpoch::Excel1904,
     };

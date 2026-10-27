@@ -1,0 +1,31 @@
+//! Integration tests, compiled as one binary to avoid linking each file separately.
+//! Add a new test file here as a module; Cargo does not discover it automatically.
+mod coercion_compatibility;
+mod coercion_contracts;
+mod coercion_formatted_numbers;
+mod coercion_statistical_pairs;
+mod database_source_contract;
+mod dates_business;
+mod financial_euro;
+mod format_calendar;
+mod format_fidelity;
+mod format_fill;
+mod format_integer_masks;
+mod format_negative_affixes;
+mod format_source_policy;
+mod format_system_formats;
+mod format_text_placeholders;
+mod lookup_geometry;
+mod lookup_intersection;
+mod lookup_lookup;
+mod lookup_safety;
+mod math_modern;
+mod matrix_flatten_wrap;
+mod matrix_grouping;
+mod matrix_modern_arrays;
+mod matrix_selection;
+mod matrix_unit;
+mod statistics_distribution_source;
+mod statistics_grouped;
+mod statistics_iteration;
+mod statistics_statistics;

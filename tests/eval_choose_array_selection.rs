@@ -1,8 +1,6 @@
 //! Positional index selection follows the existing lazy argument contract.
-use poirot::eval::{
-    overlay::{EvaluationContext, EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::Overlay;
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn target(cell: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -242,7 +240,7 @@ fn modern_selection_survives_policy_labels_and_restored_index_edits() {
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&book)
-        .with_policy(poirot::eval::overlay::EvaluationPolicy {
+        .with_policy(poirot::eval::EvaluationPolicy {
             builtin: poirot::eval::BuiltinSemanticsPolicy::PinnedPoi,
             ..Default::default()
         })

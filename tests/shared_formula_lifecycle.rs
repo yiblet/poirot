@@ -92,7 +92,8 @@ fn replacing_original_anchor_survives_calculation_snapshot_and_fresh_save() {
             .from_bytes(&snapshot)
             .unwrap()
             .into_artifact()
-            .workbook,
+            .into_parts()
+            .0,
     );
     assert_eq!(restored, book);
     let bytes = restored.save_xlsx().to_buffer().unwrap();

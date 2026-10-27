@@ -1,8 +1,6 @@
 //! Public modern-finance contracts from documented equations and independent examples.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn at(cell: &str) -> EvaluationTarget {
     EvaluationTarget {

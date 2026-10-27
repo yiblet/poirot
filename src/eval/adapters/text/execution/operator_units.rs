@@ -1,10 +1,11 @@
 //! POI concatenation operator preserves all code units.
-use super::*;
+use super::scalar::text_unsupported;
+use crate::eval::host::{ArgumentCoercion, CallHost};
+use crate::eval::values::FunctionResult;
+use crate::model::CellValue;
+
 /// Render a scalar into admitted UTF-16 units without replacing surrogate values.
-fn coercev2_concat_utf16(
-    host: &mut CallHost<'_, '_>,
-    value: &CellValue,
-) -> FunctionResult<Vec<u16>> {
+fn coerce_concat_utf16(host: &mut CallHost<'_, '_>, value: &CellValue) -> FunctionResult<Vec<u16>> {
     if let Some(text) = value.text_ref() {
         let units = text.len_units();
         let bytes = units.checked_mul(2).ok_or_else(|| {
@@ -20,7 +21,7 @@ fn coercev2_concat_utf16(
         output.extend(text.units());
         return Ok(output);
     }
-    let rendered = host.coercev2_scalar_text(value)?;
+    let rendered = ArgumentCoercion::new(host).coerce_scalar_text(value)?;
     let units = rendered.encode_utf16().count();
     host.check_text_capacity(units.saturating_mul(2))?;
     host.check_values(units)?;
@@ -32,14 +33,15 @@ fn coercev2_concat_utf16(
     output.extend(rendered.encode_utf16());
     Ok(output)
 }
+
 /// Apply text operators directly to UTF-16 units under the selected source contract.
 pub(super) fn text_unit_operator(
     host: &mut CallHost<'_, '_>,
     left: &CellValue,
     right: &CellValue,
 ) -> FunctionResult<CellValue> {
-    let left = coercev2_concat_utf16(host, left)?;
-    let right = coercev2_concat_utf16(host, right)?;
+    let left = coerce_concat_utf16(host, left)?;
+    let right = coerce_concat_utf16(host, right)?;
     let units = left
         .len()
         .checked_add(right.len())

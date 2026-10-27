@@ -3,15 +3,22 @@ use crate::eval::adapters::elementwise::recovery::{self, ErrorSelector};
 use crate::eval::adapters::elementwise::{
     self, Broadcast, Deferred, Kernel, MemberContext, Prepared, Signature, SourceIdentity,
 };
-use crate::eval::execution_observation::OperationId;
-use crate::eval::host::{CallHost, OperandKind};
-use crate::eval::*;
+use crate::eval::functions::registry::LogicalFunction;
+use crate::eval::host::{CallHost, ErrorHandler, OperandKind};
+use crate::eval::limits::EvalResult;
+use crate::eval::observe::OperationId;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, core_projection};
+use crate::model::CellError::NA;
+use crate::model::CellValue::{Blank, Boolean, Error, Number};
+use crate::model::{CellAddress, CellError, CellValue};
 
 /// Kernel for NOT, parity tests, and ERROR.TYPE over one broadcast input.
 /// It preserves spreadsheet errors as values until the selected operation decides how to handle them.
 pub(super) struct Unary(pub(super) LogicalFunction);
+
 impl Kernel for Unary {
     type Signature = (Broadcast,);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -29,7 +36,7 @@ impl Kernel for Unary {
                     .unwrap_or(Error(NA)),
                 _ => Error(NA),
             },
-            LogicalFunction::Not => Boolean(!core_projection::coercev2_operand_boolean(&value)?),
+            LogicalFunction::Not => Boolean(!core_projection::coerce_operand_boolean(&value)?),
             LogicalFunction::IsEven | LogicalFunction::IsOdd => {
                 let number = match value {
                     Number(value) => value,
@@ -46,8 +53,10 @@ impl Kernel for Unary {
 
 /// TRUE or FALSE kernel with no source operands and a single scalar result.
 pub(super) struct Constant(pub(super) bool);
+
 impl Kernel for Constant {
     type Signature = ();
+
     fn apply(
         &self,
         _context: &mut MemberContext<'_, '_, '_>,
@@ -59,8 +68,10 @@ impl Kernel for Constant {
 
 /// Inspect reference identity without reading the referenced cell contents.
 pub(super) struct IsReference;
+
 impl Kernel for IsReference {
     type Signature = (SourceIdentity,);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -75,19 +86,22 @@ impl Kernel for IsReference {
 /// IFERROR or IFNA policy for shared per-member error recovery.
 /// It decides which spreadsheet errors select the deferred fallback while operational failures propagate.
 pub(super) struct Recovery(pub(super) LogicalFunction);
+
 impl ErrorSelector for Recovery {
     fn catches(&self, error: CellError) -> bool {
         self.0 == LogicalFunction::IfError || error == NA
     }
+
     fn uncaught(
         &self,
         host: &mut CallHost<'_, '_>,
         source: Option<OperationId>,
         checked: &Value,
     ) -> EvalResult<()> {
-        let checked = host.inspect_error_handler_scalar(checked)?;
-        host.error_handler_mask(self.0, source, &checked)
+        let checked = ErrorHandler::new(host).inspect_scalar(checked)?;
+        ErrorHandler::new(host).mask(self.0, source, &checked)
     }
+
     fn fallback(
         &self,
         host: &mut CallHost<'_, '_>,
@@ -95,7 +109,8 @@ impl ErrorSelector for Recovery {
         checked: &CellValue,
         _role: &Deferred<Broadcast>,
     ) -> EvalResult<Prepared<Broadcast>> {
-        host.error_handler_fallback(self.0, source, checked)
+        ErrorHandler::new(host)
+            .fallback(self.0, source, checked)
             .map(Prepared::new)
     }
 }

@@ -2,9 +2,8 @@
 use poirot::calculation::{
     EvaluationContext, EvaluationFailure, EvaluationLimits, EvaluationTarget, ProducerPolicy,
 };
-use poirot::eval::overlay::Evaluation;
-use poirot::eval::overlay::EvaluationPolicy;
-use poirot::eval::overlay::Overlay;
+use poirot::eval::EvaluationPolicy;
+use poirot::eval::overlay::{Evaluation, Overlay};
 use poirot::eval::{
     self as eval, CellCompletion, CellObserver, EvaluationBudgets, EvaluationInputs,
     EvaluationOutcome, EvaluationRun, PreparationPolicy, WorkbookView,
@@ -92,7 +91,7 @@ fn range_consumers_keep_reference_coercion_and_overlay_dependencies() {
 fn literal_scans_retain_results_instead_of_copying_source_into_the_memo() {
     let book = book();
     let context = EvaluationContext {
-        retention: poirot::eval::run::MemoRetentionLimits::default()
+        retention: poirot::eval::MemoRetentionLimits::default()
             .max_cached_cells(1)
             .max_logical_memo_bytes(128),
         ..Default::default()
@@ -330,7 +329,7 @@ fn depth_and_retention_refusals_do_not_publish_partial_range_results() {
     for context in [
         EvaluationContext::default().limits(EvaluationLimits::default().max_depth(1)),
         EvaluationContext {
-            retention: poirot::eval::run::MemoRetentionLimits::default().max_cached_cells(0),
+            retention: poirot::eval::MemoRetentionLimits::default().max_cached_cells(0),
             ..Default::default()
         },
     ] {

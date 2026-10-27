@@ -1,15 +1,14 @@
 use crate::coercion::{
-    CellError, CellValue, CoerceV2, CoercionV2Context, CoercionV2Failure, Input, Origin, TextRef,
-    coercev2,
-    parsing::{coercev2_decimal_text, coercev2_text_view},
+    CellError, CellValue, Coerce, CoercionContext, CoercionFailure, Input, Origin, TextRef, coerce,
+    parsing::{coerce_decimal_text, coerce_text_view},
 };
 use std::{borrow::Cow, marker::PhantomData};
 
-fn required_value(input: Input<'_>) -> Result<&CellValue, CoercionV2Failure> {
+fn required_value(input: Input<'_>) -> Result<&CellValue, CoercionFailure> {
     match input.value() {
-        Some(CellValue::Error(error)) => Err(CoercionV2Failure::Worksheet(*error)),
+        Some(CellValue::Error(error)) => Err(CoercionFailure::Worksheet(*error)),
         Some(value) => Ok(value),
-        None => Err(CoercionV2Failure::mismatch("present scalar")),
+        None => Err(CoercionFailure::mismatch("present scalar")),
     }
 }
 
@@ -17,16 +16,13 @@ fn required_value(input: Input<'_>) -> Result<&CellValue, CoercionV2Failure> {
 /// Finiteness/domain validation belongs to a consuming rule, not type inspection.
 pub struct ExactNumber;
 
-impl CoerceV2<'_> for ExactNumber {
+impl Coerce<'_> for ExactNumber {
     type Output = f64;
 
-    fn coercev2_input(
-        input: Input<'_>,
-        _: &mut CoercionV2Context,
-    ) -> Result<f64, CoercionV2Failure> {
+    fn coerce_input(input: Input<'_>, _: &mut CoercionContext) -> Result<f64, CoercionFailure> {
         match required_value(input)? {
             CellValue::Number(number) => Ok(*number),
-            _ => Err(CoercionV2Failure::mismatch("existing number")),
+            _ => Err(CoercionFailure::mismatch("existing number")),
         }
     }
 }
@@ -34,16 +30,13 @@ impl CoerceV2<'_> for ExactNumber {
 /// Require an existing boolean; do not interpret numbers or text.
 pub struct ExactBoolean;
 
-impl CoerceV2<'_> for ExactBoolean {
+impl Coerce<'_> for ExactBoolean {
     type Output = bool;
 
-    fn coercev2_input(
-        input: Input<'_>,
-        _: &mut CoercionV2Context,
-    ) -> Result<bool, CoercionV2Failure> {
+    fn coerce_input(input: Input<'_>, _: &mut CoercionContext) -> Result<bool, CoercionFailure> {
         match required_value(input)? {
             CellValue::Boolean(boolean) => Ok(*boolean),
-            _ => Err(CoercionV2Failure::mismatch("existing boolean")),
+            _ => Err(CoercionFailure::mismatch("existing boolean")),
         }
     }
 }
@@ -51,32 +44,32 @@ impl CoerceV2<'_> for ExactBoolean {
 /// Borrow exact text, retaining isolated UTF-16 surrogates without allocation.
 pub struct ExactText;
 
-impl<'a> CoerceV2<'a> for ExactText {
+impl<'a> Coerce<'a> for ExactText {
     type Output = TextRef<'a>;
 
-    fn coercev2_input(
+    fn coerce_input(
         input: Input<'a>,
-        _: &mut CoercionV2Context,
-    ) -> Result<Self::Output, CoercionV2Failure> {
+        _: &mut CoercionContext,
+    ) -> Result<Self::Output, CoercionFailure> {
         required_value(input)?
             .text_ref()
-            .ok_or_else(|| CoercionV2Failure::mismatch("existing text"))
+            .ok_or_else(|| CoercionFailure::mismatch("existing text"))
     }
 }
 
 /// Explicitly request a worksheet error as data, rather than propagating it.
 pub struct ExactError;
 
-impl CoerceV2<'_> for ExactError {
+impl Coerce<'_> for ExactError {
     type Output = CellError;
 
-    fn coercev2_input(
+    fn coerce_input(
         input: Input<'_>,
-        _: &mut CoercionV2Context,
-    ) -> Result<CellError, CoercionV2Failure> {
+        _: &mut CoercionContext,
+    ) -> Result<CellError, CoercionFailure> {
         match input.value() {
             Some(CellValue::Error(error)) => Ok(*error),
-            _ => Err(CoercionV2Failure::mismatch("existing worksheet error")),
+            _ => Err(CoercionFailure::mismatch("existing worksheet error")),
         }
     }
 }
@@ -84,13 +77,13 @@ impl CoerceV2<'_> for ExactError {
 /// Preserve scalar type, omission, error value, and origin for a selector/predicate.
 pub struct Identity;
 
-impl<'a> CoerceV2<'a> for Identity {
+impl<'a> Coerce<'a> for Identity {
     type Output = Input<'a>;
 
-    fn coercev2_input(
+    fn coerce_input(
         input: Input<'a>,
-        _: &mut CoercionV2Context,
-    ) -> Result<Input<'a>, CoercionV2Failure> {
+        _: &mut CoercionContext,
+    ) -> Result<Input<'a>, CoercionFailure> {
         Ok(input)
     }
 }
@@ -99,26 +92,26 @@ impl<'a> CoerceV2<'a> for Identity {
 /// This is an explicit decimal-only policy, not full Excel arithmetic or VALUE.
 pub struct DecimalNumber;
 
-impl CoerceV2<'_> for DecimalNumber {
+impl Coerce<'_> for DecimalNumber {
     type Output = f64;
 
-    fn coercev2_input(
+    fn coerce_input(
         input: Input<'_>,
-        context: &mut CoercionV2Context,
-    ) -> Result<f64, CoercionV2Failure> {
+        context: &mut CoercionContext,
+    ) -> Result<f64, CoercionFailure> {
         let value = required_value(input)?;
         match value {
             CellValue::Number(number) if number.is_finite() => Ok(*number),
-            CellValue::Number(_) => Err(CoercionV2Failure::Worksheet(CellError::Num)),
+            CellValue::Number(_) => Err(CoercionFailure::Worksheet(CellError::Num)),
             CellValue::Blank => Ok(0.0),
             CellValue::Boolean(boolean) => Ok(f64::from(u8::from(*boolean))),
             _ => {
                 let text = value
                     .text_ref()
-                    .ok_or_else(|| CoercionV2Failure::mismatch("finite decimal number"))?;
-                let text = coercev2_text_view(text, context)?;
-                coercev2_decimal_text(&text)
-                    .ok_or_else(|| CoercionV2Failure::mismatch("finite decimal number"))
+                    .ok_or_else(|| CoercionFailure::mismatch("finite decimal number"))?;
+                let text = coerce_text_view(text, context)?;
+                coerce_decimal_text(&text)
+                    .ok_or_else(|| CoercionFailure::mismatch("finite decimal number"))
             }
         }
     }
@@ -128,24 +121,24 @@ impl CoerceV2<'_> for DecimalNumber {
 /// spelling (case-insensitive, with no trimming). This is not AND/OR collection policy.
 pub struct LogicalBoolean;
 
-impl CoerceV2<'_> for LogicalBoolean {
+impl Coerce<'_> for LogicalBoolean {
     type Output = bool;
 
-    fn coercev2_input(
+    fn coerce_input(
         input: Input<'_>,
-        context: &mut CoercionV2Context,
-    ) -> Result<bool, CoercionV2Failure> {
+        context: &mut CoercionContext,
+    ) -> Result<bool, CoercionFailure> {
         match required_value(input)? {
             CellValue::Boolean(boolean) => Ok(*boolean),
             CellValue::Blank => Ok(false),
             CellValue::Number(number) if number.is_finite() => Ok(*number != 0.0),
-            CellValue::Number(_) => Err(CoercionV2Failure::Worksheet(CellError::Num)),
+            CellValue::Number(_) => Err(CoercionFailure::Worksheet(CellError::Num)),
             value => {
                 let text = value
                     .text_ref()
-                    .ok_or_else(|| CoercionV2Failure::mismatch("logical scalar"))?;
+                    .ok_or_else(|| CoercionFailure::mismatch("logical scalar"))?;
                 let length = u64::try_from(text.storage_bytes())
-                    .map_err(|_| CoercionV2Failure::Limit(crate::coercion::Resource::Work))?;
+                    .map_err(|_| CoercionFailure::Limit(crate::coercion::Resource::Work))?;
                 context.charge(length)?;
                 let equals = |expected: &str| {
                     text.units()
@@ -161,7 +154,7 @@ impl CoerceV2<'_> for LogicalBoolean {
                 } else if equals("false") {
                     Ok(false)
                 } else {
-                    Err(CoercionV2Failure::mismatch("logical scalar"))
+                    Err(CoercionFailure::mismatch("logical scalar"))
                 }
             }
         }
@@ -172,13 +165,13 @@ impl CoerceV2<'_> for LogicalBoolean {
 /// Use ExactText when exact UTF-16 units, including isolated surrogates, are required.
 pub struct FormulaText;
 
-impl<'a> CoerceV2<'a> for FormulaText {
+impl<'a> Coerce<'a> for FormulaText {
     type Output = Cow<'a, str>;
 
-    fn coercev2_input(
+    fn coerce_input(
         input: Input<'a>,
-        context: &mut CoercionV2Context,
-    ) -> Result<Self::Output, CoercionV2Failure> {
+        context: &mut CoercionContext,
+    ) -> Result<Self::Output, CoercionFailure> {
         match required_value(input)? {
             CellValue::Blank => Ok(Cow::Borrowed("")),
             CellValue::Boolean(true) => Ok(Cow::Borrowed("TRUE")),
@@ -187,12 +180,12 @@ impl<'a> CoerceV2<'a> for FormulaText {
                 context.admit_text(crate::numeric::number_text::ALLOCATION_BOUND)?;
                 Ok(Cow::Owned(crate::numeric::number_text::render(*number)))
             }
-            CellValue::Number(_) => Err(CoercionV2Failure::Worksheet(CellError::Num)),
+            CellValue::Number(_) => Err(CoercionFailure::Worksheet(CellError::Num)),
             value => {
                 let text = value
                     .text_ref()
-                    .ok_or_else(|| CoercionV2Failure::mismatch("formula text"))?;
-                coercev2_text_view(text, context)
+                    .ok_or_else(|| CoercionFailure::mismatch("formula text"))?;
+                coerce_text_view(text, context)
             }
         }
     }
@@ -202,22 +195,22 @@ impl<'a> CoerceV2<'a> for FormulaText {
 /// Functions with other bounds must request a distinct rule.
 pub struct TextCount;
 
-impl CoerceV2<'_> for TextCount {
+impl Coerce<'_> for TextCount {
     type Output = i32;
 
-    fn coercev2_input(
+    fn coerce_input(
         input: Input<'_>,
-        context: &mut CoercionV2Context,
-    ) -> Result<i32, CoercionV2Failure> {
-        let number = coercev2::<DecimalNumber>(input, context)?;
+        context: &mut CoercionContext,
+    ) -> Result<i32, CoercionFailure> {
+        let number = coerce::<DecimalNumber>(input, context)?;
         if number < 0.0 {
-            return Err(CoercionV2Failure::Worksheet(CellError::Value));
+            return Err(CoercionFailure::Worksheet(CellError::Value));
         }
-        let number = crate::coercion::compatibility::coercev2_text_integer_number(
+        let number = crate::coercion::compatibility::coerce_text_integer_number(
             number,
             crate::coercion::compatibility::TextIntegerPolicy::Checked,
         )
-        .map_err(CoercionV2Failure::Worksheet)?;
+        .map_err(CoercionFailure::Worksheet)?;
         Ok(number.trunc() as i32)
     }
 }
@@ -226,17 +219,17 @@ impl CoerceV2<'_> for TextCount {
 /// Only omitted syntax produces `None`; a referenced blank still reaches `R`.
 pub struct Optional<R>(PhantomData<R>);
 
-impl<'a, R: CoerceV2<'a>> CoerceV2<'a> for Optional<R> {
+impl<'a, R: Coerce<'a>> Coerce<'a> for Optional<R> {
     type Output = Option<R::Output>;
 
-    fn coercev2_input(
+    fn coerce_input(
         input: Input<'a>,
-        context: &mut CoercionV2Context,
-    ) -> Result<Self::Output, CoercionV2Failure> {
+        context: &mut CoercionContext,
+    ) -> Result<Self::Output, CoercionFailure> {
         if input.value().is_none() {
             Ok(None)
         } else {
-            coercev2::<R>(input, context).map(Some)
+            coerce::<R>(input, context).map(Some)
         }
     }
 }
@@ -248,17 +241,17 @@ macro_rules! origin_rule {
         /// trigger its conversions or resource charges. The origin itself is preserved.
         pub struct $name<R>(PhantomData<R>);
 
-        impl<'a, R: CoerceV2<'a>> CoerceV2<'a> for $name<R> {
+        impl<'a, R: Coerce<'a>> Coerce<'a> for $name<R> {
             type Output = R::Output;
 
-            fn coercev2_input(
+            fn coerce_input(
                 input: Input<'a>,
-                context: &mut CoercionV2Context,
-            ) -> Result<Self::Output, CoercionV2Failure> {
+                context: &mut CoercionContext,
+            ) -> Result<Self::Output, CoercionFailure> {
                 if input.origin() != Origin::$origin {
-                    return Err(CoercionV2Failure::mismatch($description));
+                    return Err(CoercionFailure::mismatch($description));
                 }
-                coercev2::<R>(input, context)
+                coerce::<R>(input, context)
             }
         }
     };

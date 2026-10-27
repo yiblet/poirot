@@ -67,12 +67,12 @@ fn days(y: i32, m: i32, d: i32) -> i64 {
 }
 /// Call after the ordinary numeric parser rejects the text. `default_year` is
 /// the frozen replacement for the source formatter's class-initialization year.
-pub fn coercev2_date_time(text: &str, context: Context) -> Outcome {
-    coercev2_date_time_with_effects(text, context).0
+pub fn coerce_date_time(text: &str, context: Context) -> Outcome {
+    coerce_date_time_with_effects(text, context).0
 }
 /// Retains context effects when parsing aborts on an unsupported capability.
 /// This permits callers to trace failed context guards without inferring fields.
-pub fn coercev2_date_time_with_effects(text: &str, context: Context) -> (Outcome, Effects) {
+pub fn coerce_date_time_with_effects(text: &str, context: Context) -> (Outcome, Effects) {
     let mut effects = Effects::default();
     let outcome = parse_inner(text, context, &mut effects, false);
     (outcome, effects)
@@ -200,7 +200,7 @@ mod tests {
         }
     }
     fn valid(text: &str, year: i32) -> (f64, Effects) {
-        match coercev2_date_time(text, context(year)) {
+        match coerce_date_time(text, context(year)) {
             Outcome::Valid { value, effects } => (value, effects),
             other => panic!("{text:?}: {other:?}"),
         }
@@ -240,7 +240,7 @@ mod tests {
             "1 Jan 20242-Jan-2024",
             "2023 1-Jan-2024",
         ] {
-            assert_eq!(coercev2_date_time(text, context(2000)), Outcome::Rejected);
+            assert_eq!(coerce_date_time(text, context(2000)), Outcome::Rejected);
         }
     }
     #[test]
@@ -285,7 +285,7 @@ mod tests {
             "1/2/2024",
         ] {
             assert_eq!(
-                coercev2_date_time(text, context(2000)),
+                coerce_date_time(text, context(2000)),
                 Outcome::Rejected,
                 "{text:?}"
             );
@@ -293,7 +293,7 @@ mod tests {
     }
     #[test]
     fn unsupported_policies_are_distinct() {
-        let (outcome, effects) = coercev2_date_time_with_effects("1 nope", context(2024));
+        let (outcome, effects) = coerce_date_time_with_effects("1 nope", context(2024));
         assert_eq!(outcome, Outcome::Rejected);
         assert_eq!(
             effects,
@@ -302,7 +302,7 @@ mod tests {
                 ..Effects::default()
             }
         );
-        let (outcome, effects) = coercev2_date_time_with_effects("1 Jan", context(0));
+        let (outcome, effects) = coerce_date_time_with_effects("1 Jan", context(0));
         assert!(matches!(outcome, Outcome::Unsupported(_)));
         assert_eq!(
             effects,
@@ -315,17 +315,17 @@ mod tests {
         let mut c = context(2024);
         c.locale = LocalePolicy::Unsupported;
         assert!(matches!(
-            coercev2_date_time("1 Jan 2024", c),
+            coerce_date_time("1 Jan 2024", c),
             Outcome::Unsupported(_)
         ));
         c = context(2024);
         c.timezone = TimezonePolicy::Unsupported;
         assert!(matches!(
-            coercev2_date_time("1 Jan 2024", c),
+            coerce_date_time("1 Jan 2024", c),
             Outcome::Unsupported(_)
         ));
         assert!(matches!(
-            coercev2_date_time("12:00", c),
+            coerce_date_time("12:00", c),
             Outcome::Valid { .. }
         ));
     }
@@ -346,7 +346,7 @@ pub enum CalendarTextPlan<'a> {
     Formatter,
 }
 /// Inspect modern calendar text without reading workbook or clock context.
-pub fn coercev2_calendar_text_plan(
+pub fn coerce_calendar_text_plan(
     input: &str,
 ) -> Result<CalendarTextPlan<'_>, crate::coercion::CellError> {
     let input = input.trim();
@@ -384,7 +384,7 @@ pub enum CalendarEpoch {
 }
 /// Convert a validated civil argument to its workbook serial. Civil text does
 /// not invent February 29, 1900; serial values retain that separate Excel slot.
-pub fn coercev2_calendar_serial(
+pub fn coerce_calendar_serial(
     date: crate::coercion::dates::calendar::Date,
     system: CalendarEpoch,
 ) -> Result<f64, crate::coercion::CellError> {
@@ -478,13 +478,13 @@ mod calendar_tests {
             ),
         ] {
             assert_eq!(
-                coercev2_calendar_serial(date, CalendarEpoch::Excel1900),
+                coerce_calendar_serial(date, CalendarEpoch::Excel1900),
                 Ok(expected)
             );
             // The phantom 1900 slot changes the difference before March 1900.
             let offset = if expected < 60. { 1461. } else { 1462. };
             assert_eq!(
-                coercev2_calendar_serial(date, CalendarEpoch::Excel1904),
+                coerce_calendar_serial(date, CalendarEpoch::Excel1904),
                 Ok(expected - offset)
             );
         }
@@ -506,7 +506,7 @@ mod calendar_tests {
             },
         ] {
             assert_eq!(
-                coercev2_calendar_serial(date, CalendarEpoch::Excel1900),
+                coerce_calendar_serial(date, CalendarEpoch::Excel1900),
                 Err(crate::coercion::CellError::Value)
             );
         }
@@ -519,14 +519,14 @@ mod calendar_tests {
             ("1/2/2020 12:00:00.500", 0.5 + 0.5 / 86400.),
         ] {
             let CalendarTextPlan::Civil { fraction, .. } =
-                coercev2_calendar_text_plan(input).unwrap()
+                coerce_calendar_text_plan(input).unwrap()
             else {
                 panic!("calendar expected")
             };
             assert_eq!(fraction, expected);
         }
         for input in ["1/2/2020 garbage", "1/2/2020 32 12:00", "1/2/2020 24:01"] {
-            assert!(coercev2_calendar_text_plan(input).is_err(), "{input}");
+            assert!(coerce_calendar_text_plan(input).is_err(), "{input}");
         }
     }
 }

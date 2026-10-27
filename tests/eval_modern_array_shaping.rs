@@ -6,10 +6,8 @@
 //! https://support.microsoft.com/en-us/excel/functions/choosecols-function
 //! https://support.microsoft.com/en-us/excel/functions/chooserows-function
 //! https://support.microsoft.com/en-us/excel/functions/expand-function
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn at(s: &str) -> EvaluationTarget {
     EvaluationTarget {

@@ -1,20 +1,37 @@
-use super::*;
-use crate::eval::*;
+use super::builtin_adapters::builtins;
+use super::families::{
+    DateAdapter, FinancialAdapter, InformationAdapter, LogicalAdapter, MathAdapter,
+    ReferenceAdapter, TextAdapter,
+};
+use super::interface::{CallContext, FunctionAdapter, FunctionParameters};
+use crate::eval::compile;
+use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
+use crate::eval::config::EvaluationInputs;
+use crate::eval::coordinates::EvaluationTarget;
+use crate::eval::functions::registry::FUNCTION_DESCRIPTORS;
+use crate::eval::limits::{CapabilityId, EvaluationBudgets, EvaluationFailure};
+use crate::eval::run::{EvaluationRun, WorkbookView};
+use crate::eval::session::Session;
+use crate::model::{CellAddress, CellError, CellValue, Workbook};
+use poirot_functions::scalar::{Input, ParamVec};
 
 fn workbook() -> Workbook {
     let mut workbook = Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();
     workbook
 }
+
 fn target() -> EvaluationTarget {
     EvaluationTarget {
         sheet: 0,
         address: CellAddress { row: 0, col: 0 },
     }
 }
-fn expression(source: &str) -> bytecode::Compiled {
-    bytecode::compile(&poirot_parsing::formula::parse_formula(source).unwrap()).unwrap()
+
+fn expression(source: &str) -> compile::bytecode::Compiled {
+    compile::bytecode::compile(&poirot_parsing::formula::parse_formula(source).unwrap()).unwrap()
 }
+
 fn call(
     adapter: &impl FunctionAdapter,
     workbook: &Workbook,
@@ -59,6 +76,41 @@ fn composed_names_preserve_every_catalog_entry_and_alias() {
     );
     assert!(adapters.resolve(&"_XLFN.IFNA".into()).is_none());
     assert!(adapters.resolve(&"_xlfn.SUM".into()).is_none());
+}
+
+#[test]
+fn catalog_name_resolution_matches_the_composed_builtin_registry() {
+    let registry = super::builtin_adapters::builtin_registry();
+    for descriptor in FUNCTION_DESCRIPTORS
+        .iter()
+        .chain(crate::eval::functions::registry::EXCEL_DESCRIPTORS)
+    {
+        let name = descriptor.name;
+        for spelling in [
+            name.to_string(),
+            name.to_ascii_lowercase(),
+            format!("_xlfn.{name}"),
+            format!("_XLFN.{name}"),
+            format!("_xlfn._xlws.{name}"),
+        ] {
+            let spelling = poirot_parsing::formula::FunctionName::from(spelling.as_str());
+            assert_eq!(
+                crate::eval::functions::registry::resolve_function(&spelling)
+                    .map(|entry| (entry.name, entry.handler)),
+                registry
+                    .resolve(&spelling)
+                    .map(|entry| (entry.name, entry.handler)),
+                "{spelling:?}"
+            );
+            assert_eq!(
+                crate::eval::functions::registry::resolve_excel_function(&spelling),
+                registry
+                    .resolve_profile(&spelling)
+                    .map(|entry| entry.handler),
+                "{spelling:?}"
+            );
+        }
+    }
 }
 
 #[test]
@@ -145,7 +197,10 @@ fn forcing_a_deferred_input_once_does_not_repeat_randomness() {
         context.scalar(first).unwrap(),
         context.scalar(second).unwrap()
     );
-    assert_eq!(session.budget.usage.random_accesses[0].draws, 1);
+    assert_eq!(
+        session.state.runtime.budget.usage.random_accesses[0].draws,
+        1
+    );
 }
 
 #[test]
@@ -171,7 +226,7 @@ fn direct_call_keeps_operational_failures_separate_and_restores_lifecycle() {
             ..
         })
     ));
-    assert!(run.session.consumer.is_none());
+    assert!(run.session.state.runtime.stack.consumer.is_none());
     assert_eq!(
         run.call(
             target(),
@@ -205,7 +260,7 @@ fn distinct_random_arguments_and_later_invocations_draw_independently() {
         )
         .unwrap();
         assert_eq!(
-            run.session.budget.usage.random_accesses[0].draws,
+            run.session.state.runtime.budget.usage.random_accesses[0].draws,
             expected_draws
         );
     }
@@ -217,7 +272,10 @@ fn distinct_random_arguments_and_later_invocations_draw_independently() {
             .collect(),
     )
     .unwrap();
-    assert_eq!(run.session.budget.usage.random_accesses[0].draws, 4);
+    assert_eq!(
+        run.session.state.runtime.budget.usage.random_accesses[0].draws,
+        4
+    );
 }
 
 #[test]
@@ -228,7 +286,7 @@ fn deferred_input_keeps_missing_distinct_from_a_blank_value() {
         session: &mut session,
         target: target(),
     };
-    let expression = bytecode::compile(&poirot_parsing::formula::Expr::Missing).unwrap();
+    let expression = compile::bytecode::compile(&poirot_parsing::formula::Expr::Missing).unwrap();
     assert!(context.input(&expression).force().unwrap().is_missing());
 }
 
@@ -236,7 +294,7 @@ fn deferred_input_keeps_missing_distinct_from_a_blank_value() {
 fn borrowed_bytecode_arguments_force_once_and_skip_other_blocks() {
     let workbook = workbook();
     let syntax = poirot_parsing::formula::parse_formula("IF(TRUE,RAND(),1/0)").unwrap();
-    let program = crate::eval::bytecode::compile(&syntax).unwrap();
+    let program = crate::eval::compile::bytecode::compile(&syntax).unwrap();
     let (ip, invoke) = program
         .template
         .code
@@ -244,7 +302,7 @@ fn borrowed_bytecode_arguments_force_once_and_skip_other_blocks() {
         .enumerate()
         .find(|(_, instruction)| instruction.opcode.is_call())
         .unwrap();
-    let parameters = FunctionParameters(crate::eval::ArgumentsRef::Bytecode {
+    let parameters = FunctionParameters(crate::eval::vm::ArgumentsRef::Bytecode {
         program: &program,
         first: ip + 2,
         count: invoke.b as usize,
@@ -262,8 +320,11 @@ fn borrowed_bytecode_arguments_force_once_and_skip_other_blocks() {
         context.scalar(first).unwrap(),
         context.scalar(repeated).unwrap()
     );
-    assert_eq!(session.budget.usage.random_accesses[0].draws, 1);
-    assert!(session.runtime.vm.is_idle());
+    assert_eq!(
+        session.state.runtime.budget.usage.random_accesses[0].draws,
+        1
+    );
+    assert!(session.state.runtime.vm.is_idle());
 }
 
 #[test]

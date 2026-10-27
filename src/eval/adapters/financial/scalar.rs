@@ -1,46 +1,64 @@
 //! Declarative admission for loan, dollar-conversion, and monetary-format kernels.
 use crate::eval::adapters::{
     elementwise::{
-        self, Broadcast, Kernel, MemberContext, NumericErrorAdmission, NumericParameter as P,
+        self, Broadcast, Kernel, MemberContext, NumericErrorAdmission, NumericParameter,
         NumericSignature, Variadic,
     },
     failure::operational_only,
 };
-use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::functions::registry::{FinancialFunction, FunctionId};
+use crate::eval::host::{CallHost, ContextReads};
+use crate::eval::limits::EvalResult;
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::Num;
+use crate::model::CellValue::{Number, Text};
+use crate::model::{CellAddress, CellValue};
 use poirot_functions::financial as domain;
 
 /// Adapts payment, annuity, and interest-rate functions to broadcast execution.
 /// The parameter table supplies each function's defaults before the independent financial calculation runs.
 struct ScalarFinance(FinancialFunction);
+
 impl Kernel for ScalarFinance {
     type Signature = Variadic<Broadcast>;
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use FinancialFunction::*;
-        let parameters: &[P] = match self.0 {
+        use FinancialFunction::{
+            Dollar, DollarDe, DollarFr, Fixed, Fv, Ipmt, Nper, Pmt, Ppmt, Pv, Rate,
+        };
+        let parameters: &[NumericParameter] = match self.0 {
             Fv | Pv | Pmt | Nper => &[
-                P::required(),
-                P::required(),
-                P::required(),
-                P::constant(0.0),
-                P::constant(0.0),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::constant(0.0),
+                NumericParameter::constant(0.0),
             ],
-            Ipmt | Ppmt => &[P::constant(0.0); 6],
+            Ipmt | Ppmt => &[NumericParameter::constant(0.0); 6],
             Rate => &[
-                P::required(),
-                P::required(),
-                P::required(),
-                P::constant(0.0),
-                P::constant(0.0),
-                P::constant(0.1),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::constant(0.0),
+                NumericParameter::constant(0.0),
+                NumericParameter::constant(0.1),
             ],
-            DollarDe | DollarFr => &[P::decimal(); 2],
-            Fixed => &[P::required(), P::constant(2.0), P::boolean_default(false)],
-            Dollar => &[P::required(), P::constant(2.0)],
+            DollarDe | DollarFr => &[NumericParameter::decimal(); 2],
+            Fixed => &[
+                NumericParameter::required(),
+                NumericParameter::constant(2.0),
+                NumericParameter::boolean_default(false),
+            ],
+            Dollar => &[
+                NumericParameter::required(),
+                NumericParameter::constant(2.0),
+            ],
             _ => return Err(VALUE_ERROR.into()),
         };
         let values = NumericSignature::new(parameters)
@@ -84,7 +102,7 @@ impl Kernel for ScalarFinance {
                     host.check_text(1024)?;
                     domain::fixed(n(0)?, places.floor() as i32, n(2)? != 0.0)
                 } else {
-                    let currency = host.currency_context()?;
+                    let currency = ContextReads::new(host).currency_context()?;
                     let bytes = 1024usize
                         .saturating_mul(currency.grouping_separator.len().max(1))
                         .saturating_add(currency.decimal_separator.len())
@@ -105,6 +123,7 @@ impl Kernel for ScalarFinance {
         Ok(Number(number))
     }
 }
+
 /// Execute scalar finance through the shared typed kernel runtime.
 pub(super) fn execute(
     session: &mut Session<'_>,

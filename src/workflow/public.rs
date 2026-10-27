@@ -231,22 +231,21 @@ impl Workbook {
         };
         self.model.apply(changes).map_err(CalculationError::Model)
     }
-    /// Rename a sheet and update references in cell formulas and defined names.
-    /// Unsupported formulas or invalid names leave the workbook unchanged.
+    /// Configure a rename of `sheet` (zero-based) that also updates references to it
+    /// in cell formulas and defined names. Call `apply` to perform the edit.
     pub fn rename_sheet(
         &mut self,
         sheet: usize,
         name: impl Into<String>,
-    ) -> Result<model::EditOutcome, crate::workflow::edit::EditError> {
-        let plan = crate::workflow::edit::EditPlanner::rename_sheet(
-            &self.model,
-            sheet,
-            name,
-            crate::workflow::edit::EditPolicy::default(),
-        )?;
-        self.model
-            .apply_rename_sheet_plan(&plan)
-            .map_err(crate::workflow::edit::EditError::Model)
+    ) -> crate::workflow::edit::RenameSheetBuilder<'_> {
+        crate::workflow::edit::RenameSheetBuilder::new(&mut self.model, sheet, name.into())
+    }
+    /// Configure in-place translation of references within existing formulas.
+    /// Call `apply` to perform the edit.
+    pub fn translate_formulas(
+        &mut self,
+    ) -> crate::workflow::translation_edit::TranslateFormulasBuilder<'_> {
+        crate::workflow::translation_edit::TranslateFormulasBuilder::new(&mut self.model)
     }
     /// Configure a native Poirot snapshot of this workbook.
     pub fn save_snapshot(&self) -> crate::workflow::eval::artifact::SnapshotSaveBuilder<'_> {
@@ -274,7 +273,7 @@ impl Workbook {
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 #[derive(Debug)]
-#[must_use = "Call build, to_buffer, or write_file to save the workbook"]
+#[must_use = "Call to_buffer or write_file to save the workbook"]
 pub struct XlsxSaveBuilder<'a> {
     workbook: &'a model::Workbook,
     options: io::WriteOptions,
@@ -285,48 +284,15 @@ impl<'a> XlsxSaveBuilder<'a> {
         self.options = options;
         self
     }
-    /// Validate the workbook without serializing or writing a file.
-    pub fn build(self) -> Result<SavePlan<'a>, WorkbookError> {
-        Ok(SavePlan {
-            plan: io::plan_xlsx_export(self.workbook, self.options)?,
-        })
-    }
     /// Validate and serialize the workbook to an owned buffer.
     pub fn to_buffer(self) -> Result<Vec<u8>, WorkbookError> {
-        self.build()?.to_buffer()
+        Ok(io::plan_xlsx_export(self.workbook, self.options)?.execute()?)
     }
     /// Validate and serialize before opening the destination file.
-    pub fn write_file(self, path: impl AsRef<Path>) -> Result<(), WorkbookError> {
-        self.build()?.write_file(path)
-    }
-}
-
-/// A workbook validated for XLSX output without mutating its source.
-///
-/// ```
-/// use poirot::Workbook;
-/// let mut book = Workbook::new();
-/// book.add_sheet("Data")?.set_value("A1".parse()?, 42.)?;
-/// let plan = book.save_xlsx().build()?;
-/// let bytes = plan.to_buffer()?;
-/// assert_eq!(Workbook::from_bytes(&bytes)?.sheets().len(), 1);
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-#[derive(Debug)]
-pub struct SavePlan<'a> {
-    plan: io::ExportPlan<'a, model::Workbook>,
-}
-impl SavePlan<'_> {
-    /// Serialize the validated workbook without recalculating formulas.
-    pub fn to_buffer(&self) -> Result<Vec<u8>, WorkbookError> {
-        Ok(self.plan.execute()?)
-    }
-    /// Write the serialized workbook to a file.
     ///
-    /// Serialization and resource checks finish before the destination is opened.
     /// A filesystem error can still leave a partial file; this is not an atomic
     /// file replacement.
-    pub fn write_file(&self, path: impl AsRef<Path>) -> Result<(), WorkbookError> {
+    pub fn write_file(self, path: impl AsRef<Path>) -> Result<(), WorkbookError> {
         let bytes = self.to_buffer()?;
         std::fs::write(path, bytes).map_err(WorkbookError::File)
     }

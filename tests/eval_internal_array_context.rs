@@ -1,6 +1,7 @@
 //! Collection demand retains internal shape independently of worksheet publication.
-use poirot::eval::overlay::{EvaluationContext, EvaluationPolicy, Overlay};
+use poirot::eval::overlay::Overlay;
 use poirot::eval::*;
+use poirot::eval::{EvaluationContext, EvaluationPolicy};
 use poirot::model::{CellError, CellValue, Workbook};
 
 fn target(cell: &str) -> EvaluationTarget {
@@ -49,7 +50,7 @@ fn internal_array_shape_survives_scalar_result_publication() {
                 ("SUMPRODUCT(IF(TRUE,A1:A2*B1:B2,1/0))", 31.),
             ] {
                 let prepared = compiler.compile_formula(formula, &policy);
-                let bound = bound::FormulaPlan::bind(
+                let bound = compile::bound::FormulaPlan::bind(
                     &poirot_parsing::formula::parse_formula(formula).unwrap(),
                 )
                 .unwrap();

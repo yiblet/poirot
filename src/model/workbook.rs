@@ -129,7 +129,7 @@ impl Workbook {
             .last_mut()
             .ok_or_else(|| ModelError("worksheet insertion failed".into()))
     }
-    /// Metadata-only rename. Use a higher-layer edit planner to preserve formula references.
+    /// Metadata-only rename. Use `poirot::Workbook::rename_sheet` to preserve formula references.
     pub fn rename_sheet(
         &mut self,
         index: usize,

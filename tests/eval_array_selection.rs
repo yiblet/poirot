@@ -3,10 +3,8 @@
 //! https://support.microsoft.com/en-us/excel/functions/sort-function
 //! https://support.microsoft.com/en-us/excel/functions/sortby-function
 //! https://support.microsoft.com/en-us/excel/functions/unique-function
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn at(s: &str) -> EvaluationTarget {
     EvaluationTarget {

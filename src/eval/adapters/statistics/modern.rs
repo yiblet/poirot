@@ -1,15 +1,32 @@
 //! Scalar parameter lifting for documented modern distributions.
 use crate::eval::adapters::{
-    elementwise::{self, Broadcast, Kernel, MemberContext, NumericParameter as P, Variadic},
+    elementwise::{self, Broadcast, Kernel, MemberContext, NumericParameter, Variadic},
     failure::operational_only,
 };
+use crate::eval::functions::registry::{FunctionId, StatisticsFunction};
 use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::limits::{CapabilityId, EvalResult};
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::{NA, Num};
+use crate::model::CellValue::Number;
+use crate::model::{CellAddress, CellError, CellValue};
 use poirot_functions::statistics::modern::{self as kernel, DistributionKind as Kind};
 use poirot_functions::statistics::{modern_inverse as inverse, modern_tails::Tail};
+
 /// Identify the dedicated modern distribution handlers.
 pub(super) fn handles(function: StatisticsFunction) -> bool {
-    use StatisticsFunction::*;
+    use StatisticsFunction::{
+        BetaDist, BetaDistLegacy, BetaInv, BetaInvLegacy, BinomDist, BinomDistLegacy,
+        BinomDistRange, BinomInv, BinomInvLegacy, ChisqDist, ChisqDistRt, ChisqDistRtLegacy,
+        ChisqInv, ChisqInvRt, ChisqInvRtLegacy, ConfidenceNorm, ConfidenceNormLegacy, ConfidenceT,
+        ExponDist, ExponDistLegacy, FDist, FDistRt, FDistRtLegacy, FInv, FInvRt, FInvRtLegacy,
+        Gamma, GammaDist, GammaDistLegacy, GammaInv, GammaInvLegacy, Gammaln, GammalnPrecise,
+        Gauss, HypgeomDist, HypgeomDistLegacy, LognormDist, LognormDistLegacy, LognormInv,
+        LognormInvLegacy, NegbinomDist, NegbinomDistLegacy, Phi, TInv, TInv2T, TInv2TLegacy,
+        WeibullDist, WeibullDistLegacy,
+    };
     matches!(
         function,
         BetaDistLegacy
@@ -62,6 +79,7 @@ pub(super) fn handles(function: StatisticsFunction) -> bool {
             | WeibullDist
     )
 }
+
 /// Map numerical search exhaustion according to the selected worksheet contract.
 fn nonconvergence(function: StatisticsFunction) -> CellError {
     if matches!(
@@ -79,6 +97,7 @@ fn nonconvergence(function: StatisticsFunction) -> CellError {
         Num
     }
 }
+
 fn failure<E: Into<FunctionFailure>>(
     function: StatisticsFunction,
     host: &CallHost<'_, '_>,
@@ -94,55 +113,92 @@ fn failure<E: Into<FunctionFailure>>(
         ),
     }
 }
+
 /// Adapts modern probability functions to broadcast traversal and declared numeric conversion rules.
 /// Each output calls an independent distribution algorithm with evaluator work metering.
 struct Distribution(StatisticsFunction);
+
 impl Kernel for Distribution {
     type Signature = Variadic<Broadcast>;
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use StatisticsFunction::*;
+        use StatisticsFunction::{
+            BetaDist, BetaDistLegacy, BetaInv, BetaInvLegacy, BinomDist, BinomDistLegacy,
+            BinomDistRange, BinomInv, BinomInvLegacy, ChisqDist, ChisqDistRt, ChisqDistRtLegacy,
+            ChisqInv, ChisqInvRt, ChisqInvRtLegacy, ConfidenceNorm, ConfidenceNormLegacy,
+            ConfidenceT, ExponDist, ExponDistLegacy, FDist, FDistRt, FDistRtLegacy, FInv, FInvRt,
+            FInvRtLegacy, Gamma, GammaDist, GammaDistLegacy, GammaInv, GammaInvLegacy, Gammaln,
+            GammalnPrecise, Gauss, HypgeomDist, HypgeomDistLegacy, LognormDist, LognormDistLegacy,
+            LognormInv, LognormInvLegacy, NegbinomDist, NegbinomDistLegacy, Phi, TInv, TInv2T,
+            TInv2TLegacy, WeibullDist, WeibullDistLegacy,
+        };
         let function = self.0;
-        let parameters: &[P] = match function {
+        let parameters: &[NumericParameter] = match function {
             BetaDistLegacy | BetaInv | BetaInvLegacy => &[
-                P::required(),
-                P::required(),
-                P::required(),
-                P::constant(0.0),
-                P::constant(1.0),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::constant(0.0),
+                NumericParameter::constant(1.0),
             ],
             BetaDist => &[
-                P::required(),
-                P::required(),
-                P::required(),
-                P::boolean(),
-                P::constant(0.0),
-                P::constant(1.0),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::boolean(),
+                NumericParameter::constant(0.0),
+                NumericParameter::constant(1.0),
             ],
-            BinomDistRange => &[P::required(), P::required(), P::required(), P::prior(2)],
-            Phi | Gauss | Gamma | Gammaln | GammalnPrecise => &[P::required()],
+            BinomDistRange => &[
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::prior(2),
+            ],
+            Phi | Gauss | Gamma | Gammaln | GammalnPrecise => &[NumericParameter::required()],
             ChisqInv | ChisqInvRt | ChisqInvRtLegacy | TInv | TInv2T | TInv2TLegacy
-            | ChisqDistRt | ChisqDistRtLegacy => &[P::required(), P::required()],
-            ExponDist | ExponDistLegacy | ChisqDist => {
-                &[P::required(), P::required(), P::boolean()]
+            | ChisqDistRt | ChisqDistRtLegacy => {
+                &[NumericParameter::required(), NumericParameter::required()]
             }
-            BinomDist | BinomDistLegacy | WeibullDist | WeibullDistLegacy | LognormDist
-            | GammaDist | GammaDistLegacy | FDist | NegbinomDist => {
-                &[P::required(), P::required(), P::required(), P::boolean()]
-            }
-            HypgeomDist => &[
-                P::required(),
-                P::required(),
-                P::required(),
-                P::required(),
-                P::boolean(),
+            ExponDist | ExponDistLegacy | ChisqDist => &[
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::boolean(),
             ],
-            HypgeomDistLegacy => &[P::required(), P::required(), P::required(), P::required()],
-            GammaInv | GammaInvLegacy => &[P::nontext(), P::nontext(), P::nontext()],
-            _ => &[P::required(), P::required(), P::required()],
+            BinomDist | BinomDistLegacy | WeibullDist | WeibullDistLegacy | LognormDist
+            | GammaDist | GammaDistLegacy | FDist | NegbinomDist => &[
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::boolean(),
+            ],
+            HypgeomDist => &[
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::boolean(),
+            ],
+            HypgeomDistLegacy => &[
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+            ],
+            GammaInv | GammaInvLegacy => &[
+                NumericParameter::nontext(),
+                NumericParameter::nontext(),
+                NumericParameter::nontext(),
+            ],
+            _ => &[
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+            ],
         };
         let numbers = arguments.numbers(context, parameters)?;
         let n = |index, _default: Option<f64>| numbers.get(index);
@@ -345,6 +401,7 @@ pub(super) fn execute(
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn legacy_student_search_exhaustion_is_na_without_changing_modern_policy() {
         assert_eq!(nonconvergence(StatisticsFunction::TInv2TLegacy), NA);

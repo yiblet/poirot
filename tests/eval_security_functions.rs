@@ -1,8 +1,6 @@
 //! Public security contracts derived from documented equations and independent calendars.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, DateSystem, Workbook};
 fn at(cell: &str) -> EvaluationTarget {
     EvaluationTarget {

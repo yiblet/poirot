@@ -104,7 +104,7 @@ fn roman_all_forms_keep_formatter_decoder_inverse() {
         for form in 0..=4 {
             let text = poirot_functions::text::roman(number, form);
             assert_eq!(
-                poirot_functions::coercion::roman::coercev2_arabic_text(&text),
+                poirot_functions::coercion::roman::coerce_arabic_text(&text),
                 Ok(i32::from(number)),
                 "{number}, {form}: {text}"
             );

@@ -1,10 +1,8 @@
 //! Independently authored tests of stored function names from MS-XLSX §2.2.3.
 //! https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/5d1b6d44-6fc1-4ecd-8fef-0b27406cc2bf
 //! Retrieved 2026-10-21. No upstream implementation or tests reused.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn at(cell: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -87,7 +85,9 @@ fn worksheet_namespace_is_exact_and_does_not_admit_unknown_functions() {
 }
 #[test]
 fn explicitly_bound_extensions_keep_precedence_and_source_spelling() {
-    use poirot::eval::{bound::FormulaPlan, extensions::*, registry::Arity};
+    use poirot::eval::{
+        compile::bound::FormulaPlan, functions::extensions::*, functions::registry::Arity,
+    };
     let mut registry = ExtensionRegistry::new();
     registry
         .register(

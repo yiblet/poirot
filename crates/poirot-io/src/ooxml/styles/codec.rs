@@ -1,7 +1,10 @@
 //! Shared checked lexical mappings for ordinary SpreadsheetML style records.
 use super::super::xml::attr;
 use crate::IoError;
-use crate::*;
+use crate::{
+    BorderLine, ColorSource, FontFamily, FontScheme, HorizontalAlignment, IndexedColor,
+    PatternType, ReadingOrder, StyleColor, ThemeColor, Tint, Underline, VerticalAlignment,
+};
 use quick_xml::events::BytesStart;
 
 /// Exact OOXML token mapping for a supported named choice.

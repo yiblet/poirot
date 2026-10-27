@@ -3,13 +3,13 @@ use crate::{
     Error,
     baseline::Baseline,
     invalid,
-    model::*,
+    model::{CaseMetadata, CaseResult, Change, Observation, Outcome, Source, digest},
     report::{self, Format},
     selection::Selection,
     skips::Skips,
     sources::{self, TestSuite},
 };
-use rayon::prelude::*;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, BTreeSet},

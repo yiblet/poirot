@@ -153,8 +153,9 @@ fn scalar_and_broadcast_logical_kernels_follow_documented_contracts() {
 /// Edits to selected fallback cells invalidate recovery without reading inactive cells.
 #[test]
 fn recovery_overlay_tracks_source_and_selected_fallback_members() {
+    use poirot::eval::EvaluationContext;
     use poirot::eval::EvaluationTarget;
-    use poirot::eval::overlay::{EvaluationContext, Overlay};
+    use poirot::eval::overlay::Overlay;
     let target = |address: &str| EvaluationTarget {
         sheet: 0,
         address: address.parse().unwrap(),

@@ -176,16 +176,16 @@ pub fn complex(
     format_number: impl Fn(f64) -> String,
 ) -> Result<String> {
     // TODO(coercion-non-argument): [LOW] Pinned result spelling intentionally retains historical sign and zero behavior.
-    crate::coercion::complex::coerce_complex_pinned_result(real, imaginary, suffix, format_number)
+    crate::coercion::complex::convert_complex_pinned_result(real, imaginary, suffix, format_number)
         .map_err(complex_error)
 }
 /// Retained pinned imaginary coefficient text.
 pub fn imaginary(text: &str) -> Result<String> {
-    crate::coercion::complex::coercev2_complex_pinned_imaginary(text).map_err(complex_error)
+    crate::coercion::complex::coerce_complex_pinned_imaginary(text).map_err(complex_error)
 }
 /// Retained pinned real coefficient text.
 pub fn imreal(text: &str) -> Result<String> {
-    crate::coercion::complex::coercev2_complex_pinned_real(text).map_err(complex_error)
+    crate::coercion::complex::coerce_complex_pinned_real(text).map_err(complex_error)
 }
 fn complex_error(error: crate::coercion::CellError) -> EngineeringError {
     if error == crate::coercion::CellError::Value {

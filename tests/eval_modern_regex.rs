@@ -1,10 +1,8 @@
 //! Independent contracts from Microsoft's REGEXTEST/REGEXEXTRACT/REGEXREPLACE
 //! function pages (https://support.microsoft.com/en-us/excel/functions/regexextract-function).
 //! Examples and expected strings were authored here; no upstream fixtures reused.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, ExcelText, Workbook};
 fn at(cell: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -330,7 +328,7 @@ fn pinned_poi_profile_does_not_claim_modern_regex_support() {
 }
 #[test]
 fn catalog_preserves_typed_results_and_possible_numeric_coercion_effects() {
-    use poirot::eval::registry::{DependencyPolicy, ResultRule, descriptors_for_policy};
+    use poirot::eval::functions::registry::{DependencyPolicy, ResultRule, descriptors_for_policy};
     use poirot::model::{FormulaType, ScalarKinds};
     let scalar = FormulaType::scalar(ScalarKinds::TEXT);
     for (name, rule) in [

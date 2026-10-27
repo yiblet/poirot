@@ -105,7 +105,8 @@ fn imported_styles_reach_evaluation_and_survive_edits_reset_flush_and_snapshots(
                 .from_bytes(&source)
                 .unwrap()
                 .into_artifact()
-                .workbook
+                .into_parts()
+                .0
         ),
         book
     );

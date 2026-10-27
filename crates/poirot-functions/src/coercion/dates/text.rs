@@ -57,7 +57,7 @@ impl<'a> DateTextPlan<'a> {
     /// Resolve calendar arguments in dependency order. Impossible fields reject
     /// under a leap-year probe before the host acquires a clock; explicit years
     /// never request the continuation. February 29 remains year-dependent.
-    pub fn coercev2_resolve<E: From<CellError>>(
+    pub fn coerce_resolve<E: From<CellError>>(
         self,
         order: DateOrder,
         default_year: impl FnOnce() -> Result<i64, E>,

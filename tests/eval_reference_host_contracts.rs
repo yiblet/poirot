@@ -94,7 +94,7 @@ fn index_operational_failures_survive_semantic_errors_and_admission() {
 
 #[test]
 fn index_observes_arguments_in_source_order_and_completes_failed_frames() {
-    use poirot::eval::{execution_observation::*, execution_retention::*, *};
+    use poirot::eval::{observe::*, *};
     let mut workbook = Workbook::new();
     workbook.add_sheet("S").unwrap();
     let policy = PreparationPolicy::default();

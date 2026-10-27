@@ -1,24 +1,16 @@
 //! Search family host integration.
+//!
+//! Depends on: host (CallHost), session (reads and coercion), vm (deferred arguments),
+//! spill (SpillDemand and SpillQuery for spilled lookup ranges), config (policies),
+//! functions (identities), limits (budgets), values (value channels and references),
+//! ports (dependency reads), inputs (effective workbook cells) and reuse (retained
+//! lookup prefixes); sibling lookup (classic lookup execution).
 
+/// Search family dispatch and its shared helpers.
+mod dispatch;
 /// Lookup admission, sparse candidate traversal, and result projection.
 pub(in crate::eval) mod execution;
-
 /// Source-ordered classic lookup handler.
 mod handler;
 
-use crate::eval::*;
-
-/// Route search helpers and classic calls to their family-owned handlers.
-pub(in crate::eval) fn execute(
-    session: &mut Session<'_>,
-    sheet: usize,
-    address: CellAddress,
-    function: SearchFunction,
-    arguments: ArgumentsRef<'_>,
-) -> EvalResult<Value> {
-    let mut host = host::CallHost::new(session, sheet, address, arguments);
-    if let Some(helper) = function.helper() {
-        return adapters::lookup::execute_host(host, helper);
-    }
-    handler::execute(&mut host, function)
-}
+pub(in crate::eval) use dispatch::execute;

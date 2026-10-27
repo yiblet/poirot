@@ -2,10 +2,8 @@
 //! https://support.microsoft.com/en-us/office/sumif-function-169b8c99-c05c-4483-a712-1697a653039b
 //! https://support.microsoft.com/en-us/office/sumproduct-function-16753e75-9f68-4874-94ac-4d2145a2fd2e
 //! Exact ordering, lazy evaluation, dependency invalidation and observer behavior are Poirot contracts.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 
 /// Address one public workbook target.
@@ -420,12 +418,11 @@ fn external_observers_receive_reads_and_arrays_retain_their_channel() {
     for cell in ["D3", "D4"] {
         assert_eq!(direct.cell(at(0, cell)).unwrap(), 11.0.into());
     }
-    let mut trace =
-        execution_retention::BoundedExecutionTrace::new(execution_retention::RetentionLimits {
-            events: 1000,
-            scalar_values: 1000,
-            text_bytes: 10000,
-        });
+    let mut trace = observe::BoundedExecutionTrace::new(observe::RetentionLimits {
+        events: 1000,
+        scalar_values: 1000,
+        text_bytes: 10000,
+    });
     let view = WorkbookView::new(&book, &plan, &policy).unwrap();
     let mut run = EvaluationRun::new(view, Default::default(), Default::default())
         .unwrap()
@@ -435,7 +432,7 @@ fn external_observers_receive_reads_and_arrays_retain_their_channel() {
     }
     drop(run);
     assert!(!trace.events().is_empty());
-    let registry = extensions::ExtensionRegistry::new();
+    let registry = functions::extensions::ExtensionRegistry::new();
     let mut overlay = Overlay::with_workbook(&book)
         .with_extensions(&registry)
         .build()

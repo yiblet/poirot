@@ -30,8 +30,8 @@ fn test_comparison(op: Comparison, c: Ordering) -> bool {
 }
 
 /// Parse numeric criterion text using the family's supported grammar.
-pub fn coercev2_criteria_number_text(s: &str) -> Option<f64> {
-    crate::coercion::compatibility::coercev2_criteria_number_text(s)
+pub fn coerce_criteria_number_text(s: &str) -> Option<f64> {
+    crate::coercion::compatibility::coerce_criteria_number_text(s)
 }
 /// Parsed conditional-aggregation comparison and operand, such as `>=5` or a text pattern.
 #[derive(Clone, Debug)]
@@ -86,7 +86,7 @@ impl Criterion {
             (Cell::Blank, _) => false,
             (Cell::Number(a), Cell::Number(b)) => test_comparison(op, b.total_cmp(a)),
             (Cell::Number(a), Cell::Text(b)) => match op {
-                Comparison::None | Comparison::Eq => coercev2_criteria_number_text(b) == Some(*a),
+                Comparison::None | Comparison::Eq => coerce_criteria_number_text(b) == Some(*a),
                 Comparison::Ne => true,
                 _ => false,
             },

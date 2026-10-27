@@ -1,0 +1,313 @@
+{
+  "schema_version": 1,
+  "workbook": {
+    "sheets": [
+      "S"
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "Formatted numeric boundary: \"1/02/2020\"*1",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "\"1/02/2020\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 43832.0
+          }
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: VALUE(\"1/02/2020\")",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "VALUE(\"1/02/2020\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 43832.0
+          }
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: ABS(\"1/02/2020\")",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "ABS(\"1/02/2020\")"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 43832.0
+          }
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: \"- 1\"*1",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "\"- 1\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": -1.0
+          }
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: \"$- 1\"*1",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "\"$- 1\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": -1.0
+          }
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: \"1-\"*1",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "\"1-\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": -1.0
+          }
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: \"(100)%\"*1",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "\"(100)%\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": -1.0
+          }
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: \" (100) % \"*1",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "\" (100) % \"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": -1.0
+          }
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: \"% 12.5\"*1",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "\"% 12.5\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: \"0:00.0005\"*1",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "\"0:00.0005\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 5.78703703703704e-09
+          },
+          "tolerance": 5e-24
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs.",
+        "The numeric expectation comes from Calc's 15-significant-digit OOXML cache. Absolute tolerance is half the unit of its final reported decimal digit; this accounts for serialization rounding, not an evaluator discrepancy."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: \"00:57.1809\"*1",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "\"00:57.1809\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "number",
+            "value": 0.000661815972222222
+          },
+          "tolerance": 5e-19
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs.",
+        "The numeric expectation comes from Calc's 15-significant-digit OOXML cache. Absolute tolerance is half the unit of its final reported decimal digit; this accounts for serialization rounding, not an evaluator discrepancy."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: \"1,,2\"*1",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "\"1,,2\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs."
+      ]
+    },
+    {
+      "name": "Formatted numeric boundary: \"1,\"*1",
+      "actions": [
+        {
+          "action": "set",
+          "cell": "S!A1",
+          "content": {
+            "formula": "\"1,\"*1"
+          }
+        },
+        {
+          "action": "check",
+          "cell": "S!A1",
+          "expected": {
+            "type": "error",
+            "value": "#VALUE!"
+          }
+        }
+      ],
+      "evidence": [
+        "LibreOffice independently recalculated via tools/verify_json_scenarios_libreoffice.py on 2026-10-17. Expectations copied from typed Calc observations, not Poirot output. See ../evidence/coercion-formatted-numbers-libreoffice.json. Prefix percent and submillisecond elapsed fractions deliberately follow Calc observations where the pinned ClosedXML helper differs."
+      ]
+    }
+  ]
+}

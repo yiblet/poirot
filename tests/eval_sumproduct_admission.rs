@@ -1,8 +1,6 @@
 //! Equal-shaped SUMPRODUCT arguments request the same text/blank admission.
-use poirot::eval::{
-    overlay::{EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::Overlay;
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn target(cell: &str) -> EvaluationTarget {
     EvaluationTarget {
@@ -147,7 +145,7 @@ fn singleton_source_edits_invalidate_results_after_snapshot() {
         .set_formula(target("F1").address, "SUMPRODUCT(A1:A1,B1:B1)")
         .unwrap();
     let mut overlay = Overlay::with_workbook(&book)
-        .with_policy(poirot::eval::overlay::EvaluationPolicy {
+        .with_policy(poirot::eval::EvaluationPolicy {
             builtin: poirot::eval::BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })

@@ -1,8 +1,6 @@
 //! Native visual presentation survives sparse edits without changing calculation semantics.
-use poirot::eval::{
-    EvaluationTarget,
-    overlay::{EvaluationContext, Overlay},
-};
+use poirot::eval::overlay::Overlay;
+use poirot::eval::{EvaluationContext, EvaluationTarget};
 use poirot::model::{CellStyle, CellValue, FontSize, FontStyle, VisualStyle, Workbook};
 use std::sync::Arc;
 

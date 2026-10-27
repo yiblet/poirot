@@ -30,7 +30,7 @@ pub fn subtotal(code: i32, cells: &[SubtotalCell<'_>]) -> Result<f64, Error> {
         if !matches!(c.value, Cell::Blank) {
             nonblank += 1;
         }
-        if let Some(number) = coercev2_subtotal_member(c, kind)? {
+        if let Some(number) = coerce_subtotal_member(c, kind)? {
             nums.push(number);
         }
     }
@@ -80,6 +80,6 @@ pub fn subtotal(code: i32, cells: &[SubtotalCell<'_>]) -> Result<f64, Error> {
 }
 
 /// Origin-sensitive admission and conversion for one eligible SUBTOTAL member.
-fn coercev2_subtotal_member(cell: &SubtotalCell<'_>, kind: i32) -> Result<Option<f64>, Error> {
-    crate::coercion::criteria::coercev2_subtotal_member(cell.value, cell.referenced, kind)
+fn coerce_subtotal_member(cell: &SubtotalCell<'_>, kind: i32) -> Result<Option<f64>, Error> {
+    crate::coercion::criteria::coerce_subtotal_member(cell.value, cell.referenced, kind)
 }

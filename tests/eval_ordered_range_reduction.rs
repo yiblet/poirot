@@ -3,10 +3,8 @@
 //! Final subnormals become zero under the documented numeric fidelity policy:
 //! https://learn.microsoft.com/en-us/troubleshoot/microsoft-365-apps/excel/floating-point-arithmetic-inaccurate-result
 //! Geometry, work admission, lifetime and spill rejection are Poirot API contracts.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellValue, Workbook};
 
 fn at(address: &str) -> EvaluationTarget {
@@ -196,7 +194,7 @@ fn growing_members_enforce_conceptual_collection_limit_at_first_new_overflow() {
         // also fits this source layout, so it exercises the same finite guard.
         for warm in [false, true] {
             let mut direct = Evaluation::with_workbook(&book)
-                .with_policy(poirot::eval::overlay::EvaluationPolicy {
+                .with_policy(poirot::eval::EvaluationPolicy {
                     arrays,
                     ..Default::default()
                 })

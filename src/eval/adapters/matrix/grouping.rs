@@ -1,15 +1,26 @@
 //! Grouping orchestration over pure membership/layout and shared aggregate kernels.
 //! Contracts: <https://support.microsoft.com/en-us/excel/functions/groupby-function>
 //! <https://support.microsoft.com/en-us/excel/functions/percentof-function>
-use super::modern::failure;
 use super::selection::compare;
-use super::*;
+use crate::eval::adapters::elementwise::matrices::failure;
 use crate::eval::adapters::elementwise::{
-    FixedScalar,
+    ArgumentRole, FixedScalar, WholeCollection, collections,
     controls::{EmptyControl, IntegerControl},
+    matrices,
 };
-use crate::eval::host::{Aggregators, OperandOrigin, ScalarOperand};
-use crate::eval::registry::MatrixFunction as F;
+use crate::eval::functions::registry::MatrixFunction;
+use crate::eval::host::{
+    Aggregators, ArgumentCoercion, CallHost, NumericPolicy, OperandKind, OperandReader,
+    ScalarOperand,
+};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::session::Session;
+use crate::eval::values::{
+    FunctionFailure, FunctionResult, OperandOrigin, Value, err, numeric_outcome,
+};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellValue::{Blank, Boolean, Error, Number};
+use crate::model::{CellAddress, CellError, CellValue};
 use poirot_functions::matrix::{Axis, Budget, FieldRelationship, Matrix};
 use poirot_functions::statistics::BuiltinAggregator as A;
 
@@ -17,7 +28,7 @@ fn append<T>(values: &mut Vec<T>, value: T) -> FunctionResult<()> {
     values
         .try_reserve(1)
         .map_err(|_| EvaluationFailure::Resource {
-            kind: crate::eval::ResourceFailureKind::Allocation,
+            kind: crate::eval::limits::ResourceFailureKind::Allocation,
             capability: CapabilityId::FunctionAdapter,
             source: None,
             detail: "grouping output allocation failed".into(),
@@ -26,6 +37,7 @@ fn append<T>(values: &mut Vec<T>, value: T) -> FunctionResult<()> {
     values.push(value);
     Ok(())
 }
+
 fn reserve<T>(host: &mut CallHost<'_, '_>, count: usize) -> FunctionResult<Vec<T>> {
     host.check_values(count)?;
     let mut values = Vec::new();
@@ -34,6 +46,7 @@ fn reserve<T>(host: &mut CallHost<'_, '_>, count: usize) -> FunctionResult<Vec<T
         .map_err(|_| host.allocation_failure())?;
     Ok(values)
 }
+
 fn generated_text(
     host: &mut CallHost<'_, '_>,
     parts: &[crate::model::TextRef<'_>],
@@ -61,12 +74,14 @@ fn generated_text(
         units,
     )))
 }
+
 fn ordinal_label(
     host: &mut CallHost<'_, '_>,
     prefix: &str,
     ordinal: usize,
 ) -> FunctionResult<CellValue> {
-    let number = host.coercev2_number_to_text(ordinal as f64, NumericPolicy::PinnedPoi)?;
+    let number = ArgumentCoercion::new(host)
+        .coerce_number_to_text(ordinal as f64, NumericPolicy::PinnedPoi)?;
     generated_text(
         host,
         &[
@@ -76,12 +91,15 @@ fn ordinal_label(
         ],
     )
 }
+
 fn option(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<Option<i64>> {
     FixedScalar::at(index).optional_integer(host, EmptyControl::Omission, CellError::Value)
 }
+
 fn normalized(value: CellValue) -> CellValue {
-    poirot_functions::coercion::compatibility::coercev2_array_member(value)
+    poirot_functions::coercion::compatibility::coerce_array_member(value)
 }
+
 fn aggregate(
     host: &mut CallHost<'_, '_>,
     operation: A,
@@ -97,7 +115,9 @@ fn aggregate(
                 && (matches!(value, Number(_))
                     || (member.origin == OperandOrigin::Direct
                         && !matches!(value, Blank | Error(_))
-                        && match host.coercev2_scalar_number(value, NumericPolicy::PinnedPoi) {
+                        && match ArgumentCoercion::new(host)
+                            .coerce_scalar_number(value, NumericPolicy::PinnedPoi)
+                        {
                             Ok(_) => true,
                             Err(FunctionFailure::Spreadsheet(_)) => false,
                             Err(error) => return Err(error),
@@ -117,7 +137,7 @@ fn aggregate(
             if let Error(error) = member.value {
                 return Err(error.into());
             }
-            let units = host.coercev2_text_units(&member.value)?;
+            let units = ArgumentCoercion::new(host).coerce_text_units(&member.value)?;
             let length = output
                 .len()
                 .checked_add(units.len())
@@ -151,7 +171,9 @@ fn aggregate(
             Error(error) => V::Error(*error),
             value => V::Text {
                 numeric: if origin == Origin::Direct {
-                    match host.coercev2_scalar_number(value, NumericPolicy::PinnedPoi) {
+                    match ArgumentCoercion::new(host)
+                        .coerce_scalar_number(value, NumericPolicy::PinnedPoi)
+                    {
                         Ok(value) => Some(value),
                         Err(FunctionFailure::Spreadsheet(_)) => None,
                         Err(error) => return Err(error),
@@ -166,7 +188,7 @@ fn aggregate(
     let collection = operation.collection();
     host.check_values(operands.len())?;
     let mut numeric =
-        poirot_functions::statistics::coercev2_statistics_collection(collection, &operands)?;
+        poirot_functions::statistics::coerce_statistics_collection(collection, &operands)?;
     if matches!(operation, A::Median | A::Mode) {
         let work = poirot_functions::matrix::selection_work(numeric.len(), numeric.len(), 1)
             .ok_or_else(|| host.size_overflow())?;
@@ -185,18 +207,20 @@ fn aggregate(
             })?;
         return Ok(Number(*numeric.first().ok_or(CellError::NA)?));
     }
-    Ok(numeric_outcome::coerce_checked_numeric_result(
+    Ok(numeric_outcome::convert_checked_numeric_result(
         operation.numeric(&mut numeric)?,
     ))
 }
+
 fn ratio(subset: CellValue, total: CellValue) -> CellValue {
     match (subset, total) {
         (Error(error), _) | (_, Error(error)) => Error(error),
         (Number(_), Number(0.0)) => Error(CellError::Div0),
-        (Number(a), Number(b)) => numeric_outcome::coerce_checked_numeric_result(a / b),
+        (Number(a), Number(b)) => numeric_outcome::convert_checked_numeric_result(a / b),
         _ => Error(CellError::Value),
     }
 }
+
 fn aggregate_value(
     host: &mut CallHost<'_, '_>,
     operation: A,
@@ -207,10 +231,11 @@ fn aggregate_value(
         other => other,
     }
 }
+
 fn percentof(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
     let mut sums = reserve(host, 2)?;
     for index in 0..2 {
-        let count = host.collection_len(index)?;
+        let count = OperandReader::new(host).collection_len(index)?;
         let values = reserve(host, count)?;
         let values = collections::fold(
             host,
@@ -232,6 +257,7 @@ fn percentof(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
     )
     .into())
 }
+
 /// Separates whether grouping input contains a header from whether output should show one.
 /// These choices control record traversal and publication independently.
 struct Headers {
@@ -240,6 +266,7 @@ struct Headers {
     /// Whether to publish a field-header row.
     show: bool,
 }
+
 fn headers(host: &mut CallHost<'_, '_>, fields: usize, rows: usize) -> FunctionResult<Headers> {
     Ok(match option(host, 3)? {
         Some(0) => Headers {
@@ -259,10 +286,13 @@ fn headers(host: &mut CallHost<'_, '_>, fields: usize, rows: usize) -> FunctionR
             show: true,
         },
         None => {
-            let first = host.read_cell(1, 0, 0)?.value;
+            let first = OperandReader::new(host).read_cell(1, 0, 0)?.value;
             let consume = rows > 1
                 && first.text_ref().is_some()
-                && matches!(host.read_cell(1, 1, 0)?.value, Number(_));
+                && matches!(
+                    OperandReader::new(host).read_cell(1, 1, 0)?.value,
+                    Number(_)
+                );
             Headers {
                 consume,
                 show: fields > 1,
@@ -271,15 +301,16 @@ fn headers(host: &mut CallHost<'_, '_>, fields: usize, rows: usize) -> FunctionR
         _ => return Err(CellError::Value.into()),
     })
 }
+
 fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<Value> {
-    let key_shape = host.describe(0)?;
-    let value_shape = host.describe(1)?;
+    let key_shape = OperandReader::new(host).describe(0)?;
+    let value_shape = OperandReader::new(host).describe(1)?;
     if key_shape.sheets != 1 || value_shape.sheets != 1 || key_shape.rows != value_shape.rows {
         return Err(CellError::Value.into());
     }
     let fields = key_shape.columns;
     let value_columns = value_shape.columns;
-    let aggregators = host.aggregators(2)?;
+    let aggregators = Aggregators::resolve(host, 2)?;
     let headers = headers(host, fields, key_shape.rows)?;
     let relationship = match option(host, 7)?.unwrap_or(0) {
         0 => FieldRelationship::Hierarchy,
@@ -411,7 +442,7 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
     let results = Matrix::new(groups.len(), reductions, results).map_err(|e| failure(host, e))?;
     let mut sorts = reserve(host, fields)?;
     if host.len() > 5 && host.kind(5)? != OperandKind::Missing {
-        let shape = host.describe(5)?;
+        let shape = OperandReader::new(host).describe(5)?;
         if shape.sheets != 1 || (shape.rows != 1 && shape.columns != 1) {
             return Err(CellError::Value.into());
         }
@@ -513,6 +544,7 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
     }
     .publish(host)
 }
+
 /// Combines grouping keys, hierarchy, reductions, and layout for final worksheet publication.
 /// It borrows the intermediate results so publication can validate dimensions and add headers without rebuilding the groups.
 struct Output<'a> {
@@ -526,6 +558,7 @@ struct Output<'a> {
     value_columns: usize,
     headers: Headers,
 }
+
 impl Output<'_> {
     fn publish(self, host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
         let Self {
@@ -576,7 +609,7 @@ impl Output<'_> {
                 append(
                     &mut output,
                     if headers.consume {
-                        normalized(host.read_cell(0, 0, field)?.value)
+                        normalized(OperandReader::new(host).read_cell(0, 0, field)?.value)
                     } else {
                         ordinal_label(host, "Field", field.saturating_add(1))?
                     },
@@ -595,12 +628,12 @@ impl Output<'_> {
                     aggregators.members.len()
                 }) {
                     let value = if headers.consume {
-                        normalized(host.read_cell(1, 0, column)?.value)
+                        normalized(OperandReader::new(host).read_cell(1, 0, column)?.value)
                     } else {
                         ordinal_label(host, "Value", column.saturating_add(1))?
                     };
                     if aggregators.members.len() > 1 && !vertical {
-                        let label = host.coercev2_text_units(&value)?;
+                        let label = ArgumentCoercion::new(host).coerce_text_units(&value)?;
                         append(
                             &mut output,
                             generated_text(
@@ -680,21 +713,22 @@ impl Output<'_> {
         matrices::array(host, rows, columns, output.into_iter(), address)
     }
 }
+
 /// Execute grouping or the standalone sum ratio under normal spill and failure policies.
 pub(in crate::eval) fn execute(
-    function: F,
+    function: MatrixFunction,
     session: &mut Session<'_>,
     sheet: usize,
     address: CellAddress,
     args: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    if (function == F::Groupby && !(3..=8).contains(&args.len()))
-        || (function == F::Percentof && args.len() != 2)
+    if (function == MatrixFunction::Groupby && !(3..=8).contains(&args.len()))
+        || (function == MatrixFunction::Percentof && args.len() != 2)
     {
         return Ok(err(CellError::Value));
     }
     let mut host = CallHost::new_array_slots(session, sheet, address, args, &[0, 1, 5, 6]);
-    match if function == F::Percentof {
+    match if function == MatrixFunction::Percentof {
         percentof(&mut host)
     } else {
         groupby(&mut host, address)

@@ -1,6 +1,10 @@
 //! Typed rectangle materialization and checked array construction shared by matrix kernels.
-use crate::eval::host::{CallHost, ScalarOperand};
-use crate::eval::*;
+use crate::eval::host::{CallHost, OperandReader, ScalarOperand};
+use crate::eval::limits::CapabilityId;
+use crate::eval::values::{ArrayView, FunctionFailure, FunctionResult, VALUE_ERROR, Value};
+use crate::model::CellError::Num;
+use crate::model::CellValue::{Error, Number};
+use crate::model::{CellAddress, CellError, CellValue, MAX_COLUMNS, MAX_ROWS};
 use poirot_functions::matrix::{Budget, Matrix};
 
 /// Whether rearranged values retain blanks or normalize them to worksheet array members.
@@ -11,6 +15,7 @@ pub(in crate::eval::adapters) enum Members {
     /// Normalize blank array members while retaining all text units and errors.
     Normalized,
 }
+
 /// Admit output geometry before allocating rows or invoking a producer.
 pub(in crate::eval::adapters) fn admit(
     host: &mut CallHost<'_, '_>,
@@ -34,6 +39,7 @@ pub(in crate::eval::adapters) fn admit(
         max_work: cells,
     })
 }
+
 /// Traverse an admitted rectangle in row order, retaining operand source classification.
 pub(in crate::eval::adapters) fn collect<T>(
     host: &mut CallHost<'_, '_>,
@@ -54,7 +60,7 @@ pub(in crate::eval::adapters) fn collect<T>(
     for _ in 0..count {
         let row = rows.next().ok_or(VALUE_ERROR)?;
         for column in 0..columns {
-            let cell = host.read_cell(index, row, column)?;
+            let cell = OperandReader::new(host).read_cell(index, row, column)?;
             let value = convert(host, cell)?;
             // SAFETY: capacity is the locally checked count * columns product, reserved above;
             // the bounded loops append exactly capacity values.
@@ -66,18 +72,20 @@ pub(in crate::eval::adapters) fn collect<T>(
     }
     Matrix::new(count, columns, values).map_err(|error| failure(host, error))
 }
+
 /// Materialize one complete argument using a typed conversion without flattening its geometry.
 pub(in crate::eval::adapters) fn map<T>(
     host: &mut CallHost<'_, '_>,
     index: usize,
     convert: impl FnMut(&mut CallHost<'_, '_>, ScalarOperand) -> FunctionResult<T>,
 ) -> FunctionResult<Matrix<T>> {
-    let shape = host.describe(index)?;
+    let shape = OperandReader::new(host).describe(index)?;
     if shape.sheets != 1 {
         return Err(VALUE_ERROR.into());
     }
     collect(host, index, 0..shape.rows, shape.columns, convert)
 }
+
 /// Materialize mixed worksheet values without projecting or repairing UTF-16 data.
 pub(in crate::eval::adapters) fn matrix(
     host: &mut CallHost<'_, '_>,
@@ -88,11 +96,12 @@ pub(in crate::eval::adapters) fn matrix(
         Ok(match members {
             Members::Original => operand.value,
             Members::Normalized => {
-                poirot_functions::coercion::compatibility::coercev2_array_member(operand.value)
+                poirot_functions::coercion::compatibility::coerce_array_member(operand.value)
             }
         })
     })
 }
+
 /// Materialize numeric observations, propagating source errors without discarding positions.
 pub(in crate::eval::adapters) fn numeric(
     host: &mut CallHost<'_, '_>,
@@ -104,12 +113,13 @@ pub(in crate::eval::adapters) fn numeric(
         _ => Err(VALUE_ERROR.into()),
     })
 }
+
 /// Materialize square numeric matrices with invalid-member precedence over embedded errors.
 pub(in crate::eval::adapters) fn square(
     host: &mut CallHost<'_, '_>,
     index: usize,
 ) -> FunctionResult<Matrix<f64>> {
-    let shape = host.describe(index)?;
+    let shape = OperandReader::new(host).describe(index)?;
     let mut admission = poirot_functions::coercion::collections::MatrixAdmission::new(
         poirot_functions::coercion::collections::MatrixCollection::SquareNumeric,
         shape.rows,
@@ -117,13 +127,14 @@ pub(in crate::eval::adapters) fn square(
     );
     let matrix = map(host, index, |_, operand| {
         admission
-            .coercev2_matrix_member((&operand.value).into())
+            .coerce_matrix_member((&operand.value).into())
             .map(|value| value.unwrap_or(0.0))
             .map_err(Into::into)
     })?;
-    admission.coercev2_finish()?;
+    admission.coerce_finish()?;
     Ok(matrix)
 }
+
 /// Construct an output rectangle, reserving every row before evaluating any producer member.
 pub(in crate::eval::adapters) fn generate(
     host: &mut CallHost<'_, '_>,
@@ -153,6 +164,7 @@ pub(in crate::eval::adapters) fn generate(
     }
     Ok(Value::Array(ArrayView::anchored(output, Some(address))))
 }
+
 /// Assemble an exact row-major iterator through the common checked producer.
 pub(in crate::eval::adapters) fn array(
     host: &mut CallHost<'_, '_>,
@@ -169,6 +181,7 @@ pub(in crate::eval::adapters) fn array(
     }
     Ok(output)
 }
+
 /// Publish a pure matrix through common geometry admission and row assembly.
 pub(in crate::eval::adapters) fn publish<T>(
     host: &mut CallHost<'_, '_>,
@@ -184,6 +197,7 @@ pub(in crate::eval::adapters) fn publish<T>(
         address,
     )
 }
+
 /// Preserve pure-kernel failure categories at the common matrix service boundary.
 pub(in crate::eval::adapters) fn failure(
     host: &mut CallHost<'_, '_>,
@@ -208,9 +222,9 @@ pub(in crate::eval::adapters) fn reduce_aligned<T, M>(
     mut term: impl FnMut(&mut CallHost<'_, '_>, &mut M, ScalarOperand) -> FunctionResult<()>,
     mut combine: impl FnMut(&mut T, M),
 ) -> FunctionResult<T> {
-    let first = host.describe(0)?;
+    let first = OperandReader::new(host).describe(0)?;
     for index in 0..host.len() {
-        let shape = host.describe(index)?;
+        let shape = OperandReader::new(host).describe(index)?;
         if shape.sheets != 1
             || shape.missing
             || shape.rows != first.rows
@@ -225,7 +239,7 @@ pub(in crate::eval::adapters) fn reduce_aligned<T, M>(
         for column in 0..first.columns {
             let mut product = member();
             for index in 0..host.len() {
-                let operand = host.read_cell(index, row, column)?;
+                let operand = OperandReader::new(host).read_cell(index, row, column)?;
                 term(host, &mut product, operand)?;
             }
             combine(&mut total, product);
@@ -240,14 +254,14 @@ pub(in crate::eval::adapters) fn visit(
     index: usize,
     mut consume: impl FnMut(&mut CallHost<'_, '_>, usize, usize, ScalarOperand) -> FunctionResult<()>,
 ) -> FunctionResult<()> {
-    let shape = host.describe(index)?;
+    let shape = OperandReader::new(host).describe(index)?;
     if shape.sheets != 1 || shape.missing {
         return Err(VALUE_ERROR.into());
     }
-    if let Some(positions) = host.stored_positions(index)? {
+    if let Some(positions) = OperandReader::new(host).stored_positions(index)? {
         host.charge_work(positions.len() as u64)?;
         for (row, column) in positions {
-            let operand = host.read_cell(index, row, column)?;
+            let operand = OperandReader::new(host).read_cell(index, row, column)?;
             consume(host, row, column, operand)?;
         }
     } else {
@@ -258,7 +272,7 @@ pub(in crate::eval::adapters) fn visit(
         host.charge_work(count as u64)?;
         for row in 0..shape.rows {
             for column in 0..shape.columns {
-                let operand = host.read_cell(index, row, column)?;
+                let operand = OperandReader::new(host).read_cell(index, row, column)?;
                 consume(host, row, column, operand)?;
             }
         }

@@ -1,38 +1,69 @@
 //! Mathematical execution with shared numeric tables and collection folds.
 use crate::eval::adapters::{
     elementwise::{
-        self, Broadcast, Kernel, MemberContext, NumericParameter as P, Variadic, WholeCollection,
+        self, Broadcast, Kernel, MemberContext, NumericParameter, Variadic, WholeCollection,
         collections::{self, CollectionKernel},
     },
     failure::operational_only,
 };
-use crate::eval::host::{CallHost, NumericPolicy, OperandOrigin};
-use crate::eval::*;
+use crate::eval::functions::registry::{FunctionId, MathFunction};
+use crate::eval::host::{ArgumentCoercion, CallHost, NumericPolicy, RandomDraws};
+use crate::eval::limits::{CapabilityId, EvalResult};
+use crate::eval::session::Session;
+use crate::eval::values::{
+    FunctionFailure, FunctionResult, OperandOrigin, VALUE_ERROR, Value, err,
+};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::Num;
+use crate::model::CellValue::{Blank, Boolean, Number, Text};
+use crate::model::{CellAddress, CellValue};
 
 /// Adapts scalar math functions to broadcast traversal and ordered numeric conversion.
 /// The selected function supplies parameter defaults and the independent calculation.
 struct Numeric(MathFunction);
+
 impl Kernel for Numeric {
     type Signature = Variadic<Broadcast>;
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use MathFunction::*;
-        let parameters: &[P] = match self.0 {
+        use MathFunction::{
+            Atan2, Ceiling, CeilingMath, CeilingPrecise, Combin, Combina, Fact, Factdouble, Floor,
+            FloorMath, FloorPrecise, IsoCeiling, Log, Mod, Mround, Pi, Power, Quotient, Rand,
+            Randbetween, Round, RoundDown, RoundUp, Trunc,
+        };
+        let parameters: &[NumericParameter] = match self.0 {
             Pi | Rand => &[],
-            Log => &[P::constant(0.0), P::constant(10.0)],
-            Trunc => &[P::constant(0.0), P::constant(0.0)],
-            CeilingMath | FloorMath => &[P::constant(0.0), P::constant(1.0), P::constant(0.0)],
-            CeilingPrecise | FloorPrecise | IsoCeiling => &[P::constant(0.0), P::constant(1.0)],
+            Log => &[
+                NumericParameter::constant(0.0),
+                NumericParameter::constant(10.0),
+            ],
+            Trunc => &[
+                NumericParameter::constant(0.0),
+                NumericParameter::constant(0.0),
+            ],
+            CeilingMath | FloorMath => &[
+                NumericParameter::constant(0.0),
+                NumericParameter::constant(1.0),
+                NumericParameter::constant(0.0),
+            ],
+            CeilingPrecise | FloorPrecise | IsoCeiling => &[
+                NumericParameter::constant(0.0),
+                NumericParameter::constant(1.0),
+            ],
             Atan2 | Quotient | Combin | Combina | Mround | Power | Mod | Round | RoundUp
-            | RoundDown | Ceiling | Floor | Randbetween => &[P::constant(0.0), P::constant(0.0)],
-            _ => &[P::constant(0.0)],
+            | RoundDown | Ceiling | Floor | Randbetween => &[
+                NumericParameter::constant(0.0),
+                NumericParameter::constant(0.0),
+            ],
+            _ => &[NumericParameter::constant(0.0)],
         };
         let values = arguments.numbers(context, parameters)?;
         let value = match self.0 {
-            Rand => Number(context.host.random_draw(None)?),
+            Rand => Number(RandomDraws::new(context.host).draw(None)?),
             Randbetween => {
                 let bottom = values.get(0)?;
                 let top = values.get(1)?;
@@ -42,13 +73,13 @@ impl Kernel for Numeric {
                 let bottom = bottom.ceil();
                 let top = top.floor().max(bottom);
                 let interval =
-                    crate::eval::random::Interval::new(bottom, top).ok_or_else(|| {
+                    crate::eval::config::random::Interval::new(bottom, top).ok_or_else(|| {
                         context.host.unsupported(
                             CapabilityId::FunctionAdapter,
                             "random integer interval exceeds the calculation stream's exact domain",
                         )
                     })?;
-                Number(context.host.random_draw(Some(interval))?)
+                Number(RandomDraws::new(context.host).draw(Some(interval))?)
             }
             Combina => Number(poirot_functions::math::combina_metered(
                 values.get(0)?,
@@ -79,8 +110,10 @@ impl Kernel for Numeric {
 /// GCD, LCM, or MULTINOMIAL kernel over ordered source collections.
 /// It applies origin-sensitive numeric admission before invoking or incrementally feeding the independent calculation.
 struct Reduction(MathFunction);
+
 impl CollectionKernel for Reduction {
     type Signature = Variadic<WholeCollection>;
+
     fn apply(
         &self,
         host: &mut CallHost<'_, '_>,
@@ -104,8 +137,8 @@ impl CollectionKernel for Reduction {
                     {
                         return Ok(());
                     }
-                    let number =
-                        host.coercev2_scalar_number(&member.value, NumericPolicy::PinnedPoi)?;
+                    let number = ArgumentCoercion::new(host)
+                        .coerce_scalar_number(&member.value, NumericPolicy::PinnedPoi)?;
                     if number < 0.0 || (self.0 == MathFunction::Gcd && number >= 9007199254740992.0)
                     {
                         return Err(Num.into());
@@ -148,8 +181,8 @@ impl CollectionKernel for Reduction {
                 {
                     return Ok(());
                 }
-                let number =
-                    host.coercev2_scalar_number(&member.value, NumericPolicy::PinnedPoi)?;
+                let number = ArgumentCoercion::new(host)
+                    .coerce_scalar_number(&member.value, NumericPolicy::PinnedPoi)?;
                 result.push(number, || {
                     host.charge_work(1).map_err(FunctionFailure::from)
                 })

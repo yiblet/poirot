@@ -1,8 +1,6 @@
 //! Shared Excel criterion admission; pinned POI predicates retain their source behavior.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 
 fn target(at: &str) -> EvaluationTarget {

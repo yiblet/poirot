@@ -1,5 +1,13 @@
 //! Shared typed mathematical dispatch and pure numeric operation selection.
-use crate::eval::*;
+use crate::eval::functions::registry::{FunctionId, MathFunction};
+use crate::eval::limits::EvalResult;
+use crate::eval::session::Session;
+use crate::eval::values::{VALUE_ERROR, Value, finite};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::{Div0, Num};
+use crate::model::CellValue::Number;
+use crate::model::{CellAddress, CellError, CellValue};
+
 /// Execute mathematical operations through shared scalar or collection signatures.
 pub(in crate::eval) fn execute(
     session: &mut Session<'_>,
@@ -10,6 +18,7 @@ pub(in crate::eval) fn execute(
 ) -> EvalResult<Value> {
     super::modern::execute(session, sheet, at, name, args)
 }
+
 /// Apply shared math arithmetic to selected and coerced numeric operands.
 pub(super) fn scalar(name: MathFunction, a: &[f64]) -> Result<CellValue, CellError> {
     let n = a.len();

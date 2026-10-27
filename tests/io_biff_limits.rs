@@ -121,12 +121,11 @@ fn huge_extent_does_not_allocate_a_dense_rectangle() {
         assert!(workbook.sheet(0).unwrap().cells().is_empty());
         return;
     }
+    // Test names omit the crate segment of the module path.
+    let module = module_path!().split_once("::").unwrap().1;
+    let name = format!("{module}::huge_extent_does_not_allocate_a_dense_rectangle");
     let mut child = Command::new(std::env::current_exe().unwrap())
-        .args([
-            "--exact",
-            "huge_extent_does_not_allocate_a_dense_rectangle",
-            "--nocapture",
-        ])
+        .args(["--exact", name.as_str(), "--nocapture"])
         .env(CHILD, "1")
         .spawn()
         .unwrap();

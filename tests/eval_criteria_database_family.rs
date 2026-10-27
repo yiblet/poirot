@@ -1,6 +1,6 @@
 //! Actual formulas for typed criteria/database bridges; pinned POI source contracts.
 use poirot::eval::{
-    EvaluationBudgets, EvaluationInputs, EvaluationOutcome, bound::FormulaPlan, run_plan,
+    EvaluationBudgets, EvaluationInputs, EvaluationOutcome, compile::bound::FormulaPlan, run_plan,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 fn workbook() -> Workbook {

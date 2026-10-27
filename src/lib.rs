@@ -195,7 +195,7 @@
 //! - [`styles`] inspects presentation and renders values with number formats.
 //! - [`calculation`] configures direct and incremental scenarios and their limits.
 //! - [`files`] configures imports and Excel exports and exposes diagnostics.
-//! - [`editing`] plans structural changes and formula-reference translation.
+//! - [`editing`] renames sheets and translates formula references atomically.
 //! - [`snapshots`] saves native state and restores source with visible preparation status.
 //!
 //! Advanced integrations depend directly on `poirot::model`, `poirot_io`,
@@ -272,13 +272,12 @@ pub mod styles {
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub mod calculation {
-    pub use crate::eval::random::RandomAccess;
-    pub use crate::eval::run::{MemoRetentionLimits, MemoRetentionUsage};
     pub use crate::eval::{
         ArrayResultPolicy, BudgetFailure, BudgetKind, BuiltinSemanticsPolicy, CapabilityId,
         CurrencyContext, DateOrder, EvaluationLimits, EvaluationUsage, FormattingConfiguration,
-        FormulaCacheMaterializationPolicy, KnownSourceException, Localization, ProducerPolicy,
-        RegexSettings, ResourceFailureKind, TextSemanticsPolicy,
+        FormulaCacheMaterializationPolicy, KnownSourceException, Localization, MemoRetentionLimits,
+        MemoRetentionUsage, ProducerPolicy, RandomAccess, RegexSettings, ResourceFailureKind,
+        TextSemanticsPolicy,
     };
     pub use crate::workflow::{
         CalculationError, CellEvaluation, CompilationUsage, Evaluation, EvaluationBuilder,
@@ -303,8 +302,7 @@ pub mod calculation {
 pub mod files {
     pub use crate::model::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
     pub use crate::workflow::{
-        LoadBuilder, SavePlan, ScenarioSaveError, ScenarioXlsxSaveBuilder, WorkbookError,
-        XlsxSaveBuilder,
+        LoadBuilder, ScenarioSaveError, ScenarioXlsxSaveBuilder, WorkbookError, XlsxSaveBuilder,
     };
     pub use poirot_io::opc::OpcImportPolicy;
     pub use poirot_io::{IoError, ReadOptions, ResourceBudget, WriteOptions};
@@ -313,25 +311,18 @@ pub mod files {
 /// Structural edits and source-checked formula reference translations.
 ///
 /// ```
-/// use poirot::{Workbook, editing::{EditPlanner, EditPolicy}};
+/// use poirot::Workbook;
 /// let mut book = Workbook::new();
 /// book.add_sheet("Data")?.set_formula("A1".parse()?, "Data!B1")?;
-/// let plan = EditPlanner::rename_sheet(book.model(), 0, "Inputs", EditPolicy::default())?;
-/// book.model_mut().apply_rename_sheet_plan(&plan)?;
+/// book.rename_sheet(0, "Inputs").apply()?;
 /// assert!(book.sheet_by_name("Inputs").is_some());
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub mod editing {
-    pub use crate::model::{
-        EditOutcome, FormulaReplacement, FormulaSource, RenameSheetPlan, WorkbookChange,
-    };
-    pub use crate::workflow::edit::{
-        EditError, EditPlanner, EditPolicy, FormulaSpellingPolicy, SavedCachePolicy,
-    };
-    pub use crate::workflow::translation_edit::{
-        FormulaTranslationEditPlan, TranslationCachePolicy, TranslationRequest,
-    };
-    pub use poirot_parsing::formula::{FormulaLocation, TranslationPlan, TranslationPolicy};
+    pub use crate::model::{EditOutcome, FormulaSource, WorkbookChange};
+    pub use crate::workflow::edit::{EditError, RenameSheetBuilder};
+    pub use crate::workflow::translation_edit::{TranslateFormulasBuilder, TranslationRequest};
+    pub use poirot_parsing::formula::{FormulaLocation, TranslationPolicy};
 }
 
 /// Native source and calculation-state persistence with explicit recovery policies.

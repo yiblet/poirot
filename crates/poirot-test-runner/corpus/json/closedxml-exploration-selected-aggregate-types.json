@@ -21,7 +21,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -111,7 +111,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -203,7 +203,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -293,7 +293,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -383,7 +383,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -475,7 +475,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -565,7 +565,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -657,7 +657,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -747,7 +747,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -837,7 +837,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -927,7 +927,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -1019,7 +1019,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -1109,7 +1109,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -1199,7 +1199,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -1291,7 +1291,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -1381,7 +1381,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -1471,7 +1471,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -1563,7 +1563,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -1653,7 +1653,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -1743,7 +1743,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -1835,7 +1835,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -1925,7 +1925,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -2015,7 +2015,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -2107,7 +2107,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -2197,7 +2197,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -2369,7 +2369,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -2541,7 +2541,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -2713,7 +2713,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -2885,7 +2885,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -3057,7 +3057,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -3229,7 +3229,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -3401,7 +3401,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -3573,7 +3573,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -3745,7 +3745,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -3917,7 +3917,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -4089,7 +4089,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -4261,7 +4261,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -4433,7 +4433,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -4605,7 +4605,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -4777,7 +4777,7 @@
         "INDEX reference forwarding must retain the selected scalar type until the aggregate applies its referenced-value policy; change to numeric 11 and restore.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
         "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/closedxml-exploration-origins-libreoffice.json. Calc corroboration is not a native Excel execution claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {

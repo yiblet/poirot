@@ -2,14 +2,12 @@
 //! Microsoft documents rectangular sequential values and defaults at
 //! https://support.microsoft.com/en-us/excel/functions/sequence-function.
 //! Error coercion details not stated there are explicit Poirot contracts here.
-use poirot::eval::{
-    compiler::PreparedFormula,
-    overlay::{Evaluation, EvaluationPolicy},
-    *,
-};
+use poirot::eval::compile::compiler::PreparedFormula;
+use poirot::eval::overlay::Evaluation;
+use poirot::eval::*;
 use poirot::model::{CellAddress, CellError, CellValue, ShapeBounds as S, Workbook};
 
-fn properties(formula: &str) -> typing::ExpressionProperties {
+fn properties(formula: &str) -> compile::typing::ExpressionProperties {
     let prepared = FormulaCompiler::new().compile_formula(formula, &PreparationPolicy::default());
     let PreparedFormula::Ready(formula) = prepared.as_ref() else {
         panic!("not prepared: {formula}")
@@ -275,7 +273,7 @@ fn sequence_allocation_failure_is_operational_and_edge_spills_are_blocked() {
     sheet
         .set_formula(at("A1").address, "SEQUENCE(2,3)")
         .unwrap();
-    let context = overlay::EvaluationContext {
+    let context = EvaluationContext {
         limits: poirot::eval::EvaluationLimits::default().max_collection_values(5),
         ..Default::default()
     };
@@ -312,7 +310,7 @@ fn bounds_follow_formula_edits_style_changes_and_overlay_snapshot_retention() {
         .set_formula(at("A1").address, "SEQUENCE(2,2)")
         .unwrap();
     let mut overlay = overlay::Overlay::with_workbook(&book).build().unwrap();
-    let context = overlay::EvaluationContext::default();
+    let context = EvaluationContext::default();
     assert_eq!(
         overlay
             .evaluation(&context)
@@ -390,7 +388,7 @@ fn compiler_rebinding_and_parser_policy_cannot_retain_narrow_old_bounds() {
 }
 #[test]
 fn extension_created_arrays_have_unknown_bounds_instead_of_argument_guesses() {
-    use extensions::*;
+    use functions::extensions::*;
     let mut registry = ExtensionRegistry::new();
     registry
         .register(
@@ -398,7 +396,7 @@ fn extension_created_arrays_have_unknown_bounds_instead_of_argument_guesses() {
             "RECTANGLE",
             "geometry/v1",
             ExtensionContract {
-                arity: registry::Arity {
+                arity: functions::registry::Arity {
                     minimum: 0,
                     maximum: 0,
                 },

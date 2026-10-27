@@ -1,6 +1,14 @@
 //! Identity-array generation through the independent matrix kernel.
-use super::*;
-use crate::eval::adapters::elementwise::{FixedScalar, NumericParameter};
+use crate::eval::adapters::elementwise::{FixedScalar, NumericParameter, matrices};
+use crate::eval::adapters::failure::operational_only;
+use crate::eval::host::CallHost;
+use crate::eval::limits::EvalResult;
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionFailure, VALUE_ERROR, Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellValue::Number;
+use crate::model::{CellAddress, MAX_COLUMNS};
+
 /// Execute MUNIT with checked square geometry before allocation or publication.
 pub(super) fn execute(
     session: &mut Session<'_>,
@@ -19,8 +27,8 @@ pub(super) fn execute(
         }
         let n = dimension.trunc() as usize;
         let budget = matrices::admit(&mut host, n, n)?;
-        let matrix =
-            poirot_functions::matrix::unit(n, budget).map_err(|e| modern::failure(&mut host, e))?;
+        let matrix = poirot_functions::matrix::unit(n, budget)
+            .map_err(|e| matrices::failure(&mut host, e))?;
         crate::eval::adapters::elementwise::matrices::publish(&mut host, matrix, address, Number)
     })();
     match result {

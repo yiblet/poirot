@@ -1,6 +1,6 @@
 use poirot_functions::coercion::CellError;
 use poirot_functions::coercion::statistics::{
-    NumericPairs, PairCollection, Value, coercev2_statistics_pairs,
+    NumericPairs, PairCollection, Value, coerce_statistics_pairs,
 };
 
 #[test]
@@ -22,7 +22,7 @@ fn numeric_samples_exclude_both_coordinates_of_every_nonnumeric_pair() {
             } else {
                 (Value::Number(999.), excluded)
             };
-            let pairs = coercev2_statistics_pairs(
+            let pairs = coerce_statistics_pairs(
                 PairCollection::NumericOnly,
                 &[Value::Number(0.), a, Value::Number(2.)],
                 &[Value::Number(1.), b, Value::Number(5.)],
@@ -39,7 +39,7 @@ fn numeric_samples_exclude_both_coordinates_of_every_nonnumeric_pair() {
 #[test]
 fn input_shape_and_error_precedence_are_checked_before_sample_membership() {
     assert_eq!(
-        coercev2_statistics_pairs(
+        coerce_statistics_pairs(
             PairCollection::NumericOnly,
             &[Value::Text { numeric: None }],
             &[]
@@ -47,7 +47,7 @@ fn input_shape_and_error_precedence_are_checked_before_sample_membership() {
         Err(CellError::NA)
     );
     assert_eq!(
-        coercev2_statistics_pairs(
+        coerce_statistics_pairs(
             PairCollection::NumericOnly,
             &[
                 Value::Text { numeric: Some(1.) },
@@ -57,7 +57,7 @@ fn input_shape_and_error_precedence_are_checked_before_sample_membership() {
         ),
         Err(CellError::Ref)
     );
-    let pairs = coercev2_statistics_pairs(
+    let pairs = coerce_statistics_pairs(
         PairCollection::NumericOnly,
         &[Value::Boolean(true)],
         &[Value::Number(1.)],

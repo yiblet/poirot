@@ -67,7 +67,7 @@
   "closedxml-origins.json": "coercion",
   "closedxml-text.json": "text",
   "closedxml-value-origins.json": "coercion",
-  "coercionv2-formatted-number-boundaries.json": "text",
+  "coercion-formatted-number-boundaries.json": "text",
   "concat-members.json": "text",
   "excel-serial-weekdays.json": "date_time",
   "lookup-blanks.json": "spreadsheet",

@@ -93,7 +93,7 @@ fn scalar_policy_preparation_refusals_abort_iferror_but_lazy_sources_remain_unus
     let context = EvaluationContext::default();
     // Scalar intersection preserves demand-driven preparation. Dynamic spilling
     // must eagerly resolve formulas whose resource failure leaves their type unknown.
-    let policy = poirot::eval::overlay::EvaluationPolicy {
+    let policy = poirot::eval::EvaluationPolicy {
         arrays: eval::ArrayResultPolicy::ScalarIntersection,
         ..Default::default()
     };

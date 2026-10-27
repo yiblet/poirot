@@ -1,5 +1,6 @@
 //! Shared failure domains for adapter policies. Capability details stay typed by family.
-use crate::eval::{EvaluationFailure, FunctionFailure};
+use crate::eval::limits::EvaluationFailure;
+use crate::eval::values::FunctionFailure;
 use crate::model::CellError;
 
 /// Shared semantic and operational failures with typed family capability details.

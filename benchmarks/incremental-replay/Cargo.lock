@@ -18,6 +18,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "allocation-counter"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "beb9e990c0a33699f1984d85a6abead615ccc72dd8130bf3e15dcabe2ca149c9"
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -505,6 +511,7 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 name = "poirot"
 version = "0.1.0"
 dependencies = [
+ "crc32fast",
  "foldhash",
  "nom",
  "poirot-functions",
@@ -538,8 +545,10 @@ dependencies = [
 name = "poirot-incremental-replay"
 version = "0.1.0"
 dependencies = [
+ "allocation-counter",
  "poirot",
  "poirot-parsing",
+ "postcard",
  "serde_json",
  "sha2",
 ]

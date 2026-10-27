@@ -1,5 +1,6 @@
 [package]
 name = "poirot-test-runner"
+autotests = false
 version.workspace = true
 edition.workspace = true
 publish = false
@@ -23,3 +24,7 @@ serde.workspace = true
 
 [lints]
 workspace = true
+
+[[test]]
+name = "integration"
+path = "tests/main.rs"

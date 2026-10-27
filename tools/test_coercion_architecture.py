@@ -106,22 +106,22 @@ def violations(source):
         if not containing:
             continue
         name = max(containing, key=lambda item: item[1])[0]
-        if not name.startswith(('coerce_', 'coercev2_')) and name != 'coercev2':
-            result.append((code.count('\n', 0, match.start()) + 1, name, 'inline type change outside coerce_ helper'))
-        elif name.startswith('coerce_') and re.search(r'\bBlank\b', match[0]) and re.search(r'\b(?:Number|0)\b', match[0]):
+        if not name.startswith(('coerce_', 'convert_')) and name != 'coerce':
+            result.append((code.count('\n', 0, match.start()) + 1, name, 'inline type change outside coercion helper'))
+        elif name.startswith('convert_') and re.search(r'\bBlank\b', match[0]) and re.search(r'\b(?:Number|0)\b', match[0]):
             result.append((code.count('\n', 0, match.start()) + 1, name, 'blank-to-zero conversion outside argument policy'))
     for match in re.finditer(r'\b(?:finalize_cell_result|operand_number|operand_boolean|logical_test|scalar_number|scalar_text)\s*\(', code):
         result.append((code.count('\n', 0, match.start()) + 1, '', 'legacy coercion helper name'))
-    for match in re.finditer(r'\bcoerce_\w+\s+as\s+(?!coerce_)\w+', code):
+    for match in re.finditer(r'\b(coerce|convert)_\w+\s+as\s+(?!\1_)\w+', code):
         result.append((code.count('\n', 0, match.start()) + 1, '', 'coercion import hides its prefix'))
     return result
 
 
-def searchable_v2_source(source):
+def searchable_conversion_source(source):
     """Permit only locally declared, adjacent-audited non-argument names."""
     code = production_code(source)
     declared_results = set()
-    for match in re.finditer(r'\bfn\s+(coerce_\w+)\b', code):
+    for match in re.finditer(r'\bfn\s+(convert_\w+)\b', code):
         line_start = source.rfind('\n', 0, match.start())
         prefix = source[:line_start].splitlines()
         adjacent = prefix[-1] if prefix else ''
@@ -152,7 +152,7 @@ class CoercionArchitectureTests(unittest.TestCase):
                 continue
             source = path.read_text()
             code = production_code(source)
-            for match in re.finditer(r'\bfn\s+(coerce_\w+)\b', code):
+            for match in re.finditer(r'\bfn\s+(convert_\w+)\b', code):
                 line_start = source.rfind('\n', 0, match.start())
                 prefix = source[:line_start].splitlines()
                 adjacent = prefix[-1] if prefix else ''
@@ -173,7 +173,7 @@ class CoercionArchitectureTests(unittest.TestCase):
                                   if start <= match.start() < end]
                     if containing:
                         name = max(containing, key=lambda item: item[1])[0]
-                        if name.startswith('coercev2_'):
+                        if name.startswith('coerce_'):
                             failures.append(f'{path.relative_to(ROOT)}: {name} retains an inline argument conversion')
         self.assertEqual(failures, [], '\n' + '\n'.join(failures))
 
@@ -189,13 +189,14 @@ class CoercionArchitectureTests(unittest.TestCase):
     def test_guard_catches_inline_coercions_and_hidden_aliases(self):
         self.assertTrue(violations('fn select(v: V) { match v { Blank => Number(0.), _ => v } }'))
         self.assertTrue(violations('fn select(v: V) { match v { Boolean(b) => u8::from(b) as f64, _ => 0.0 } }'))
+        self.assertTrue(violations('use foo::convert_number as number;'))
         self.assertTrue(violations('use foo::coerce_number as number;'))
         self.assertTrue(violations('fn select(v: V) { finalize_cell_result(v) }'))
         self.assertTrue(violations('fn select(v: V) { if v == Blank { Number(0.) } else { v } }'))
 
     def test_guard_preserves_typed_reads_algorithms_and_test_exemptions(self):
-        self.assertFalse(violations('fn coercev2_input(v: V) { match v { Blank => Number(0.) } }'))
-        self.assertTrue(violations('fn coerce_publication(v: V) { match v { Blank => Number(0.), _ => v } }'))
+        self.assertFalse(violations('fn coerce_input(v: V) { match v { Blank => Number(0.) } }'))
+        self.assertTrue(violations('fn convert_publication(v: V) { match v { Blank => Number(0.), _ => v } }'))
         self.assertFalse(violations('fn read(v: V) { match v { Blank => Blank, _ => v } }'))
         self.assertFalse(violations('fn kernel(n: usize) { n as f64 }'))
         self.assertFalse(violations('#[cfg(test)] mod tests { fn sample() { match v { Blank => Number(0.) } } }'))
@@ -203,21 +204,21 @@ class CoercionArchitectureTests(unittest.TestCase):
         # A production item after a test-only item is still checked.
         self.assertTrue(violations('#[cfg(test)] mod tests {} fn read() { match v { Blank => Number(0.) } }'))
 
-    def test_v2_naming_exempts_only_audited_central_result_helpers(self):
-        pattern = r'(?i)\b(?:coercion|coerce)(?!v2)'
-        audited = '// TODO(coercion-non-argument): [LOW] Result text may round digits.\nfn coerce_result() {}\nfn use_result() { coerce_result() }'
-        self.assertNotRegex(searchable_v2_source(audited), pattern)
-        self.assertRegex(searchable_v2_source('fn coerce_result() {}'), pattern)
-        self.assertRegex(searchable_v2_source('fn use_result() { coerce_result() }'), pattern)
-        self.assertRegex(searchable_v2_source(audited + '\nfn use_other() { coerce_argument() }'), pattern)
+    def test_conversion_naming_exempts_only_audited_central_result_helpers(self):
+        pattern = r'\bconvert_\w+'
+        audited = '// TODO(coercion-non-argument): [LOW] Result text may round digits.\nfn convert_result() {}\nfn use_result() { convert_result() }'
+        self.assertNotRegex(searchable_conversion_source(audited), pattern)
+        self.assertRegex(searchable_conversion_source('fn convert_result() {}'), pattern)
+        self.assertRegex(searchable_conversion_source('fn use_result() { convert_result() }'), pattern)
+        self.assertRegex(searchable_conversion_source(audited + '\nfn use_other() { convert_argument() }'), pattern)
 
-    def test_v2_crate_keeps_conversion_names_searchable(self):
+    def test_coercion_crate_keeps_conversion_names_searchable(self):
         crate = ROOT / 'crates/poirot-functions/src/coercion'
         for path in crate.rglob('*.rs'):
             source = path.read_text()
             if path.suffix == '.rs':
-                source = searchable_v2_source(source)
-            self.assertNotRegex(production_code(source), r'\bcoerce_(?!v2)\w+', str(path))
+                source = searchable_conversion_source(source)
+            self.assertNotRegex(production_code(source), r'\bconvert_\w+', str(path))
 
 
 if __name__ == '__main__':

@@ -2,11 +2,15 @@
 use crate::eval::adapters::elementwise::{
     ArgumentRole, Broadcast, Kernel, MemberContext, WholeCollection, collections,
 };
-use crate::eval::host::{CallHost, NumericPolicy, OperandKind, ScalarOperand};
-use crate::eval::*;
+use crate::eval::host::{
+    ArgumentCoercion, CallHost, NumericPolicy, OperandKind, OperandReader, ScalarOperand,
+};
+use crate::eval::values::FunctionResult;
+use crate::model::CellValue;
+use crate::model::CellValue::Number;
 use poirot_functions::coercion::{
     compatibility::ScalarRef,
-    series::{coercev2_seriessum_coefficient, coercev2_seriessum_number},
+    series::{coerce_seriessum_coefficient, coerce_seriessum_number},
 };
 
 /// Convert a SERIESSUM scalar without admitting logicals or explicit omissions.
@@ -16,16 +20,19 @@ fn number(host: &mut CallHost<'_, '_>, scalar: ScalarOperand) -> FunctionResult<
     } else {
         (&scalar.value).into()
     };
-    coercev2_seriessum_number(value, |text| {
-        let text = host.project_text(text)?;
-        host.coercev2_number_text(&text, NumericPolicy::PinnedPoi)
+    coerce_seriessum_number(value, |text| {
+        let text = ArgumentCoercion::new(host).project_text(text)?;
+        ArgumentCoercion::new(host).coerce_number_text(&text, NumericPolicy::PinnedPoi)
     })
 }
+
 /// SERIESSUM kernel that broadcasts numeric controls over one coefficient collection.
 /// Each output reads coefficients in source order and preserves their scalar-versus-reference coercion rules.
 pub(super) struct Series;
+
 impl Kernel for Series {
     type Signature = (Broadcast, Broadcast, Broadcast, WholeCollection);
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -37,7 +44,7 @@ impl Kernel for Series {
         let initial = number(context.host, initial)?;
         let step = step.read(context)?;
         let step = number(context.host, step)?;
-        let description = context.host.describe(coefficients.argument())?;
+        let description = OperandReader::new(context.host).describe(coefficients.argument())?;
         let scalar = matches!(description.kind, OperandKind::Scalar | OperandKind::Missing)
             || (description.kind == OperandKind::Reference
                 && description.rows == 1
@@ -56,7 +63,7 @@ impl Kernel for Series {
                     } else {
                         (&member.value).into()
                     };
-                    coercev2_seriessum_coefficient(value)?
+                    coerce_seriessum_coefficient(value)?
                 };
                 let term =
                     poirot_functions::math::series::term(x, initial, step, *index, coefficient)?;

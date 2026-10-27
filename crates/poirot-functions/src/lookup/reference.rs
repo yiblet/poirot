@@ -1,5 +1,5 @@
 use crate::lookup::operands::{
-    Arguments, charge, coercev2_lookup_boolean, coercev2_lookup_text, scalar,
+    Arguments, charge, coerce_lookup_boolean, coerce_lookup_text, scalar,
 };
 use crate::lookup::{
     Context, Error, Failure, Unsupported, Value, Work, Workbook, parse_dynamic_reference,
@@ -131,10 +131,10 @@ pub(super) fn indirect(
     if args.is_empty() {
         return Err(Error::Value.into());
     }
-    let text = coercev2_lookup_text(&scalar(&args.get(0, c, w)?, c, w)?, w)?;
+    let text = coerce_lookup_text(&scalar(&args.get(0, c, w)?, c, w)?, w)?;
     let a1 = match args.len() {
         1 => true,
-        2 => coercev2_lookup_boolean(scalar(&args.get(1, c, w)?, c, w)?)?,
+        2 => coerce_lookup_boolean(scalar(&args.get(1, c, w)?, c, w)?)?,
         _ => return Err(Error::Value.into()),
     };
     let query = parse_dynamic_reference(&text, a1, w)?;

@@ -3,9 +3,7 @@
 //! https://support.microsoft.com/en-us/excel/functions/vlookup-function
 //! https://support.microsoft.com/en-us/excel/functions/xlookup-function
 //! Deferred classic operand order and operational failures are Poirot contracts.
-use poirot::eval::{
-    execution_observation::*, execution_retention::*, overlay::Evaluation, overlay::Overlay, *,
-};
+use poirot::eval::{observe::*, overlay::Evaluation, overlay::Overlay, *};
 use poirot::model::{CellError, CellValue, Workbook};
 
 #[test]

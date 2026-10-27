@@ -96,7 +96,7 @@ impl Default for TextSemanticsPolicy {
 impl TextSemanticsPolicy {
     /// Resolve indexing units and semantic length limits for one operation.
     pub fn operation(self, operation: Operation) -> Result<OperationPolicy, Unsupported> {
-        use Operation::*;
+        use Operation::{Index, Len};
         let (units, limit) = match (self.source, operation) {
             (SourceVersion::ExcelCompatibilityV2Unverified, _) => {
                 return Err(Unsupported::UnverifiedExcelVersion);

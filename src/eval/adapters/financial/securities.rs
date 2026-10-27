@@ -1,10 +1,18 @@
 //! Date-aware rectangular lifting for documented security calculations.
 use crate::eval::adapters::{
-    elementwise::{self, Broadcast, Kernel, MemberContext, NumericParameter as P, Variadic},
+    elementwise::{self, Broadcast, Kernel, MemberContext, NumericParameter, Variadic},
     failure::operational_only,
 };
+use crate::eval::functions::registry::{FinancialFunction, FunctionId};
 use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::limits::{CapabilityId, EvalResult};
+use crate::eval::ports::DependencyRead;
+use crate::eval::session::{ReadRecorder, Session};
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::{Div0, Num};
+use crate::model::CellValue::Number;
+use crate::model::{CellAddress, CellValue};
 use poirot_functions::coercion::date_time::CalendarEpoch;
 use poirot_functions::financial::{
     FinancialError,
@@ -23,9 +31,14 @@ fn spreadsheet(error: FinancialError) -> FunctionFailure {
     }
     .into()
 }
+
 /// Identify the security functions handled by this adapter.
 pub(super) fn handles(function: FinancialFunction) -> bool {
-    use FinancialFunction::*;
+    use FinancialFunction::{
+        Accrint, Accrintm, Coupdaybs, Coupdays, Coupdaysnc, Coupncd, Coupnum, Couppcd, Disc,
+        Duration, Intrate, Mduration, Price, Pricedisc, Pricemat, Received, Tbilleq, Tbillprice,
+        Tbillyield, Yield, Yielddisc, Yieldmat,
+    };
     matches!(
         function,
         Accrint
@@ -52,80 +65,89 @@ pub(super) fn handles(function: FinancialFunction) -> bool {
             | Yieldmat
     )
 }
+
 /// Adapts coupon, bond, and other security functions to shared broadcast execution.
 /// The workbook epoch and parameter table supply date conversion and validated frequency or basis choices.
 struct SecurityKernel {
     function: FinancialFunction,
     epoch: CalendarEpoch,
 }
+
 impl Kernel for SecurityKernel {
     type Signature = Variadic<Broadcast>;
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use FinancialFunction::*;
+        use FinancialFunction::{
+            Accrint, Accrintm, Coupdaybs, Coupdays, Coupdaysnc, Coupncd, Coupnum, Couppcd, Disc,
+            Duration, Intrate, Mduration, Price, Pricedisc, Pricemat, Received, Tbilleq,
+            Tbillprice, Tbillyield, Yield, Yielddisc, Yieldmat,
+        };
         let function = self.function;
         let epoch = self.epoch;
-        let parameters: &[P] = match function {
+        let parameters: &[NumericParameter] = match function {
             Coupdaybs | Coupdays | Coupdaysnc | Coupncd | Coupnum | Couppcd => &[
-                P::calendar_date(),
-                P::calendar_date(),
-                P::required().integer_choices(&[1, 2, 4]),
-                P::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::required().integer_choices(&[1, 2, 4]),
+                NumericParameter::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
             ],
             Price | Yield => &[
-                P::calendar_date(),
-                P::calendar_date(),
-                P::required(),
-                P::required(),
-                P::required(),
-                P::required().integer_choices(&[1, 2, 4]),
-                P::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required().integer_choices(&[1, 2, 4]),
+                NumericParameter::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
             ],
             Duration | Mduration => &[
-                P::calendar_date(),
-                P::calendar_date(),
-                P::required(),
-                P::required(),
-                P::required().integer_choices(&[1, 2, 4]),
-                P::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required().integer_choices(&[1, 2, 4]),
+                NumericParameter::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
             ],
             Accrint => &[
-                P::calendar_date(),
-                P::calendar_date(),
-                P::calendar_date(),
-                P::required(),
-                P::constant(1000.0),
-                P::required().integer_choices(&[1, 2, 4]),
-                P::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
-                P::boolean_default(true),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::required(),
+                NumericParameter::constant(1000.0),
+                NumericParameter::required().integer_choices(&[1, 2, 4]),
+                NumericParameter::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
+                NumericParameter::boolean_default(true),
             ],
             Accrintm => &[
-                P::calendar_date(),
-                P::calendar_date(),
-                P::required(),
-                P::constant(1000.0),
-                P::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::required(),
+                NumericParameter::constant(1000.0),
+                NumericParameter::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
             ],
             Pricemat | Yieldmat => &[
-                P::calendar_date(),
-                P::calendar_date(),
-                P::calendar_date(),
-                P::required(),
-                P::required(),
-                P::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
             ],
-            Tbilleq | Tbillprice | Tbillyield => {
-                &[P::calendar_date(), P::calendar_date(), P::required()]
-            }
+            Tbilleq | Tbillprice | Tbillyield => &[
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::required(),
+            ],
             Disc | Intrate | Pricedisc | Received | Yielddisc => &[
-                P::calendar_date(),
-                P::calendar_date(),
-                P::required(),
-                P::required(),
-                P::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
+                NumericParameter::calendar_date(),
+                NumericParameter::calendar_date(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::constant(0.0).integer_choices(&[0, 1, 2, 3, 4]),
             ],
             _ => return Err(VALUE_ERROR.into()),
         };
@@ -261,6 +283,7 @@ impl Kernel for SecurityKernel {
         Ok(Number(value))
     }
 }
+
 /// Coerce security inputs, publish lifted outputs and retain operational work failures.
 pub(super) fn execute(
     session: &mut Session<'_>,
@@ -276,8 +299,10 @@ pub(super) fn execute(
     {
         return Ok(err(VALUE_ERROR));
     }
-    session.read(DependencyRead::ContextField(run::ContextRead::DateSystem));
-    let epoch = match session.workbook.date_system {
+    ReadRecorder::new(session).read(DependencyRead::ContextField(
+        crate::eval::ports::ContextRead::DateSystem,
+    ));
+    let epoch = match session.sources.workbook.date_system {
         crate::model::DateSystem::Excel1900 => CalendarEpoch::Excel1900,
         crate::model::DateSystem::Excel1904 => CalendarEpoch::Excel1904,
     };

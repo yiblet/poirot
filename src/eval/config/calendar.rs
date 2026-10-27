@@ -1,0 +1,110 @@
+//! Shared calculation calendar bounds and workbook serial conversion.
+use crate::model::CellError::Num;
+use crate::model::{CellError, DateSystem};
+use poirot_functions::coercion::compatibility::coerce_date_integer;
+use poirot_functions::coercion::dates::calendar::{Date, civil, epoch};
+use poirot_functions::format::{CalendarPolicy, PhantomDayPolicy};
+
+/// Select calculation bounds and serial-60 handling for a workbook date system.
+pub(in crate::eval) fn calculation_policy(system: DateSystem) -> CalendarPolicy {
+    CalendarPolicy {
+        date_system: system,
+        phantom_day: PhantomDayPolicy::GregorianMarch1,
+    }
+}
+
+/// Return the largest supported calculation day serial.
+pub(in crate::eval) fn max_serial(system: DateSystem) -> i64 {
+    calculation_policy(system).maximum_day()
+}
+
+/// Validate a serial against the calculation calendar's bounds.
+pub(in crate::eval) fn valid(n: f64, system: DateSystem) -> Result<f64, CellError> {
+    calculation_policy(system).validate(n).map_err(|_| Num)?;
+    Ok(n)
+}
+
+/// Convert civil components to a bounded workbook day serial.
+pub(in crate::eval) fn serial(d: Date, system: DateSystem) -> Result<f64, CellError> {
+    valid(serial_day(d, system) as f64, system)
+}
+
+// Unbounded conversion permits DATE month/day overflow to return into range.
+/// Convert components without bounds checks so DATE overflow can normalize into range.
+pub(in crate::eval) fn serial_day(d: Date, system: DateSystem) -> i64 {
+    if system == DateSystem::Excel1904 {
+        epoch(d) + 24107
+    } else if d
+        == (Date {
+            y: 1900,
+            m: 2,
+            d: 29,
+        })
+    {
+        60
+    } else {
+        let e = epoch(d);
+        e + 25568
+            + i64::from(
+                e >= epoch(Date {
+                    y: 1900,
+                    m: 3,
+                    d: 1,
+                }),
+            )
+    }
+}
+
+/// Resolve a bounded serial into calculation date components.
+pub(in crate::eval) fn date(n: f64, system: DateSystem) -> Result<Date, CellError> {
+    let d = calculation_policy(system).date(n).map_err(|_| Num)?;
+    Ok(Date {
+        y: d.year,
+        m: i64::from(d.month),
+        d: i64::from(d.day),
+    })
+}
+
+// YEARFRAC numeric text deliberately bypasses the bounded calendar policy, as in
+// pinned YearFrac.evaluateDateArg. Keep its Gregorian conversion separate so
+// the shared display/calculation bounds do not erase that operand exception.
+/// Resolve YEARFRAC's numeric-text serial outside the bounded calculation calendar.
+pub(in crate::eval) fn calendar_date(n: f64, system: DateSystem) -> Result<Date, CellError> {
+    let n = coerce_date_integer(n.floor())?;
+    if system == DateSystem::Excel1900 && n == 60 {
+        return Ok(Date {
+            y: 1900,
+            m: 3,
+            d: 1,
+        });
+    }
+    Ok(civil(if system == DateSystem::Excel1904 {
+        n - 24107
+    } else {
+        n - 25568 - i64::from(n > 60)
+    }))
+}
+
+/// Return the Gregorian weekday with Sunday as zero, preserving serial-60 behavior.
+pub(in crate::eval) fn pinned_gregorian_weekday(n: i64, system: DateSystem) -> i64 {
+    // Sunday=0. The serial-60 discontinuity follows Gregorian conversion in POI.
+    let e = if system == DateSystem::Excel1904 {
+        n - 24107
+    } else {
+        n - 25568 - i64::from(n > 60)
+    };
+    (e + 4).rem_euclid(7)
+}
+
+/// Return Excel's serial-calendar weekday with Sunday as zero.
+pub(in crate::eval) fn excel_serial_weekday(n: i64, system: DateSystem) -> i64 {
+    // Excel keeps a continuous seven-day cycle across its fictitious 1900-02-29.
+    // Thus serial 1 is Sunday rather than Gregorian 1900-01-01's Monday.
+    // The 1904 system starts on Friday and has no fictitious leap day.
+    let origin = if system == DateSystem::Excel1904 {
+        5
+    } else {
+        6
+    };
+    (n.rem_euclid(7) + origin) % 7
+}

@@ -263,7 +263,7 @@ fn rename_updates_quoted_references_and_defined_names() {
         .unwrap()
         .set_formula(at("B1"), "Input+1")
         .unwrap();
-    let outcome = book.rename_sheet(0, "New's data").unwrap();
+    let outcome = book.rename_sheet(0, "New's data").apply().unwrap();
     assert_eq!(outcome.changed_sources.len(), 2);
     assert_eq!(book.sheet(0).unwrap().name(), "New's data");
     assert_eq!(
@@ -290,7 +290,7 @@ fn rename_failures_leave_names_formulas_and_values_unchanged() {
     book.add_sheet("Taken").unwrap();
     for (sheet, name) in [(0, "Taken"), (0, "bad/name"), (10, "New")] {
         let before = book.clone();
-        assert!(book.rename_sheet(sheet, name).is_err());
+        assert!(book.rename_sheet(sheet, name).apply().is_err());
         assert_eq!(book, before);
     }
     book.sheet_mut(0)
@@ -298,7 +298,7 @@ fn rename_failures_leave_names_formulas_and_values_unchanged() {
         .set_formula(at("D1"), "SUM(")
         .unwrap();
     let before = book.clone();
-    assert!(book.rename_sheet(0, "New").is_err());
+    assert!(book.rename_sheet(0, "New").apply().is_err());
     assert_eq!(book, before);
 }
 

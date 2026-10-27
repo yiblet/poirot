@@ -20,7 +20,7 @@
         "https://support.microsoft.com/en-us/excel/functions/correl-function",
         "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -95,7 +95,7 @@
         "https://support.microsoft.com/en-us/excel/functions/correl-function",
         "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -170,7 +170,7 @@
         "https://support.microsoft.com/en-us/excel/functions/correl-function",
         "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -245,7 +245,7 @@
         "https://support.microsoft.com/en-us/excel/functions/correl-function",
         "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -319,7 +319,7 @@
         "https://support.microsoft.com/en-us/excel/functions/correl-function",
         "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -394,7 +394,7 @@
         "https://support.microsoft.com/en-us/excel/functions/correl-function",
         "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -468,7 +468,7 @@
         "https://support.microsoft.com/en-us/excel/functions/correl-function",
         "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -542,7 +542,7 @@
         "https://support.microsoft.com/en-us/excel/functions/correl-function",
         "Paired data rule: single pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -584,7 +584,7 @@
         "https://support.microsoft.com/en-us/excel/functions/correl-function",
         "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -658,7 +658,7 @@
         "https://support.microsoft.com/en-us/excel/functions/pearson-function",
         "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -733,7 +733,7 @@
         "https://support.microsoft.com/en-us/excel/functions/pearson-function",
         "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -808,7 +808,7 @@
         "https://support.microsoft.com/en-us/excel/functions/pearson-function",
         "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -883,7 +883,7 @@
         "https://support.microsoft.com/en-us/excel/functions/pearson-function",
         "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -957,7 +957,7 @@
         "https://support.microsoft.com/en-us/excel/functions/pearson-function",
         "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1032,7 +1032,7 @@
         "https://support.microsoft.com/en-us/excel/functions/pearson-function",
         "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1106,7 +1106,7 @@
         "https://support.microsoft.com/en-us/excel/functions/pearson-function",
         "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1180,7 +1180,7 @@
         "https://support.microsoft.com/en-us/excel/functions/pearson-function",
         "Paired data rule: single pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1222,7 +1222,7 @@
         "https://support.microsoft.com/en-us/excel/functions/pearson-function",
         "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1296,7 +1296,7 @@
         "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
         "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1371,7 +1371,7 @@
         "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
         "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1446,7 +1446,7 @@
         "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
         "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1521,7 +1521,7 @@
         "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
         "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1595,7 +1595,7 @@
         "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
         "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1670,7 +1670,7 @@
         "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
         "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1745,7 +1745,7 @@
         "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
         "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1820,7 +1820,7 @@
         "https://support.microsoft.com/en-us/excel/functions/covariance-s-function",
         "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1894,7 +1894,7 @@
         "https://support.microsoft.com/en-us/excel/functions/slope-function",
         "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -1969,7 +1969,7 @@
         "https://support.microsoft.com/en-us/excel/functions/slope-function",
         "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2044,7 +2044,7 @@
         "https://support.microsoft.com/en-us/excel/functions/slope-function",
         "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2119,7 +2119,7 @@
         "https://support.microsoft.com/en-us/excel/functions/slope-function",
         "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2193,7 +2193,7 @@
         "https://support.microsoft.com/en-us/excel/functions/slope-function",
         "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2268,7 +2268,7 @@
         "https://support.microsoft.com/en-us/excel/functions/slope-function",
         "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2342,7 +2342,7 @@
         "https://support.microsoft.com/en-us/excel/functions/slope-function",
         "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2417,7 +2417,7 @@
         "https://support.microsoft.com/en-us/excel/functions/slope-function",
         "Paired data rule: single pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2459,7 +2459,7 @@
         "https://support.microsoft.com/en-us/excel/functions/slope-function",
         "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2533,7 +2533,7 @@
         "https://support.microsoft.com/en-us/excel/functions/intercept-function",
         "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2608,7 +2608,7 @@
         "https://support.microsoft.com/en-us/excel/functions/intercept-function",
         "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2683,7 +2683,7 @@
         "https://support.microsoft.com/en-us/excel/functions/intercept-function",
         "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2758,7 +2758,7 @@
         "https://support.microsoft.com/en-us/excel/functions/intercept-function",
         "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2832,7 +2832,7 @@
         "https://support.microsoft.com/en-us/excel/functions/intercept-function",
         "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2907,7 +2907,7 @@
         "https://support.microsoft.com/en-us/excel/functions/intercept-function",
         "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -2981,7 +2981,7 @@
         "https://support.microsoft.com/en-us/excel/functions/intercept-function",
         "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -3056,7 +3056,7 @@
         "https://support.microsoft.com/en-us/excel/functions/intercept-function",
         "Paired data rule: single pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -3098,7 +3098,7 @@
         "https://support.microsoft.com/en-us/excel/functions/intercept-function",
         "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -3172,7 +3172,7 @@
         "https://support.microsoft.com/en-us/excel/functions/forecast-function",
         "Paired data rule: zero is included. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -3247,7 +3247,7 @@
         "https://support.microsoft.com/en-us/excel/functions/forecast-function",
         "Paired data rule: text rejects the whole pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -3322,7 +3322,7 @@
         "https://support.microsoft.com/en-us/excel/functions/forecast-function",
         "Paired data rule: numeric text is still excluded. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -3397,7 +3397,7 @@
         "https://support.microsoft.com/en-us/excel/functions/forecast-function",
         "Paired data rule: blank pair rejected. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -3471,7 +3471,7 @@
         "https://support.microsoft.com/en-us/excel/functions/forecast-function",
         "Paired data rule: nonnumeric opposite coordinate. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -3546,7 +3546,7 @@
         "https://support.microsoft.com/en-us/excel/functions/forecast-function",
         "Paired data rule: constant x. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -3620,7 +3620,7 @@
         "https://support.microsoft.com/en-us/excel/functions/forecast-function",
         "Paired data rule: constant y. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -3695,7 +3695,7 @@
         "https://support.microsoft.com/en-us/excel/functions/forecast-function",
         "Paired data rule: single pair. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {
@@ -3737,7 +3737,7 @@
         "https://support.microsoft.com/en-us/excel/functions/forecast-function",
         "Paired data rule: error is not missing. Retain a pair only when both coordinates are numeric. Expected follows the documented covariance/correlation/least-squares sums, not evaluator output.",
         "Expected values authored from the cited rule or assertion before evaluating Poirot; independent Calc corroboration required for inclusion.",
-        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercionv2-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
+        "Independently recalculated with LibreOffice 26.2.6.3 through fresh en-US OOXML snapshots and typed cached results. See ../evidence/coercion-paired-libreoffice.json. Calc corroboration is not a native Excel execution claim."
       ],
       "actions": [
         {

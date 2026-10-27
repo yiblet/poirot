@@ -2,7 +2,7 @@
 use poirot::calculation::EvaluationContext;
 use poirot::eval::{
     self as eval, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
-    EvaluationTarget, run::MemoRetentionLimits,
+    EvaluationTarget, MemoRetentionLimits,
 };
 use poirot::{CellValue, Workbook};
 fn target(address: &str) -> EvaluationTarget {

@@ -1,6 +1,6 @@
-use super::calendar::max_serial;
-use crate::eval::{CellError, CellError::Num};
-use crate::model::DateSystem;
+use crate::eval::config::calendar::max_serial;
+use crate::model::CellError::Num;
+use crate::model::{CellError, DateSystem};
 
 /// Decode supported numeric weekend modes into Sunday-first exclusion flags.
 pub(super) fn weekend_policy(mode: i64) -> Result<[bool; 7], CellError> {
@@ -36,11 +36,14 @@ pub(super) fn network_serial(
     };
     poirot_functions::dates::network_days(start, end, epoch, weekends, holidays)
 }
+
 fn is_serial_workday(day: i64, system: DateSystem, weekends: &[bool; 7]) -> bool {
-    let weekday = super::calendar::excel_serial_weekday(day, system).rem_euclid(7) as usize;
+    let weekday =
+        crate::eval::config::calendar::excel_serial_weekday(day, system).rem_euclid(7) as usize;
     // SAFETY: rem_euclid(7) bounds weekday to 0..7 and the array has seven entries.
     !weekends[weekday]
 }
+
 /// Advance in one serial coordinate, jumping whole weeks before a holiday or
 /// calendar bound. Each call is charged as one CalendarStep by the host.
 pub(super) fn advance_serial(
@@ -100,6 +103,7 @@ pub(super) fn advance_serial(
 #[cfg(test)]
 mod modern_tests {
     use super::*;
+
     #[test]
     fn serial_helpers_reject_unbounded_inputs_without_arithmetic_panics() {
         let weekends = [true, false, false, false, false, false, true];

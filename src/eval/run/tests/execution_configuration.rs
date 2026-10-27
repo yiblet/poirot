@@ -1,5 +1,12 @@
 //! Tests of the execution_configuration contract.
-use super::*;
+use super::super::evaluation_probe::EvaluationProbe;
+use super::super::evaluation_run::EvaluationRun;
+use super::super::workbook_view::WorkbookView;
+use super::support::{A1, B1, Reads, context, target, value, workbook};
+use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
+use crate::eval::limits::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::ports::{ContextRead, DependencyRead, ReadEvent};
+use crate::model::{CellError, CellValue};
 
 #[test]
 fn formatting_is_consumed_only_when_selected_and_is_not_captured_by_plans() {
@@ -12,7 +19,7 @@ fn formatting_is_consumed_only_when_selected_and_is_not_captured_by_plans() {
     let policy = PreparationPolicy::default();
     let mut compiler = FormulaCompiler::new();
     let plan = compiler.compile_workbook(&workbook, &policy);
-    let currency = crate::eval::CurrencyContext {
+    let currency = crate::eval::config::CurrencyContext {
         decimal_separator: ".".into(),
         grouping_separator: ",".into(),
         primary_group: 3,
@@ -22,15 +29,15 @@ fn formatting_is_consumed_only_when_selected_and_is_not_captured_by_plans() {
         negative_prefix: "($".into(),
         negative_suffix: ")".into(),
     };
-    let first = crate::eval::RunConfiguration::new(
+    let first = crate::eval::config::RunConfiguration::new(
         context(),
-        crate::eval::FormattingConfiguration::with_currency(currency.clone()),
+        crate::eval::config::FormattingConfiguration::with_currency(currency.clone()),
     );
     let mut changed = currency;
     changed.positive_prefix = "USD ".into();
-    let second = crate::eval::RunConfiguration::new(
+    let second = crate::eval::config::RunConfiguration::new(
         context(),
-        crate::eval::FormattingConfiguration::with_currency(changed),
+        crate::eval::config::FormattingConfiguration::with_currency(changed),
     );
     assert_ne!(first.fingerprint(), second.fingerprint());
     for (configuration, expected) in [(&first, "$1.00"), (&second, "USD 1.00")] {
@@ -56,7 +63,7 @@ fn formatting_is_consumed_only_when_selected_and_is_not_captured_by_plans() {
         }));
     }
     assert_eq!(compiler.usage().parse_attempts, 1);
-    let missing = crate::eval::RunConfiguration::from(context());
+    let missing = crate::eval::config::RunConfiguration::from(context());
     let mut reads = Reads::default();
     let run = EvaluationRun::new_with_configuration(
         WorkbookView::new(&workbook, &plan, &policy).unwrap(),
@@ -70,7 +77,7 @@ fn formatting_is_consumed_only_when_selected_and_is_not_captured_by_plans() {
             .outcome,
         EvaluationOutcome::Aborted {
             failure: EvaluationFailure::UnsupportedCapability {
-                capability: crate::eval::CapabilityId::Formatting,
+                capability: crate::eval::limits::CapabilityId::Formatting,
                 ..
             },
             ..
@@ -107,7 +114,7 @@ fn formatting_is_consumed_only_when_selected_and_is_not_captured_by_plans() {
 
 #[test]
 fn provider_identity_rebinds_unknown_names_and_only_selected_calls_are_consumed() {
-    use crate::eval::extensions::*;
+    use crate::eval::functions::extensions::*;
     let mut workbook = workbook();
     workbook
         .sheet_mut(0)
@@ -123,7 +130,7 @@ fn provider_identity_rebinds_unknown_names_and_only_selected_calls_are_consumed(
             "CUSTOM",
             "identity-v1",
             ExtensionContract {
-                arity: crate::eval::registry::Arity {
+                arity: crate::eval::functions::registry::Arity {
                     minimum: 1,
                     maximum: 1,
                 },
@@ -279,9 +286,10 @@ fn random_consumption_tracks_actual_draws_and_session_memo() {
         );
     }
 }
+
 #[test]
 fn dollar_and_rand_have_independent_dependency_categories_and_consumption() {
-    use crate::eval::registry::{DependencyPolicy, resolve_function};
+    use crate::eval::functions::registry::{DependencyPolicy, resolve_function};
     let dollar = resolve_function(&poirot_parsing::formula::FunctionName::from("DOLLAR"))
         .unwrap()
         .dependencies;
@@ -303,18 +311,20 @@ fn dollar_and_rand_have_independent_dependency_categories_and_consumption() {
         .unwrap()
         .set_formula(B1, "RAND()")
         .unwrap();
-    let configuration = crate::eval::RunConfiguration::new(
+    let configuration = crate::eval::config::RunConfiguration::new(
         context(),
-        crate::eval::FormattingConfiguration::with_currency(crate::eval::CurrencyContext {
-            decimal_separator: ".".into(),
-            grouping_separator: ",".into(),
-            primary_group: 3,
-            secondary_group: 3,
-            positive_prefix: "$".into(),
-            positive_suffix: String::new(),
-            negative_prefix: "($".into(),
-            negative_suffix: ")".into(),
-        }),
+        crate::eval::config::FormattingConfiguration::with_currency(
+            crate::eval::config::CurrencyContext {
+                decimal_separator: ".".into(),
+                grouping_separator: ",".into(),
+                primary_group: 3,
+                secondary_group: 3,
+                positive_prefix: "$".into(),
+                positive_suffix: String::new(),
+                negative_prefix: "($".into(),
+                negative_suffix: ")".into(),
+            },
+        ),
     );
     let policy = PreparationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&workbook, &policy);
@@ -362,14 +372,14 @@ fn formatted_number_locale_is_exact_configuration_and_lazy_consumption() {
     let policy = PreparationPolicy::default();
     let mut compiler = FormulaCompiler::new();
     let formula = compiler.compile_formula("\"1,234\"*1", &policy);
-    let configuration = crate::eval::RunConfiguration::from(context());
+    let configuration = crate::eval::config::RunConfiguration::from(context());
     let changed = configuration.clone().with_number_locale(
-        crate::eval::NumberLocale::new(",", Some("."), Some("EUR"), "%", ":").unwrap(),
+        poirot_parsing::number::NumberLocale::new(",", Some("."), Some("EUR"), "%", ":").unwrap(),
     );
     assert_ne!(configuration.fingerprint(), changed.fingerprint());
     for (configuration, expected) in [(&configuration, 1234.), (&changed, 1.234)] {
         let mut reads = Reads::default();
-        let outcome = crate::eval::run_formula_with_configuration(
+        let outcome = crate::eval::entry::run_formula_with_configuration(
             &workbook,
             0,
             A1,
@@ -378,7 +388,7 @@ fn formatted_number_locale_is_exact_configuration_and_lazy_consumption() {
             EvaluationBudgets::default(),
         );
         assert!(
-            matches!(outcome, crate::eval::EvaluationOutcome::Complete { value: CellValue::Number(n), .. } if n == expected)
+            matches!(outcome, crate::eval::limits::EvaluationOutcome::Complete { value: CellValue::Number(n), .. } if n == expected)
         );
         let plan = compiler.compile_workbook(&workbook, &policy);
         let probe = EvaluationProbe::Formula {

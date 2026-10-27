@@ -1,6 +1,6 @@
 //! Streaming aggregation with repeated lazy matching for two-pass statistics.
 use super::criteria::CriteriaPlan;
-use super::selection::{coercev2_database_number, selected};
+use super::selection::{coerce_database_number, selected};
 use super::{
     CellError, CellValue, DatabaseError, DatabaseFunction, DatabasePlan, FinalizationPolicy,
 };
@@ -58,7 +58,7 @@ fn aggregate<'a>(
             }
             continue;
         }
-        if let Some(number) = coercev2_database_number(value) {
+        if let Some(number) = coerce_database_number(value) {
             count += 1;
             sum += number;
             product = if count == 1 { number } else { product * number };
@@ -66,9 +66,9 @@ fn aggregate<'a>(
                 None => value,
                 Some(old) => {
                     if (function == DatabaseFunction::Min
-                        && number < coercev2_database_number(old).ok_or(CellError::Value)?)
+                        && number < coerce_database_number(old).ok_or(CellError::Value)?)
                         || (function == DatabaseFunction::Max
-                            && number > coercev2_database_number(old).ok_or(CellError::Value)?)
+                            && number > coerce_database_number(old).ok_or(CellError::Value)?)
                     {
                         value
                     } else {
@@ -78,7 +78,9 @@ fn aggregate<'a>(
             });
         }
     }
-    use DatabaseFunction::*;
+    use DatabaseFunction::{
+        Average, Count, CountA, Get, Max, Min, Product, Stdev, StdevP, Sum, Var, VarP,
+    };
     if function == Get {
         return Ok(match unique {
             None => CellValue::Error(CellError::Value),
@@ -111,7 +113,7 @@ fn aggregate<'a>(
             let mean = sum / count as f64;
             let mut squared = 0.;
             for value in values {
-                if let Some(value) = coercev2_database_number(value?) {
+                if let Some(value) = coerce_database_number(value?) {
                     squared += (value - mean) * (value - mean);
                 }
             }

@@ -54,7 +54,10 @@ fn documented_aliases_are_default_and_pinned_registry_remains_explicit() {
         default.fingerprint().computation(),
         excel.fingerprint().computation()
     );
-    assert_eq!(poirot::eval::registry::SUPPORTED_FUNCTIONS.len(), 262);
+    assert_eq!(
+        poirot::eval::functions::registry::SUPPORTED_FUNCTIONS.len(),
+        262
+    );
     for (formula, expected) in [
         ("PERCENTILE.INC(A1:A4,0.5)", 4.),
         ("_xlfn.PERCENTILE.INC(A1:A4,0.25)", 3.25),
@@ -135,7 +138,7 @@ fn selectors_errors_lazy_branches_and_empty_samples_use_budgeted_adapter() {
 fn bound_extensions_keep_precedence_over_profile_aliases() {
     use poirot::eval::{
         EvaluationRun, EvaluationTarget, FormulaCompiler, PreparationPolicy, WorkbookView,
-        extensions::*, registry::Arity,
+        functions::extensions::*, functions::registry::Arity,
     };
     let mut registry = ExtensionRegistry::new();
     registry

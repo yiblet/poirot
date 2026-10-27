@@ -3,10 +3,18 @@
 //! <https://support.microsoft.com/en-us/excel/functions/sort-function>
 //! <https://support.microsoft.com/en-us/excel/functions/sortby-function>
 //! <https://support.microsoft.com/en-us/excel/functions/unique-function>
-use super::modern::{Members, failure, matrix};
-use super::*;
-use crate::eval::adapters::elementwise::{FixedScalar, NumericParameter};
-use crate::eval::registry::MatrixFunction as F;
+use crate::eval::adapters::elementwise::matrices::{Members, failure, matrix};
+use crate::eval::adapters::elementwise::{
+    FixedScalar, NumericParameter, WholeCollection, matrices,
+};
+use crate::eval::functions::registry::MatrixFunction;
+use crate::eval::host::CallHost;
+use crate::eval::limits::EvalResult;
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellValue::{Blank, Boolean, Error, Number, Text};
+use crate::model::{CellAddress, CellError, CellValue};
 use poirot_functions::matrix::{Axis, Budget, Matrix, SortOrder};
 use std::cmp::Ordering;
 
@@ -17,9 +25,11 @@ fn order(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<SortOrder>
         _ => Err(CellError::Value.into()),
     }
 }
+
 fn axis(by_col: bool) -> Axis {
     if by_col { Axis::Columns } else { Axis::Rows }
 }
+
 fn rank(value: &CellValue) -> u8 {
     match value {
         Number(_) => 0,
@@ -29,6 +39,7 @@ fn rank(value: &CellValue) -> u8 {
         Blank => 4,
     }
 }
+
 pub(super) fn compare(a: &CellValue, b: &CellValue) -> Ordering {
     if let (Some(a), Some(b)) = (a.text_ref(), b.text_ref()) {
         return poirot_functions::text_units::fold::compare_utf16(a.units(), b.units());
@@ -41,12 +52,14 @@ pub(super) fn compare(a: &CellValue, b: &CellValue) -> Ordering {
         _ => rank(a).cmp(&rank(b)),
     }
 }
+
 /// A sorting member with its key's direction; true blanks always follow ordinary values.
 #[derive(Clone)]
 struct SortMember {
     value: CellValue,
     order: SortOrder,
 }
+
 fn compare_sort(a: &SortMember, b: &SortMember) -> Ordering {
     match (&a.value, &b.value) {
         (Blank, Blank) => Ordering::Equal,
@@ -62,6 +75,7 @@ fn compare_sort(a: &SortMember, b: &SortMember) -> Ordering {
         }
     }
 }
+
 fn admit(
     host: &mut CallHost<'_, '_>,
     input: &Matrix<CellValue>,
@@ -82,6 +96,7 @@ fn admit(
         max_work: work,
     })
 }
+
 fn normalized(
     host: &mut CallHost<'_, '_>,
     result: Matrix<CellValue>,
@@ -91,17 +106,18 @@ fn normalized(
         host,
         result,
         address,
-        poirot_functions::coercion::compatibility::coercev2_array_member,
+        poirot_functions::coercion::compatibility::coerce_array_member,
     )
 }
+
 fn evaluate(
     host: &mut CallHost<'_, '_>,
-    function: F,
+    function: MatrixFunction,
     length: usize,
     address: CellAddress,
 ) -> FunctionResult<Value> {
     let input = matrix(host, 0, Members::Original)?;
-    if function == F::Filter {
+    if function == MatrixFunction::Filter {
         let (axis, include) = WholeCollection::at(1).booleans(host, |rows, columns| {
             if columns == 1 && rows == input.rows() {
                 Ok(Axis::Rows)
@@ -130,7 +146,7 @@ fn evaluate(
             .map_err(|e| failure(host, e))?;
         return normalized(host, result, address);
     }
-    if function == F::Unique {
+    if function == MatrixFunction::Unique {
         let axis = axis(FixedScalar::at(1).boolean(host, false)?);
         let once = FixedScalar::at(2).boolean(host, false)?;
         let keys = if axis == Axis::Rows {
@@ -145,7 +161,7 @@ fn evaluate(
     }
     let mut keys = Vec::new();
     let mut orders = Vec::new();
-    let axis = if function == F::Sort {
+    let axis = if function == MatrixFunction::Sort {
         let axis = axis(FixedScalar::at(3).boolean(host, false)?);
         let index = FixedScalar::at(1).number(host, NumericParameter::constant(1.0))?;
         let key_limit = if axis == Axis::Rows {
@@ -230,9 +246,10 @@ fn evaluate(
         .map_err(|e| failure(host, e))?;
     normalized(host, result, address)
 }
+
 /// Execute selection calls with deferred operands and operational error separation.
 pub(super) fn execute(
-    function: F,
+    function: MatrixFunction,
     session: &mut Session<'_>,
     sheet: usize,
     address: CellAddress,
@@ -240,10 +257,10 @@ pub(super) fn execute(
 ) -> EvalResult<Value> {
     let length = args.len();
     let valid = match function {
-        F::Filter => (2..=3).contains(&length),
-        F::Sort => (1..=4).contains(&length),
-        F::Unique => (1..=3).contains(&length),
-        F::Sortby => (2..=255).contains(&length),
+        MatrixFunction::Filter => (2..=3).contains(&length),
+        MatrixFunction::Sort => (1..=4).contains(&length),
+        MatrixFunction::Unique => (1..=3).contains(&length),
+        MatrixFunction::Sortby => (2..=255).contains(&length),
         _ => false,
     };
     if !valid {

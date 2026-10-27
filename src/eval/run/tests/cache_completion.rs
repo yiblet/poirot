@@ -1,5 +1,15 @@
 //! Tests of the cache_completion contract.
-use super::*;
+use super::super::evaluation_probe::EvaluationProbe;
+use super::super::evaluation_run::EvaluationRun;
+use super::super::workbook_view::WorkbookView;
+use super::support::{A1, B1, C1, Reads, context, target, value, workbook};
+use crate::eval::compile::compiler::{FormulaCompiler, PreparationPolicy};
+use crate::eval::coordinates::EvaluationTarget;
+use crate::eval::limits::{EvaluationBudgets, EvaluationFailure, EvaluationOutcome};
+use crate::eval::ports::{CachedCellReader, CellCompletion, CellObserver, CellProvenance};
+use crate::eval::ports::{DependencyRead, ReadEvent};
+use crate::model::CellValue;
+use std::sync::Arc;
 
 #[test]
 fn external_cache_port_preserves_consumed_edges_and_operational_failures() {
@@ -16,7 +26,7 @@ fn external_cache_port_preserves_consumed_edges_and_operational_failures() {
             self.queries.push(target);
             if self.failure {
                 return Err(EvaluationFailure::UnsupportedCapability {
-                    capability: crate::eval::CapabilityId::ExternalData,
+                    capability: crate::eval::limits::CapabilityId::ExternalData,
                     source: Some(target),
                     detail: "cache read failed".into(),
                 });
@@ -162,6 +172,7 @@ fn completed_cell_observer_sees_recursive_results_and_all_provenances() {
         ]
     );
 }
+
 #[test]
 fn bounded_observer_failure_aborts_and_prevents_transaction_commit() {
     /// Stages one completion before refusing further retention to test atomic aborts.
@@ -180,13 +191,15 @@ fn bounded_observer_failure_aborts_and_prevents_transaction_commit() {
                     self.staged.push(value.clone());
                     Ok(())
                 }
-                Ok(_) => Err(EvaluationFailure::Budget(crate::eval::BudgetFailure {
-                    kind: crate::eval::BudgetKind::Materialization,
-                    limit: 1,
-                    consumed: 1,
-                    requested: 1,
-                    target: Some(completion.target),
-                })),
+                Ok(_) => Err(EvaluationFailure::Budget(
+                    crate::eval::limits::BudgetFailure {
+                        kind: crate::eval::limits::BudgetKind::Materialization,
+                        limit: 1,
+                        consumed: 1,
+                        requested: 1,
+                        target: Some(completion.target),
+                    },
+                )),
             }
         }
     }
@@ -246,7 +259,7 @@ fn observer_notification_cannot_mask_an_existing_operational_abort() {
             self.notified += 1;
             assert!(completion.result.is_err());
             Err(EvaluationFailure::UnsupportedCapability {
-                capability: crate::eval::CapabilityId::ExternalData,
+                capability: crate::eval::limits::CapabilityId::ExternalData,
                 source: Some(completion.target),
                 detail: "observer capacity exhausted".into(),
             })
@@ -276,6 +289,7 @@ fn observer_notification_cannot_mask_an_existing_operational_abort() {
     ));
     assert_eq!(observer.notified, 1);
 }
+
 #[test]
 fn lazy_cached_reads_keep_errors_operational_and_charge_text_to_dependency() {
     /// Supplies controlled cached text or an operational failure for lazy-read tests.
@@ -293,7 +307,7 @@ fn lazy_cached_reads_keep_errors_operational_and_charge_text_to_dependency() {
             }
             if self.fail {
                 return Err(EvaluationFailure::UnsupportedCapability {
-                    capability: crate::eval::CapabilityId::ExternalData,
+                    capability: crate::eval::limits::CapabilityId::ExternalData,
                     source: Some(target),
                     detail: "cached dependency unavailable".into(),
                 });
@@ -379,7 +393,7 @@ fn lazy_cached_reads_keep_errors_operational_and_charge_text_to_dependency() {
     .unwrap()
     .with_cell_reader(&mut cache);
     assert!(
-        matches!(run.evaluate_probes(&[EvaluationProbe::Cell(target(B1))]).outcome, EvaluationOutcome::Aborted { failure: EvaluationFailure::Budget(crate::eval::BudgetFailure { kind: crate::eval::BudgetKind::TextBytes, target: Some(at), .. }), .. } if at == target(C1))
+        matches!(run.evaluate_probes(&[EvaluationProbe::Cell(target(B1))]).outcome, EvaluationOutcome::Aborted { failure: EvaluationFailure::Budget(crate::eval::limits::BudgetFailure { kind: crate::eval::limits::BudgetKind::TextBytes, target: Some(at), .. }), .. } if at == target(C1))
     );
     assert_eq!(workbook, before);
 }

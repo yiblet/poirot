@@ -1,23 +1,37 @@
 //! Shared timeline admission and scalar-slot lifting for additive ETS functions.
 use crate::eval::adapters::{
     elementwise::{
-        self, Broadcast, Kernel, MemberContext, NumericParameter as P, NumericSignature, Optional,
+        self, Broadcast, Kernel, MemberContext, NumericParameter, NumericSignature, Optional,
         WholeCollection, collections,
     },
     failure::operational_only,
 };
+use crate::eval::functions::registry::{FunctionId, StatisticsFunction};
 use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::ports::DependencyRead;
+use crate::eval::session::{ReadRecorder, Session};
+use crate::eval::values::{
+    FunctionFailure, FunctionResult, VALUE_ERROR, Value, err, numeric_outcome,
+};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::Num;
+use crate::model::CellValue::Number;
+use crate::model::{CellAddress, CellValue};
 use poirot_functions::coercion::date_time::CalendarEpoch;
 use poirot_functions::statistics::{ets as kernel, modern::Failure};
+
 /// Identify the additive forecasting family independently of legacy FORECAST.
 pub(super) fn handles(function: StatisticsFunction) -> bool {
-    use StatisticsFunction::*;
+    use StatisticsFunction::{
+        ForecastEts, ForecastEtsConfint, ForecastEtsSeasonality, ForecastEtsStat,
+    };
     matches!(
         function,
         ForecastEts | ForecastEtsConfint | ForecastEtsSeasonality | ForecastEtsStat
     )
 }
+
 fn failure(host: &CallHost<'_, '_>, value: Failure<EvaluationFailure>) -> FunctionFailure {
     match value {
         Failure::Spreadsheet(error) => error.into(),
@@ -32,6 +46,7 @@ fn failure(host: &CallHost<'_, '_>, value: Failure<EvaluationFailure>) -> Functi
         ),
     }
 }
+
 /// ETS adapter that collects paired observations once and broadcasts scalar forecasting controls over them.
 /// Its role signature keeps sample positions separate from forecast and model controls.
 struct Ets<R> {
@@ -40,6 +55,7 @@ struct Ets<R> {
     observed: Vec<(f64, f64)>,
     roles: std::marker::PhantomData<R>,
 }
+
 impl<R> Ets<R> {
     /// Bind a forecasting operation before shared signature admission.
     fn new(function: StatisticsFunction, epoch: CalendarEpoch) -> Self {
@@ -51,6 +67,7 @@ impl<R> Ets<R> {
         }
     }
 }
+
 macro_rules! ets_kernel {
     ($roles:ty, $values:tt, $timeline:tt, [$($slot:tt => $optional:ident),*], [$($parameter:expr),*]) => {
         impl Kernel for Ets<$roles> {
@@ -60,7 +77,7 @@ macro_rules! ets_kernel {
                 Ok(())
             }
             fn apply(&self, context: &mut MemberContext<'_, '_, '_>, arguments: &Self::Signature) -> FunctionResult<CellValue> {
-                use StatisticsFunction::*;
+                use StatisticsFunction::{ForecastEts, ForecastEtsConfint, ForecastEtsSeasonality, ForecastEtsStat};
                 let function = self.function;
                 let forecasting = matches!(function, ForecastEts | ForecastEtsConfint);
                 let numbers = NumericSignature::new(&[$($parameter),*]).numbers_roles(context, [$(ets_kernel!(@role arguments.$slot, $optional)),*])?;
@@ -138,24 +155,28 @@ macro_rules! ets_kernel {
                 _ => return Err(VALUE_ERROR.into()),
             }
             .map_err(|e| failure(host, e))?;
-            Ok(numeric_outcome::coerce_checked_numeric_result(value))
+            Ok(numeric_outcome::convert_checked_numeric_result(value))
             }
         }
     };
     (@role $role:expr, required) => { Some($role) };
     (@role $role:expr, optional) => { $role.0 };
 }
+
 ets_kernel!((Broadcast, WholeCollection, WholeCollection, Optional<Broadcast>, Optional<Broadcast>, Optional<Broadcast>), 1, 2,
     [0 => required, 3 => optional, 4 => optional, 5 => optional],
-    [P::required(), P::constant(1.0), P::constant(1.0), P::constant(1.0)]);
+    [NumericParameter::required(), NumericParameter::constant(1.0), NumericParameter::constant(1.0), NumericParameter::constant(1.0)]);
+
 ets_kernel!((Broadcast, WholeCollection, WholeCollection, Optional<Broadcast>, Optional<Broadcast>, Optional<Broadcast>, Optional<Broadcast>), 1, 2,
     [0 => required, 3 => optional, 4 => optional, 5 => optional, 6 => optional],
-    [P::required(), P::constant(0.95), P::constant(1.0), P::constant(1.0), P::constant(1.0)]);
+    [NumericParameter::required(), NumericParameter::constant(0.95), NumericParameter::constant(1.0), NumericParameter::constant(1.0), NumericParameter::constant(1.0)]);
+
 ets_kernel!((WholeCollection, WholeCollection, Optional<Broadcast>, Optional<Broadcast>), 0, 1,
-    [2 => optional, 3 => optional], [P::constant(1.0), P::constant(1.0)]);
+    [2 => optional, 3 => optional], [NumericParameter::constant(1.0), NumericParameter::constant(1.0)]);
+
 ets_kernel!((WholeCollection, WholeCollection, Broadcast, Optional<Broadcast>, Optional<Broadcast>, Optional<Broadcast>), 0, 1,
     [2 => required, 3 => optional, 4 => optional, 5 => optional],
-    [P::required(), P::constant(1.0), P::constant(1.0), P::constant(1.0)]);
+    [NumericParameter::required(), NumericParameter::constant(1.0), NumericParameter::constant(1.0), NumericParameter::constant(1.0)]);
 
 /// Prepare and fit a genuine AAA model for each lifted scalar setting combination.
 pub(super) fn execute(
@@ -172,8 +193,10 @@ pub(super) fn execute(
     {
         return Ok(err(VALUE_ERROR));
     }
-    session.read(DependencyRead::ContextField(run::ContextRead::DateSystem));
-    let epoch = match session.workbook.date_system {
+    ReadRecorder::new(session).read(DependencyRead::ContextField(
+        crate::eval::ports::ContextRead::DateSystem,
+    ));
+    let epoch = match session.sources.workbook.date_system {
         crate::model::DateSystem::Excel1900 => CalendarEpoch::Excel1900,
         crate::model::DateSystem::Excel1904 => CalendarEpoch::Excel1904,
     };

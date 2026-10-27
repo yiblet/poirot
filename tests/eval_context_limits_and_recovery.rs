@@ -1,6 +1,7 @@
 //! Quotas, cycle recovery, and consuming source recovery are evaluator API contracts.
 //! Numeric expectations below follow integer arithmetic, independent of cached results.
-use poirot::eval::overlay::{Evaluation, EvaluationContext, Overlay, OverlayError};
+use poirot::eval::EvaluationContext;
+use poirot::eval::overlay::{Evaluation, Overlay, OverlayError};
 use poirot::eval::{BudgetKind, EvaluationFailure, EvaluationLimits, EvaluationTarget};
 use poirot::model::{CellValue, Workbook};
 use std::borrow::Borrow;

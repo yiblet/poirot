@@ -20,7 +20,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ArithmeticOperatorsTests.cs#L68: UnaryPlus_IsNonOpThatKeepsValueAndType",
         "Unary plus is a no-op, unlike unary minus and arithmetic coercion. Expectations are ClosedXML test assertions, not a native Excel reproduction.",
         "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained.",
         "Fresh source-hash-bound Calc corroboration for unary-plus scalar preservation: see ../evidence/unary-plus-libreoffice.json. Reference identity and mixed-array behavior are separate Poirot contracts, tested in poirot-eval/tests/unary_plus.rs."
       ],
       "actions": [
@@ -122,7 +122,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/ArithmeticOperatorsTests.cs#L68: UnaryPlus_IsNonOpThatKeepsValueAndType",
         "The source explicitly asserts ISBLANK(+A1) for an absent A1. Expectations are ClosedXML test assertions, not a native Excel reproduction.",
         "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained.",
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained.",
         "Fresh source-hash-bound Calc corroboration for unary-plus scalar preservation: see ../evidence/unary-plus-libreoffice.json. Reference identity and mixed-array behavior are separate Poirot contracts, tested in poirot-eval/tests/unary_plus.rs."
       ],
       "actions": [
@@ -150,7 +150,7 @@
         "IF returns the selected reference in either branch, which ISREF observes before materialization. Source: If_CanReturnReference.",
         "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
         "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -191,7 +191,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L186: IfError_FirstArgumentNonError_ReturnFirstArgument",
         "The successful first argument is blank rather than numeric zero or the fallback. Expectations are ClosedXML test assertions, not a native Excel reproduction.",
         "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -247,7 +247,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/LogicalTests.cs#L201: IfError_FirstArgumentError_ReturnSecondArgument",
         "An error selects the missing IF result without changing its blank type. Expectations are ClosedXML test assertions, not a native Excel reproduction.",
         "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -289,7 +289,7 @@
         "The source Rows_Blank_ReturnsValueError assertion rejects an inline missing IF result with #VALUE!.",
         "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
         "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -316,7 +316,7 @@
         "Logical-looking text in a referenced cell is ignored. Editing that cell to a boolean makes it contribute to AND or OR.",
         "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
         "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -419,7 +419,7 @@
         "https://github.com/ClosedXML/ClosedXML/blob/09f2f21a60e821ce7fb18ca3576b272e5dd6d921/ClosedXML.Tests/Excel/CalcEngine/CompareOperatorsTests.cs#L151: Comparison_BlankIsEqualToFalseOrZeroOrEmptyString",
         "A blank comparison uses the other operand type instead of assigning blank one fixed scalar type. Expectations are ClosedXML test assertions, not a native Excel reproduction.",
         "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -521,7 +521,7 @@
         "VALUE accepts a blank reference as zero but rejects empty text. The referenced cell is edited from blank to literal empty text, preserving the upstream scalar-type distinction.",
         "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
         "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -586,7 +586,7 @@
         "Exact MATCH distinguishes numbers, numeric text, and booleans rather than coercing the candidate elements.",
         "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
         "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {
@@ -643,7 +643,7 @@
         "Ascending approximate MATCH selects the final qualifying duplicate.",
         "Only the assertions corroborated by LibreOffice are retained from the original source-method group; related assertions with engine disagreement are excluded.",
         "LibreOffice 26.2.6.3 620(Build:3), independently recalculated 2026-10-17 via OOXML import, calculateAll, and typed OOXML cached results. Every authored check matches. See ../evidence/closedxml-libreoffice.json and tools/verify_json_scenarios_libreoffice.py. This is a Calc observation, not a native Excel claim.",
-        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercionv2-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
+        "Fresh independent LibreOffice recalculation after blank-preservation and argument-admission changes: see ../evidence/coercion-blank-preservation-libreoffice.json. Source hashes bind this suite; original formulas and expected values are retained."
       ],
       "actions": [
         {

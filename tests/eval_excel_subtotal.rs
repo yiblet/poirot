@@ -121,7 +121,8 @@ fn nested_detection_is_syntax_based_and_exclusion_preserves_metadata_reads() {
 }
 #[test]
 fn visibility_changes_invalidate_plans_and_nested_overlay_edits_invalidate_results() {
-    use poirot::eval::overlay::{EvaluationContext, EvaluationPolicy, Overlay};
+    use poirot::eval::overlay::Overlay;
+    use poirot::eval::{EvaluationContext, EvaluationPolicy};
     let mut w = workbook();
     let p = PreparationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&w, &p);
@@ -230,9 +231,7 @@ fn shared_run_overlay_replaces_nested_formula_but_keeps_row_visibility() {
     .unwrap();
     let p = PreparationPolicy::default();
     let plan = FormulaCompiler::new().compile_workbook(&w, &p);
-    let shared =
-        poirot::eval::run::shared_workbook::SharedWorkbook::new(w, std::sync::Arc::new(plan))
-            .unwrap();
+    let shared = poirot::eval::run::SharedWorkbook::new(w, std::sync::Arc::new(plan)).unwrap();
     let (_, inputs) = shared
         .prepare_inputs::<_, poirot::model::ModelError>(|_| {
             Ok((

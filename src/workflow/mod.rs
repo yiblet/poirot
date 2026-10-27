@@ -54,22 +54,25 @@ use crate::eval;
 use crate::model;
 use poirot_io as io;
 
-/// Formula-aware structural edit planning and atomic application.
+/// Formula-aware structural edits applied atomically.
 pub mod edit;
 // File handling and recalculation implementation; its types are re-exported below.
 mod public;
 mod scenario;
-pub use scenario::*;
+pub use scenario::{
+    Evaluation, EvaluationBuilder, EvaluationPolicy, NumberLocale, Overlay, OverlayBuilder,
+    PreparationPolicy, RestoreBuilder, RestoredEvaluation, RestoredWorkbook, ScenarioSaveError,
+    ScenarioXlsxSaveBuilder,
+};
 /// Source-checked translation of references within existing formulas.
 pub mod translation_edit;
 
-pub use eval::overlay::{CompilationUsage, EvaluationContext, OverlayEdits, OverlayError};
-pub use public::{
-    CalculationError, LoadBuilder, SavePlan, Workbook, WorkbookError, XlsxSaveBuilder,
-};
+pub use eval::EvaluationContext;
+pub use eval::overlay::{CompilationUsage, OverlayEdits, OverlayError};
+pub use public::{CalculationError, LoadBuilder, Workbook, WorkbookError, XlsxSaveBuilder};
 
+pub use eval::overlay::WorkspaceState;
 pub use eval::overlay::snapshot::Snapshot as OverlaySnapshot;
-pub use eval::overlay::snapshot::WorkspaceState;
 pub use eval::{CellEvaluation, EvaluationFailure, EvaluationTarget};
 pub use model::snapshot::Snapshot as WorkbookSnapshot;
 

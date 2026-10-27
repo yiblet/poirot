@@ -1,13 +1,20 @@
 //! Statistical kernels over shared scalar signatures and numeric collections.
 use crate::eval::adapters::elementwise::{
-    self, Broadcast, Kernel, MemberContext, NumericParameter as P, NumericSignature, Optional,
-    Variadic, WholeCollection,
+    self, Broadcast, Kernel, MemberContext, NumericParameter, NumericSignature, Optional, Variadic,
+    WholeCollection,
     collections::{self, Admission, CollectionKernel},
 };
 use crate::eval::adapters::failure::operational_only;
+use crate::eval::functions::registry::{FunctionId, StatisticsFunction};
 use crate::eval::host::CallHost;
-use crate::eval::registry::StatisticsFunction as F;
-use crate::eval::*;
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::session::Session;
+use crate::eval::values::{
+    FunctionFailure, FunctionResult, VALUE_ERROR, Value, err, numeric_outcome,
+};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::{NA, Num};
+use crate::model::{CellAddress, CellValue};
 use poirot_functions::statistics as domain;
 
 /// Map numerical computation failures without catching operational aborts.
@@ -27,24 +34,44 @@ fn computation(
 
 /// Adapts scalar probability functions to broadcast traversal and ordered parameter conversion.
 /// Each output invokes the selected independent distribution algorithm with evaluator work metering.
-struct Distribution(F);
+struct Distribution(StatisticsFunction);
+
 impl Kernel for Distribution {
     type Signature = Variadic<Broadcast>;
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use F::*;
-        let parameters: &[P] = match self.0 {
-            NormDist | NormDistLegacy => {
-                &[P::required(), P::required(), P::required(), P::boolean()]
-            }
-            NormSDist => &[P::required(), P::boolean().missing_as_blank()],
-            NormSDistLegacy | NormSInv | NormSInvLegacy => &[P::required()],
-            Poisson | PoissonDist | TDist => &[P::required(), P::required(), P::boolean()],
-            TDistRt | TDist2T => &[P::required(), P::required()],
-            _ => &[P::required(), P::required(), P::required()],
+        use StatisticsFunction::{
+            NormDist, NormDistLegacy, NormInv, NormInvLegacy, NormSDist, NormSDistLegacy, NormSInv,
+            NormSInvLegacy, Poisson, PoissonDist, Standardize, TDist, TDist2T, TDistLegacy,
+            TDistRt,
+        };
+        let parameters: &[NumericParameter] = match self.0 {
+            NormDist | NormDistLegacy => &[
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::boolean(),
+            ],
+            NormSDist => &[
+                NumericParameter::required(),
+                NumericParameter::boolean().missing_as_blank(),
+            ],
+            NormSDistLegacy | NormSInv | NormSInvLegacy => &[NumericParameter::required()],
+            Poisson | PoissonDist | TDist => &[
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::boolean(),
+            ],
+            TDistRt | TDist2T => &[NumericParameter::required(), NumericParameter::required()],
+            _ => &[
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+            ],
         };
         let n = arguments.numbers(context, parameters)?;
         let host = &mut *context.host;
@@ -87,22 +114,26 @@ impl Kernel for Distribution {
             )?,
             _ => return Err(VALUE_ERROR.into()),
         };
-        Ok(numeric_outcome::coerce_checked_numeric_result(value))
+        Ok(numeric_outcome::convert_checked_numeric_result(value))
     }
 }
 
 /// Statistical aggregate kernel over complete source collections.
 /// The selected operation determines which values and origins enter the sample before the independent reduction runs.
-struct Aggregate(F);
+struct Aggregate(StatisticsFunction);
+
 impl CollectionKernel for Aggregate {
     type Signature = Variadic<WholeCollection>;
+
     fn apply(
         &self,
         host: &mut CallHost<'_, '_>,
         arguments: &Self::Signature,
         _address: CellAddress,
     ) -> FunctionResult<Value> {
-        use F::*;
+        use StatisticsFunction::{
+            AveDev, AverageA, DevSq, GeoMean, MaxA, MinA, Mode, StdevA, StdevPA, VarA, VarPA,
+        };
         use domain::{Aggregate as A, Collection as C};
         let (operation, admission) = match self.0 {
             AveDev => (A::AveDev, C::NumericAggregate),
@@ -121,7 +152,7 @@ impl CollectionKernel for Aggregate {
         let values = collections::statistics(host, arguments.iter(), admission)?;
         host.charge_work((values.len() as u64).saturating_mul(16))?;
         Ok(
-            numeric_outcome::coerce_checked_numeric_result(domain::aggregate_with_policy(
+            numeric_outcome::convert_checked_numeric_result(domain::aggregate_with_policy(
                 operation,
                 &values,
                 domain::SamplePolicy::ExcelDocumentation,
@@ -134,13 +165,14 @@ impl CollectionKernel for Aggregate {
 /// Order-statistic kernel that collects one fixed sample before visiting broadcast controls.
 /// Its typed signature keeps the sample position distinct from parameters such as rank or percentile.
 struct Order<R> {
-    function: F,
+    function: StatisticsFunction,
     values: Vec<f64>,
     roles: std::marker::PhantomData<R>,
 }
+
 impl<R> Order<R> {
     /// Retain the mathematical operation before shared signature admission.
-    fn new(function: F) -> Self {
+    fn new(function: StatisticsFunction) -> Self {
         Self {
             function,
             values: Vec::new(),
@@ -148,54 +180,71 @@ impl<R> Order<R> {
         }
     }
 }
+
 /// Typed order-statistic roles determine the sample position and scalar demand.
 trait OrderRoles: elementwise::Signature {
     /// Return the fixed sample from this signature.
     fn sample(&self) -> &WholeCollection;
+
     /// Coerce the sample operation's scalar parameter slots in order.
     fn numbers(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
-        function: F,
+        function: StatisticsFunction,
     ) -> FunctionResult<elementwise::NumericArguments>;
 }
+
 impl OrderRoles for (WholeCollection, Broadcast, Optional<Broadcast>) {
     fn sample(&self) -> &WholeCollection {
         &self.0
     }
+
     fn numbers(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
-        function: F,
+        function: StatisticsFunction,
     ) -> FunctionResult<elementwise::NumericArguments> {
         if matches!(
             function,
-            F::PercentRank | F::PercentRankInc | F::PercentRankExc
+            StatisticsFunction::PercentRank
+                | StatisticsFunction::PercentRankInc
+                | StatisticsFunction::PercentRankExc
         ) {
-            NumericSignature::new(&[P::required(), P::constant(3.0)])
-                .numbers_roles(context, [Some(self.1), self.2.0])
+            NumericSignature::new(&[
+                NumericParameter::required(),
+                NumericParameter::constant(3.0),
+            ])
+            .numbers_roles(context, [Some(self.1), self.2.0])
         } else {
-            NumericSignature::new(&[P::required()]).numbers_roles(context, [Some(self.1)])
+            NumericSignature::new(&[NumericParameter::required()])
+                .numbers_roles(context, [Some(self.1)])
         }
     }
 }
+
 impl OrderRoles for (Broadcast, WholeCollection, Optional<Broadcast>) {
     fn sample(&self) -> &WholeCollection {
         &self.1
     }
+
     fn numbers(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
-        _function: F,
+        _function: StatisticsFunction,
     ) -> FunctionResult<elementwise::NumericArguments> {
-        NumericSignature::new(&[P::required(), P::constant(0.0)])
-            .numbers_roles(context, [Some(self.0), self.2.0])
+        NumericSignature::new(&[
+            NumericParameter::required(),
+            NumericParameter::constant(0.0),
+        ])
+        .numbers_roles(context, [Some(self.0), self.2.0])
     }
 }
+
 impl<R: OrderRoles> Kernel for Order<R> {
     type Signature = R;
+
     fn prepare(&mut self, host: &mut CallHost<'_, '_>, arguments: &R) -> FunctionResult<()> {
-        use F::*;
+        use StatisticsFunction::{PercentRank, PercentRankExc, PercentRankInc, Rank, RankEq};
         let policy = match self.function {
             Rank | RankEq => domain::Collection::Rank,
             PercentRank | PercentRankInc | PercentRankExc => domain::Collection::PercentRank,
@@ -204,12 +253,16 @@ impl<R: OrderRoles> Kernel for Order<R> {
         self.values = collections::statistics(host, [*arguments.sample()], policy)?;
         Ok(())
     }
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &R,
     ) -> FunctionResult<CellValue> {
-        use F::*;
+        use StatisticsFunction::{
+            Large, PercentRank, PercentRankExc, PercentRankInc, Percentile, QuartileInc, Rank,
+            RankEq, Small,
+        };
         let n = arguments.numbers(context, self.function)?;
         let first = n.get(0)?;
         context
@@ -217,7 +270,7 @@ impl<R: OrderRoles> Kernel for Order<R> {
             .charge_work((self.values.len() as u64).saturating_mul(64))?;
         let value = match self.function {
             Large | Small => {
-                let rank = poirot_functions::coercion::compatibility::coercev2_statistics_kth_rank(
+                let rank = poirot_functions::coercion::compatibility::coerce_statistics_kth_rank(
                     first,
                     if self.function == Large {
                         poirot_functions::coercion::compatibility::KthRankPolicy::DocumentedLarge
@@ -259,21 +312,22 @@ impl<R: OrderRoles> Kernel for Order<R> {
             }
             _ => return Err(VALUE_ERROR.into()),
         };
-        Ok(numeric_outcome::coerce_checked_numeric_result(value))
+        Ok(numeric_outcome::convert_checked_numeric_result(value))
     }
 }
 
 /// Paired-statistics kernel that collects aligned X and Y observations once.
 /// A forecast signature can broadcast target coordinates over those same pairs.
 struct Paired<R> {
-    function: F,
+    function: StatisticsFunction,
     y: Vec<f64>,
     x: Vec<f64>,
     roles: std::marker::PhantomData<R>,
 }
+
 impl<R> Paired<R> {
     /// Retain a paired mathematical operation until samples have been admitted.
-    fn new(function: F) -> Self {
+    fn new(function: StatisticsFunction) -> Self {
         Self {
             function,
             y: Vec::new(),
@@ -282,45 +336,57 @@ impl<R> Paired<R> {
         }
     }
 }
+
 /// Typed pair signatures retain collection positions and an optional scalar forecast.
 trait PairRoles: elementwise::Signature {
     /// Return samples in their source acquisition order.
     fn samples(&self) -> (&WholeCollection, &WholeCollection);
+
     /// Coerce the forecast coordinate only for signatures that declare one.
     fn target(&self, context: &mut MemberContext<'_, '_, '_>) -> FunctionResult<Option<f64>>;
 }
+
 impl PairRoles for (WholeCollection, WholeCollection) {
     fn samples(&self) -> (&WholeCollection, &WholeCollection) {
         (&self.0, &self.1)
     }
+
     fn target(&self, _context: &mut MemberContext<'_, '_, '_>) -> FunctionResult<Option<f64>> {
         Ok(None)
     }
 }
+
 impl PairRoles for (Broadcast, WholeCollection, WholeCollection) {
     fn samples(&self) -> (&WholeCollection, &WholeCollection) {
         (&self.1, &self.2)
     }
+
     fn target(&self, context: &mut MemberContext<'_, '_, '_>) -> FunctionResult<Option<f64>> {
-        NumericSignature::new(&[P::required()])
+        NumericSignature::new(&[NumericParameter::required()])
             .numbers_roles(context, [Some(self.0)])?
             .get(0)
             .map(Some)
     }
 }
+
 impl<R: PairRoles> Kernel for Paired<R> {
     type Signature = R;
+
     fn prepare(&mut self, host: &mut CallHost<'_, '_>, arguments: &R) -> FunctionResult<()> {
         let (first, second) = arguments.samples();
         (self.y, self.x) = collections::pairs(host, first, second, Admission::Numeric)?;
         Ok(())
     }
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &R,
     ) -> FunctionResult<CellValue> {
-        use F::*;
+        use StatisticsFunction::{
+            Correl, Covar, CovarianceP, CovarianceS, Intercept, Pearson, Slope, SumX2MY2, SumX2PY2,
+            SumXMY2,
+        };
         let target = arguments.target(context)?;
         context
             .host
@@ -353,7 +419,7 @@ impl<R: PairRoles> Kernel for Paired<R> {
                 domain::SamplePolicy::ExcelDocumentation,
             )?
         };
-        Ok(numeric_outcome::coerce_checked_numeric_result(value))
+        Ok(numeric_outcome::convert_checked_numeric_result(value))
     }
 }
 
@@ -362,12 +428,17 @@ pub(super) fn execute(
     session: &mut Session<'_>,
     sheet: usize,
     address: CellAddress,
-    function: F,
+    function: StatisticsFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    use F::*;
-    let function = if function == F::QuartileIncLegacy {
-        F::QuartileInc
+    use StatisticsFunction::{
+        AveDev, AverageA, Correl, Covar, CovarianceP, CovarianceS, DevSq, Forecast, ForecastLinear,
+        GeoMean, Intercept, Large, MaxA, MinA, Mode, Pearson, PercentRank, PercentRankExc,
+        PercentRankInc, Percentile, QuartileInc, Rank, RankEq, Slope, Small, StdevA, StdevPA,
+        SumX2MY2, SumX2PY2, SumXMY2, VarA, VarPA,
+    };
+    let function = if function == StatisticsFunction::QuartileIncLegacy {
+        StatisticsFunction::QuartileInc
     } else {
         function
     };

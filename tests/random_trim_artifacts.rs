@@ -1,7 +1,7 @@
 //! Saved evaluator compatibility is independent of authored workbook source.
 use poirot::calculation::EvaluationContext;
+use poirot::eval::EvaluationPolicy;
 use poirot::eval::artifact;
-use poirot::eval::overlay::EvaluationPolicy;
 use poirot::eval::overlay::Overlay;
 use poirot::{CellValue, Workbook};
 #[test]
@@ -24,7 +24,9 @@ fn previous_random_trim_preparation_recovers_authored_source_and_edits() {
         overlay.evaluation(&context).unwrap().cell(trimmed).unwrap(),
         11.0.into()
     );
-    let mut bytes = overlay.save_snapshot().to_buffer().unwrap();
+    let mut bytes = poirot::eval::artifact::SnapshotSaveBuilder::checkpoint(overlay.snapshot())
+        .to_buffer()
+        .unwrap();
     let previous = poirot::eval::overlay::snapshot::COMPATIBILITY_REVISION - 1;
     bytes[16..24].copy_from_slice(&previous.to_le_bytes());
     assert!(

@@ -1,5 +1,5 @@
 //! Rendered text keeps fill positions outside user-visible Unicode data.
-use super::*;
+use super::{FormatError, Token, error, literal, resource_error};
 /// Display text with deferred `*` fill insertions kept outside the visible buffer.
 /// Tracking insertion positions lets final rendering apply character width without reserving
 /// a sentinel character that could collide with user text.
@@ -85,6 +85,9 @@ impl RenderedText {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::format::{
+        CellValue, FormatCompilePolicy, FormatRenderContext, compile_format, render_value,
+    };
     #[test]
     fn tracked_positions_preserve_arbitrary_unicode_and_use_character_width() {
         let mut output = RenderedText::plain("é😀\u{10ffff}");

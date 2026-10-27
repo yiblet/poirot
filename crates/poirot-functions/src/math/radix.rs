@@ -70,7 +70,7 @@ mod tests {
             for number in [0, 1, 15, 255, 45745, 9007199254740991] {
                 let text = base(number, radix, 0).unwrap();
                 assert_eq!(
-                    crate::coercion::radix::coercev2_decimal_text(&text, radix),
+                    crate::coercion::radix::coerce_decimal_text(&text, radix),
                     Ok(number as f64)
                 );
             }

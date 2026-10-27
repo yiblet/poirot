@@ -60,48 +60,115 @@ name and `$` anchors for copy translation; `CellCoordinates` is the parser's dec
 token form. Evaluation resolves references against a workbook before reading cells.
 Neither syntax type owns a stored cell or a calculated result.
 
+## Evaluator layout
+
+`src/eval/mod.rs` declares the folders below and re-exports the public evaluation
+API. Each folder states its purpose and its "Depends on:" siblings in its `mod.rs`.
+Evaluator code imports items from their defining module; a folder's `mod.rs`
+re-exports serve only callers outside that folder. `super::` paths stay within one
+top-level folder; imports from another folder use `crate::eval::<folder>::..`
+(`tools/test_module_layout.py` checks both).
+
+Folders are listed from the bottom layer up. A folder uses only folders listed
+before it, except inside the recursion group.
+
+| Layer | Folder | Purpose | Uses |
+| --- | --- | --- | --- |
+| 1 | `coordinates/` | Cell identity (`EvaluationTarget`) and run-local hash tables and memo keyed by sheet index and address | — |
+| 1 | `inputs/` | Sparse scenario edits and the effective workbook reads that merge them with a baseline | — |
+| 2 | `limits/` | Work budgets, usage records and run counters, memo retention limits, operational failures and outcomes, fallible allocation | coordinates |
+| 2 | `materialization/` | Explicit cache publication policy and receipts | coordinates |
+| 3 | `values/` | Value channels, reference areas, arrays, coercion, comparison, numeric results, budget-admitted copies, function failures, `CellEvaluation` | coordinates, limits |
+| 4 | `config/` | Immutable inputs: policies, clock, random streams, calendar, locale, context fields, `EvaluationContext`, `EvaluationPolicy` | limits, values, materialization |
+| 5 | `functions/` | Builtin identities and spellings, extension registrations, external function names, ATP names | config, coordinates, limits, values |
+| 6 | `compile/` | Formula text to bound expression to bytecode, plus possible-result typing | functions, coordinates, limits |
+| 6 | `observe/` | Execution events, bounded retention and consumed builtin calls | functions, coordinates, limits, values |
+| 6 | `ports/` | Caller-implemented run ports: completed cells, consumed reads, cached results | functions, coordinates, limits |
+| 7 | `reuse/` | Retained dependency evidence, the persistent result cache, spill roles and lookup prefixes | config, functions, coordinates, limits, ports |
+| 8 | `session/` | `Session` and the executors for one cell lifecycle: cells, reads, projection, observation | layers 1–7, host, spill, vm |
+| 8 | `vm/` | Bytecode execution, call admission, operators, references, selection and broadcasting | layers 1–7, session, host, adapters, spill |
+| 8 | `spill/` | Dynamic-array discovery, settlement and publication | layers 1–7, session |
+| 8 | `host/` | `CallHost` (adapter call boundary: arguments, admission, failures) and its executors; extension invocation | layers 1–7, session, vm, spill, adapters |
+| 8 | `adapters/` | Per-family adapters over pure `poirot-functions` algorithms | layers 1–7, host, session, vm, spill |
+| 9 | `run/` | `EvaluationRun`: one execution lifetime over a prepared workbook view | layers 1–8 |
+| 10 | `entry/` | Public `run_*` entry points (including extension runs) and atomic recalculation | layers 1–9 |
+| 10 | `overlay/` | `Overlay` and `Evaluation`: retained edits and incremental reuse across scenarios | layers 1–9 |
+| 11 | `artifact/` | Versioned native snapshots that save and restore overlays | config, overlay |
+
+Layer 8 is the evaluator's one recursion group: cells run formulas (`session` →
+`vm`), formulas call adapters through the host (`vm` → `host` → `adapters`), and
+adapters read cells and spills back through the session (`adapters` → `session`,
+`spill`). These five folders depend on each other; every other dependency points
+down. `tools/test_eval_dependencies.py` declares the group, checks each folder's
+`Depends on:` line against its non-test imports and rejects any other cycle.
+
+Inside a folder, each struct or enum lives in one file with all its impls. Behavior
+that needs a whole `Session` or `CallHost` lives in an executor: a struct that
+borrows it, is named for its job and is built at the call site, such as
+`Vm::new(session)`. Examples are `Vm` (`vm/`), `CellEvaluator` (`session/cells/`),
+`SpillDemand` (`spill/`) and `OperandReader` (`host/`).
+
+`Session` (`src/eval/session/composition.rs`) holds only its component structs:
+`RunSources` (workbook content, scenario inputs, compilation services),
+`RunPolicies` (execution policies), `RunState` (execution storage and mode),
+`ReuseHandles` (retained result caches and dependency recording) and `RunPorts`
+(caller-installed observation ports). `RunState` reaches the `Runtime` storage, owned
+by the run or borrowed from a persistent workspace (`Storage`), which holds one
+component per concern: `Machine` (VM stacks, `vm/`), `BudgetMeter` and `RunUsage`,
+`EvaluationStack` (cells and names under evaluation, the consuming target),
+`ResultMemo` (memoized results and retention usage), `CallEffects` (random streams,
+date coercion effects, extension trace), `SpillPreparation`, `LookupPrefixes` and
+`ObservationState`. Each field has one path, such as `session.state.runtime.budget`.
+
 ## Follow a calculation
 
 `book.evaluation().build()?.cell(target)` reaches the evaluator's direct scenario.
 `book.overlay().build()?.evaluation(&context)?.cell(target)` uses the same execution
 engine with dependency tracking and a cache retained across edits.
 
-Both enter `Session::cell` in `src/eval/session_execution.rs`:
+Both enter `CellEvaluator::cell` in `src/eval/session/cells/cell_evaluator.rs`:
 
 1. Resolve the effective source, including scenario edits.
 2. Record the read and reuse a valid cached result if available.
 3. Otherwise evaluate the literal or compiled formula and its dependencies.
 4. Restore the caller's state, record dependency evidence and notify observers.
 
-`CellAttempt` carries execution state; `CellRead` carries the result into completion.
-`CompletionContext` restricts completion to bookkeeping and observer delivery.
-Spreadsheet errors are values. Operational failures, such as exhausted budgets,
-are Rust errors. A failed output batch publishes none of its new results.
+In `src/eval/session/cells/`, `CellAttempt` carries execution state, `CellRead`
+carries the result into completion and `CompletionContext` restricts completion to
+bookkeeping and observer delivery. Spreadsheet errors are values. Operational
+failures, such as exhausted budgets, are Rust errors. A failed output batch
+publishes none of its new results.
 
-Compilation lives in `compiler.rs` and `bytecode.rs`; execution lives in
-`bytecode_vm.rs`. A compiled body holds instructions and a label table. Deferred
-arguments preserve lazy function behavior; runtime operators handle broadcasting.
+`src/eval/compile/` turns formulas into bytecode; `src/eval/vm/bytecode_vm.rs`
+defines the `Vm` executor that runs it. A compiled body holds instructions and a
+label table. Deferred arguments preserve lazy function behavior; runtime operators
+handle broadcasting.
 
 ## Types and spills
 
-`typing.rs` infers possible scalar kinds, arrays, references, maximum dimensions
-and effects alongside compilation. Unknown inputs stay conservative. These facts
-help rule out impossible spills; they do not establish actual spill ownership or
-replace runtime dependency tracking.
+`src/eval/compile/typing/` infers possible scalar kinds, arrays, references, maximum
+dimensions and effects alongside compilation. Unknown inputs stay conservative.
+These facts help rule out impossible spills; they do not establish actual spill
+ownership or replace runtime dependency tracking.
 
-`spill_publication.rs` coordinates four smaller services: candidate discovery,
-producer execution, overlap settlement and admission. Possible rectangles locate
-producers that could reach a requested blank or range. Actual evaluated shapes
-determine ownership. Authored nonblank cells block spills; competing producers
-use Poirot's top-left priority. The [compatibility guide](compatibility.md) describes
-how that policy differs from a promise of exact Excel compatibility.
+`src/eval/spill/` coordinates candidate discovery (`discovery.rs`), producer
+execution (`producer_execution.rs`), overlap settlement (`settlement.rs`) and
+admission (`admission.rs`). Readers demand settled ownership through the
+`SpillDemand` executor (`spill_demand.rs`). Possible rectangles locate producers
+that could reach a requested blank or range. Actual evaluated shapes determine
+ownership. Authored nonblank cells block spills; competing producers use Poirot's
+top-left priority. The [compatibility guide](compatibility.md) describes how that
+policy differs from a promise of exact Excel compatibility.
 
 ## Reuse and edits
 
-`overlay/dependencies.rs` records consumed cells and ranges and invalidates their
-readers after edits. A dirty result can remain cached when its dependencies
-recalculate to identical values. Context changes and volatile functions follow
-their own invalidation rules. Export includes only currently valid results.
+`Overlay` (`src/eval/overlay/incremental.rs`) retains edits, compiled formulas and
+results between calculations. `src/eval/reuse/` records consumed cells and ranges
+(`reads.rs`, `dependencies.rs`) and invalidates their readers after edits
+(`cache.rs`). A dirty result can
+remain cached when its dependencies recalculate to identical values. Context
+changes and volatile functions follow their own invalidation rules. Export
+includes only currently valid results.
 
 Start with `tests/cell_lifecycle.rs` for public examples of dependency reads,
 warm reuse, edits and failure recovery. Read [evaluation.md](evaluation.md) for

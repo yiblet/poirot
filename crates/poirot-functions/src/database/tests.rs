@@ -230,8 +230,8 @@ fn java_numeric_criteria_syntax() {
     );
     assert_eq!(condition_matches(&3.0.into(), &"=0x1.8p1".into()), Ok(true));
     assert_eq!(condition_matches(&3.0.into(), &"=3f".into()), Ok(true));
-    assert_eq!(coercev2_java_number_text("inf"), None);
-    assert_eq!(coercev2_java_number_text("3\u{a0}"), None);
+    assert_eq!(coerce_java_number_text("inf"), None);
+    assert_eq!(coerce_java_number_text("3\u{a0}"), None);
 }
 #[test]
 fn shapes_headers_and_rounding() {

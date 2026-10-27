@@ -12,12 +12,12 @@ impl Workbook for Book {
     fn argument(&mut self, _: usize, _: Context) -> Result<Value, Failure> {
         Err(Failure::Unsupported(Unsupported::DeferredArguments))
     }
-    fn coercev2_numeric_text(&mut self, text: &str) -> Result<f64, Failure> {
+    fn coerce_numeric_text(&mut self, text: &str) -> Result<f64, Failure> {
         text.trim()
             .parse()
             .map_err(|_| Failure::Spreadsheet(Error::Value))
     }
-    fn coercev2_number_to_text(&mut self, number: f64) -> Result<String, Failure> {
+    fn coerce_number_to_text(&mut self, number: f64) -> Result<String, Failure> {
         Ok(number.to_string())
     }
     fn cell(&mut self, _: &Reference, sheet: u32, row: u32, col: u32) -> Result<Scalar, Failure> {

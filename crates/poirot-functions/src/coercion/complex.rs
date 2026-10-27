@@ -34,7 +34,7 @@ pub struct ComplexNumber {
     pub suffix: ComplexSuffix,
 }
 /// Admit a suffix, retaining the established empty-string default.
-pub fn coercev2_complex_suffix(text: &str) -> Result<ComplexSuffix> {
+pub fn coerce_complex_suffix(text: &str) -> Result<ComplexSuffix> {
     match text {
         "" | "i" => Ok(ComplexSuffix::I),
         "j" => Ok(ComplexSuffix::J),
@@ -44,7 +44,7 @@ pub fn coercev2_complex_suffix(text: &str) -> Result<ComplexSuffix> {
 /// Complex component admission is identical for direct, referenced and selected
 /// array scalars. Text capacity/work admission stays with the host; missing
 /// arguments retain the host's capability failure rather than becoming blanks.
-pub fn coercev2_complex_scalar(value: crate::scalar::Scalar) -> Result<Option<ComplexNumber>> {
+pub fn coerce_complex_scalar(value: crate::scalar::Scalar) -> Result<Option<ComplexNumber>> {
     use crate::scalar::Scalar;
     match value {
         Scalar::Number(real) if real.is_finite() => Ok(Some(ComplexNumber {
@@ -57,7 +57,7 @@ pub fn coercev2_complex_scalar(value: crate::scalar::Scalar) -> Result<Option<Co
             imaginary: 0.0,
             suffix: ComplexSuffix::I,
         })),
-        Scalar::Text(text) => coercev2_complex_text(&text).map(Some),
+        Scalar::Text(text) => coerce_complex_text(&text).map(Some),
         Scalar::Missing => Ok(None),
         Scalar::Error(error) => Err(error),
         Scalar::Boolean(_) => Err(CellError::Value),
@@ -66,7 +66,7 @@ pub fn coercev2_complex_scalar(value: crate::scalar::Scalar) -> Result<Option<Co
 }
 /// Parse finite ASCII decimal/scientific coefficients; no whitespace, locale,
 /// currency, percent, date, hex, infinity or NaN grammar is inherited.
-pub fn coercev2_complex_text(text: &str) -> Result<ComplexNumber> {
+pub fn coerce_complex_text(text: &str) -> Result<ComplexNumber> {
     let (body, suffix, has_unit) = if let Some(body) = text.strip_suffix('i') {
         (body, ComplexSuffix::I, true)
     } else if let Some(body) = text.strip_suffix('j') {
@@ -92,7 +92,7 @@ pub fn coercev2_complex_text(text: &str) -> Result<ComplexNumber> {
         }
         let coefficient = if let Some(at) = split {
             let r = body.get(..at).ok_or(CellError::Num)?;
-            real = coercev2_complex_coefficient(r)?;
+            real = coerce_complex_coefficient(r)?;
             body.get(at..).ok_or(CellError::Num)?
         } else {
             body
@@ -100,10 +100,10 @@ pub fn coercev2_complex_text(text: &str) -> Result<ComplexNumber> {
         imaginary = match coefficient {
             "" | "+" => 1.0,
             "-" => -1.0,
-            other => coercev2_complex_coefficient(other)?,
+            other => coerce_complex_coefficient(other)?,
         };
     } else {
-        real = coercev2_complex_coefficient(body)?;
+        real = coerce_complex_coefficient(body)?;
         imaginary = 0.0;
     }
     Ok(ComplexNumber {
@@ -112,7 +112,7 @@ pub fn coercev2_complex_text(text: &str) -> Result<ComplexNumber> {
         suffix,
     })
 }
-fn coercev2_complex_coefficient(text: &str) -> Result<f64> {
+fn coerce_complex_coefficient(text: &str) -> Result<f64> {
     // nom's decimal/scientific number parser consumes no surrounding whitespace;
     // all_consuming rejects locale separators, suffixes and trailing operators.
     let (_, n) = nom::combinator::all_consuming(
@@ -129,7 +129,7 @@ fn coercev2_complex_coefficient(text: &str) -> Result<f64> {
 /// Render computed coefficients using the host's established number formatter.
 /// Zero is canonical text zero; negative unit coefficients retain their sign.
 // TODO(coercion-non-argument): [LOW] Computed result spelling can round component digits.
-pub fn coerce_complex_result(
+pub fn convert_complex_result(
     value: ComplexNumber,
     format_number: impl Fn(f64) -> String,
 ) -> Result<String> {
@@ -163,7 +163,7 @@ pub fn coerce_complex_result(
 
 /// The formatter is supplied by the adapter to preserve the engine's Excel number spelling.
 // TODO(coercion-non-argument): [LOW] Pinned result spelling intentionally retains historical sign and zero behavior.
-pub fn coerce_complex_pinned_result(
+pub fn convert_complex_pinned_result(
     real: f64,
     imaginary: f64,
     suffix: &str,
@@ -191,7 +191,7 @@ pub fn coerce_complex_pinned_result(
     Ok(text)
 }
 
-fn coercev2_complex_pinned_parts(text: &str) -> Result<regex::Captures<'_>> {
+fn coerce_complex_pinned_parts(text: &str) -> Result<regex::Captures<'_>> {
     static PATTERN: OnceLock<regex::Regex> = OnceLock::new();
     PATTERN
         .get_or_init(|| {
@@ -205,8 +205,8 @@ fn coercev2_complex_pinned_parts(text: &str) -> Result<regex::Captures<'_>> {
         .ok_or(CellError::Num)
 }
 /// Extract the imaginary component of a complex-number spelling.
-pub fn coercev2_complex_pinned_imaginary(text: &str) -> Result<String> {
-    let parts = coercev2_complex_pinned_parts(text)?;
+pub fn coerce_complex_pinned_imaginary(text: &str) -> Result<String> {
+    let parts = coerce_complex_pinned_parts(text)?;
     if parts.get(5).ok_or(CellError::Num)?.as_str().is_empty() {
         return Ok("0".into());
     }
@@ -225,8 +225,8 @@ pub fn coercev2_complex_pinned_imaginary(text: &str) -> Result<String> {
     ))
 }
 /// Extract the real component of a complex-number spelling.
-pub fn coercev2_complex_pinned_real(text: &str) -> Result<String> {
-    let parts = coercev2_complex_pinned_parts(text)?;
+pub fn coerce_complex_pinned_real(text: &str) -> Result<String> {
+    let parts = coerce_complex_pinned_parts(text)?;
     if parts.get(2).ok_or(CellError::Num)?.as_str().is_empty() {
         return Ok("0".into());
     }
@@ -263,7 +263,7 @@ mod tests {
             ("-0-0i", 0.0, 0.0, ComplexSuffix::I),
         ] {
             assert_eq!(
-                coercev2_complex_text(text),
+                coerce_complex_text(text),
                 Ok(ComplexNumber {
                     real,
                     imaginary,
@@ -283,7 +283,7 @@ mod tests {
             (3.0, 0.0, "3"),
         ] {
             assert_eq!(
-                coerce_complex_result(
+                convert_complex_result(
                     ComplexNumber {
                         real,
                         imaginary,
@@ -306,21 +306,21 @@ mod tests {
             " 2+3i", "2 +3i", "2+3i ", "NaN", "inf", "1e309i", "0x1i", "$2", "2%", "1,000",
             "1/2/2020", "２i", "😀i",
         ] {
-            assert_eq!(coercev2_complex_text(text), Err(CellError::Num), "{text}");
+            assert_eq!(coerce_complex_text(text), Err(CellError::Num), "{text}");
         }
         use crate::scalar::Scalar;
         assert_eq!(
-            coercev2_complex_scalar(Scalar::Boolean(true)),
+            coerce_complex_scalar(Scalar::Boolean(true)),
             Err(CellError::Value)
         );
         assert_eq!(
-            coercev2_complex_scalar(Scalar::Error(CellError::NA)),
+            coerce_complex_scalar(Scalar::Error(CellError::NA)),
             Err(CellError::NA)
         );
-        assert_eq!(coercev2_complex_scalar(Scalar::Missing), Ok(None));
+        assert_eq!(coerce_complex_scalar(Scalar::Missing), Ok(None));
         let exact = 1.2345678901234567;
         assert_eq!(
-            coercev2_complex_scalar(Scalar::Number(exact))
+            coerce_complex_scalar(Scalar::Number(exact))
                 .unwrap()
                 .unwrap()
                 .real
@@ -328,7 +328,7 @@ mod tests {
             exact.to_bits()
         );
         assert_eq!(
-            coerce_complex_result(
+            convert_complex_result(
                 ComplexNumber {
                     real: f64::INFINITY,
                     imaginary: 0.0,

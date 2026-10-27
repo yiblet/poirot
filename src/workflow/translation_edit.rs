@@ -3,13 +3,6 @@ use crate::model::{CellValue, FormulaSource, ModelError, Workbook};
 use crate::workflow::edit::EditError;
 use poirot_parsing::formula::{FormulaLocation, TranslationPlan, TranslationPolicy};
 
-/// Treatment of saved formula results after an in-place reference translation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum TranslationCachePolicy {
-    /// Changed cell formulas lose their imported result; runtime caches key by source.
-    #[default]
-    ClearChanged,
-}
 /// A formula source and the copy displacement used to translate its relative references.
 /// `to` defines the displacement; it does not move the formula to a new cell.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -21,24 +14,81 @@ pub struct TranslationRequest {
     /// Destination cell context for relative references.
     pub to: FormulaLocation,
 }
+/// Options for translating references within existing formulas in place.
+///
+/// Each request translates relative references as if its formula were copied
+/// by the request's displacement; no cells move. All requested formulas are
+/// translated before any change is written, so one failure leaves the workbook
+/// unchanged. Changed cell formulas lose their saved result and shared-formula
+/// provenance.
+///
+/// ```
+/// use poirot::{Workbook, editing::{FormulaLocation, FormulaSource, TranslationRequest}};
+/// let mut book = Workbook::new();
+/// book.add_sheet("Data")?.set_formula("B1".parse()?, "A1*2")?;
+/// let changed = book
+///     .translate_formulas()
+///     .request(TranslationRequest {
+///         source: FormulaSource::Cell { sheet: 0, address: "B1".parse()? },
+///         from: FormulaLocation { row: 0, column: 1 },
+///         to: FormulaLocation { row: 1, column: 1 },
+///     })
+///     .apply()?;
+/// assert_eq!(changed.len(), 1);
+/// assert_eq!(book.stored_cell("Data", "B1".parse()?).ok_or("missing")?.formula.as_deref(),
+///     Some("A2*2"));
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+#[derive(Debug)]
+#[must_use = "Call apply to translate the formulas"]
+pub struct TranslateFormulasBuilder<'a> {
+    workbook: &'a mut Workbook,
+    requests: Vec<TranslationRequest>,
+    policy: TranslationPolicy,
+}
+impl<'a> TranslateFormulasBuilder<'a> {
+    /// Configure an empty batch of translations for `workbook`.
+    pub(crate) fn new(workbook: &'a mut Workbook) -> Self {
+        Self {
+            workbook,
+            requests: Vec::new(),
+            policy: TranslationPolicy::default(),
+        }
+    }
+    /// Add one formula to translate. Each formula source may appear once.
+    pub fn request(mut self, request: TranslationRequest) -> Self {
+        self.requests.push(request);
+        self
+    }
+    /// Replace the translation boundary and parsing policy.
+    pub fn policy(mut self, policy: TranslationPolicy) -> Self {
+        self.policy = policy;
+        self
+    }
+    /// Translate every requested formula as one atomic edit.
+    ///
+    /// Returns the sources whose formula text changed.
+    pub fn apply(self) -> Result<Vec<FormulaSource>, EditError> {
+        FormulaTranslationEditPlan::new(self.workbook, &self.requests, self.policy)?
+            .apply(self.workbook)
+    }
+}
 /// A source-checked batch of in-place formula translations.
 /// Application validates the captured sheet/name topology and formula sources before
-/// changing any formula, and clears changed cell results under the default policy.
+/// changing any formula, and clears changed cell results.
 #[derive(Debug, Clone, PartialEq)]
-pub struct FormulaTranslationEditPlan {
+struct FormulaTranslationEditPlan {
     sheets: Vec<String>,
     names: Vec<(String, String, Option<usize>)>,
     edits: Vec<(FormulaSource, TranslationPlan)>,
-    cache_policy: TranslationCachePolicy,
 }
 impl FormulaTranslationEditPlan {
     /// Translate references in the selected formulas in place. This does not copy
     /// cells or move workbook structure; from/to specify the copy displacement.
-    pub fn new(
+    fn new(
         workbook: &Workbook,
         requests: &[TranslationRequest],
         policy: TranslationPolicy,
-        cache_policy: TranslationCachePolicy,
     ) -> Result<Self, EditError> {
         let mut seen = std::collections::BTreeSet::new();
         let mut edits = Vec::new();
@@ -68,20 +118,11 @@ impl FormulaTranslationEditPlan {
             sheets: sheet_names(workbook),
             names: defined_names(workbook),
             edits,
-            cache_policy,
         })
-    }
-    /// Borrow checked source replacements to apply as one edit.
-    pub fn edits(&self) -> &[(FormulaSource, TranslationPlan)] {
-        &self.edits
-    }
-    /// Return the saved-result policy captured during planning.
-    pub fn cache_policy(&self) -> TranslationCachePolicy {
-        self.cache_policy
     }
     /// All preconditions are checked before writes. Saved results and styles do
     /// not participate in source identity; changes to names/sheets invalidate it.
-    pub fn apply(&self, workbook: &mut Workbook) -> Result<Vec<FormulaSource>, EditError> {
+    fn apply(&self, workbook: &mut Workbook) -> Result<Vec<FormulaSource>, EditError> {
         if self.sheets != sheet_names(workbook) || self.names != defined_names(workbook) {
             return Err(model_error("stale translation workbook identity"));
         }
@@ -107,9 +148,7 @@ impl FormulaTranslationEditPlan {
                         .ok_or_else(|| model_error("stale translation formula source"))?;
                     cell.formula = Some(plan.replacement().into());
                     cell.shared_formula = None;
-                    match self.cache_policy {
-                        TranslationCachePolicy::ClearChanged => cell.value = CellValue::Blank,
-                    }
+                    cell.value = CellValue::Blank;
                 }
                 FormulaSource::DefinedName { index } => {
                     workbook
@@ -177,13 +216,8 @@ mod tests {
     fn pure_plan_atomic_stale_and_clear_changed_caches() {
         let (mut w, requests) = setup();
         let before = w.clone();
-        let plan = FormulaTranslationEditPlan::new(
-            &w,
-            &requests,
-            TranslationPolicy::default(),
-            TranslationCachePolicy::default(),
-        )
-        .unwrap();
+        let plan =
+            FormulaTranslationEditPlan::new(&w, &requests, TranslationPolicy::default()).unwrap();
         assert_eq!(w, before);
         w.sheet_mut(0)
             .unwrap()
@@ -202,13 +236,8 @@ mod tests {
             group: crate::model::SharedFormulaId(1),
             origin: "A1".parse().unwrap(),
         });
-        let plan = FormulaTranslationEditPlan::new(
-            &w,
-            &requests,
-            TranslationPolicy::default(),
-            TranslationCachePolicy::default(),
-        )
-        .unwrap();
+        let plan =
+            FormulaTranslationEditPlan::new(&w, &requests, TranslationPolicy::default()).unwrap();
         assert_eq!(plan.apply(&mut w).unwrap().len(), 2);
         let cell = w.sheet(0).unwrap().get("A1".parse().unwrap()).unwrap();
         assert_eq!(cell.formula.as_deref(), Some("B2+$B$2"));
@@ -225,23 +254,12 @@ mod tests {
             .formula = Some("XFD2".into());
         let before = w.clone();
         assert!(
-            FormulaTranslationEditPlan::new(
-                &w,
-                &requests,
-                TranslationPolicy::default(),
-                TranslationCachePolicy::default()
-            )
-            .is_err()
+            FormulaTranslationEditPlan::new(&w, &requests, TranslationPolicy::default(),).is_err()
         );
         assert_eq!(w, before);
         let (mut w, requests) = setup();
-        let plan = FormulaTranslationEditPlan::new(
-            &w,
-            &requests,
-            TranslationPolicy::default(),
-            TranslationCachePolicy::default(),
-        )
-        .unwrap();
+        let plan =
+            FormulaTranslationEditPlan::new(&w, &requests, TranslationPolicy::default()).unwrap();
         w.rename_sheet(0, "Other").unwrap();
         let before = w.clone();
         assert!(plan.apply(&mut w).is_err());

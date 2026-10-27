@@ -4,8 +4,20 @@ use crate::eval::adapters::elementwise::{
     Variadic, WholeCollection,
     collections::{self, CollectionKernel},
 };
-use crate::eval::host::{CallHost, HostOperand, NumericPolicy, OperandOrigin, ScalarOperand};
-use crate::eval::*;
+use crate::eval::functions::registry::StatisticsFunction;
+use crate::eval::host::{
+    ArgumentCoercion, CallHost, HostOperand, NumericPolicy, OperandReader, ScalarOperand,
+};
+use crate::eval::limits::{CapabilityId, EvalResult, WorkKind};
+use crate::eval::session::Session;
+use crate::eval::values::core_projection::semantic;
+use crate::eval::values::{
+    FunctionResult, OperandOrigin, VALUE_ERROR, Value, err, numeric_outcome,
+};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::Div0;
+use crate::model::CellValue::{Blank, Boolean, Error, Number, Text};
+use crate::model::{CellAddress, CellError, CellValue, KnownSourceException};
 use poirot_functions::statistics::{NumericReduction, NumericReductionState};
 use std::{collections::TryReserveError, ops::ControlFlow};
 
@@ -24,7 +36,7 @@ struct State {
 impl State {
     /// Construct the fixed-scratch reducer or sample vector selected by a function.
     fn new(function: StatisticsFunction) -> Self {
-        use StatisticsFunction::*;
+        use StatisticsFunction::{Average, Max, Min, Product, Sum, SumSq};
         let operation = match function {
             Sum => Some(NumericReduction::Sum),
             SumSq => Some(NumericReduction::SumSq),
@@ -47,7 +59,7 @@ impl State {
 
     /// Fold one already read member without invoking another host service.
     fn consume(&mut self, function: StatisticsFunction, member: ScalarOperand, selected: bool) {
-        use StatisticsFunction::*;
+        use StatisticsFunction::{Count, CountA};
         if self.error.is_some() || self.special || self.allocation_failed {
             return;
         }
@@ -105,8 +117,11 @@ fn direct(
             || (!member.missing && member.origin == OperandOrigin::Direct && member.value == Blank)
             || (!member.missing
                 && !matches!(member.value, Blank | Error(_))
-                && semantic(host.coercev2_scalar_number(&member.value, NumericPolicy::PinnedPoi))?
-                    .is_ok())
+                && semantic(
+                    ArgumentCoercion::new(host)
+                        .coerce_scalar_number(&member.value, NumericPolicy::PinnedPoi),
+                )?
+                .is_ok())
         {
             state.count += 1;
         }
@@ -118,7 +133,7 @@ fn direct(
     }
     let value =
         if !member.missing && member.origin == OperandOrigin::Direct && member.value == Blank {
-            poirot_functions::coercion::collections::coercev2_aggregate_argument(
+            poirot_functions::coercion::collections::coerce_aggregate_argument(
                 member.value,
                 poirot_functions::scalar::Origin::Direct,
             )
@@ -136,10 +151,10 @@ fn direct(
     let number = if function == StatisticsFunction::Sum {
         match value {
             Number(number) => Ok(number),
-            _ => host.coercev2_scalar_number(&value, NumericPolicy::PinnedPoi),
+            _ => ArgumentCoercion::new(host).coerce_scalar_number(&value, NumericPolicy::PinnedPoi),
         }
     } else {
-        host.coercev2_scalar_number(&value, NumericPolicy::PinnedPoi)
+        ArgumentCoercion::new(host).coerce_scalar_number(&value, NumericPolicy::PinnedPoi)
     };
     match semantic(number)? {
         Ok(number) => {
@@ -168,7 +183,7 @@ fn finish(function: StatisticsFunction, mut state: State) -> EvalResult<Value> {
     }
     if let Some(reduction) = state.reduction {
         return Ok(match reduction.finish() {
-            Some(value) => numeric_outcome::coerce_checked_numeric_result(value).into(),
+            Some(value) => numeric_outcome::convert_checked_numeric_result(value).into(),
             None => err(Div0),
         });
     }
@@ -190,7 +205,7 @@ fn finish(function: StatisticsFunction, mut state: State) -> EvalResult<Value> {
         _ => return Ok(err(VALUE_ERROR)),
     };
     Ok(match result {
-        Ok(value) => numeric_outcome::coerce_checked_numeric_result(value).into(),
+        Ok(value) => numeric_outcome::convert_checked_numeric_result(value).into(),
         Err(error) => err(error),
     })
 }
@@ -284,8 +299,10 @@ impl AggregatePolicy for StatisticsAggregate {
 
 /// Count logical blank positions while preserving sparse reference geometry.
 struct CountBlank;
+
 impl CollectionKernel for CountBlank {
     type Signature = Variadic<WholeCollection>;
+
     fn apply(
         &self,
         host: &mut CallHost<'_, '_>,
@@ -294,7 +311,9 @@ impl CollectionKernel for CountBlank {
     ) -> FunctionResult<Value> {
         let count =
             collections::fold_sources(host, arguments.iter(), 0u64, |host, count, operand| {
-                if let Some(blanks) = host.countblank_references(operand.value())? {
+                if let Some(blanks) =
+                    OperandReader::new(host).countblank_references(operand.value())?
+                {
                     *count = count
                         .checked_add(blanks)
                         .ok_or_else(|| host.size_overflow())?;

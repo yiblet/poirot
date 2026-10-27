@@ -40,8 +40,10 @@ fn array_probes_select_scalars_without_publishing_worksheet_spills() {
     let mut compiler = FormulaCompiler::new();
     let plan = compiler.compile_workbook(&w, &policy);
     let array = compiler.compile_formula("{1,2}", &policy);
-    let bound = bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula("{3,4}").unwrap())
-        .unwrap();
+    let bound = compile::bound::FormulaPlan::bind(
+        &poirot_parsing::formula::parse_formula("{3,4}").unwrap(),
+    )
+    .unwrap();
     let scalar = compiler.compile_formula("9", &policy);
     let configuration = config();
     let mut run = EvaluationRun::new_with_configuration(

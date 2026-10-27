@@ -113,7 +113,7 @@ fn operational_limits_cannot_be_caught_by_iferror() {
             },
         ),
     ] {
-        let plan = eval::bound::FormulaPlan::bind(
+        let plan = eval::compile::bound::FormulaPlan::bind(
             &poirot_parsing::formula::parse_formula(formula).unwrap(),
         )
         .unwrap();
@@ -149,7 +149,7 @@ fn indexed_reference_traversal_stops_before_later_operational_failure() {
             CellValue::Number(99.),
         )
         .unwrap();
-    let plan = eval::bound::FormulaPlan::bind(
+    let plan = eval::compile::bound::FormulaPlan::bind(
         &poirot_parsing::formula::parse_formula("AVERAGEA(A1:A2)").unwrap(),
     )
     .unwrap();

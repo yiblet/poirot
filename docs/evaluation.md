@@ -131,7 +131,9 @@ let value = restored.evaluation.cell(output)?;
 
 `prepared_status` distinguishes reused preparation, absent preparation, incompatible preparation discarded during recovery, and explicit source-only recovery. Compatible saved spreadsheet policies take precedence. When preparation is absent or discarded, default `EvaluationPolicy` semantics apply; `into_evaluation_with_policy(context, fallback)` overrides only that recovery fallback. The context always starts a new direct cycle; direct result caches are not restored as warm incremental state.
 
-Use `.prepared_policy(poirot::snapshots::PreparedPolicy::RequireCompatible)` to require present, compatible preparation (refusing source-only snapshots as well), or `SourceOnly` to discard it deliberately. Component decoding enforces the same strict requirement. `into_artifact()` exposes incremental checkpoint attachment and custom provider management through `poirot::eval::artifact`.
+Use `.prepared_policy(poirot::snapshots::PreparedPolicy::RequireCompatible)` to require present, compatible preparation (refusing source-only snapshots as well), or `SourceOnly` to discard it deliberately. Component decoding enforces the same strict requirement. `into_artifact()` exposes incremental checkpoint attachment and custom provider management through `poirot::eval::artifact`. Checkpoints store the workbook once; preparation saved by an earlier engine revision is discarded (or refused under `RequireCompatible`) while its source still restores.
+
+Prepared incremental checkpoints retain calculated results and bounded exact-lookup search evidence. Attachment rebuilds the previously inspected spill-discovery regions from authored source without evaluating formulas. This work belongs to restoration; subsequent cycles retain the same discovery and lookup reuse as an in-memory overlay. New source edits, execution-context changes and resource admission still invalidate or discard affected state normally.
 
 ## Public vocabulary
 

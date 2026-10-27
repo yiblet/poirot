@@ -1,11 +1,20 @@
 //! Bounded numeric lifting for documented real engineering special functions.
 use crate::eval::adapters::elementwise::{Broadcast, MemberContext, NumericParameter, Variadic};
-use crate::eval::*;
+use crate::eval::functions::registry::EngineeringFunction;
+use crate::eval::limits::{CapabilityId, EvalResult};
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::Num;
+use crate::model::CellValue::Number;
+use crate::model::{CellAddress, CellValue};
 use poirot_functions::engineering::special::{self as kernel, Bessel};
 
 /// Recognize the documented special-function execution path.
 pub(super) fn handles(function: EngineeringFunction) -> bool {
-    use EngineeringFunction::*;
+    use EngineeringFunction::{
+        Besseli, Besselj, Besselk, Bessely, Delta, Erf, ErfPrecise, Erfc, ErfcPrecise, Gestep,
+    };
     matches!(
         function,
         Besseli
@@ -20,17 +29,22 @@ pub(super) fn handles(function: EngineeringFunction) -> bool {
             | Gestep
     )
 }
+
 /// Runs real-valued engineering functions with shared ordered numeric conversion.
 /// The selected function supplies defaults and chooses the independent algorithm for each output member.
 struct Special(EngineeringFunction);
+
 impl crate::eval::adapters::elementwise::Kernel for Special {
     type Signature = Variadic<Broadcast>;
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use EngineeringFunction::*;
+        use EngineeringFunction::{
+            Besseli, Besselj, Besselk, Bessely, Delta, Erf, ErfPrecise, Erfc, ErfcPrecise, Gestep,
+        };
         let parameters: &[NumericParameter] = match self.0 {
             Gestep | Delta => &[
                 NumericParameter::required(),
@@ -91,6 +105,7 @@ impl crate::eval::adapters::elementwise::Kernel for Special {
         }
     }
 }
+
 /// Evaluate special functions through shared typed argument admission and lifting.
 pub(super) fn execute(
     session: &mut Session<'_>,
@@ -99,7 +114,7 @@ pub(super) fn execute(
     function: EngineeringFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    super::run(
+    super::dispatch::run(
         session,
         sheet,
         address,

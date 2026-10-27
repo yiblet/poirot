@@ -1,8 +1,12 @@
 //! Indexed source style records; component IDs describe the direct cell XF.
-use super::codec::*;
+use super::codec::{Token, argb, boolean, choice, color, invalid, number, valid};
 use crate::IoError;
 use crate::ooxml::xml::{attr, xml};
-use crate::*;
+use crate::{
+    Alignment, BorderLine, BorderSide, Borders, CellStyle, FontSize, FontStyle, ImportDiagnostic,
+    ImportDiagnosticKind, PatternFill, PatternType, RotationDegrees, StyleContext, TextRotation,
+    Underline, VisualStyle,
+};
 use quick_xml::{
     NsReader,
     events::{BytesStart, Event},

@@ -1,20 +1,31 @@
 //! Modern sample contracts with fixed collections and separately lifted scalar slots.
 use crate::eval::adapters::{
     elementwise::{
-        self, ArgumentRole, Broadcast, Kernel, MemberContext, NumericParameter as P,
-        NumericSignature, Optional, Variadic, WholeCollection,
+        self, ArgumentRole, Broadcast, Kernel, MemberContext, NumericParameter, NumericSignature,
+        Optional, Variadic, WholeCollection,
         collections::{self, Admission},
         matrices,
     },
     failure::operational_only,
 };
-use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::functions::registry::{FunctionId, StatisticsFunction};
+use crate::eval::host::{CallHost, OperandReader};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::{NA, Num};
+use crate::model::CellValue::Number;
+use crate::model::{CellAddress, CellValue};
 use poirot_functions::statistics::{modern::Failure, modern_sample as kernel};
 
 /// Identify the modern descriptive-statistics and hypothesis-test handlers.
 pub(super) fn handles(function: StatisticsFunction) -> bool {
-    use StatisticsFunction::*;
+    use StatisticsFunction::{
+        ChisqTest, ChisqTestLegacy, FTest, FTestLegacy, Fisher, FisherInv, HarMean, Kurt, ModeMult,
+        ModeSngl, PercentileExc, Permut, PermutationA, Prob, QuartileExc, RSq, RankAvg, Skew,
+        SkewP, Steyx, TTest, TTestLegacy, TrimMean, ZTest, ZTestLegacy,
+    };
     matches!(
         function,
         ChisqTestLegacy
@@ -44,6 +55,7 @@ pub(super) fn handles(function: StatisticsFunction) -> bool {
             | ZTest
     )
 }
+
 fn failure<E: Into<FunctionFailure>>(
     host: &CallHost<'_, '_>,
     failure: Failure<E>,
@@ -58,23 +70,27 @@ fn failure<E: Into<FunctionFailure>>(
         ),
     }
 }
+
 /// Budget sorting, mode storage and repeated scalar computations before work starts.
 fn processing(host: &mut CallHost<'_, '_>, len: usize) -> EvalResult<()> {
     host.check_values(len.saturating_mul(3))?;
     host.charge_work((len as u64).saturating_mul(16 + u64::from(usize::BITS - len.leading_zeros())))
 }
+
 /// Statistical kernel that collects complete samples and may produce a data-dependent result shape.
 /// MODE.MULT returns all modes as an array instead of forcing the result into scalar member traversal.
 struct SampleAggregate(StatisticsFunction);
+
 impl collections::CollectionKernel for SampleAggregate {
     type Signature = Variadic<WholeCollection>;
+
     fn apply(
         &self,
         host: &mut CallHost<'_, '_>,
         arguments: &Self::Signature,
         address: CellAddress,
     ) -> FunctionResult<Value> {
-        use StatisticsFunction::*;
+        use StatisticsFunction::{HarMean, Kurt, ModeMult, ModeSngl, Skew};
         let function = self.0;
         let mut values = collections::collect(host, arguments.iter(), Admission::Aggregate)?;
         processing(host, values.len())?;
@@ -114,6 +130,7 @@ impl collections::CollectionKernel for SampleAggregate {
 
 /// Position-preserving samples used by paired hypothesis tests.
 type PositionalSamples = (Vec<Option<f64>>, Vec<Option<f64>>);
+
 /// Aligned admitted numeric samples used by two-sample calculations.
 type PairedSamples = (Vec<f64>, Vec<f64>);
 
@@ -127,6 +144,7 @@ struct Sample<R> {
     shape: Option<(usize, usize)>,
     roles: std::marker::PhantomData<R>,
 }
+
 impl<R> Sample<R> {
     /// Bind a sample operation before inspecting its typed argument geometry.
     fn new(function: StatisticsFunction) -> Self {
@@ -140,34 +158,43 @@ impl<R> Sample<R> {
         }
     }
 }
+
 /// Mixed collection and scalar signatures supply independently admitted inputs.
 trait SampleRoles: elementwise::Signature {
     /// Materialize the samples in source order under their declared admission policy.
     fn prepare(&self, host: &mut CallHost<'_, '_>, sample: &mut Sample<Self>) -> FunctionResult<()>
     where
         Self: Sized;
+
     /// Coerce broadcast slots in source order through the shared parameter table.
     fn numbers(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         function: StatisticsFunction,
     ) -> FunctionResult<elementwise::NumericArguments>;
+
     /// Test whether an optional sigma was omitted before numeric coercion.
     fn sigma_missing(&self, _context: &mut MemberContext<'_, '_, '_>) -> FunctionResult<bool> {
         Ok(false)
     }
 }
+
 impl<R: SampleRoles> Kernel for Sample<R> {
     type Signature = R;
+
     fn prepare(&mut self, host: &mut CallHost<'_, '_>, arguments: &R) -> FunctionResult<()> {
         arguments.prepare(host, self)
     }
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &R,
     ) -> FunctionResult<CellValue> {
-        use StatisticsFunction::*;
+        use StatisticsFunction::{
+            ChisqTest, FTest, Fisher, FisherInv, PercentileExc, Permut, PermutationA, Prob,
+            QuartileExc, RSq, RankAvg, Steyx, TTest, TrimMean, ZTest,
+        };
         let function = self.function;
         let numbers = arguments.numbers(context, function)?;
         let sigma_missing = function == ZTest && arguments.sigma_missing(context)?;
@@ -305,22 +332,24 @@ impl SampleRoles for Variadic<Broadcast> {
     ) -> FunctionResult<()> {
         Ok(())
     }
+
     fn numbers(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         function: StatisticsFunction,
     ) -> FunctionResult<elementwise::NumericArguments> {
-        let parameters: &[P] = if matches!(
+        let parameters: &[NumericParameter] = if matches!(
             function,
             StatisticsFunction::Fisher | StatisticsFunction::FisherInv
         ) {
-            &[P::required()]
+            &[NumericParameter::required()]
         } else {
-            &[P::required(), P::required()]
+            &[NumericParameter::required(), NumericParameter::required()]
         };
         self.numbers(context, parameters)
     }
 }
+
 impl SampleRoles for (WholeCollection, Broadcast, Optional<Broadcast>) {
     fn prepare(
         &self,
@@ -330,15 +359,19 @@ impl SampleRoles for (WholeCollection, Broadcast, Optional<Broadcast>) {
         *sample.values.get_mut() = collections::collect(host, [self.0], Admission::Numeric)?;
         Ok(())
     }
+
     fn numbers(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         function: StatisticsFunction,
     ) -> FunctionResult<elementwise::NumericArguments> {
-        let parameters: &[P] = if function == StatisticsFunction::ZTest {
-            &[P::required(), P::constant(f64::NAN)]
+        let parameters: &[NumericParameter] = if function == StatisticsFunction::ZTest {
+            &[
+                NumericParameter::required(),
+                NumericParameter::constant(f64::NAN),
+            ]
         } else {
-            &[P::required()]
+            &[NumericParameter::required()]
         };
         if function == StatisticsFunction::ZTest {
             NumericSignature::new(parameters).numbers_roles(context, [Some(self.1), self.2.0])
@@ -346,6 +379,7 @@ impl SampleRoles for (WholeCollection, Broadcast, Optional<Broadcast>) {
             NumericSignature::new(parameters).numbers_roles(context, [Some(self.1)])
         }
     }
+
     fn sigma_missing(&self, context: &mut MemberContext<'_, '_, '_>) -> FunctionResult<bool> {
         Ok(self
             .2
@@ -355,6 +389,7 @@ impl SampleRoles for (WholeCollection, Broadcast, Optional<Broadcast>) {
             .unwrap_or(true))
     }
 }
+
 impl SampleRoles for (Broadcast, WholeCollection, Optional<Broadcast>) {
     fn prepare(
         &self,
@@ -364,15 +399,20 @@ impl SampleRoles for (Broadcast, WholeCollection, Optional<Broadcast>) {
         *sample.values.get_mut() = collections::collect(host, [self.1], Admission::Numeric)?;
         Ok(())
     }
+
     fn numbers(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         _function: StatisticsFunction,
     ) -> FunctionResult<elementwise::NumericArguments> {
-        NumericSignature::new(&[P::required(), P::constant(0.0)])
-            .numbers_roles(context, [Some(self.0), self.2.0])
+        NumericSignature::new(&[
+            NumericParameter::required(),
+            NumericParameter::constant(0.0),
+        ])
+        .numbers_roles(context, [Some(self.0), self.2.0])
     }
 }
+
 impl SampleRoles
     for (
         WholeCollection,
@@ -401,32 +441,34 @@ impl SampleRoles
         }
         Ok(())
     }
+
     fn numbers(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         function: StatisticsFunction,
     ) -> FunctionResult<elementwise::NumericArguments> {
         let parameters = if function == StatisticsFunction::TTest {
-            [P::required(), P::required()]
+            [NumericParameter::required(), NumericParameter::required()]
         } else {
-            [P::constant(0.0), P::prior(0)]
+            [NumericParameter::constant(0.0), NumericParameter::prior(0)]
         };
         NumericSignature::new(&parameters).numbers_roles(context, [self.2.0, self.3.0])
     }
 }
+
 impl SampleRoles for (WholeCollection, WholeCollection) {
     fn prepare(
         &self,
         host: &mut CallHost<'_, '_>,
         sample: &mut Sample<Self>,
     ) -> FunctionResult<()> {
-        use StatisticsFunction::*;
+        use StatisticsFunction::{ChisqTest, RSq, Steyx};
         sample.mass = Some(match sample.function {
             RSq | Steyx => collections::pairs(host, &self.0, &self.1, Admission::Aggregate)?,
             ChisqTest => {
                 let (a, b) = (
-                    host.describe(self.0.argument())?,
-                    host.describe(self.1.argument())?,
+                    OperandReader::new(host).describe(self.0.argument())?,
+                    OperandReader::new(host).describe(self.1.argument())?,
                 );
                 if a.sheets != 1 || b.sheets != 1 || a.rows != b.rows || a.columns != b.columns {
                     return Err(NA.into());
@@ -447,6 +489,7 @@ impl SampleRoles for (WholeCollection, WholeCollection) {
         });
         Ok(())
     }
+
     fn numbers(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -479,7 +522,10 @@ pub(super) fn execute(
         other => other,
     };
     let mut host = CallHost::new_array(session, sheet, address, args, args.len());
-    use StatisticsFunction::*;
+    use StatisticsFunction::{
+        ChisqTest, FTest, Fisher, FisherInv, HarMean, Kurt, ModeMult, ModeSngl, Permut,
+        PermutationA, Prob, RSq, RankAvg, Skew, SkewP, Steyx, TTest,
+    };
     let result = match function {
         HarMean | Kurt | Skew | SkewP | ModeSngl | ModeMult => {
             collections::execute(&mut host, address, SampleAggregate(function))

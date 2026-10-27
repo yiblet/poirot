@@ -7,7 +7,7 @@ use crate::fods::{
     report::{CaseFailure, CaseResult, CaseStatus, EvaluationReport, FailureKind, RunSummary},
 };
 use poirot::model::{CellAddress, CellValue, Workbook};
-use rayon::prelude::*;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 fn failure(kind: FailureKind, message: impl Into<String>) -> CaseFailure {
     CaseFailure {

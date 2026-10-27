@@ -2,15 +2,15 @@
 use super::{CellError, CellValue, DatabaseError, DatabaseFunction, Grid};
 
 /// Project a scalar into the numeric channel accepted by database aggregates.
-pub fn coercev2_database_number(value: &CellValue) -> Option<f64> {
-    crate::coercion::compatibility::coercev2_database_number(value)
+pub fn coerce_database_number(value: &CellValue) -> Option<f64> {
+    crate::coercion::compatibility::coerce_database_number(value)
 }
 /// Convert a cell to owned header/criteria text, refusing unsupported UTF-16 projection.
-pub fn coercev2_database_text(value: &CellValue) -> Result<String, DatabaseError> {
+pub fn coerce_database_text(value: &CellValue) -> Result<String, DatabaseError> {
     use crate::coercion::compatibility::TextFailure;
-    crate::coercion::compatibility::coercev2_text(
+    crate::coercion::compatibility::coerce_text(
         value.into(),
-        crate::coercion::compatibility::coercev2_number_to_text,
+        crate::coercion::compatibility::coerce_number_to_text,
     )
     .map_err(|error| match error {
         TextFailure::Worksheet(e) => e.into(),
@@ -22,18 +22,18 @@ pub fn coercev2_database_text(value: &CellValue) -> Result<String, DatabaseError
 /// Math.round uses nearest integer, with ties towards positive infinity.
 /// Adding 0.5 first loses the distinction immediately below a half-integer.
 /// Out-of-area indices retain this crate's explicit bounded-input boundary.
-pub fn coercev2_database_field_index(value: &CellValue, columns: usize) -> Option<usize> {
-    crate::coercion::compatibility::coercev2_database_field_index(value, columns)
+pub fn coerce_database_field_index(value: &CellValue, columns: usize) -> Option<usize> {
+    crate::coercion::compatibility::coerce_database_field_index(value, columns)
 }
 
 /// DStarRunner.getColumnForName applies coerceValueToInt to numeric criteria
 /// headings. Unlike the rounded field argument, this floors and checks Java int
 /// bounds. The runner converts the resulting EvaluationException to VALUE.
-pub fn coercev2_database_criteria_header_index(
+pub fn coerce_database_criteria_header_index(
     value: &CellValue,
     columns: usize,
 ) -> Result<Option<usize>, CellError> {
-    crate::coercion::compatibility::coercev2_database_criteria_header_index(value, columns)
+    crate::coercion::compatibility::coerce_database_criteria_header_index(value, columns)
 }
 /// Resolve a criteria header against the database's header row.
 pub(super) fn header_column(
@@ -45,7 +45,7 @@ pub(super) fn header_column(
         if matches!(value, CellValue::Blank | CellValue::Error(_)) {
             continue;
         }
-        if equal_ignore_case(&coercev2_database_text(value)?, name) {
+        if equal_ignore_case(&coerce_database_text(value)?, name) {
             return Ok(Some(col));
         }
     }
@@ -65,12 +65,12 @@ pub(super) fn select_field(
     let selected = match field {
         CellValue::Error(error) if !function.empty_field() => return Err((*error).into()),
         CellValue::Error(_) => None,
-        value if coercev2_database_number(value).is_some() => {
-            coercev2_database_field_index(value, database.columns)
+        value if coerce_database_number(value).is_some() => {
+            coerce_database_field_index(value, database.columns)
         }
         CellValue::Text(name) => header_column(database, name)?,
         CellValue::Blank => header_column(database, "")?,
-        value => header_column(database, &coercev2_database_text(value)?)?,
+        value => header_column(database, &coerce_database_text(value)?)?,
     };
     if selected.is_none() && !function.empty_field() {
         return Err(CellError::Value.into());

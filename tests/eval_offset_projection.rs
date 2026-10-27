@@ -191,7 +191,7 @@ fn offset_tracks_only_consumed_cells_and_executed_volatility() {
     use poirot::eval::{
         DependencyRead, DependencyReadSink, EvaluationRun, EvaluationTarget, FormulaCompiler,
         PreparationPolicy, ReadEvent, WorkbookView,
-        registry::{FunctionId, ReferenceFunction},
+        functions::registry::{FunctionId, ReferenceFunction},
     };
     /// Caller-owned observations of actual reference and control consumption.
     #[derive(Default)]

@@ -1,28 +1,46 @@
 //! Modern PCRE2 functions retain operational failures and dynamic array geometry.
 use crate::eval::adapters::elementwise::{Broadcast, MemberContext, Variadic, text as shared};
-use crate::eval::host::{CallHost, NumericPolicy};
-use crate::eval::*;
+use crate::eval::functions::registry::TextFunction;
+use crate::eval::host::{ArgumentCoercion, CallHost, NumericPolicy, PolicyReads};
+use crate::eval::limits::{CapabilityId, EvalResult, EvaluationFailure};
+use crate::eval::values::{FunctionFailure, FunctionResult, Value, err};
+use crate::model::CellValue::{Boolean, Error, Number, Text};
+use crate::model::{CellAddress, CellError, CellValue};
 use poirot_functions::text::regex::{self, Case, Extraction, Program};
 
 /// Connects the independent regex library's resource requests to evaluator budgets and execution limits.
 /// Admission failures propagate as operational errors.
-struct RegexHost<'a, 'b, 'c>(&'a mut CallHost<'b, 'c>);
+struct RegexHost<'a, 'b, 'c>(&'a mut CallHost<'b, 'c>, regex::ExecutionLimits);
+
+impl<'a, 'b, 'c> RegexHost<'a, 'b, 'c> {
+    /// Borrow the call host with the run's regex execution guards captured beside it.
+    fn new(host: &'a mut CallHost<'b, 'c>) -> Self {
+        let limits = PolicyReads::new(host).regex_settings();
+        Self(host, limits)
+    }
+}
+
 impl regex::Host for RegexHost<'_, '_, '_> {
     /// Admission failures abort execution rather than becoming spreadsheet values.
     type Failure = EvaluationFailure;
+
     fn execution_limits(&self) -> regex::ExecutionLimits {
-        self.0.regex_settings()
+        self.1
     }
+
     fn work(&mut self, units: usize) -> EvalResult<()> {
         self.0.charge_work(units as u64)
     }
+
     fn text(&mut self, bytes: usize) -> EvalResult<()> {
         self.0.check_text(bytes)
     }
+
     fn values(&mut self, count: usize) -> EvalResult<()> {
         self.0.check_values(count)
     }
 }
+
 fn failure(host: &CallHost<'_, '_>, failure: regex::Failure<EvaluationFailure>) -> FunctionFailure {
     match failure {
         regex::Failure::Pattern | regex::Failure::TextLimit => CellError::Value.into(),
@@ -40,21 +58,25 @@ fn failure(host: &CallHost<'_, '_>, failure: regex::Failure<EvaluationFailure>) 
         // PCRE2 public ABI: NOMEMORY=-48, HEAP_FAILED=121. The verified
         // pcre2-sys revision/source is recorded beside compile_failure in the domain crate.
         regex::Failure::Native(code) => host.resource_failure(
-            if code == -48 || code == 121 { crate::eval::ResourceFailureKind::Allocation } else { crate::eval::ResourceFailureKind::BackendGuard },
+            if code == -48 || code == 121 { crate::eval::limits::ResourceFailureKind::Allocation } else { crate::eval::limits::ResourceFailureKind::BackendGuard },
             format!("PCRE2 native execution guard or representation failure ({code}); native consumption unavailable"),
         ).into(),
     }
 }
+
 fn text(host: &mut CallHost<'_, '_>, value: &CellValue) -> FunctionResult<String> {
     if let Some(text) = value.text_ref() {
-        return host.project_text(text);
+        return ArgumentCoercion::new(host).project_text(text);
     }
     match value {
         Error(error) => Err((*error).into()),
-        Number(value) => host.coercev2_number_to_text(*value, NumericPolicy::PinnedPoi),
-        _ => host.coercev2_scalar_text(value),
+        Number(value) => {
+            ArgumentCoercion::new(host).coerce_number_to_text(*value, NumericPolicy::PinnedPoi)
+        }
+        _ => ArgumentCoercion::new(host).coerce_scalar_text(value),
     }
 }
+
 fn case(value: f64) -> FunctionResult<Case> {
     match value {
         0. => Ok(Case::Sensitive),
@@ -62,6 +84,7 @@ fn case(value: f64) -> FunctionResult<Case> {
         _ => Err(CellError::Value.into()),
     }
 }
+
 fn mode(value: f64) -> FunctionResult<Extraction> {
     match value {
         0. => Ok(Extraction::First),
@@ -70,11 +93,14 @@ fn mode(value: f64) -> FunctionResult<Extraction> {
         _ => Err(CellError::Value.into()),
     }
 }
+
 /// Runs the selected regex operation for broadcast operands and returns its possibly expanded result.
 /// Shared text execution assembles capture or match arrays into the worksheet output.
 struct RegexKernel(TextFunction);
+
 impl shared::ExpansionKernel for RegexKernel {
     type Signature = Variadic<Broadcast>;
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -115,12 +141,12 @@ impl shared::ExpansionKernel for RegexKernel {
             _ => return Err(CellError::Value.into()),
         };
         let host = &mut *context.host;
-        let program = Program::compile(&pattern, sensitivity, &mut RegexHost(host))
+        let program = Program::compile(&pattern, sensitivity, &mut RegexHost::new(host))
             .map_err(|e| failure(host, e))?;
         let values: FunctionResult<Vec<CellValue>> = match name {
             TextFunction::RegexTest => {
                 let value = program
-                    .test(&source, &mut RegexHost(host))
+                    .test(&source, &mut RegexHost::new(host))
                     .map_err(|e| failure(host, e))?;
                 host.check_values(1)?;
                 Ok(vec![Boolean(value)])
@@ -131,7 +157,7 @@ impl shared::ExpansionKernel for RegexKernel {
                         &source,
                         replacement.as_deref().ok_or(CellError::Value)?,
                         occurrence,
-                        &mut RegexHost(host),
+                        &mut RegexHost::new(host),
                     )
                     .map_err(|e| failure(host, e))?;
                 host.check_values(1)?;
@@ -139,7 +165,7 @@ impl shared::ExpansionKernel for RegexKernel {
             }
             TextFunction::RegexExtract => {
                 let values = program
-                    .extract(&source, extraction, &mut RegexHost(host))
+                    .extract(&source, extraction, &mut RegexHost::new(host))
                     .map_err(|e| failure(host, e))?;
                 host.check_values(values.len())?;
                 Ok(values.into_iter().map(Text).collect())
@@ -156,6 +182,7 @@ impl shared::ExpansionKernel for RegexKernel {
         })
     }
 }
+
 /// Evaluate modern regex functions under the documentation profile.
 pub(in crate::eval) fn execute(
     name: TextFunction,

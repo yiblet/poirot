@@ -1,5 +1,5 @@
 //! Per-member policies; traversal, shape validation, and allocation stay with hosts.
-use crate::coercion::compatibility::{DeferredNumber, NumberPolicy, ScalarRef, coercev2_number};
+use crate::coercion::compatibility::{DeferredNumber, NumberPolicy, ScalarRef, coerce_number};
 use crate::coercion::{CellError, Origin};
 /// Source matrix area admission policy.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -16,7 +16,7 @@ pub enum MatrixCollection {
     Transpose,
 }
 /// Admit one matrix area member without reading any other member.
-pub fn coercev2_matrix_member(
+pub fn coerce_matrix_member(
     value: ScalarRef<'_>,
     policy: MatrixCollection,
 ) -> Result<Option<f64>, CellError> {
@@ -50,10 +50,7 @@ impl MatrixAdmission {
         }
     }
     /// Admit one member, retaining the first embedded error in strict mode.
-    pub fn coercev2_matrix_member(
-        &mut self,
-        value: ScalarRef<'_>,
-    ) -> Result<Option<f64>, CellError> {
+    pub fn coerce_matrix_member(&mut self, value: ScalarRef<'_>) -> Result<Option<f64>, CellError> {
         if self.policy == MatrixCollection::SquareNumeric {
             match value {
                 ScalarRef::Number(n) => return Ok(Some(n)),
@@ -64,14 +61,14 @@ impl MatrixAdmission {
             }
             return Ok(None);
         }
-        let number = coercev2_matrix_member(value, self.policy)?;
+        let number = coerce_matrix_member(value, self.policy)?;
         if number.is_some() {
             self.numbers = self.numbers.saturating_add(1);
         }
         Ok(number)
     }
     /// Reject incomplete strict matrices before their numeric storage is used.
-    pub fn coercev2_finish(self) -> Result<(), CellError> {
+    pub fn coerce_finish(self) -> Result<(), CellError> {
         if self.invalid {
             return Err(CellError::Value);
         }
@@ -88,7 +85,7 @@ impl MatrixAdmission {
     }
 }
 /// TREND accepts numeric and logical members; all other kinds yield VALUE.
-pub fn coercev2_trend_member(value: ScalarRef<'_>) -> Result<f64, CellError> {
+pub fn coerce_trend_member(value: ScalarRef<'_>) -> Result<f64, CellError> {
     match value {
         ScalarRef::Number(n) => Ok(n),
         ScalarRef::Boolean(b) => Ok(f64::from(u8::from(b))),
@@ -98,7 +95,7 @@ pub fn coercev2_trend_member(value: ScalarRef<'_>) -> Result<f64, CellError> {
 /// SUMPRODUCT requests either strict scalar or zero-admitting text/blank handling.
 /// The caller selects admission; singleton geometry does not determine it.
 /// Boolean-to-number admission is retained in both modes.
-pub fn coercev2_sumproduct_member(value: ScalarRef<'_>, scalar: bool) -> Result<f64, CellError> {
+pub fn coerce_sumproduct_member(value: ScalarRef<'_>, scalar: bool) -> Result<f64, CellError> {
     match value {
         ScalarRef::Number(n) => Ok(n),
         ScalarRef::Boolean(b) => Ok(f64::from(u8::from(b))),
@@ -108,33 +105,33 @@ pub fn coercev2_sumproduct_member(value: ScalarRef<'_>, scalar: bool) -> Result<
     }
 }
 /// Financial cash flows admit direct text/logical inputs and ignore referenced ones.
-pub fn coercev2_cashflow_member<'a, E: From<CellError>>(
+pub fn coerce_cashflow_member<'a, E: From<CellError>>(
     value: ScalarRef<'a>,
     origin: Origin,
     parse: impl FnMut(DeferredNumber<'a>) -> Result<f64, E>,
 ) -> Result<Option<f64>, E> {
     match value {
         ScalarRef::Number(_) | ScalarRef::Error(_) => {
-            coercev2_number(value, NumberPolicy::Finite, parse).map(Some)
+            coerce_number(value, NumberPolicy::Finite, parse).map(Some)
         }
         ScalarRef::Boolean(_) | ScalarRef::Text(_) if origin == Origin::Direct => {
-            coercev2_number(value, NumberPolicy::Finite, parse).map(Some)
+            coerce_number(value, NumberPolicy::Finite, parse).map(Some)
         }
         _ => Ok(None),
     }
 }
 /// FREQUENCY applies the same origin filtering while preserving nonfinite numbers.
-pub fn coercev2_frequency_member<'a, E: From<CellError>>(
+pub fn coerce_frequency_member<'a, E: From<CellError>>(
     value: ScalarRef<'a>,
     origin: Origin,
     parse: impl FnMut(DeferredNumber<'a>) -> Result<f64, E>,
 ) -> Result<Option<f64>, E> {
     match value {
         ScalarRef::Number(_) | ScalarRef::Error(_) => {
-            coercev2_number(value, NumberPolicy::Preserve, parse).map(Some)
+            coerce_number(value, NumberPolicy::Preserve, parse).map(Some)
         }
         ScalarRef::Boolean(_) | ScalarRef::Text(_) if origin == Origin::Direct => {
-            coercev2_number(value, NumberPolicy::Preserve, parse).map(Some)
+            coerce_number(value, NumberPolicy::Preserve, parse).map(Some)
         }
         _ => Ok(None),
     }
@@ -143,7 +140,7 @@ pub fn coercev2_frequency_member<'a, E: From<CellError>>(
 /// Numeric aggregates count a directly computed blank as a numeric observation;
 /// blanks selected from references or arrays remain blank and can be ignored.
 /// Syntactically omitted arguments must retain omission metadata at the host.
-pub fn coercev2_aggregate_argument(
+pub fn coerce_aggregate_argument(
     value: crate::coercion::CellValue,
     origin: Origin,
 ) -> crate::coercion::CellValue {
@@ -166,7 +163,7 @@ pub enum HolidayPolicy {
 }
 /// Admit a holiday member, retaining provenance until the consuming function
 /// requests date conversion. Bounds and date-text context belong to the host.
-pub fn coercev2_holiday_member<'a, E: From<CellError>>(
+pub fn coerce_holiday_member<'a, E: From<CellError>>(
     value: ScalarRef<'a>,
     origin: Origin,
     policy: HolidayPolicy,
@@ -198,10 +195,7 @@ pub enum WeekendConsumer {
 }
 /// Modern seven-character weekend masks start with Monday; numeric weekend
 /// codes remain handled by weekend_policy. WORKDAY forbids an all-weekend mask.
-pub fn coercev2_weekend_mask(
-    text: &str,
-    consumer: WeekendConsumer,
-) -> Result<[bool; 7], CellError> {
+pub fn coerce_weekend_mask(text: &str, consumer: WeekendConsumer) -> Result<[bool; 7], CellError> {
     if text.len() != 7 || !text.bytes().all(|byte| matches!(byte, b'0' | b'1')) {
         return Err(CellError::Value);
     }
@@ -222,24 +216,24 @@ mod business_day_tests {
     #[test]
     fn weekend_masks_keep_consumer_specific_empty_week_rules() {
         assert_eq!(
-            coercev2_weekend_mask("1111111", WeekendConsumer::NetworkDays),
+            coerce_weekend_mask("1111111", WeekendConsumer::NetworkDays),
             Ok([true; 7])
         );
         assert_eq!(
-            coercev2_weekend_mask("1111111", WeekendConsumer::WorkDay),
+            coerce_weekend_mask("1111111", WeekendConsumer::WorkDay),
             Err(CellError::Value)
         );
         assert_eq!(
-            coercev2_weekend_mask("0000000", WeekendConsumer::WorkDay),
+            coerce_weekend_mask("0000000", WeekendConsumer::WorkDay),
             Ok([false; 7])
         );
         assert_eq!(
-            coercev2_weekend_mask("0000011", WeekendConsumer::WorkDay),
+            coerce_weekend_mask("0000011", WeekendConsumer::WorkDay),
             Ok([true, false, false, false, false, false, true])
         );
         for text in ["", "1", "00000000", "000000x", "000000é"] {
             assert_eq!(
-                coercev2_weekend_mask(text, WeekendConsumer::WorkDay),
+                coerce_weekend_mask(text, WeekendConsumer::WorkDay),
                 Err(CellError::Value)
             );
         }

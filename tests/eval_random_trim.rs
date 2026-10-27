@@ -2,10 +2,8 @@
 //! https://support.microsoft.com/en-us/excel/functions/randarray-function
 //! https://support.microsoft.com/en-us/excel/functions/trimrange-function
 //! Native Excel does not document the blank-text/reference edge policies tested separately below.
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn at(cell: &str) -> EvaluationTarget {
     EvaluationTarget {

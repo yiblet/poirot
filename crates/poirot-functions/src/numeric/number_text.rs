@@ -8,7 +8,7 @@ pub const ALLOCATION_BOUND: usize = 512;
 
 /// Render binary64 input using the selected numeric-text source contract.
 pub fn render(value: f64) -> String {
-    super::coerce_number_to_text(value)
+    super::convert_number_to_text(value)
 }
 
 #[cfg(test)]
@@ -36,7 +36,7 @@ mod tests {
             (0xffff_ffff_ffff_ffff, "3.5953862697246E+308"),
             (0x7ff8_0000_0000_0000, "2.6965397022935E+308"),
         ] {
-            assert_eq!(super::super::coerce_number_bits_to_text(bits), expected);
+            assert_eq!(super::super::convert_number_bits_to_text(bits), expected);
         }
         for bits in [
             0xffff_ffff_ffff_ffff,

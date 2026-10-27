@@ -3,11 +3,10 @@
 //! https://support.microsoft.com/en-us/excel/functions/munit-function
 //! https://support.microsoft.com/en-us/excel/functions/sumproduct-function
 //! Other transforms use their named Microsoft function contracts, with explicit small permutations.
+use poirot::eval::overlay::{Evaluation, Overlay};
 use poirot::eval::{
-    BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationFailure, EvaluationInputs,
-    EvaluationOutcome, EvaluationTarget,
-    overlay::{Evaluation, EvaluationContext, EvaluationPolicy, Overlay},
-    run_formula,
+    BuiltinSemanticsPolicy, EvaluationBudgets, EvaluationContext, EvaluationFailure,
+    EvaluationInputs, EvaluationOutcome, EvaluationPolicy, EvaluationTarget, run_formula,
 };
 use poirot::model::{CellError, CellValue, ExcelText, Workbook};
 

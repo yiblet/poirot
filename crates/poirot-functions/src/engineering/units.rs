@@ -49,7 +49,10 @@ fn linear(dimension: Dimension, scale: f64, prefix: Prefix) -> Unit {
     }
 }
 fn exact(token: &str) -> Option<Unit> {
-    use Dimension::*;
+    use Dimension::{
+        Area, Energy, Force, Information, Length, Magnetism, Mass, Power, Pressure, Speed,
+        Temperature, Time, Volume,
+    };
     use Prefix::{Decimal as D, Information as I, None as No};
     const INCH: f64 = 0.0254;
     const FOOT: f64 = 12.0 * INCH;

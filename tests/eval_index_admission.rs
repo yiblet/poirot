@@ -1,9 +1,7 @@
 //! INDEX contracts from Microsoft INDEX documentation and pinned ClosedXML LookupTests.
 //! Calc corroboration is recorded in evidence/index-admission-libreoffice.json.
-use poirot::eval::{
-    overlay::{EvaluationContext, Overlay},
-    *,
-};
+use poirot::eval::overlay::Overlay;
+use poirot::eval::*;
 use poirot::model::{CellAddress, CellError, CellValue, ExcelText, Workbook};
 
 fn target(address: &str) -> EvaluationTarget {
@@ -196,7 +194,7 @@ fn selected_index_results_refresh_after_source_edits() {
             .unwrap();
     }
     let mut overlay = Overlay::with_workbook(&w)
-        .with_policy(poirot::eval::overlay::EvaluationPolicy {
+        .with_policy(poirot::eval::EvaluationPolicy {
             builtin: BuiltinSemanticsPolicy::ExcelDocumentation,
             ..Default::default()
         })

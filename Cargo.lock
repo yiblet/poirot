@@ -653,6 +653,7 @@ dependencies = [
  "allocation-counter",
  "calamine",
  "cfb",
+ "crc32fast",
  "foldhash",
  "nom",
  "poirot-functions",

@@ -64,8 +64,9 @@ fn countblank_reduces_sparse_geometry_without_narrowing_the_count() {
 
 #[test]
 fn lifted_statistics_discover_spill_children_before_their_anchor_is_requested() {
+    use poirot::eval::EvaluationContext;
     use poirot::eval::EvaluationTarget;
-    use poirot::eval::overlay::{EvaluationContext, Overlay};
+    use poirot::eval::overlay::Overlay;
     let mut workbook = Workbook::new();
     workbook.add_sheet("S").unwrap();
     let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();

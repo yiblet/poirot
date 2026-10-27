@@ -1,6 +1,6 @@
 use poirot::eval::{
     CapabilityId, EvaluationBudgets, EvaluationFailure, EvaluationInputs, EvaluationOutcome,
-    bound::{Expression, FormulaPlan},
+    compile::bound::{Expression, FormulaPlan},
     run_formula,
 };
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
@@ -252,10 +252,9 @@ fn qualified_latin1_names_choose_local_scope_using_checked_policy() {
 
 #[test]
 fn prepared_qualified_names_retain_typed_potential_and_consumed_scope_queries() {
-    use poirot::eval::compiler::PreparedFormula;
-    use poirot::eval::run::{
-        DependencyRead, DependencyReadSink, EvaluationRun, ReadEvent, WorkbookView,
-    };
+    use poirot::eval::compile::compiler::PreparedFormula;
+    use poirot::eval::run::{EvaluationRun, WorkbookView};
+    use poirot::eval::{DependencyRead, DependencyReadSink, ReadEvent};
     use poirot::eval::{EvaluationTarget, FormulaCompiler, PreparationPolicy};
     #[derive(Default)]
     /// Records actual scoped-name lookups for prepared qualified-name tests.

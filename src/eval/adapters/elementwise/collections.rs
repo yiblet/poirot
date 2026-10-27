@@ -1,7 +1,12 @@
 //! Checked source-ordered numerical collection materialization for typed kernels.
-use super::{ArgumentRole, Signature, WholeCollection};
-use crate::eval::host::{CallHost, NumericPolicy, OperandKind, OperandOrigin};
-use crate::eval::*;
+use super::argument_role::ArgumentRole;
+use super::tuple_signature::Signature;
+use super::whole_collection::WholeCollection;
+use crate::eval::host::{ArgumentCoercion, CallHost, NumericPolicy, OperandKind, OperandReader};
+use crate::eval::values::{FunctionFailure, FunctionResult, OperandOrigin, VALUE_ERROR, Value};
+use crate::model::CellError::{NA, Ref};
+use crate::model::CellValue::{Blank, Boolean, Error, Number};
+use crate::model::{CellAddress, CellError};
 
 /// Numeric admission chosen independently from positional traversal.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -15,6 +20,7 @@ pub(in crate::eval::adapters) enum Admission {
     /// Retain numbers and treat actual blanks as zero, rejecting other values.
     BlankZero,
 }
+
 /// Read one position under its declared numeric admission rule.
 fn member(
     host: &mut CallHost<'_, '_>,
@@ -23,7 +29,7 @@ fn member(
     admission: Admission,
     kind: OperandKind,
 ) -> FunctionResult<Option<f64>> {
-    let operand = host.collection_cell(index, offset)?;
+    let operand = OperandReader::new(host).collection_cell(index, offset)?;
     if operand.missing {
         return Err(VALUE_ERROR.into());
     }
@@ -46,13 +52,14 @@ fn member(
     if admission == Admission::Aggregate && direct {
         return match operand.value {
             Blank => Ok(None),
-            value => host
-                .coercev2_scalar_number(&value, NumericPolicy::PinnedPoi)
+            value => ArgumentCoercion::new(host)
+                .coerce_scalar_number(&value, NumericPolicy::PinnedPoi)
                 .map(Some),
         };
     }
     Ok(None)
 }
+
 /// Traverse checked collection cells in position order under one admission rule.
 fn visit_members(
     host: &mut CallHost<'_, '_>,
@@ -67,6 +74,7 @@ fn visit_members(
     }
     Ok(())
 }
+
 /// Charge and collect one operand without erasing excluded pair positions.
 pub(in crate::eval::adapters) fn positions(
     host: &mut CallHost<'_, '_>,
@@ -92,6 +100,7 @@ pub(in crate::eval::adapters) fn positions(
     })?;
     Ok(result)
 }
+
 /// Gather one or more samples, charging before copying their admitted members.
 pub(in crate::eval::adapters) fn collect(
     host: &mut CallHost<'_, '_>,
@@ -101,7 +110,7 @@ pub(in crate::eval::adapters) fn collect(
     let mut result = Vec::new();
     for role in roles {
         let index = role.argument();
-        let len = host.collection_len(index)?;
+        let len = OperandReader::new(host).collection_len(index)?;
         let total = result
             .len()
             .checked_add(len)
@@ -125,6 +134,7 @@ pub(in crate::eval::adapters) fn collect(
     }
     Ok(result)
 }
+
 /// Preserve positional associations while excluding a pair containing a nonnumber.
 pub(in crate::eval::adapters) fn pairs(
     host: &mut CallHost<'_, '_>,
@@ -156,14 +166,15 @@ pub(in crate::eval::adapters) fn pairs(
     }
     Ok((x, y))
 }
+
 /// Collect the original paired geometry without independently filtering either axis.
 pub(in crate::eval::adapters) fn points(
     host: &mut CallHost<'_, '_>,
     values: &WholeCollection,
     timeline: &WholeCollection,
 ) -> FunctionResult<Vec<(f64, f64)>> {
-    let a = host.describe(values.argument())?;
-    let b = host.describe(timeline.argument())?;
+    let a = OperandReader::new(host).describe(values.argument())?;
+    let b = OperandReader::new(host).describe(timeline.argument())?;
     if a.sheets != 1 || b.sheets != 1 {
         return Err(VALUE_ERROR.into());
     }
@@ -198,7 +209,8 @@ pub(in crate::eval::adapters) fn points(
 /// A whole-collection operation whose result may have a data-dependent shape.
 pub(in crate::eval::adapters) trait CollectionKernel {
     /// Typed sources admitted before collection traversal begins.
-    type Signature: super::Signature;
+    type Signature: super::tuple_signature::Signature;
+
     /// Calculate the complete result after shared source binding and admission.
     fn apply(
         &self,
@@ -207,6 +219,7 @@ pub(in crate::eval::adapters) trait CollectionKernel {
         address: CellAddress,
     ) -> FunctionResult<Value>;
 }
+
 /// Execute a typed collection kernel with shared signature admission.
 pub(in crate::eval::adapters) fn execute<K: CollectionKernel>(
     host: &mut CallHost<'_, '_>,
@@ -240,6 +253,58 @@ pub(in crate::eval::adapters) fn fold<T>(
     Ok(state)
 }
 
+/// Fold members like [`fold`], but read only stored cells of single-area references.
+///
+/// Absent cells read as blanks and cannot fail, so `skip` receives the number of
+/// absent positions passed over before each stored member and after the last one.
+/// Arrays, scalars, multi-area references, and external readers use dense reads,
+/// reporting every member to `step`.
+pub(in crate::eval::adapters) fn fold_stored<T>(
+    host: &mut CallHost<'_, '_>,
+    roles: impl IntoIterator<Item = WholeCollection>,
+    mut state: T,
+    mut skip: impl FnMut(&mut CallHost<'_, '_>, &mut T, usize) -> FunctionResult<()>,
+    mut step: impl FnMut(
+        &mut CallHost<'_, '_>,
+        &mut T,
+        crate::eval::host::ScalarOperand,
+    ) -> FunctionResult<()>,
+) -> FunctionResult<T> {
+    for role in roles {
+        let len = role.len(host)?;
+        let Some(positions) = OperandReader::new(host).stored_positions(role.argument())? else {
+            host.check_values(len)?;
+            host.charge_work(len as u64)?;
+            for offset in 0..len {
+                let operand = role.read(host, offset)?;
+                step(host, &mut state, operand)?;
+            }
+            continue;
+        };
+        let columns = role.describe(host)?.columns;
+        host.charge_work(positions.len() as u64)?;
+        let mut next = 0usize;
+        for (row, column) in positions {
+            let offset = row
+                .checked_mul(columns)
+                .and_then(|start| start.checked_add(column))
+                .ok_or_else(|| host.size_overflow())?;
+            let gap = offset.checked_sub(next).ok_or(Ref)?;
+            if gap > 0 {
+                skip(host, &mut state, gap)?;
+            }
+            let operand = role.read_at(host, row, column)?;
+            step(host, &mut state, operand)?;
+            next = offset.checked_add(1).ok_or_else(|| host.size_overflow())?;
+        }
+        let gap = len.checked_sub(next).ok_or(Ref)?;
+        if gap > 0 {
+            skip(host, &mut state, gap)?;
+        }
+    }
+    Ok(state)
+}
+
 /// Materialize statistical numeric inputs with explicit origin-sensitive admission.
 pub(in crate::eval::adapters) fn statistics(
     host: &mut CallHost<'_, '_>,
@@ -260,7 +325,8 @@ pub(in crate::eval::adapters) fn statistics(
             .try_reserve(len)
             .map_err(|_| host.allocation_failure())?;
         let kind = host.kind(role.argument())?;
-        let area = policy == Collection::Mode && host.is_area(role.argument())?;
+        let area =
+            policy == Collection::Mode && OperandReader::new(host).is_area(role.argument())?;
         for offset in 0..len {
             let operand = role.read(host, offset)?;
             let direct = operand.origin == OperandOrigin::Direct || kind == OperandKind::Scalar;
@@ -290,7 +356,9 @@ pub(in crate::eval::adapters) fn statistics(
                     Error(error) => StatisticalValue::Error(error),
                     value => {
                         let numeric = if parse {
-                            match host.coercev2_scalar_number(&value, NumericPolicy::PinnedPoi) {
+                            match ArgumentCoercion::new(host)
+                                .coerce_scalar_number(&value, NumericPolicy::PinnedPoi)
+                            {
                                 Ok(number) => Some(number),
                                 Err(FunctionFailure::Spreadsheet(VALUE_ERROR)) => None,
                                 Err(other) => return Err(other),
@@ -302,7 +370,7 @@ pub(in crate::eval::adapters) fn statistics(
                     }
                 }
             };
-            let admitted = poirot_functions::statistics::coercev2_statistics_collection(
+            let admitted = poirot_functions::statistics::coerce_statistics_collection(
                 policy,
                 &[Operand { value, origin }],
             )?;

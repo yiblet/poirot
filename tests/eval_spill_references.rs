@@ -4,7 +4,8 @@
 //! Stored ANCHORARRAY spelling follows the pinned rust_xlsxwriter 0.101.0 author docs:
 //! https://docs.rs/rust_xlsxwriter/0.101.0/rust_xlsxwriter/struct.Formula.html
 //! No external implementation, tests or fixture data were copied or adapted.
-use poirot::eval::overlay::{Evaluation, EvaluationContext, Overlay};
+use poirot::eval::EvaluationContext;
+use poirot::eval::overlay::{Evaluation, Overlay};
 use poirot::eval::{BudgetKind, EvaluationFailure, EvaluationTarget};
 use poirot::model::{CellError, CellValue, Workbook};
 
@@ -508,7 +509,7 @@ fn scalar_intersection_publication_still_selects_one_value_from_array_channels()
         ("D1", "{1,2;3,4}"),
         ("G1", "SUM(D1#)"),
     ]);
-    let policy = poirot::eval::overlay::EvaluationPolicy {
+    let policy = poirot::eval::EvaluationPolicy {
         arrays: poirot::eval::ArrayResultPolicy::ScalarIntersection,
         ..Default::default()
     };

@@ -1,272 +1,33 @@
 //! Borrowed Serde view of a workbook plus its sparse overlay state.
-use super::*;
-use crate::eval::run_overlay::CellEdit;
-use serde::{Deserialize, Serialize, ser::Error as _};
-use std::borrow::Cow;
-const VERSION: u32 = 76;
+use super::borrowed_source::BorrowedSource;
+use super::incremental::Overlay;
+use super::overlay_error::OverlayError;
+use super::snapshot_baseline::SnapshotBaseline;
+use super::snapshot_payload::{SnapshotPayload, VERSION};
+use super::snapshot_state::SnapshotState;
+use super::source::Source;
+use super::workspace_state::WorkspaceState;
+use crate::eval::coordinates::EvaluationTarget;
+use crate::eval::inputs::CellEdit;
+use crate::eval::reuse::{Cache, Cached, Key};
+use crate::model::{CellAddress, CellValue, Workbook};
+use serde::{Deserialize, Serialize, Serializer, ser::Error as _};
+use std::borrow::{Borrow, Cow};
+use std::cell::RefCell;
+use std::collections::BTreeMap;
+use std::sync::Arc;
+
 /// Compatibility revision for persisted engine preparation and retained results.
 /// Bump when wire layout or execution semantics invalidate prepared snapshots,
 /// including changes that leave Serde field layouts intact. This is separate from
 /// durable workbook-source versioning owned by the public file envelope.
-pub const COMPATIBILITY_REVISION: u64 = 74;
+pub const COMPATIBILITY_REVISION: u64 = 78;
 
 /// Serde view of a baseline workbook and its sparse overlay state.
 pub struct Snapshot<'a> {
-    state: State<'a>,
-}
-/// Borrowed runtime view or independently owned wire payload.
-enum State<'a> {
-    Borrowed(BorrowedSource<'a>),
-    Owned(Box<Payload<'static>>),
-}
-/// Type-erased borrowed source; snapshots do not depend on the workbook handle type.
-struct BorrowedSource<'a> {
-    workbook: &'a Workbook,
-    inputs: &'a crate::eval::run_overlay::RunInputs,
-    compiler: &'a RefCell<FormulaCompiler>,
-    policy: &'a EvaluationPolicy,
-    preparation: &'a crate::eval::PreparationPolicy,
-    cache: Option<&'a RefCell<Cache>>,
+    pub(super) state: SnapshotState<'a>,
 }
 
-/// Validated detached source and optional incremental results, awaiting a baseline handle.
-pub struct WorkspaceState {
-    baseline: crate::model::snapshot::Snapshot<'static>,
-    inputs: crate::eval::run_overlay::RunInputs,
-    compiler: FormulaCompiler,
-    cache: Cache,
-    policy: EvaluationPolicy,
-    preparation: crate::eval::PreparationPolicy,
-}
-impl WorkspaceState {
-    /// Materialize effective authored source for independent persistence/recovery.
-    /// Compiled programs and retained computed results are not promoted to inputs.
-    /// The supplied baseline must match exactly, just as for runtime attachment.
-    pub fn source_workbook(&self, workbook: &Workbook) -> Result<Workbook, OverlayError> {
-        if !self.baseline.matches(workbook) {
-            return Err(OverlayError::Snapshot(
-                "baseline differs from detached state".into(),
-            ));
-        }
-        let mut result = workbook.clone();
-        let deleted = self.inputs.edits().filter_map(|(sheet, address, edit)| {
-            matches!(edit, CellEdit::Delete)
-                .then_some(WorkbookChange::RemoveCell { sheet, address })
-        });
-        let writes = self
-            .inputs
-            .edits()
-            .filter_map(|(sheet, address, edit)| match edit {
-                CellEdit::Delete => None,
-                CellEdit::StyleOnly(cell) => Some(WorkbookChange::SetStyle {
-                    sheet,
-                    address,
-                    style: cell.style.clone(),
-                }),
-                CellEdit::Replace(cell) => Some(WorkbookChange::SetCell {
-                    sheet,
-                    address,
-                    cell: cell.as_ref().clone(),
-                }),
-            });
-        result.apply(deleted.chain(writes))?;
-        Ok(result)
-    }
-
-    /// Attach to an exactly matching baseline without extensions.
-    pub fn attach<'a, W: Borrow<Workbook>>(
-        self,
-        workbook: W,
-    ) -> Result<Overlay<'a, W>, OverlayError> {
-        self.attach_registry(workbook, None)
-    }
-    /// Attach to an exactly matching baseline and extension registry.
-    pub fn attach_with_extensions<'a, W: Borrow<Workbook>>(
-        self,
-        workbook: W,
-        extensions: &'a crate::eval::extensions::ExtensionRegistry,
-    ) -> Result<Overlay<'a, W>, OverlayError> {
-        self.attach_registry(workbook, Some(Registry::Borrowed(extensions)))
-    }
-    /// Reattach immutable shared providers for ordinary worker-thread transfer.
-    pub fn attach_with_shared_extensions<'a, W: Borrow<Workbook>>(
-        self,
-        workbook: W,
-        extensions: Arc<crate::eval::extensions::ExtensionRegistry>,
-    ) -> Result<Overlay<'a, W>, OverlayError> {
-        self.attach_registry(workbook, Some(Registry::Shared(extensions)))
-    }
-    fn attach_registry<'a, W: Borrow<Workbook>>(
-        self,
-        workbook: W,
-        extensions: Option<Registry<'a>>,
-    ) -> Result<Overlay<'a, W>, OverlayError> {
-        if !self.baseline.matches(workbook.borrow()) {
-            return Err(OverlayError::Snapshot(
-                "baseline differs from detached state".into(),
-            ));
-        }
-        let registry = extensions.as_ref().map(Registry::get).map_or_else(
-            crate::eval::RegistryIdentity::default,
-            crate::eval::RegistryIdentity::with_extensions,
-        );
-        if self.preparation.registry != registry {
-            return Err(OverlayError::RegistryMismatch);
-        }
-        Ok(Overlay {
-            source: Source {
-                workbook,
-                inputs: self.inputs,
-                compiler: RefCell::new(self.compiler),
-                spill_candidates: Default::default(),
-                policy: self.policy,
-                preparation: self.preparation,
-                extensions,
-            },
-            cache: RefCell::new(self.cache),
-        })
-    }
-    /// Attach as direct evaluation, reusing compilation but discarding incremental results.
-    pub fn into_evaluation<'a, W: Borrow<Workbook>>(
-        self,
-        workbook: W,
-        context: EvaluationContext,
-    ) -> Result<Evaluation<'a, W>, OverlayError> {
-        Evaluation::from_source(self.attach(workbook)?.source, context)
-    }
-    /// Attach direct evaluation with the exact runtime extension registry.
-    pub fn into_evaluation_with_extensions<'a, W: Borrow<Workbook>>(
-        self,
-        workbook: W,
-        context: EvaluationContext,
-        extensions: &'a crate::eval::extensions::ExtensionRegistry,
-    ) -> Result<Evaluation<'a, W>, OverlayError> {
-        Evaluation::from_source(
-            self.attach_with_extensions(workbook, extensions)?.source,
-            context,
-        )
-    }
-    /// Restore direct evaluation with shared providers and a fresh context.
-    pub fn into_evaluation_with_shared_extensions<'a, W: Borrow<Workbook>>(
-        self,
-        workbook: W,
-        context: EvaluationContext,
-        extensions: Arc<crate::eval::extensions::ExtensionRegistry>,
-    ) -> Result<Evaluation<'a, W>, OverlayError> {
-        Evaluation::from_source(
-            self.attach_with_shared_extensions(workbook, extensions)?
-                .source,
-            context,
-        )
-    }
-}
-/// Versioned wire payload; runtime providers are reattached during restoration.
-#[derive(Serialize, Deserialize)]
-struct Payload<'a> {
-    version: u32,
-    model: crate::model::snapshot::Snapshot<'a>,
-    policy: Cow<'a, EvaluationPolicy>,
-    preparation: Cow<'a, crate::eval::PreparationPolicy>,
-    compiler: crate::eval::compiler::cache_snapshot::Cache<'a>,
-    writes: Vec<(usize, CellAddress, Cow<'a, Cell>)>,
-    deleted: Cow<'a, std::collections::BTreeSet<Key>>,
-    style_only: Cow<'a, std::collections::BTreeSet<Key>>,
-    cached: Vec<CachedValue<'a>>,
-    context: Option<Cow<'a, ContextKey>>,
-    spill_resets: Cow<'a, std::collections::BTreeSet<Key>>,
-}
-/// Serializable result paired with its consumed dependencies.
-#[derive(Serialize, Deserialize)]
-struct CachedValue<'a> {
-    key: Key,
-    value: crate::model::snapshot::Value<'a>,
-    dependencies: Cow<'a, Dependencies>,
-}
-impl<'a> Payload<'a> {
-    fn capture(
-        overlay: &BorrowedSource<'a>,
-        compiler: &'a FormulaCompiler,
-        cache: &'a Cache,
-    ) -> Result<Self, OverlayError> {
-        let mut cached = cache
-            .entries
-            .iter()
-            .filter(|(_, entry)| entry.validity.is_clean())
-            .map(|(key, entry)| CachedValue {
-                key: *key,
-                value: crate::model::snapshot::Value::capture(&entry.value),
-                dependencies: Cow::Borrowed(&entry.dependencies),
-            })
-            .collect::<Vec<_>>();
-        cached.sort_unstable_by_key(|entry| entry.key);
-        Ok(Self {
-            version: VERSION,
-            model: overlay.workbook.snapshot(),
-            policy: Cow::Borrowed(overlay.policy),
-            preparation: Cow::Borrowed(overlay.preparation),
-            compiler: crate::eval::compiler::cache_snapshot::Cache::capture(
-                compiler,
-                overlay.preparation,
-            )
-            .map_err(OverlayError::Snapshot)?,
-            // Preserve the existing wire layout while deriving its disjoint views
-            // from one runtime collection. Only serialization allocates marker sets.
-            writes: overlay
-                .inputs
-                .edits()
-                .filter_map(|(sheet, at, edit)| {
-                    edit.cell().map(|cell| (sheet, at, Cow::Borrowed(cell)))
-                })
-                .collect(),
-            deleted: Cow::Owned(
-                overlay
-                    .inputs
-                    .edits()
-                    .filter_map(|(sheet, at, edit)| {
-                        matches!(edit, CellEdit::Delete).then_some((sheet, at))
-                    })
-                    .collect(),
-            ),
-            style_only: Cow::Owned(
-                overlay
-                    .inputs
-                    .edits()
-                    .filter_map(|(sheet, at, edit)| edit.is_style_only().then_some((sheet, at)))
-                    .collect(),
-            ),
-            cached,
-            context: cache.context.as_ref().map(Cow::Borrowed),
-            spill_resets: Cow::Borrowed(&cache.spill_resets),
-        })
-    }
-    fn into_owned(self) -> Payload<'static> {
-        Payload {
-            version: self.version,
-            model: self.model.into_owned(),
-            policy: Cow::Owned(self.policy.into_owned()),
-            preparation: Cow::Owned(self.preparation.into_owned()),
-            compiler: self.compiler.into_owned(),
-            writes: self
-                .writes
-                .into_iter()
-                .map(|(sheet, at, cell)| (sheet, at, Cow::Owned(cell.into_owned())))
-                .collect(),
-            deleted: Cow::Owned(self.deleted.into_owned()),
-            style_only: Cow::Owned(self.style_only.into_owned()),
-            cached: self
-                .cached
-                .into_iter()
-                .map(|c| CachedValue {
-                    key: c.key,
-                    value: c.value.into_owned(),
-                    dependencies: Cow::Owned(c.dependencies.into_owned()),
-                })
-                .collect(),
-            context: self.context.map(|c| Cow::Owned(c.into_owned())),
-            spill_resets: Cow::Owned(self.spill_resets.into_owned()),
-        }
-    }
-}
 impl<'a> Snapshot<'a> {
     /// Borrow overlay state without requiring the overlay itself to implement Serde.
     pub(super) fn borrowed<W: Borrow<Workbook>>(
@@ -274,21 +35,23 @@ impl<'a> Snapshot<'a> {
         cache: Option<&'a RefCell<Cache>>,
     ) -> Self {
         Self {
-            state: State::Borrowed(BorrowedSource {
+            state: SnapshotState::Borrowed(BorrowedSource {
                 workbook: source.workbook(),
                 inputs: &source.inputs,
                 compiler: &source.compiler,
+                spill_candidates: &source.spill_candidates,
                 policy: &source.policy,
                 preparation: &source.preparation,
                 cache,
             }),
         }
     }
+
     /// Capture owned serialized state that can outlive the source overlay.
     pub fn into_owned(self) -> Result<Snapshot<'static>, OverlayError> {
         let payload = match self.state {
-            State::Owned(payload) => payload,
-            State::Borrowed(overlay) => {
+            SnapshotState::Owned(payload) => payload,
+            SnapshotState::Borrowed(overlay) => {
                 let empty = Cache::default();
                 let cache = overlay
                     .cache
@@ -296,25 +59,146 @@ impl<'a> Snapshot<'a> {
                     .transpose()
                     .map_err(|e| OverlayError::Snapshot(e.to_string()))?;
                 Box::new(
-                    Payload::capture(
+                    SnapshotPayload::capture(
                         &overlay,
                         &*overlay
                             .compiler
                             .try_borrow()
                             .map_err(|e| OverlayError::Snapshot(e.to_string()))?,
                         cache.as_deref().unwrap_or(&empty),
+                        SnapshotBaseline::Model(overlay.workbook.snapshot()),
                     )?
                     .into_owned(),
                 )
             }
         };
         Ok(Snapshot {
-            state: State::Owned(payload),
+            state: SnapshotState::Owned(payload),
         })
     }
-    /// Validate serialized identities and rebuild runtime caches and dependency indices.
+
+    /// Materialize the effective authored source written beside prepared state.
+    /// A borrowed overlay yields its own workbook when unedited, otherwise one clone with
+    /// its edits applied; an owned payload is restored and validated first.
+    pub(in crate::eval) fn effective_source(self) -> Result<Cow<'a, Workbook>, OverlayError> {
+        match self.state {
+            SnapshotState::Borrowed(overlay) if overlay.inputs.is_empty() => {
+                Ok(Cow::Borrowed(overlay.workbook))
+            }
+            SnapshotState::Borrowed(overlay) => Ok(Cow::Owned(
+                overlay
+                    .workbook
+                    .with_changes(overlay.inputs.workbook_changes())?,
+            )),
+            SnapshotState::Owned(_) => {
+                let (baseline, state) = self.restore()?;
+                Ok(Cow::Owned(
+                    baseline.with_changes(state.inputs.workbook_changes())?,
+                ))
+            }
+        }
+    }
+
+    /// Serialize preparation for a checkpoint whose source section holds the effective
+    /// workbook. An unedited borrowed overlay omits its baseline, which equals that source.
+    pub(in crate::eval) fn serialize_prepared<S: Serializer>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        self.serialize_payload(serializer, true)
+    }
+
+    /// Serialize the payload, storing the baseline model unless `omit_unedited_baseline`
+    /// is set and the borrowed overlay has no authored edits.
+    fn serialize_payload<S: Serializer>(
+        &self,
+        serializer: S,
+        omit_unedited_baseline: bool,
+    ) -> Result<S::Ok, S::Error> {
+        match &self.state {
+            SnapshotState::Owned(payload) => payload.serialize(serializer),
+            SnapshotState::Borrowed(overlay) => {
+                let compiler = overlay.compiler.try_borrow().map_err(S::Error::custom)?;
+                let empty = Cache::default();
+                let cache = overlay
+                    .cache
+                    .map(|c| c.try_borrow())
+                    .transpose()
+                    .map_err(S::Error::custom)?;
+                let baseline = if omit_unedited_baseline && overlay.inputs.is_empty() {
+                    SnapshotBaseline::Source
+                } else {
+                    SnapshotBaseline::Model(overlay.workbook.snapshot())
+                };
+                SnapshotPayload::capture(
+                    overlay,
+                    &compiler,
+                    cache.as_deref().unwrap_or(&empty),
+                    baseline,
+                )
+                .map_err(S::Error::custom)?
+                .serialize(serializer)
+            }
+        }
+    }
+
+    /// Restore a detached snapshot, which stores its own baseline workbook.
     pub(super) fn restore(self) -> Result<(Workbook, WorkspaceState), OverlayError> {
-        let State::Owned(payload) = self.into_owned()?.state else {
+        let mut payload = self.into_payload()?;
+        let SnapshotBaseline::Model(model) =
+            std::mem::replace(&mut payload.baseline, SnapshotBaseline::Source)
+        else {
+            return Err(OverlayError::Snapshot(
+                "snapshot baseline belongs to a checkpoint source section".into(),
+            ));
+        };
+        let workbook = model.restore()?;
+        let encoded = WorkspaceState::encode_baseline(&workbook)?;
+        Self::rebuild(payload, workbook, encoded)
+    }
+
+    /// Restore checkpoint preparation beside its decoded effective `source` workbook.
+    /// `encoded_source` must be the postcard model snapshot `source` was decoded from.
+    /// An unedited checkpoint's source is its baseline; a stored baseline must reproduce
+    /// `source` once the checkpoint's edits are applied.
+    pub(in crate::eval) fn restore_with_source(
+        self,
+        source: Workbook,
+        encoded_source: &[u8],
+    ) -> Result<(Workbook, WorkspaceState), OverlayError> {
+        let mut payload = self.into_payload()?;
+        match std::mem::replace(&mut payload.baseline, SnapshotBaseline::Source) {
+            SnapshotBaseline::Source => {
+                if !payload.writes.is_empty()
+                    || !payload.deleted.is_empty()
+                    || !payload.style_only.is_empty()
+                {
+                    return Err(OverlayError::Snapshot(
+                        "edited checkpoint lacks its baseline".into(),
+                    ));
+                }
+                Self::rebuild(payload, source, encoded_source.to_vec())
+            }
+            SnapshotBaseline::Model(model) => {
+                let workbook = model.restore()?;
+                let encoded = WorkspaceState::encode_baseline(&workbook)?;
+                let (baseline, state) = Self::rebuild(payload, workbook, encoded)?;
+                let effective = baseline.with_changes(state.inputs.workbook_changes())?;
+                if !source.snapshot().matches(&effective)
+                    || source.file_metadata != effective.file_metadata
+                {
+                    return Err(OverlayError::Snapshot(
+                        "source and prepared state disagree".into(),
+                    ));
+                }
+                Ok((baseline, state))
+            }
+        }
+    }
+
+    /// Own the wire payload and check its version and parser policy.
+    fn into_payload(self) -> Result<SnapshotPayload<'static>, OverlayError> {
+        let SnapshotState::Owned(payload) = self.into_owned()?.state else {
             return Err(OverlayError::Snapshot(
                 "snapshot ownership conversion failed".into(),
             ));
@@ -328,9 +212,18 @@ impl<'a> Snapshot<'a> {
         if payload.preparation.parse != payload.policy.parse {
             return Err(OverlayError::Snapshot("parser policy mismatch".into()));
         }
+        Ok(payload)
+    }
+
+    /// Validate serialized identities against `workbook` and rebuild runtime caches and
+    /// dependency indices. `baseline` is the encoded form of `workbook`.
+    fn rebuild(
+        payload: SnapshotPayload<'static>,
+        workbook: Workbook,
+        baseline: Vec<u8>,
+    ) -> Result<(Workbook, WorkspaceState), OverlayError> {
         // Typed file decoding owns optional quotas. Restoration validates source,
         // ownership and cache evidence without imposing another hidden size cap.
-        let workbook = payload.model.restore()?;
         let policy = payload.policy.into_owned();
         let preparation = payload.preparation.into_owned();
         let compiler = payload
@@ -340,7 +233,7 @@ impl<'a> Snapshot<'a> {
         let mut overlay = Overlay {
             source: Source {
                 workbook,
-                inputs: crate::eval::run_overlay::RunInputs::empty(),
+                inputs: crate::eval::inputs::RunInputs::empty(),
                 compiler: RefCell::new(compiler),
                 spill_candidates: Default::default(),
                 policy,
@@ -349,6 +242,22 @@ impl<'a> Snapshot<'a> {
             },
             cache: RefCell::new(Cache::default()),
         };
+        let mut previous_prefix: Option<(usize, CellAddress)> = None;
+        for &(sheet, address) in &payload.inspected_prefixes {
+            if previous_prefix.is_some_and(|(prior_sheet, prior)| {
+                sheet < prior_sheet
+                    || (sheet == prior_sheet
+                        && (address.col <= prior.col || address.row >= prior.row))
+            }) {
+                return Err(OverlayError::Snapshot(
+                    "noncanonical source discovery prefixes".into(),
+                ));
+            }
+            previous_prefix = Some((sheet, address));
+            overlay
+                .source
+                .validate_target(EvaluationTarget { sheet, address })?;
+        }
         for (sheet, address, cell) in payload.writes {
             let target = EvaluationTarget { sheet, address };
             overlay.source.validate_target(target)?;
@@ -390,7 +299,7 @@ impl<'a> Snapshot<'a> {
             if !match baseline {
                 Some(base) => {
                     base.formula == cell.formula
-                        && crate::eval::same_result_identity(&base.value, &cell.value)
+                        && crate::eval::ports::same_result_identity(&base.value, &cell.value)
                 }
                 None => cell.formula.is_none() && cell.value == CellValue::Blank,
             } {
@@ -422,11 +331,19 @@ impl<'a> Snapshot<'a> {
                     .source
                     .validate_target(EvaluationTarget { sheet, address })?;
             }
-            if !payload.cached.is_empty() && cache.context.is_none() {
+            cache.lookup_prefixes = payload
+                .lookup_prefixes
+                .into_owned()
+                .restore(overlay.source.workbook())
+                .map_err(OverlayError::Snapshot)?;
+            if (!payload.cached.is_empty() || !cache.lookup_prefixes.is_empty())
+                && cache.context.is_none()
+            {
                 return Err(OverlayError::Snapshot(
                     "cached results lack execution context".into(),
                 ));
             }
+            cache.entries.reserve(payload.cached.len());
             for entry in payload.cached {
                 overlay.source.validate_target(EvaluationTarget {
                     sheet: entry.key.0,
@@ -462,7 +379,7 @@ impl<'a> Snapshot<'a> {
                     entry.key,
                     Cached {
                         version: 0,
-                        validity: super::dependencies::Validity::Clean,
+                        validity: crate::eval::reuse::Validity::Clean,
                         value: Arc::new(entry.value.restore()),
                         dependencies: Box::new(entry.dependencies.into_owned()),
                     },
@@ -515,7 +432,7 @@ impl<'a> Snapshot<'a> {
                     ));
                 }
             }
-            cache.rebuild_ranges();
+            // Range indexes stay marked dirty and are built on the first invalidation.
         }
         let Source {
             workbook,
@@ -525,13 +442,13 @@ impl<'a> Snapshot<'a> {
             preparation,
             ..
         } = overlay.source;
-        let baseline = workbook.snapshot().into_owned();
         Ok((
             workbook,
             WorkspaceState {
                 baseline,
                 inputs,
                 compiler: compiler.into_inner(),
+                inspected_prefixes: payload.inspected_prefixes,
                 cache: overlay.cache.into_inner(),
                 policy,
                 preparation,
@@ -539,78 +456,19 @@ impl<'a> Snapshot<'a> {
         ))
     }
 }
+
 impl Serialize for Snapshot<'_> {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        match &self.state {
-            State::Owned(payload) => payload.serialize(serializer),
-            State::Borrowed(overlay) => {
-                let compiler = overlay.compiler.try_borrow().map_err(S::Error::custom)?;
-                let empty = Cache::default();
-                let cache = overlay
-                    .cache
-                    .map(|c| c.try_borrow())
-                    .transpose()
-                    .map_err(S::Error::custom)?;
-                Payload::capture(overlay, &compiler, cache.as_deref().unwrap_or(&empty))
-                    .map_err(S::Error::custom)?
-                    .serialize(serializer)
-            }
-        }
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.serialize_payload(serializer, false)
     }
 }
+
 impl<'de, 'a> Deserialize<'de> for Snapshot<'a> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         Ok(Self {
-            state: State::Owned(Box::new(Payload::<'static>::deserialize(deserializer)?)),
+            state: SnapshotState::Owned(Box::new(SnapshotPayload::<'static>::deserialize(
+                deserializer,
+            )?)),
         })
-    }
-}
-
-#[cfg(test)]
-mod style_marker_validation {
-    use super::*;
-
-    #[test]
-    fn malformed_style_only_markers_cannot_authorize_content_or_missing_writes() {
-        for malformed in 0..3 {
-            let mut book = Workbook::new();
-            book.add_sheet("S")
-                .unwrap()
-                .set_value(CellAddress { row: 0, col: 0 }, 1.0)
-                .unwrap();
-            let mut overlay = Overlay::with_workbook(&book).build().unwrap();
-            let key = (0, CellAddress { row: 0, col: 0 });
-            overlay
-                .set_value(
-                    EvaluationTarget {
-                        sheet: key.0,
-                        address: key.1,
-                    },
-                    2.0,
-                )
-                .unwrap();
-            let mut snapshot = overlay.snapshot().into_owned().unwrap();
-            let State::Owned(payload) = &mut snapshot.state else {
-                panic!("owned payload")
-            };
-            match malformed {
-                0 => {
-                    payload.style_only.to_mut().insert(key);
-                }
-                1 => {
-                    payload
-                        .style_only
-                        .to_mut()
-                        .insert((0, CellAddress { row: 1, col: 0 }));
-                }
-                _ => {
-                    payload.writes.clear();
-                    payload.writes.push((0, key.1, Cow::Owned(Cell::new(1.0))));
-                    payload.style_only.to_mut().insert(key);
-                    payload.deleted.to_mut().insert(key);
-                }
-            }
-            assert!(snapshot.restore().is_err());
-        }
     }
 }

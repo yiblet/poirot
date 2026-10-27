@@ -1,5 +1,6 @@
 //! Shared boundaries behind the independently authored JSON corpus regressions.
-use poirot::eval::overlay::{EvaluationContext, Overlay};
+use poirot::eval::EvaluationContext;
+use poirot::eval::overlay::Overlay;
 use poirot::eval::*;
 use poirot::model::{CellAddress, CellError, CellValue, Workbook};
 
@@ -110,9 +111,10 @@ fn shared_corpus_boundaries_agree_across_public_execution_paths() {
             },
         };
         let prepared = compiler.compile_formula(formula, &policy);
-        let bound =
-            bound::FormulaPlan::bind(&poirot_parsing::formula::parse_formula(formula).unwrap())
-                .unwrap();
+        let bound = compile::bound::FormulaPlan::bind(
+            &poirot_parsing::formula::parse_formula(formula).unwrap(),
+        )
+        .unwrap();
         let direct = run_formula(
             &book,
             0,

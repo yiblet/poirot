@@ -1,74 +1,55 @@
 //! Shared sparse source, parsing policies, and lazy compilation for both evaluation paths.
-use super::*;
-use crate::eval::run_overlay::CellEdit;
+use super::changes::{append_cell_changes, same_cell};
+use super::compilation_usage::CompilationUsage;
+use super::edit_kind::EditKind;
+use super::local_cell_target::LocalCellTarget;
+use super::overlay_error::OverlayError;
+use super::registry_handle::RegistryHandle;
+use super::source_change::SourceChange;
+use crate::eval::compile::compiler::FormulaCompiler;
+use crate::eval::config::{EvaluationContext, EvaluationPolicy};
+use crate::eval::coordinates::EvaluationTarget;
+use crate::eval::inputs::CellEdit;
+use crate::eval::reuse::Key;
+use crate::model::{Cell, CellStyle, CellValue, ModelError, Workbook, WorkbookChange};
 use std::borrow::Borrow;
+use std::cell::RefCell;
 
-/// Runtime provider owner, excluded from serialized binding identity.
-pub(super) enum Registry<'a> {
-    /// Caller-managed immutable registry.
-    Borrowed(&'a crate::eval::extensions::ExtensionRegistry),
-    /// Providers shared with worker-owned workspaces.
-    Shared(Arc<crate::eval::extensions::ExtensionRegistry>),
-}
-impl Registry<'_> {
-    /// Read implementations independently of handle ownership.
-    pub fn get(&self) -> &crate::eval::extensions::ExtensionRegistry {
-        match self {
-            Self::Borrowed(registry) => registry,
-            Self::Shared(registry) => registry,
-        }
-    }
-}
-
-/// Whether an authored operation replaces content or preserves it while changing style.
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum EditKind {
-    Content,
-    Style,
-}
-
-/// Whether value-only dependency cutoffs are sound for an authored mutation.
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum SourceChange {
-    /// Literal content changed without changing formula or style metadata.
-    Value,
-    /// Formula, style, or stored spill ownership may have changed.
-    Metadata,
-}
 /// Baseline handle plus authored diff and compilation; contains no evaluated results.
 pub(super) struct Source<'a, W> {
     /// Immutable borrowed or shared baseline handle.
     pub workbook: W,
     /// Sparse authored overrides and removals.
-    pub inputs: crate::eval::run_overlay::RunInputs,
+    pub inputs: crate::eval::inputs::RunInputs,
     /// Lazily interned programs independent of evaluated values.
     pub compiler: RefCell<FormulaCompiler>,
     /// Typed producer classification shared across unchanged evaluations.
-    pub spill_candidates: RefCell<crate::eval::spill_publication::CandidateIndex>,
+    pub spill_candidates: RefCell<crate::eval::spill::CandidateIndex>,
     /// Parsing and calculation rules shared by both paths.
     pub policy: EvaluationPolicy,
     /// Exact parser and provider binding identity.
-    pub preparation: crate::eval::PreparationPolicy,
+    pub preparation: crate::eval::compile::compiler::PreparationPolicy,
     /// Runtime implementations, never serialized into a snapshot.
-    pub extensions: Option<Registry<'a>>,
+    pub extensions: Option<RegistryHandle<'a>>,
 }
+
 impl<'a, W: Borrow<Workbook>> Source<'a, W> {
     /// Validate preparation policy and allocate an empty source diff and compiler.
     pub fn new(
         workbook: W,
         policy: EvaluationPolicy,
-        extensions: Option<Registry<'a>>,
+        extensions: Option<RegistryHandle<'a>>,
     ) -> Result<Self, OverlayError> {
-        let registry = extensions.as_ref().map(Registry::get).map_or_else(
-            crate::eval::RegistryIdentity::default,
-            crate::eval::RegistryIdentity::with_extensions,
+        let registry = extensions.as_ref().map(RegistryHandle::get).map_or_else(
+            crate::eval::compile::compiler::RegistryIdentity::default,
+            crate::eval::compile::compiler::RegistryIdentity::with_extensions,
         );
         Ok(Self {
             workbook,
-            inputs: crate::eval::run_overlay::RunInputs::empty(),
+            inputs: crate::eval::inputs::RunInputs::empty(),
             compiler: RefCell::new(FormulaCompiler::new()),
             spill_candidates: Default::default(),
-            preparation: crate::eval::PreparationPolicy {
+            preparation: crate::eval::compile::compiler::PreparationPolicy {
                 parse: policy.parse,
                 registry,
             },
@@ -76,13 +57,15 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             extensions,
         })
     }
+
     /// Borrow the baseline without exposing its handle representation.
     pub fn workbook(&self) -> &Workbook {
         self.workbook.borrow()
     }
+
     /// Resolve a local sheet-qualified cell against baseline sheet metadata.
     pub fn target(&self, reference: &str) -> Result<EvaluationTarget, ModelError> {
-        let target = target::LocalCellTarget::parse(reference)?;
+        let target = LocalCellTarget::parse(reference)?;
         let sheet = self
             .workbook()
             .try_sheet_index_by_name(&target.sheet)
@@ -93,14 +76,17 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             address: target.address,
         })
     }
+
     /// Read the effective authored source before evaluating formulas.
     pub fn source_cell(&self, target: EvaluationTarget) -> Option<&Cell> {
         self.effective().cell(target.sheet, target.address)
     }
+
     /// Combine baseline and sparse edits for the common execution read port.
-    pub fn effective(&self) -> crate::eval::run_overlay::EffectiveWorkbook<'_> {
-        crate::eval::run_overlay::EffectiveWorkbook::new(self.workbook(), Some(&self.inputs))
+    pub fn effective(&self) -> crate::eval::inputs::EffectiveWorkbook<'_> {
+        crate::eval::inputs::EffectiveWorkbook::new(self.workbook(), Some(&self.inputs))
     }
+
     /// Reject invalid addresses and absent sheets before mutating source.
     pub fn validate_target(&self, target: EvaluationTarget) -> Result<(), ModelError> {
         target.address.validate()?;
@@ -109,6 +95,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         }
         Ok(())
     }
+
     fn remove_override(&mut self, target: EvaluationTarget) {
         if let Some(cells) = self.inputs.sheets.get_mut(&target.sheet) {
             cells.remove(&target.address);
@@ -117,6 +104,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             }
         }
     }
+
     /// Classify literal writes before changing effective source or saved ownership.
     pub fn change_kind(
         &self,
@@ -146,6 +134,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             SourceChange::Metadata
         }
     }
+
     /// Replace source, dropping redundant overrides; report whether invalidation is needed.
     pub fn write_cell(
         &mut self,
@@ -198,6 +187,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         }
         Ok(true)
     }
+
     /// Hide baseline source or remove an override; report effective source changes.
     pub fn remove_cell(&mut self, target: EvaluationTarget) -> Result<bool, ModelError> {
         self.validate_target(target)?;
@@ -224,6 +214,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         }
         Ok(true)
     }
+
     /// Restore baseline inputs, invalidating source proofs only where formulas change.
     pub fn discard_inputs(&mut self) {
         let workbook = self.workbook.borrow();
@@ -239,8 +230,9 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
                 candidates.remove(&sheet);
             }
         }
-        self.inputs = crate::eval::run_overlay::RunInputs::empty();
+        self.inputs = crate::eval::inputs::RunInputs::empty();
     }
+
     /// Count authored overrides and removal markers rather than edit history.
     pub fn edited_cells(&self) -> usize {
         self.inputs
@@ -249,6 +241,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             .map(|s| s.cells().len())
             .sum::<usize>()
     }
+
     /// Project compiler counters without exposing retained program internals.
     pub fn compiled_usage(&mut self) -> CompilationUsage {
         let compiler = self.compiler.get_mut();
@@ -261,14 +254,14 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
             unique_programs: compiler.unique_programs(),
         }
     }
+
     /// Prepare effective cell and name sources without executing formulas.
     pub fn compile_all(&mut self) -> CompilationUsage {
         let workbook = self.workbook.borrow();
-        let effective =
-            crate::eval::run_overlay::EffectiveWorkbook::new(workbook, Some(&self.inputs));
+        let effective = crate::eval::inputs::EffectiveWorkbook::new(workbook, Some(&self.inputs));
         let targets = source_targets(workbook, Some(&self.inputs));
         let compiler = self.compiler.get_mut();
-        let mut prepare = |source: &str| match self.extensions.as_ref().map(Registry::get) {
+        let mut prepare = |source: &str| match self.extensions.as_ref().map(RegistryHandle::get) {
             Some(registry) => {
                 compiler.compile_formula_with_extensions(source, &self.preparation, registry);
             }
@@ -289,6 +282,7 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         }
         self.compiled_usage()
     }
+
     /// Export owned source mutations, independent of any evaluated result cache.
     pub fn source_changes(&self) -> Vec<WorkbookChange> {
         // Keep deletion-before-write export order without retaining a second edit index.
@@ -320,37 +314,39 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         }
         changes
     }
+
     /// Attach shared execution to source, policies, providers, and a fixed context.
     pub fn session<'e>(
         &'e self,
         context: &'e EvaluationContext,
-        meter: crate::eval::budget::BudgetMeter,
-    ) -> crate::eval::Session<'e> {
+        meter: crate::eval::limits::BudgetMeter,
+    ) -> crate::eval::session::Session<'e> {
         self.session_with_runtime(
             context,
-            crate::eval::runtime::Storage::Owned(Box::new(crate::eval::runtime::Runtime::new(
+            crate::eval::session::Storage::Owned(Box::new(crate::eval::session::Runtime::new(
                 meter,
             ))),
         )
     }
+
     /// Reborrow persistent execution storage without moving its stacks or caches.
     pub fn session_with_runtime<'e>(
         &'e self,
         context: &'e EvaluationContext,
-        runtime: crate::eval::runtime::Storage<'e>,
-    ) -> crate::eval::Session<'e> {
-        let mut session = crate::eval::Session::with_runtime(
+        runtime: crate::eval::session::Storage<'e>,
+    ) -> crate::eval::session::Session<'e> {
+        let mut session = crate::eval::session::Session::with_runtime(
             self.workbook(),
-            crate::eval::configuration::SessionConfiguration::from_overlay(context, &self.policy),
+            crate::eval::session::RunPolicies::from_overlay(context, &self.policy),
             runtime,
         );
-        session.inputs = Some(&self.inputs);
-        session.lazy_compiler = Some(&self.compiler);
-        session.spill_candidates = Some(&self.spill_candidates);
-        session.preparation_policy = Some(&self.preparation);
-        session.extensions = self.extensions.as_ref().map(Registry::get);
-        session.memo_limits = Some(context.retention);
-        session.lookup_prefixes.enable();
+        session.sources.inputs = Some(&self.inputs);
+        session.sources.lazy_compiler = Some(&self.compiler);
+        session.reuse.spill_candidates = Some(&self.spill_candidates);
+        session.sources.preparation_policy = Some(&self.preparation);
+        session.sources.extensions = self.extensions.as_ref().map(RegistryHandle::get);
+        session.state.memo_limits = Some(context.retention);
+        session.state.runtime.lookup_prefixes.enable();
         session
     }
 }
@@ -377,7 +373,7 @@ macro_rules! edit_methods {
                     shared_formula: None,
                     style,
                 },
-                source::EditKind::Content,
+                crate::eval::overlay::edit_kind::EditKind::Content,
             )
         }
         /// Replace a formula and clear its saved value, preserving its style.
@@ -392,7 +388,11 @@ macro_rules! edit_methods {
                 .source_cell(target)
                 .map(|c| c.style.clone())
                 .unwrap_or_default();
-            self.write_cell(target, cell, source::EditKind::Content)
+            self.write_cell(
+                target,
+                cell,
+                crate::eval::overlay::edit_kind::EditKind::Content,
+            )
         }
         /// Replace authored style and invalidate potentially affected results.
         pub fn set_style(
@@ -402,7 +402,11 @@ macro_rules! edit_methods {
         ) -> Result<(), ModelError> {
             let mut cell = self.source.source_cell(target).cloned().unwrap_or_default();
             cell.style = style;
-            self.write_cell(target, cell, source::EditKind::Style)
+            self.write_cell(
+                target,
+                cell,
+                crate::eval::overlay::edit_kind::EditKind::Style,
+            )
         }
         /// Change a formula's saved source value; the default Compute policy still recalculates it.
         pub fn set_cached_value(
@@ -419,13 +423,19 @@ macro_rules! edit_methods {
                 return Err(ModelError("cache target has no formula".into()));
             }
             cell.value = value.into();
-            self.write_cell(target, cell, source::EditKind::Content)
+            self.write_cell(
+                target,
+                cell,
+                crate::eval::overlay::edit_kind::EditKind::Content,
+            )
         }
         /// Remove effective authored content and invalidate results.
         pub fn remove_cell(&mut self, target: EvaluationTarget) -> Result<(), ModelError> {
-            let change = self
-                .source
-                .change_kind(target, None, source::EditKind::Content);
+            let change = self.source.change_kind(
+                target,
+                None,
+                crate::eval::overlay::edit_kind::EditKind::Content,
+            );
             if self.source.remove_cell(target)? {
                 self.source_changed(target, change);
             }
@@ -435,7 +445,7 @@ macro_rules! edit_methods {
             &mut self,
             target: EvaluationTarget,
             cell: Cell,
-            kind: source::EditKind,
+            kind: crate::eval::overlay::edit_kind::EditKind,
         ) -> Result<(), ModelError> {
             let change = self.source.change_kind(target, Some(&cell), kind);
             if self.source.write_cell(target, cell, kind)? {
@@ -445,6 +455,7 @@ macro_rules! edit_methods {
         }
     };
 }
+
 /// Shared edit expansion with a caller-supplied invalidation hook.
 pub(super) use edit_methods;
 
@@ -495,13 +506,14 @@ macro_rules! source_methods {
         }
     };
 }
+
 /// Shared source-operation expansion for direct and persistent workspaces.
 pub(super) use source_methods;
 
 /// Enumerate authored cells, excluding stale saved spill-only children and tombstones.
 pub(super) fn source_targets(
     workbook: &Workbook,
-    inputs: Option<&crate::eval::run_overlay::RunInputs>,
+    inputs: Option<&crate::eval::inputs::RunInputs>,
 ) -> std::collections::BTreeSet<Key> {
     let mut targets = std::collections::BTreeSet::new();
     for (sheet, source) in workbook.sheets().iter().enumerate() {

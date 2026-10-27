@@ -4,12 +4,17 @@ use crate::eval::adapters::elementwise::{
     self, Broadcast, Deferred, Kernel, MemberContext, NumericParameter, NumericSignature, Optional,
     Signature, SourceIdentity, WholeCollection,
 };
-use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::functions::registry::ReferenceFunction;
+use crate::eval::host::{ArgumentCoercion, CallHost};
+use crate::eval::limits::CapabilityId;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value};
+use crate::model::CellValue::{Number, Text};
+use crate::model::{CellValue, MAX_COLUMNS, MAX_ROWS};
 
 /// ADDRESS kernel that broadcasts coordinates and spelling controls into reference text.
 /// It converts numeric options before formatting each output member.
 struct Address;
+
 impl Kernel for Address {
     /// Broadcast coordinates and optional spelling controls.
     type Signature = (
@@ -19,6 +24,7 @@ impl Kernel for Address {
         Optional<Broadcast>,
         Optional<Broadcast>,
     );
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
@@ -49,7 +55,7 @@ impl Kernel for Address {
             .transpose()?;
         let sheet = match sheet {
             Some(operand) if !operand.missing => {
-                Some(context.host.coercev2_scalar_text(&operand.value)?)
+                Some(ArgumentCoercion::new(context.host).coerce_scalar_text(&operand.value)?)
             }
             _ => None,
         };

@@ -1,6 +1,18 @@
-use super::*;
+use super::bounded;
+use super::codec::{
+    HEADER, SOURCE_CHECKSUM, decode, deserialize, encode, encode_workbook, encode_workspace,
+    read_file, sections,
+};
+use super::prepared_policy::PreparedPolicy;
+use super::prepared_status::PreparedStatus;
+use super::restored_artifact::RestoredArtifact;
+use super::snapshot_error::SnapshotError;
+use super::snapshot_limits::SnapshotLimits;
+use super::snapshot_load_builder::SnapshotLoadBuilder;
 use crate::eval;
-use crate::eval::{CellValue, overlay::Evaluation, overlay::EvaluationContext};
+use crate::eval::config::EvaluationContext;
+use crate::eval::overlay::{Evaluation, Overlay};
+use crate::model::{CellValue, Workbook};
 use poirot_io as io;
 
 fn workbook() -> Workbook {
@@ -15,6 +27,7 @@ fn workbook() -> Workbook {
         .unwrap();
     book
 }
+
 fn decode_default(bytes: &[u8]) -> Result<RestoredArtifact, SnapshotError> {
     decode(
         bytes,
@@ -275,7 +288,7 @@ fn prepared_source_mismatch_is_rejected() {
 
 #[test]
 fn provider_implementations_remain_external_and_identity_checked() {
-    use crate::eval::{extensions::*, registry::Arity};
+    use crate::eval::{functions::extensions::*, functions::registry::Arity};
     let mut book = workbook();
     book.sheet_mut(0)
         .unwrap()
@@ -390,7 +403,7 @@ fn restored_execution_keeps_operational_failure_separate_from_spreadsheet_error(
     let target = run.target("S!D1").unwrap();
     assert_eq!(
         run.cell(target).unwrap(),
-        CellValue::Error(crate::eval::CellError::Num)
+        CellValue::Error(crate::model::CellError::Num)
     );
 }
 
@@ -433,7 +446,10 @@ fn durable_source_and_prepared_metadata_must_agree_even_without_calculation_iden
     let evaluation = Evaluation::with_workbook(&book)
         .build(EvaluationContext::default())
         .unwrap();
-    let bytes = evaluation.save_snapshot().to_buffer().unwrap();
+    let bytes =
+        super::snapshot_save_builder::SnapshotSaveBuilder::checkpoint(evaluation.snapshot())
+            .to_buffer()
+            .unwrap();
     let (_, prepared, revision) = sections(&bytes, usize::MAX).unwrap();
     let mut changed = workbook();
     changed.file_metadata = Some(crate::model::FileMetadata {
@@ -471,7 +487,7 @@ fn native_visual_style_context_and_sparse_edits_obey_payload_quotas() {
     let mut sparse = Overlay::with_workbook(workbook()).build().unwrap();
     sparse
         .set_style(
-            crate::eval::EvaluationTarget {
+            crate::eval::coordinates::EvaluationTarget {
                 sheet: 0,
                 address: "E1".parse().unwrap(),
             },
@@ -516,7 +532,7 @@ fn native_visual_style_context_and_sparse_edits_obey_payload_quotas() {
     let mut overlay = Overlay::with_workbook(book).build().unwrap();
     overlay
         .set_style(
-            crate::eval::EvaluationTarget {
+            crate::eval::coordinates::EvaluationTarget {
                 sheet: 0,
                 address: "E1".parse().unwrap(),
             },
@@ -560,4 +576,439 @@ fn native_visual_style_context_and_sparse_edits_obey_payload_quotas() {
         )
         .is_err()
     );
+}
+
+/// Two styled sheets with formulas, a spill, a defined name and import metadata.
+fn styled_workbook() -> Workbook {
+    use crate::model::{CellStyle, FontStyle, VisualStyle};
+    use std::sync::Arc;
+    let bold = CellStyle {
+        visual: Some(Arc::new(VisualStyle {
+            font: Some(FontStyle {
+                bold: true,
+                ..Default::default()
+            }),
+            ..Default::default()
+        })),
+        ..Default::default()
+    };
+    let mut book = workbook();
+    book.file_metadata = Some(crate::model::FileMetadata {
+        format: crate::model::FileFormat::Xlsx,
+        import_warnings: Vec::new(),
+    });
+    book.define_name("Rate", "S!$A$1", None).unwrap();
+    let sheet = book.sheet_mut(0).unwrap();
+    sheet
+        .set_style("A1".parse().unwrap(), bold.clone())
+        .unwrap();
+    sheet.set_value("A2".parse().unwrap(), "text").unwrap();
+    sheet
+        .set_style("A2".parse().unwrap(), bold.clone())
+        .unwrap();
+    sheet
+        .set_formula_with_cached_value("D1".parse().unwrap(), "SEQUENCE(3)", CellValue::Blank)
+        .unwrap();
+    let other = book.add_sheet("T").unwrap();
+    other.set_value("A1".parse().unwrap(), 5.).unwrap();
+    other
+        .set_formula_with_cached_value("B1".parse().unwrap(), "S!B1+A1", CellValue::Blank)
+        .unwrap();
+    other.set_style("B1".parse().unwrap(), bold).unwrap();
+    other.set_formula("C1".parse().unwrap(), "Rate*10").unwrap();
+    book
+}
+
+/// Cells whose values the checkpoint restore tests compare.
+const CHECKED_CELLS: [&str; 9] = [
+    "S!A1", "S!B1", "S!C1", "S!D1", "S!D2", "S!D3", "S!E5", "T!B1", "T!C1",
+];
+
+/// Evaluate [`CHECKED_CELLS`], returning their values and the formula executions it took.
+fn checked_values(overlay: &mut Overlay<'_, Workbook>) -> (Vec<CellValue>, u64) {
+    let targets = CHECKED_CELLS.map(|cell| overlay.target(cell).unwrap());
+    let context = EvaluationContext::default();
+    let mut evaluation = overlay.evaluation(&context).unwrap();
+    let values = targets.map(|target| evaluation.cell(target).unwrap());
+    (values.to_vec(), evaluation.usage().formula_executions)
+}
+
+/// Save `overlay` as a checkpoint, restore it, and require the same baseline, authored
+/// edits, retained results and values. Returns the file bytes.
+fn assert_checkpoint_round_trip(overlay: &mut Overlay<'_, Workbook>) -> Vec<u8> {
+    let bytes = encode_workspace(overlay.snapshot(), SnapshotLimits::default()).unwrap();
+    let restored = decode_default(&bytes).unwrap();
+    assert_eq!(restored.prepared_status, PreparedStatus::Restored);
+    assert_eq!(restored.workbook(), overlay.workbook());
+    let super::restored_checkpoint::RestoredCheckpoint::Prepared(mut restored) =
+        restored.into_checkpoint().unwrap()
+    else {
+        panic!("checkpoint preparation was not restored");
+    };
+    assert_eq!(restored.cached_cells(), overlay.cached_cells());
+    assert_eq!(restored.changes(), overlay.changes());
+    let retained = overlay.cached_cells() > 0;
+    let (expected, _) = checked_values(overlay);
+    let (values, executions) = checked_values(&mut restored);
+    assert_eq!(values, expected);
+    if retained {
+        assert_eq!(executions, 0);
+    }
+    bytes
+}
+
+#[test]
+fn checkpoints_store_the_workbook_once_and_restore_identical_results() {
+    use crate::model::CellStyle;
+    let number = CellValue::Number;
+    let mut overlay = Overlay::with_workbook(styled_workbook()).build().unwrap();
+    overlay.compile_all();
+    let detached = postcard::to_allocvec(&overlay.snapshot()).unwrap();
+    let compiled = assert_checkpoint_round_trip(&mut overlay);
+    // Unedited preparation omits the model that the detached snapshot stores, so only
+    // the variant tag and the trailing source checksum differ in size.
+    let (source, prepared, _) = sections(&compiled, usize::MAX).unwrap();
+    assert_eq!(
+        prepared.len() - SOURCE_CHECKSUM + source.len(),
+        detached.len()
+    );
+    assert_eq!(
+        checked_values(&mut overlay).0,
+        [
+            number(3.),
+            number(6.),
+            number(9.),
+            number(1.),
+            number(2.),
+            number(3.),
+            CellValue::Blank,
+            number(11.),
+            number(30.),
+        ]
+    );
+    let warm = assert_checkpoint_round_trip(&mut overlay);
+    assert!(overlay.cached_cells() > 0);
+    assert_ne!(warm, compiled);
+
+    let target =
+        |overlay: &Overlay<'_, Workbook>, reference: &str| overlay.target(reference).unwrap();
+    let (a1, a2, c1, e5, t_a1, t_b1) = (
+        target(&overlay, "S!A1"),
+        target(&overlay, "S!A2"),
+        target(&overlay, "S!C1"),
+        target(&overlay, "S!E5"),
+        target(&overlay, "T!A1"),
+        target(&overlay, "T!B1"),
+    );
+    overlay.set_value(a1, 7.).unwrap();
+    overlay.remove_cell(c1).unwrap();
+    overlay.set_formula(e5, "A1+T!A1").unwrap();
+    overlay
+        .set_style(
+            a2,
+            CellStyle {
+                number_format: Some("0.00".into()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    overlay.set_style(t_a1, CellStyle::default()).unwrap();
+    overlay.remove_cell(t_b1).unwrap();
+    overlay.compile_all();
+    let edited = encode_workspace(overlay.snapshot(), SnapshotLimits::default()).unwrap();
+    // Edited preparation keeps its baseline beside the effective source.
+    let (_, prepared, _) = sections(&edited, usize::MAX).unwrap();
+    assert_eq!(
+        prepared.len() - SOURCE_CHECKSUM,
+        postcard::to_allocvec(&overlay.snapshot()).unwrap().len()
+    );
+    assert_eq!(
+        checked_values(&mut overlay).0,
+        [
+            number(7.),
+            number(14.),
+            CellValue::Blank,
+            number(1.),
+            number(2.),
+            number(3.),
+            number(12.),
+            CellValue::Blank,
+            number(70.),
+        ]
+    );
+    let warm_edited = assert_checkpoint_round_trip(&mut overlay);
+    assert!(overlay.cached_cells() > 0);
+    overlay.clear_calculated_cache();
+    assert_checkpoint_round_trip(&mut overlay);
+
+    let source = decode(
+        &warm_edited,
+        SnapshotLimits::default(),
+        PreparedPolicy::SourceOnly,
+    )
+    .unwrap()
+    .into_parts()
+    .0;
+    let sheet = source.sheet(0).unwrap();
+    assert_eq!(sheet.get("A1".parse().unwrap()).unwrap().value, number(7.));
+    assert!(sheet.get("C1".parse().unwrap()).is_none());
+    assert_eq!(
+        sheet.get("E5".parse().unwrap()).unwrap().formula.as_deref(),
+        Some("A1+T!A1")
+    );
+    assert_eq!(
+        sheet
+            .get("A2".parse().unwrap())
+            .unwrap()
+            .style
+            .number_format,
+        Some("0.00".into())
+    );
+    assert!(
+        source
+            .sheet(1)
+            .unwrap()
+            .get("B1".parse().unwrap())
+            .is_none()
+    );
+}
+
+#[test]
+fn owned_checkpoint_snapshots_restore_like_borrowed_ones() {
+    let mut overlay = Overlay::with_workbook(styled_workbook()).build().unwrap();
+    overlay
+        .evaluation(&EvaluationContext::default())
+        .unwrap()
+        .all()
+        .unwrap();
+    let owned = overlay.snapshot().into_owned().unwrap();
+    let bytes = encode_workspace(owned, SnapshotLimits::default()).unwrap();
+    let restored = decode_default(&bytes).unwrap();
+    assert_eq!(restored.workbook(), overlay.workbook());
+    let super::restored_checkpoint::RestoredCheckpoint::Prepared(mut restored) =
+        restored.into_checkpoint().unwrap()
+    else {
+        panic!("checkpoint preparation was not restored");
+    };
+    assert_eq!(restored.changes(), overlay.changes());
+    assert_eq!(
+        checked_values(&mut restored),
+        (checked_values(&mut overlay).0, 0)
+    );
+}
+
+#[test]
+fn caller_supplied_baselines_are_still_compared_on_attach() {
+    let mut overlay = Overlay::with_workbook(styled_workbook()).build().unwrap();
+    overlay.compile_all();
+    let bytes = encode_workspace(overlay.snapshot(), SnapshotLimits::default()).unwrap();
+    let (workbook, state) = decode_default(&bytes).unwrap().into_parts();
+    let mut other = workbook.clone();
+    other
+        .sheet_mut(0)
+        .unwrap()
+        .set_value("A1".parse().unwrap(), 4.)
+        .unwrap();
+    assert!(matches!(
+        state.unwrap().attach(&other),
+        Err(eval::overlay::OverlayError::Snapshot(detail))
+            if detail == "baseline differs from detached state"
+    ));
+    let (workbook, state) = decode_default(&bytes).unwrap().into_parts();
+    let state = state.unwrap();
+    assert!(state.source_workbook(&other).is_err());
+    let mut attached = state.attach(&workbook).unwrap();
+    let target = attached.target("T!C1").unwrap();
+    let context = EvaluationContext::default();
+    let mut evaluation = attached.evaluation(&context).unwrap();
+    assert_eq!(evaluation.cell(target).unwrap(), CellValue::Number(30.));
+}
+
+#[test]
+fn prepared_sections_must_end_with_their_source_checksum() {
+    let mut overlay = Overlay::with_workbook(styled_workbook()).build().unwrap();
+    overlay.compile_all();
+    let bytes = encode_workspace(overlay.snapshot(), SnapshotLimits::default()).unwrap();
+    let (_, prepared, revision) = sections(&bytes, usize::MAX).unwrap();
+    for short in [&prepared[..1], &prepared[..SOURCE_CHECKSUM - 1]] {
+        let truncated = encode(&styled_workbook(), short, revision, Default::default()).unwrap();
+        assert!(matches!(
+            decode_default(&truncated),
+            Err(SnapshotError::Envelope("truncated prepared section"))
+        ));
+    }
+    let mut bad_checksum = bytes.clone();
+    *bad_checksum.last_mut().unwrap() ^= 1;
+    assert!(matches!(
+        decode_default(&bad_checksum),
+        Err(SnapshotError::Envelope(
+            "source and prepared state disagree"
+        ))
+    ));
+    // Dropping a payload byte keeps the checksum but leaves a malformed payload.
+    let mut short_payload = prepared[..prepared.len() - SOURCE_CHECKSUM - 1].to_vec();
+    short_payload.extend_from_slice(&prepared[prepared.len() - SOURCE_CHECKSUM..]);
+    let malformed = encode(
+        &styled_workbook(),
+        &short_payload,
+        revision,
+        Default::default(),
+    )
+    .unwrap();
+    assert!(decode_default(&malformed).is_err());
+    assert_eq!(
+        decode(
+            &malformed,
+            SnapshotLimits::default(),
+            PreparedPolicy::SourceOnly
+        )
+        .unwrap()
+        .workbook(),
+        &styled_workbook()
+    );
+}
+
+/// Source-only file written by the previous prepared format (COMPATIBILITY_REVISION 75);
+/// its source section format is unchanged. Workbook: [`workbook`].
+#[rustfmt::skip]
+const OLD_SOURCE: &str = concat!(
+    "524f49534e415000010008000000000000000000000000004c00000000000000000000000000000001015300",
+    "0001000003000001808080808080808440000000000101808080808080cec740010441312a32000000020180",
+    "8080808080cec740010441312a330000000000000001000000000000",
+);
+
+/// Checkpoint written by the previous prepared format (COMPATIBILITY_REVISION 75) with its
+/// model stored twice: [`workbook`] compiled with `S!A1` edited to 7.
+#[rustfmt::skip]
+const OLD_CHECKPOINT: &str = concat!(
+    "524f49534e41500001000800010000004b000000000000004c00000000000000b30100000000000001015300",
+    "0001000003000001808080808080808e40000000000101808080808080cec740010441312a32000000020180",
+    "8080808080cec740010441312a3300000000000000010000000000004d010153000001000003000001808080",
+    "808080808440000000000101808080808080cec740010441312a320000000201808080808080cec740010441",
+    "312a330000000000000001000000000000800880018080408080010101000200800880018080408080011500",
+    "020300120000000001010101ff0400010110001f000001010101e30400030402000000000101010180040000",
+    "0000090000000000000000000100000700000000000100000000000000000100000200000080808080040001",
+    "0000000000150000020000010000000000000100000300120000000001010101ff0400010110001f00000101",
+    "0101e30400030402000000000101010180040000000009000000000000000000010000070000000000010000",
+    "000000000000010000020000008080a080040001000000000015000002000001000000000000010000020441",
+    "312a320000010000141400000000000000000000000000000000000000000100000000000000000000000441",
+    "312a330001010000141400000000000000000000000000000000000000000100000000000000000000000100",
+    "000001808080808080808e400000000000000000000000",
+);
+
+/// Unedited compiled checkpoint of [`workbook`] written by prepared payload version 78
+/// (COMPATIBILITY_REVISION 76), whose compiler cache entries carry no template keys.
+#[rustfmt::skip]
+const REVISION_76_CHECKPOINT: &str = concat!(
+    "524f49534e41500001000800010000004c000000000000004c000000000000005b0100000000000001015300",
+    "0001000003000001808080808080808440000000000101808080808080cec740010441312a32000000020180",
+    "8080808080cec740010441312a3300000000000000010000000000004e018008800180804080800101010002",
+    "00800880018080408080011500020300120000000001010101ff0400010110001f000001010101e304000304",
+    "0200000000010101018004000000000900000000000000000001000007000000000001000000000000000001",
+    "0000020000008080808004000100000000001500000200000100000000000001000003001200000000010101",
+    "01ff0400010110001f000001010101e304000304020000000001010101800400000000090000000000000000",
+    "00010000070000000000010000000000000000010000020000008080a0800400010000000000150000020000",
+    "01000000000000010000020441312a3200000100001414000000000000000000000000000000000000000001",
+    "00000000000000000000000441312a3300010100001414000000000000000000000000000000000000000001",
+    "00000000000000000000000000000000000000f05d05da",
+);
+
+/// Unedited compiled checkpoint of [`workbook`] written by prepared payload version 79
+/// (COMPATIBILITY_REVISION 77), whose template keys came from std's unspecified
+/// `DefaultHasher` rather than the fixed `normalized_hash` algorithm.
+#[rustfmt::skip]
+const REVISION_77_CHECKPOINT: &str = concat!(
+    "524f49534e41500001000800010000004d000000000000004c00000000000000710100000000000001015300",
+    "0001000003000001808080808080808440000000000101808080808080cec740010441312a32000000020180",
+    "8080808080cec740010441312a3300000000000000010000000000004f018008800180804080800101010002",
+    "00800880018080408080011500020300120000000001010101ff0400010110001f000001010101e304000304",
+    "0200000000010101018004000000000900000000000000000001000007000000000001000000000000000001",
+    "0000020000008080808004000100000000001500000200000100000000000001000003001200000000010101",
+    "01ff0400010110001f000001010101e304000304020000000001010101800400000000090000000000000000",
+    "00010000070000000000010000000000000000010000020000008080a0800400010000000000150000020000",
+    "01000000000000010000020441312a3200000100001414000000000000000000000000000000000000000001",
+    "000000000000000000000001d7d1e98eaccfecbcf1010441312a330001010000141400000000000000000000",
+    "0000000000000000000001000000000000000000000001e9f8dee0fbf2d9e5b3010000000000000000f05d05",
+    "da",
+);
+
+/// Decode a hex fixture.
+fn unhex(hex: &str) -> Vec<u8> {
+    (0..hex.len())
+        .step_by(2)
+        .map(|at| u8::from_str_radix(&hex[at..at + 2], 16).unwrap())
+        .collect()
+}
+
+#[test]
+fn previous_format_prepared_sections_are_rejected_while_their_source_restores() {
+    let source = unhex(OLD_SOURCE);
+    let restored = decode_default(&source).unwrap();
+    assert_eq!(restored.prepared_status, PreparedStatus::Absent);
+    assert_eq!(restored.workbook(), &workbook());
+    assert_eq!(
+        source,
+        encode_workbook(&workbook(), SnapshotLimits::default()).unwrap()
+    );
+
+    let checkpoint = unhex(OLD_CHECKPOINT);
+    assert_eq!(&checkpoint[16..24], &75_u64.to_le_bytes());
+    assert!(matches!(
+        decode(
+            &checkpoint,
+            SnapshotLimits::default(),
+            PreparedPolicy::RequireCompatible
+        ),
+        Err(SnapshotError::Envelope(
+            "incompatible prepared engine revision"
+        ))
+    ));
+    let mut edited = workbook();
+    edited
+        .sheet_mut(0)
+        .unwrap()
+        .set_value("A1".parse().unwrap(), 7.)
+        .unwrap();
+    for policy in [PreparedPolicy::ReuseCompatible, PreparedPolicy::SourceOnly] {
+        let restored = decode(&checkpoint, SnapshotLimits::default(), policy).unwrap();
+        assert_ne!(restored.prepared_status, PreparedStatus::Restored);
+        assert_eq!(restored.workbook(), &edited);
+    }
+    // Even under the current revision, the old payload is refused rather than misread.
+    let mut relabeled = checkpoint;
+    relabeled[16..24]
+        .copy_from_slice(&crate::eval::overlay::snapshot::COMPATIBILITY_REVISION.to_le_bytes());
+    assert!(decode_default(&relabeled).is_err());
+}
+
+#[test]
+fn compiler_caches_with_older_template_keys_are_rejected_while_their_source_restores() {
+    for (fixture, revision) in [
+        (REVISION_76_CHECKPOINT, 76_u64),
+        (REVISION_77_CHECKPOINT, 77),
+    ] {
+        let checkpoint = unhex(fixture);
+        assert_eq!(&checkpoint[16..24], &revision.to_le_bytes());
+        assert!(matches!(
+            decode(
+                &checkpoint,
+                SnapshotLimits::default(),
+                PreparedPolicy::RequireCompatible
+            ),
+            Err(SnapshotError::Envelope(
+                "incompatible prepared engine revision"
+            ))
+        ));
+        let restored = decode_default(&checkpoint).unwrap();
+        assert_eq!(
+            restored.prepared_status,
+            PreparedStatus::DiscardedIncompatible
+        );
+        assert_eq!(restored.workbook(), &workbook());
+        // Relabeled as current, the old payload is refused rather than misread.
+        let mut relabeled = checkpoint;
+        relabeled[16..24]
+            .copy_from_slice(&crate::eval::overlay::snapshot::COMPATIBILITY_REVISION.to_le_bytes());
+        assert!(decode_default(&relabeled).is_err());
+    }
 }

@@ -1,14 +1,21 @@
 //! Modern scalar finance lifting with explicitly consumed schedule/date collections.
 use crate::eval::adapters::{
     elementwise::{
-        self, Broadcast, Kernel, MemberContext, NumericParameter as P, NumericSignature, Optional,
+        self, Broadcast, Kernel, MemberContext, NumericParameter, NumericSignature, Optional,
         Variadic, WholeCollection,
         collections::{self, Admission},
     },
     failure::operational_only,
 };
-use crate::eval::host::CallHost;
-use crate::eval::*;
+use crate::eval::functions::registry::{FinancialFunction, FunctionId};
+use crate::eval::host::{ArgumentCoercion, CallHost};
+use crate::eval::limits::{CapabilityId, EvalResult};
+use crate::eval::session::Session;
+use crate::eval::values::{FunctionFailure, FunctionResult, VALUE_ERROR, Value, err};
+use crate::eval::vm::ArgumentsRef;
+use crate::model::CellError::{Div0, Num};
+use crate::model::CellValue::{Error, Number};
+use crate::model::{CellAddress, CellValue};
 use poirot_functions::financial::{
     FinancialError,
     modern::{self as kernel, DatedFlow, LoanComponent},
@@ -22,6 +29,7 @@ pub(super) fn spreadsheet(error: FinancialError) -> FunctionFailure {
     }
     .into()
 }
+
 fn numerical<E: Into<FunctionFailure>>(
     host: &CallHost<'_, '_>,
     error: kernel::Failure<E>,
@@ -35,6 +43,7 @@ fn numerical<E: Into<FunctionFailure>>(
         ),
     }
 }
+
 /// Prepare paired dated flows with checked shared traversal and calendar services.
 fn dated_flows(
     host: &mut CallHost<'_, '_>,
@@ -54,7 +63,7 @@ fn dated_flows(
             if operand.missing {
                 return Err(VALUE_ERROR.into());
             }
-            match poirot_functions::coercion::collections::coercev2_aggregate_argument(
+            match poirot_functions::coercion::collections::coerce_aggregate_argument(
                 operand.value,
                 poirot_functions::scalar::Origin::Direct,
             ) {
@@ -68,15 +77,17 @@ fn dated_flows(
                 return Err(VALUE_ERROR.into());
             }
             let date = match operand.value {
-                Number(number) if number.is_finite() && number >= 0.0 => host
-                    .coercev2_calendar_date(&Number(number.trunc()))
-                    .map_err(|error| match error {
-                        FunctionFailure::Spreadsheet(_) => {
-                            FunctionFailure::Spreadsheet(VALUE_ERROR)
-                        }
-                        other => other,
-                    })?
-                    .trunc(),
+                Number(number) if number.is_finite() && number >= 0.0 => {
+                    ArgumentCoercion::new(host)
+                        .coerce_calendar_date(&Number(number.trunc()))
+                        .map_err(|error| match error {
+                            FunctionFailure::Spreadsheet(_) => {
+                                FunctionFailure::Spreadsheet(VALUE_ERROR)
+                            }
+                            other => other,
+                        })?
+                        .trunc()
+                }
                 Error(error) => return Err(error.into()),
                 _ => return Err(VALUE_ERROR.into()),
             };
@@ -109,8 +120,10 @@ fn dated_flows(
 struct ScheduleFinance {
     values: Vec<f64>,
 }
+
 impl Kernel for ScheduleFinance {
     type Signature = (Broadcast, WholeCollection);
+
     fn prepare(
         &mut self,
         host: &mut CallHost<'_, '_>,
@@ -119,13 +132,14 @@ impl Kernel for ScheduleFinance {
         self.values = collections::collect(host, [arguments.1], Admission::BlankZero)?;
         Ok(())
     }
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        let values =
-            NumericSignature::new(&[P::required()]).numbers_roles(context, [Some(arguments.0)])?;
+        let values = NumericSignature::new(&[NumericParameter::required()])
+            .numbers_roles(context, [Some(arguments.0)])?;
         context
             .host
             .charge_work((self.values.len() as u64).saturating_mul(2))?;
@@ -134,12 +148,15 @@ impl Kernel for ScheduleFinance {
             .map_err(spreadsheet)
     }
 }
+
 /// XNPV kernel that prepares one dated cash-flow sample and discounts it at each broadcast rate.
 struct PresentFinance {
     flows: Vec<DatedFlow>,
 }
+
 impl Kernel for PresentFinance {
     type Signature = (Broadcast, WholeCollection, WholeCollection);
+
     fn prepare(
         &mut self,
         host: &mut CallHost<'_, '_>,
@@ -148,13 +165,14 @@ impl Kernel for PresentFinance {
         self.flows = dated_flows(host, &arguments.1, &arguments.2)?;
         Ok(())
     }
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        let values =
-            NumericSignature::new(&[P::required()]).numbers_roles(context, [Some(arguments.0)])?;
+        let values = NumericSignature::new(&[NumericParameter::required()])
+            .numbers_roles(context, [Some(arguments.0)])?;
         context
             .host
             .charge_work((self.flows.len() as u64).saturating_mul(3))?;
@@ -163,12 +181,15 @@ impl Kernel for PresentFinance {
             .map_err(spreadsheet)
     }
 }
+
 /// XIRR kernel that prepares one dated cash-flow sample and solves it from each broadcast guess.
 struct ReturnFinance {
     flows: Vec<DatedFlow>,
 }
+
 impl Kernel for ReturnFinance {
     type Signature = (WholeCollection, WholeCollection, Optional<Broadcast>);
+
     fn prepare(
         &mut self,
         host: &mut CallHost<'_, '_>,
@@ -177,13 +198,14 @@ impl Kernel for ReturnFinance {
         self.flows = dated_flows(host, &arguments.0, &arguments.1)?;
         Ok(())
     }
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        let values =
-            NumericSignature::new(&[P::constant(0.1)]).numbers_roles(context, [arguments.2.0])?;
+        let values = NumericSignature::new(&[NumericParameter::constant(0.1)])
+            .numbers_roles(context, [arguments.2.0])?;
         kernel::xirr(&self.flows, values.get(0)?, |work| {
             context.host.charge_work(work)
         })
@@ -195,42 +217,46 @@ impl Kernel for ReturnFinance {
 /// Adapts scalar financial functions to broadcast traversal with declared numeric defaults.
 /// Each output invokes the selected independent financial calculation after conversion.
 struct NumericFinance(FinancialFunction);
+
 impl Kernel for NumericFinance {
     type Signature = Variadic<Broadcast>;
+
     fn apply(
         &self,
         context: &mut MemberContext<'_, '_, '_>,
         arguments: &Self::Signature,
     ) -> FunctionResult<CellValue> {
-        use FinancialFunction::*;
+        use FinancialFunction::{
+            Cumipmt, Cumprinc, Db, Ddb, Effect, Ispmt, Nominal, Pduration, Rri, Sln, Syd, Vdb,
+        };
         let function = self.0;
-        let parameters: &[P] = match function {
-            Effect | Nominal => &[P::required(); 2],
-            Pduration | Rri | Sln => &[P::required(); 3],
-            Syd | Ispmt => &[P::required(); 4],
+        let parameters: &[NumericParameter] = match function {
+            Effect | Nominal => &[NumericParameter::required(); 2],
+            Pduration | Rri | Sln => &[NumericParameter::required(); 3],
+            Syd | Ispmt => &[NumericParameter::required(); 4],
             Db => &[
-                P::required(),
-                P::required(),
-                P::required(),
-                P::required(),
-                P::constant(12.0),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::constant(12.0),
             ],
             Ddb => &[
-                P::required(),
-                P::required(),
-                P::required(),
-                P::required(),
-                P::constant(2.0),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::constant(2.0),
             ],
-            Cumipmt | Cumprinc => &[P::required(); 6],
+            Cumipmt | Cumprinc => &[NumericParameter::required(); 6],
             Vdb => &[
-                P::required(),
-                P::required(),
-                P::required(),
-                P::required(),
-                P::required(),
-                P::constant(2.0),
-                P::boolean_default(false),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::required(),
+                NumericParameter::constant(2.0),
+                NumericParameter::boolean_default(false),
             ],
             _ => return Err(VALUE_ERROR.into()),
         };

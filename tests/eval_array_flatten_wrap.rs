@@ -4,10 +4,8 @@
 //! https://support.microsoft.com/en-us/excel/functions/wrapcols-function
 //! https://support.microsoft.com/en-us/excel/functions/wraprows-function
 //! Empty results: https://support.microsoft.com/en-us/excel/how-to-correct-a-calc-error
-use poirot::eval::{
-    overlay::{Evaluation, EvaluationContext, EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::{Evaluation, Overlay};
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, Workbook};
 fn at(s: &str) -> EvaluationTarget {
     EvaluationTarget {

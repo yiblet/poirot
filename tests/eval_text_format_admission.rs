@@ -1,8 +1,6 @@
 //! TEXT value admission reuses contextual numeric parsing without changing the renderer.
-use poirot::eval::{
-    overlay::{EvaluationPolicy, Overlay},
-    *,
-};
+use poirot::eval::overlay::Overlay;
+use poirot::eval::*;
 use poirot::model::{CellError, CellValue, ExcelText, Workbook};
 
 fn target(address: &str) -> EvaluationTarget {
@@ -269,7 +267,7 @@ fn text_calendar_admission_uses_workbook_epoch_and_does_not_swallow_operational_
     let syntax =
         poirot_parsing::formula::parse_formula(r#"IFERROR(TEXT("15:43:09","h:mm:ss AM/PM"),99)"#)
             .unwrap();
-    let plan = poirot::eval::bound::FormulaPlan::bind(&syntax).unwrap();
+    let plan = poirot::eval::compile::bound::FormulaPlan::bind(&syntax).unwrap();
     for budget in [
         EvaluationBudgets {
             text_bytes: 4,

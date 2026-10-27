@@ -9,7 +9,7 @@ case behaves identically.
 
 | Area | Current support and limits |
 | --- | --- |
-| Excel functions | Broad support, with remaining gaps in individual functions, optional arguments, coercion and array behavior. The [builtin catalog](https://github.com/yiblet/poirot/blob/master/src/eval/registry/catalog.rs) lists registered names and argument counts. |
+| Excel functions | Broad support, with remaining gaps in individual functions, optional arguments, coercion and array behavior. The [builtin catalog](https://github.com/yiblet/poirot/blob/master/src/eval/functions/registry/catalog.rs) lists registered names and argument counts. |
 | Dynamic arrays | Implemented, including functions such as `FILTER`, `SORTBY`, `UNIQUE` and `SEQUENCE`. Spill compatibility still has gaps. Competing spills use top-left anchor priority: row first, then column. This is a Poirot policy, not a verified Excel rule. |
 | Shared formulas | Imported copied formulas become complete, independent formula sources. Shared storage is separate from legacy array-formula groups. |
 | Legacy array formulas | **Unsupported.** Formulas entered with Ctrl+Shift+Enter, including fixed multi-cell formula groups, are outside current support. Dynamic-array support does not cover these formulas. |

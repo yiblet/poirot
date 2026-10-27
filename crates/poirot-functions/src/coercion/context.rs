@@ -24,7 +24,7 @@ pub enum Resource {
 
 /// Mismatch, spreadsheet error, and operational failure stay distinguishable.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum CoercionV2Failure {
+pub enum CoercionFailure {
     /// This candidate may be followed by a lower-priority candidate.
     Mismatch(Mismatch),
     /// A spreadsheet error is terminal unless explicitly requested as data.
@@ -35,7 +35,7 @@ pub enum CoercionV2Failure {
     UnsupportedText,
 }
 
-impl CoercionV2Failure {
+impl CoercionFailure {
     pub(crate) fn mismatch(expected: &'static str) -> Self {
         Self::Mismatch(Mismatch::Input {
             argument: None,
@@ -54,7 +54,7 @@ impl CoercionV2Failure {
     }
 }
 
-impl fmt::Display for CoercionV2Failure {
+impl fmt::Display for CoercionFailure {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Mismatch(mismatch) => write!(f, "no matching input: {mismatch:?}"),
@@ -65,7 +65,7 @@ impl fmt::Display for CoercionV2Failure {
     }
 }
 
-impl std::error::Error for CoercionV2Failure {}
+impl std::error::Error for CoercionFailure {}
 
 /// Caller-supplied resource limits; hosts can supply their remaining allowance.
 #[derive(Clone, Copy, Debug)]
@@ -93,18 +93,18 @@ pub struct Usage {
 /// Conversion limits and accumulated work for a function call.
 /// Failed attempts retain their resource charges. No clock or locale is implicit.
 #[derive(Debug)]
-pub struct CoercionV2Context {
+pub struct CoercionContext {
     limits: Limits,
     usage: Usage,
 }
 
-impl Default for CoercionV2Context {
+impl Default for CoercionContext {
     fn default() -> Self {
         Self::new(Limits::default())
     }
 }
 
-impl CoercionV2Context {
+impl CoercionContext {
     pub fn new(limits: Limits) -> Self {
         Self {
             limits,
@@ -116,24 +116,24 @@ impl CoercionV2Context {
         self.usage
     }
 
-    pub(crate) fn charge(&mut self, work: u64) -> Result<(), CoercionV2Failure> {
+    pub(crate) fn charge(&mut self, work: u64) -> Result<(), CoercionFailure> {
         let used = self
             .usage
             .work
             .checked_add(work)
             .filter(|used| *used <= self.limits.work)
-            .ok_or(CoercionV2Failure::Limit(Resource::Work))?;
+            .ok_or(CoercionFailure::Limit(Resource::Work))?;
         self.usage.work = used;
         Ok(())
     }
 
-    pub(crate) fn admit_text(&mut self, bytes: usize) -> Result<(), CoercionV2Failure> {
+    pub(crate) fn admit_text(&mut self, bytes: usize) -> Result<(), CoercionFailure> {
         let used = self
             .usage
             .text_bytes
             .checked_add(bytes)
             .filter(|used| *used <= self.limits.text_bytes)
-            .ok_or(CoercionV2Failure::Limit(Resource::TextBytes))?;
+            .ok_or(CoercionFailure::Limit(Resource::TextBytes))?;
         self.usage.text_bytes = used;
         Ok(())
     }

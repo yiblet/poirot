@@ -13,6 +13,10 @@ repository = "https://github.com/yiblet/poirot"
 [workspace.lints.rust]
 unsafe_code = "forbid"
 
+[workspace.lints.clippy]
+enum_glob_use = "deny"
+wildcard_imports = "deny"
+
 [workspace.dependencies]
 allocation-counter = "0.8.1"
 smallvec = "1.16.3"
@@ -38,6 +42,7 @@ serde = { version = "1.0.229", features = ["derive", "rc"] }
 
 [package]
 name = "poirot"
+autotests = false
 version.workspace = true
 edition.workspace = true
 description = "Read, edit, evaluate and write Excel workbooks"
@@ -51,6 +56,8 @@ include = ["/src/**", "/examples/**", "/README.md", "/CONTRIBUTING.md", "/docs/c
 poirot-parsing = { version = "0.1.0", path = "crates/poirot-parsing" }
 poirot-io = { version = "0.1.0", path = "crates/poirot-io" }
 foldhash = "0.2.0"
+# MIT OR Apache-2.0, used under MIT: checksums identify snapshot source sections.
+crc32fast = "1.5.0"
 serde = { workspace = true }
 serde_bytes = "0.11.19"
 nom = { workspace = true }
@@ -69,3 +76,7 @@ allocation-counter = { workspace = true }
 
 [lints]
 workspace = true
+
+[[test]]
+name = "integration"
+path = "tests/main.rs"
