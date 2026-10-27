@@ -20,7 +20,8 @@ pub(super) struct Writer<'registry> {
     pub(super) registry: Option<&'registry crate::eval::functions::extensions::ExtensionRegistry>,
     pub(super) output: Compiled,
     pub(super) pending_labels: [Option<Label>; DEPTH * 2],
-    pub(super) aggregation_roles: [bool; DEPTH],
+    /// Zero-based reducer argument at each nesting depth: GROUPBY uses 2, PIVOTBY 3.
+    pub(super) aggregation_roles: [Option<usize>; DEPTH],
 }
 
 impl Writer<'_> {
@@ -150,12 +151,21 @@ impl<'ast> Sink<'ast> for Writer<'_> {
                     None => CallTarget::Unresolved,
                 };
                 if let Some(role) = self.aggregation_roles.get_mut(label / 2) {
-                    *role = !matches!(call_target, CallTarget::Extension(_))
-                        && lookup.and_then(|name| {
+                    *role = if matches!(call_target, CallTarget::Extension(_)) {
+                        None
+                    } else {
+                        match lookup.and_then(|name| {
                             crate::eval::functions::registry::resolve_handler(&name.into())
-                        }) == Some(crate::eval::functions::registry::FunctionId::Matrix(
-                            crate::eval::functions::registry::MatrixFunction::Groupby,
-                        ));
+                        }) {
+                            Some(crate::eval::functions::registry::FunctionId::Matrix(
+                                crate::eval::functions::registry::MatrixFunction::Groupby,
+                            )) => Some(2),
+                            Some(crate::eval::functions::registry::FunctionId::Matrix(
+                                crate::eval::functions::registry::MatrixFunction::Pivotby,
+                            )) => Some(3),
+                            _ => None,
+                        }
+                    };
                 }
                 let opcode = if call_target
                     == CallTarget::Builtin(crate::eval::functions::registry::FunctionId::Logical(
@@ -174,7 +184,7 @@ impl<'ast> Sink<'ast> for Writer<'_> {
                 Instruction::new(opcode, index, count as u32)
             }
             High::Argument(index, label, depth, expression) => {
-                if index == 2 && self.aggregation_roles.get(depth) == Some(&true) {
+                if self.aggregation_roles.get(depth) == Some(&Some(index)) {
                     match aggregation::lower_with_registry(expression, self.registry) {
                         Ok(Some(plan)) => {
                             let start = self.output.template.code.len().saturating_add(1);

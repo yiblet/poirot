@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 /// Wire version of the serialized payload layout.
-pub(super) const VERSION: u32 = 81;
+pub(super) const VERSION: u32 = 82;
 
 /// Versioned wire payload; runtime providers are reattached during restoration.
 #[derive(Serialize, Deserialize)]

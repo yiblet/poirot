@@ -23,7 +23,8 @@ use crate::model::{CellAddress, CellError, CellValue};
 use poirot_functions::matrix::{Axis, Budget, FieldRelationship, Matrix};
 use poirot_functions::statistics::BuiltinAggregator as A;
 
-fn append<T>(values: &mut Vec<T>, value: T) -> FunctionResult<()> {
+/// Append one output member, reporting allocation failure.
+pub(super) fn append<T>(values: &mut Vec<T>, value: T) -> FunctionResult<()> {
     values
         .try_reserve(1)
         .map_err(|reservation_source| EvaluationError::Resource {
@@ -38,7 +39,8 @@ fn append<T>(values: &mut Vec<T>, value: T) -> FunctionResult<()> {
     Ok(())
 }
 
-fn reserve<T>(host: &mut CallHost<'_, '_>, count: usize) -> FunctionResult<Vec<T>> {
+/// Check the value budget and reserve space for a collection.
+pub(super) fn reserve<T>(host: &mut CallHost<'_, '_>, count: usize) -> FunctionResult<Vec<T>> {
     host.check_values(count)?;
     let mut values = Vec::new();
     values
@@ -47,7 +49,8 @@ fn reserve<T>(host: &mut CallHost<'_, '_>, count: usize) -> FunctionResult<Vec<T
     Ok(values)
 }
 
-fn generated_text(
+/// Construct bounded text from borrowed UTF-8 or UTF-16 label parts.
+pub(super) fn generated_text(
     host: &mut CallHost<'_, '_>,
     parts: &[crate::model::TextRef<'_>],
 ) -> FunctionResult<CellValue> {
@@ -91,11 +94,13 @@ fn ordinal_label(
     )
 }
 
-fn option(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<Option<i64>> {
+/// Read an optional integer grouping control.
+pub(super) fn option(host: &mut CallHost<'_, '_>, index: usize) -> FunctionResult<Option<i64>> {
     FixedScalar::at(index).optional_integer(host, EmptyControl::Omission, CellError::Value)
 }
 
-fn normalized(value: CellValue) -> CellValue {
+/// Apply grouping output normalization to an array member.
+pub(super) fn normalized(value: CellValue) -> CellValue {
     poirot_functions::coercion::compatibility::coerce_array_member(value)
 }
 
@@ -207,7 +212,8 @@ fn aggregate(
     ))
 }
 
-fn ratio(subset: CellValue, total: CellValue) -> CellValue {
+/// Divide independently reduced sets under spreadsheet error rules.
+pub(super) fn ratio(subset: CellValue, total: CellValue) -> CellValue {
     match (subset, total) {
         (Error(error), _) | (_, Error(error)) => Error(error),
         (Number(_), Number(0.0)) => Error(CellError::Div0),
@@ -216,7 +222,8 @@ fn ratio(subset: CellValue, total: CellValue) -> CellValue {
     }
 }
 
-fn aggregate_value(
+/// Reduce source operands, preserving spreadsheet errors as cell values.
+pub(super) fn aggregate_value(
     host: &mut CallHost<'_, '_>,
     operation: A,
     members: &[&ScalarOperand],

@@ -24,6 +24,11 @@ pub use modern_text_error::ModernTextError;
 mod regex_error;
 
 pub use regex_error::RegexError;
+/// Japanese ASCII and katakana width conversion.
+pub mod width;
+
+/// Thai currency spelling from integer baht and satang.
+pub mod baht;
 
 /// Unicode15 full-case mapping with contextual final sigma.
 pub mod java_case;
@@ -35,6 +40,10 @@ pub mod numeric;
 pub mod regex;
 /// Allocation-free UTF-16 selection and output-reservation plans.
 pub mod units;
+/// Allocation-free UTF-8 URL component encoding.
+pub mod url;
+/// Bounded local XML and XPath selection.
+pub mod xml;
 
 pub use crate::coercion::{NumericTextError, NumericTextSourceError};
 /// Java processes UTF-16 `char`s. Supplementary letters retain their spelling

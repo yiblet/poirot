@@ -46,6 +46,25 @@ macro_rules! registry {
 }
 
 registry! {
+"LENB" => Text(TextFunction::LenB), 1, 1, FamilyControlled, REFERENCE_READS, ElementwiseNumber;
+"LEFTB" => Text(TextFunction::LeftB), 1, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
+"RIGHTB" => Text(TextFunction::RightB), 1, 2, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
+"MIDB" => Text(TextFunction::MidB), 3, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
+"FINDB" => Text(TextFunction::FindB), 2, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+"SEARCHB" => Text(TextFunction::SearchB), 2, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
+"REPLACEB" => Text(TextFunction::ReplaceB), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
+"FILTERXML" => Text(TextFunction::FilterXml), 2, 2, FamilyControlled, NUMERIC_COERCION, Any;
+"PIVOTBY" => Matrix(MatrixFunction::Pivotby), 4, 11, FamilyControlled, NUMERIC_COERCION, Array;
+"ASC" => Text(TextFunction::Asc), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
+"DBCS" => Text(TextFunction::Dbcs), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
+"JIS" => Text(TextFunction::Dbcs), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
+"CELL" => Reference(ReferenceFunction::Cell), 1, 2, FamilyControlled, REFERENCE_READS, Scalar;
+"AGGREGATE" => Criteria(CriteriaFunction::Aggregate), 3, 255, FamilyControlled, REFERENCE_READS, FourthNumericArgument;
+"BAHTTEXT" => Text(TextFunction::BahtText), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
+"SHEETS" => Reference(ReferenceFunction::Sheets), 0, 1, FamilyControlled, REFERENCE_READS, Scalar;
+"FORMULATEXT" => Reference(ReferenceFunction::FormulaText), 1, 1, FamilyControlled, REFERENCE_READS, Scalar;
+"ISFORMULA" => Information(InformationFunction::IsFormula), 1, 1, FamilyControlled, REFERENCE_READS, Any;
+"ENCODEURL" => Text(TextFunction::EncodeUrl), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
 "RAND" => Math(MathFunction::Rand), 0, 0, FamilyControlled, RANDOM_READS, Number;
 "RANDBETWEEN" => Math(MathFunction::Randbetween), 2, 2, FamilyControlled, RANDOM_NUMERIC, ElementwiseNumber;
 "ERROR.TYPE" => Logical(LogicalFunction::ErrorType), 1, 1, FamilyControlled, REFERENCE_READS, ElementwiseNumber;

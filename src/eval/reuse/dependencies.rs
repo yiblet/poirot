@@ -33,6 +33,9 @@ pub(in crate::eval) struct Dependencies {
     /// Numeric input locale was consumed.
     #[serde(default)]
     pub number_locale: bool,
+    /// Whether this calculation read the selected byte-text language.
+    #[serde(default)]
+    pub byte_text_language: bool,
     /// Whether the result owns a spill region or belongs to another cell's spill.
     pub spill: super::spill_role::SpillRole,
     /// A possible producer needs ownership validation even when its current result is scalar.

@@ -13,6 +13,10 @@ pub enum ReferenceFunction {
     Indirect,
     /// OFFSET handler.
     Offset,
+    /// FORMULATEXT handler.
+    FormulaText,
+    /// SHEETS counts modeled worksheet references.
+    Sheets,
     /// SHEET handler.
     Sheet,
     /// SINGLE implicit intersection handler.
@@ -30,6 +34,8 @@ pub enum ReferenceFunction {
     Index,
     /// Stored spelling of the postfix spill-range reference operator.
     AnchorArray,
+    /// CELL modeled metadata handler.
+    Cell,
 }
 
 impl ReferenceFunction {
@@ -37,7 +43,10 @@ impl ReferenceFunction {
     pub(in crate::eval) fn helper(self) -> Option<Function> {
         match self {
             Self::Indirect => Some(Function::Reference(ReferenceHelper::Indirect)),
-            Self::Address
+            Self::Cell
+            | Self::FormulaText
+            | Self::Sheets
+            | Self::Address
             | Self::Areas
             | Self::Hyperlink
             | Self::Sheet

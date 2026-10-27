@@ -49,6 +49,8 @@ pub enum MatrixFunction {
     Trend,
     /// Group rows with typed built-in reductions and optional hierarchy totals.
     Groupby,
+    /// Group records on two axes with typed built-in reductions.
+    Pivotby,
     /// Ratio of two independently summed sets.
     Percentof,
     /// Seeded rectangular random numeric generation.

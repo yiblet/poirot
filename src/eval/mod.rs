@@ -120,9 +120,9 @@ pub use inputs::{EffectiveStoredCells, EffectiveWorkbook, InputError, RunInputs}
 
 // Run configuration, policy selections, and cache identity types.
 pub use config::{
-    ArrayResultPolicy, ComputationFingerprint, ConfigurationFingerprint, ContextFingerprint,
-    CurrencyContext, DateOrder, EvaluationContext, EvaluationInputs, EvaluationPolicy,
-    FormattingConfiguration, Localization, ProducerPolicy, RunConfiguration,
+    ArrayResultPolicy, ByteTextLanguage, ComputationFingerprint, ConfigurationFingerprint,
+    ContextFingerprint, CurrencyContext, DateOrder, EvaluationContext, EvaluationInputs,
+    EvaluationPolicy, FormattingConfiguration, Localization, ProducerPolicy, RunConfiguration,
 };
 
 /// One calculated output returned by bulk evaluation.

@@ -4,8 +4,8 @@ use std::{fmt, ops::Deref};
 
 macro_rules! common_functions {
     ($( $variant:ident = $index:literal => $name:literal; )*) => {
-        /// Interned common spellings used for compact lookup. Membership does not
-        /// establish support under an evaluator's selected builtin policy.
+        /// Interned common spellings for compact compiler and registry lookup.
+        /// The evaluator registry determines whether a call is supported.
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
         #[repr(u16)]
         pub enum CommonFunction {
@@ -510,6 +510,25 @@ common_functions! {
     TTestLegacy = 474 => "TTEST";
     WeibullDistLegacy = 475 => "WEIBULL";
     ZTestLegacy = 476 => "ZTEST";
+    LenB = 477 => "LENB";
+    LeftB = 478 => "LEFTB";
+    RightB = 479 => "RIGHTB";
+    MidB = 480 => "MIDB";
+    FindB = 481 => "FINDB";
+    SearchB = 482 => "SEARCHB";
+    ReplaceB = 483 => "REPLACEB";
+    FilterXml = 484 => "FILTERXML";
+    Pivotby = 485 => "PIVOTBY";
+    Asc = 486 => "ASC";
+    Dbcs = 487 => "DBCS";
+    Jis = 488 => "JIS";
+    Cell = 489 => "CELL";
+    Aggregate = 490 => "AGGREGATE";
+    BahtText = 491 => "BAHTTEXT";
+    Sheets = 492 => "SHEETS";
+    FormulaText = 493 => "FORMULATEXT";
+    IsFormula = 494 => "ISFORMULA";
+    EncodeUrl = 495 => "ENCODEURL";
 
 
 

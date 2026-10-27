@@ -25,7 +25,7 @@ use std::sync::Arc;
 type Result<T> = std::result::Result<T, PlanSnapshotError>;
 
 /// Wire version of the plan snapshot layout.
-pub(super) const VERSION: u32 = 22;
+pub(super) const VERSION: u32 = 23;
 
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
 #[derive(Serialize, Deserialize)]
@@ -225,6 +225,7 @@ impl<'a> PlanSnapshot<'a> {
                         })
                     })
                     .collect::<Result<Vec<_>>>()?;
+                super::template_validation::validate_aggregation_roles(&p.template, &calls)?;
                 for instruction in &p.template.code {
                     if instruction.opcode == Opcode::Conditional
                         && calls.get(instruction.a as usize).is_none_or(|call| {

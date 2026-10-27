@@ -1,6 +1,41 @@
 /// Typed operation or capability rejection explaining an evaluation failure.
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum EvaluationReasonError {
+    /// CELL omitted its reference and requires a selected UI cell.
+    #[error("CELL omitted reference requires selected UI cell")]
+    CellSelectedUiReference,
+    /// BAHTTEXT supports magnitudes below 2^53 baht; larger Excel spellings are unverified.
+    #[error("BAHTTEXT supports magnitudes below 2^53 baht; larger Excel spellings are unverified")]
+    BahtMagnitudeOutsideVerifiedDomain,
+    /// CELL encountered a format string outside its recognized format whitelist.
+    #[error("CELL custom number-format classification")]
+    CellCustomNumberFormat,
+    /// CELL requires unmodeled file, protection or display metadata.
+    #[error("CELL requires unmodeled file, protection or display metadata")]
+    CellUnmodeledMetadata,
+    /// PIVOTBY cannot output field headers; use field_headers 0 or 1.
+    #[error("PIVOTBY field-header publication is not supported; use field_headers 0 or 1")]
+    PivotFieldHeaderPublication,
+    /// PIVOTBY currently supports one value column and one built-in reducer.
+    #[error("PIVOTBY currently supports one value column and one built-in reducer")]
+    PivotMultipleValuesOrReducers,
+    /// PIVOTBY requires a supported built-in reduction handle; callable values are not implemented.
+    #[error(
+        "PIVOTBY requires a supported built-in reduction handle; callable values are not implemented"
+    )]
+    PivotCallableReducer,
+    /// The selected byte-text language requires unverified DBCS semantics.
+    #[error("DBCS byte text is outside the verified non-DBCS contract")]
+    DbcsByteText,
+    /// The bounded XML backend rejected the requested operation.
+    #[error("XML selection rejected")]
+    Xml(
+        #[source]
+        std::sync::Arc<
+            poirot_functions::text::xml::XmlQueryError<super::evaluation_error::EvaluationError>,
+        >,
+    ),
+
     /// Bessel computation exceeds the bounded order/series envelope.
     #[error("Bessel computation exceeds the bounded order/series envelope")]
     BesselComputationExceedsTheBoundedOrderSeriesEnvelope,
@@ -424,6 +459,15 @@ impl EvaluationReasonError {
             Self::MissingFunctionAdapter { function } => function.len(),
             Self::Reservation { operation, .. } => operation.retained_text_bytes(),
             Self::SmallVectorReservation { .. } => 0,
+            | Self::BahtMagnitudeOutsideVerifiedDomain
+            | Self::CellCustomNumberFormat
+            | Self::CellUnmodeledMetadata
+            | Self::PivotFieldHeaderPublication
+            | Self::PivotMultipleValuesOrReducers
+            | Self::PivotCallableReducer
+            | Self::CellSelectedUiReference
+            | Self::DbcsByteText
+            | Self::Xml(..)
             | Self::BesselComputationExceedsTheBoundedOrderSeriesEnvelope
             | Self::EtsPreparationExceedsItsAdmittedAllocationOrWorkEnvelope
             | Self::ExcelCodeRequiresAnExplicitNonAsciiPlatformCodePage

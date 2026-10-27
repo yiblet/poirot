@@ -3,7 +3,7 @@
 use super::plan_snapshot_error::PlanSnapshotError;
 use super::snapshot_reader::SnapshotReader;
 use crate::eval::compile::bytecode::{
-    InstructionIndex, Label, Opcode, ReferenceBindings, ReferenceKind, Template,
+    Call, CallTarget, InstructionIndex, Label, Opcode, ReferenceBindings, ReferenceKind, Template,
 };
 
 /// Validate instruction structure, operand bounds, and call descriptor indices.
@@ -25,13 +25,6 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<(), PlanSn
                 .is_none_or(|i| i.opcode != Opcode::Enter)
         {
             return Err(PlanSnapshotError::SnapshotAggregationPlan);
-        }
-        if entry.start != 0
-            && t.code
-                .get(entry.start - 1)
-                .is_none_or(|i| i.opcode != Opcode::Argument || i.a != 2)
-        {
-            return Err(PlanSnapshotError::SnapshotAggregationArgumentRole);
         }
         previous = Some(entry.start);
     }
@@ -115,6 +108,75 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<(), PlanSn
             Opcode::Binary if i.a > 14 => return Err(PlanSnapshotError::SnapshotBinary),
             _ => {}
         }
+    }
+    Ok(())
+}
+
+/// Require each contextual reducer to belong to exactly one supported call slot;
+/// standalone root projections have no owning call.
+pub(super) fn validate_aggregation_roles(
+    template: &Template,
+    calls: &[Call],
+) -> Result<(), PlanSnapshotError> {
+    use crate::eval::functions::registry::{FunctionId, MatrixFunction};
+
+    if template.aggregations.is_empty() {
+        return Ok(());
+    }
+    let mut seen = Vec::new();
+    seen.try_reserve_exact(template.aggregations.len())
+        .map_err(PlanSnapshotError::AggregationReservation)?;
+    // SAFETY: The successful reservation admits exactly this many bools into
+    // the empty vector; no insertion has consumed that capacity.
+    seen.resize(template.aggregations.len(), false);
+    let mut matched = 0;
+    // A root projection is compiled directly, without an owning call.
+    if template
+        .aggregations
+        .first()
+        .is_some_and(|entry| entry.start == 0)
+        && let Some(root) = seen.first_mut()
+    {
+        *root = true;
+        matched += 1;
+    }
+    for (ip, instruction) in template.code.iter().enumerate() {
+        if !instruction.opcode.is_call() {
+            continue;
+        }
+        let role = match calls.get(instruction.a as usize).map(|call| &call.target) {
+            Some(CallTarget::Builtin(FunctionId::Matrix(MatrixFunction::Groupby))) => Some(2),
+            Some(CallTarget::Builtin(FunctionId::Matrix(MatrixFunction::Pivotby))) => Some(3),
+            _ => None,
+        };
+        let mut descriptor = ip.saturating_add(2);
+        for ordinal in 0..instruction.b {
+            let argument = template
+                .code
+                .get(descriptor)
+                .ok_or(PlanSnapshotError::SnapshotArgumentDescriptor)?;
+            if let Some(start) = descriptor.checked_add(1)
+                && let Ok(index) = template
+                    .aggregations
+                    .binary_search_by_key(&start, |entry| entry.start)
+            {
+                let visited = seen
+                    .get_mut(index)
+                    .ok_or(PlanSnapshotError::SnapshotAggregationCount)?;
+                if *visited || role != Some(ordinal) || argument.opcode != Opcode::Argument {
+                    return Err(PlanSnapshotError::SnapshotAggregationArgumentRole);
+                }
+                *visited = true;
+                matched += 1;
+            }
+            descriptor = template
+                .resolve_label(Label(argument.c))
+                .ok_or(PlanSnapshotError::SnapshotJumpLabel)?
+                .index();
+        }
+    }
+    if matched != template.aggregations.len() {
+        return Err(PlanSnapshotError::SnapshotAggregationArgumentRole);
     }
     Ok(())
 }

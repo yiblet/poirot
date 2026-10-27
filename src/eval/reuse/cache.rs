@@ -348,6 +348,17 @@ impl Cache {
         self.context = Some(context);
     }
 
+    /// Invalidate cached cells that read the byte-text language and their dependents.
+    pub fn invalidate_byte_text_language(&mut self) {
+        let seeds = self
+            .entries
+            .iter()
+            .filter(|(_, entry)| entry.dependencies.byte_text_language)
+            .map(|(key, _)| *key)
+            .collect::<Vec<_>>();
+        self.invalidate_context(seeds);
+    }
+
     /// Rebuild the rectangle lookup after dependency traces have changed.
     pub fn rebuild_ranges(&mut self) {
         self.ranges = RangeIndex::new(&self.entries);

@@ -113,6 +113,30 @@ pub(super) fn text_scalar(
         return Ok(Number(number));
     }
 
+    if matches!(name, TextFunction::Asc | TextFunction::Dbcs) {
+        let input = ArgumentCoercion::new(host).coerce_text_units(a.first().ok_or(VALUE_ERROR)?)?;
+        let mode = match name {
+            TextFunction::Asc => poirot_functions::text::width::WidthConversion::Narrow,
+            _ => poirot_functions::text::width::WidthConversion::Wide,
+        };
+        host.charge_work(input.len() as u64)?;
+        let units = mode.units(&input);
+        let count = units.clone().take(32768).count();
+        if count > 32767 {
+            return Err(VALUE_ERROR.into());
+        }
+        host.check_text_capacity(count.saturating_mul(2))?;
+        let mut output = Vec::new();
+        output
+            .try_reserve_exact(count)
+            .map_err(|_| host.allocation_failure())?;
+        for unit in units {
+            // SAFETY: count measured this identical iterator, and was reserved above.
+            output.push(unit);
+        }
+        return Ok(elementwise::text::value(output));
+    }
+
     let t = elementwise::text::argument(host, a, 0)?;
     host.check_text(t.len())?;
     host.check_values(t.chars().count())?;
@@ -146,6 +170,29 @@ pub(super) fn text_scalar(
             for c in t.chars().filter(|c| (*c as u32) >= 32) {
                 // SAFETY: Removing characters cannot exceed the locally reserved input byte length.
                 result.push(c);
+            }
+            Text(result)
+        }
+        TextFunction::EncodeUrl => {
+            let encoded = poirot_functions::text::url::encode_url(&t);
+            // Each input byte produces at most three ASCII characters. Reject
+            // Excel's cell-text limit during measurement before reserving output.
+            let bytes = encoded
+                .clone()
+                .try_fold(0usize, |bytes, character| {
+                    bytes
+                        .checked_add(character.len_utf8())
+                        .filter(|size| *size <= 32767)
+                })
+                .ok_or(VALUE_ERROR)?;
+            host.check_text(bytes)?;
+            let mut result = String::new();
+            result
+                .try_reserve_exact(bytes)
+                .map_err(|_| host.allocation_failure())?;
+            for character in encoded {
+                // SAFETY: bytes sums the UTF-8 lengths of this cloned iterator, reserved above.
+                result.push(character);
             }
             Text(result)
         }
@@ -207,7 +254,18 @@ pub(super) fn text_scalar(
                 }
             }
         }
-        TextFunction::Text
+        TextFunction::LenB
+        | TextFunction::LeftB
+        | TextFunction::RightB
+        | TextFunction::MidB
+        | TextFunction::FindB
+        | TextFunction::SearchB
+        | TextFunction::ReplaceB
+        | TextFunction::Asc
+        | TextFunction::Dbcs
+        | TextFunction::FilterXml
+        | TextFunction::BahtText
+        | TextFunction::Text
         | TextFunction::Char
         | TextFunction::UniChar
         | TextFunction::Value

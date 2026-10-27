@@ -233,6 +233,9 @@ pub(in crate::eval) fn execute(
     ) {
         return super::random_trim::execute(function, session, sheet, address, args);
     }
+    if function == MatrixFunction::Pivotby {
+        return super::pivot_executor::execute(session, sheet, address, args);
+    }
     if matches!(
         function,
         MatrixFunction::Groupby | MatrixFunction::Percentof

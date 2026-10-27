@@ -12,9 +12,11 @@ use crate::model::{CellAddress, CellValue};
 use poirot_functions::text::{java_case, units};
 
 /// Runs UTF-16 text operations for each broadcast member.
-/// Indexed operations count surrogate pairs together under documented Version 2.
+/// Ordinary operations count surrogate pairs together; non-DBCS B functions count
+/// each UTF-16 unit separately through the same kernels.
 struct TextKernel {
     name: TextFunction,
+    paired: bool,
 }
 
 impl Kernel for TextKernel {
@@ -35,13 +37,17 @@ impl Kernel for TextKernel {
                 | TextFunction::Mid
                 | TextFunction::Replace
         );
-        let length = if indexed {
+        let length = if indexed && self.paired {
             units::paired_length(&text)
         } else {
             text.len()
         };
         let offsets = |range: std::ops::Range<usize>| {
-            units::paired_offset(&text, range.start)..units::paired_offset(&text, range.end)
+            if self.paired {
+                units::paired_offset(&text, range.start)..units::paired_offset(&text, range.end)
+            } else {
+                range
+            }
         };
         match name {
             TextFunction::Len => Ok(Number(length as f64)),
@@ -116,7 +122,11 @@ impl Kernel for TextKernel {
             TextFunction::Find | TextFunction::Search => {
                 let hay = arguments.text_units(context, 1)?;
                 let start = arguments.text_integer(context, 2, Some(1))?;
-                let hay_length = { units::paired_length(&hay) };
+                let hay_length = if self.paired {
+                    units::paired_length(&hay)
+                } else {
+                    hay.len()
+                };
                 let start = poirot_functions::coercion::compatibility::coerce_text_search_start(
                     f64::from(start),
                     hay_length,
@@ -127,14 +137,23 @@ impl Kernel for TextKernel {
                         units::wildcard_reservation(hay.len(), text.len()),
                     )?;
                     shared::reserve(context.host, reservation)?;
-                    units::search(&hay, &text, start, true)
+                    units::search(&hay, &text, start, self.paired)
                 } else {
                     context
                         .host
                         .charge_work(hay.len().saturating_mul(text.len()) as u64)?;
-                    let offset = { units::paired_offset(&hay, start) };
-                    java_case::index_of(&hay, &text, offset)
-                        .map(|offset| units::paired_length(hay.get(..offset).unwrap_or_default()))
+                    let offset = if self.paired {
+                        units::paired_offset(&hay, start)
+                    } else {
+                        start
+                    };
+                    java_case::index_of(&hay, &text, offset).map(|offset| {
+                        if self.paired {
+                            units::paired_length(hay.get(..offset).unwrap_or_default())
+                        } else {
+                            offset
+                        }
+                    })
                 };
                 Ok(Number(position.ok_or(VALUE_ERROR)? as f64 + 1.))
             }
@@ -209,7 +228,7 @@ impl collections::CollectionKernel for ConcatKernel {
     }
 }
 
-/// Execute text operations using typed roles and current Excel UTF-16 semantics.
+/// Dispatch ordinary text or legacy B functions with their respective UTF-16 indexing.
 pub(in crate::eval) fn execute(
     mut host: CallHost<'_, '_>,
     name: TextFunction,
@@ -218,11 +237,43 @@ pub(in crate::eval) fn execute(
     if !FunctionId::Text(name).descriptor().arity.accepts(length) {
         return Ok(err(VALUE_ERROR));
     }
+    // Microsoft MS-OE376 LENB/FINDB/MIDB notes distinguish non-DBCS default
+    // languages from DBCS languages; non-DBCS positions count legacy UTF-16
+    // units, independently of ordinary text Compatibility Version 2 indexing.
+    // https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/7a8bce94-30cb-44a6-a2a5-e4b2ac26eab3
+    // https://support.microsoft.com/en-us/excel/compatibility-versions
+    // Only the non-DBCS contract is verified here: do not infer Excel's DBCS
+    // classification, split-byte padding, or offsets from UTF-8/codepage length.
+    let byte_operation = match name {
+        TextFunction::LenB => Some(TextFunction::Len),
+        TextFunction::LeftB => Some(TextFunction::Left),
+        TextFunction::RightB => Some(TextFunction::Right),
+        TextFunction::MidB => Some(TextFunction::Mid),
+        TextFunction::FindB => Some(TextFunction::Find),
+        TextFunction::SearchB => Some(TextFunction::Search),
+        TextFunction::ReplaceB => Some(TextFunction::Replace),
+        _ => None,
+    };
+    if byte_operation.is_some()
+        && host.byte_text_language() != crate::eval::config::ByteTextLanguage::NonDbcs
+    {
+        return Err(host.capability_failure(
+            CapabilityId::FunctionAdapter,
+            crate::eval::limits::EvaluationReasonError::DbcsByteText,
+        ));
+    }
     let address = host.target().address;
     let result = if name == TextFunction::Concat {
         collections::execute(&mut host, address, ConcatKernel)
     } else {
-        elementwise::execute(&mut host, address, TextKernel { name })
+        elementwise::execute(
+            &mut host,
+            address,
+            TextKernel {
+                name: byte_operation.unwrap_or(name),
+                paired: byte_operation.is_none(),
+            },
+        )
     };
     super::outcome::finish(result)
 }

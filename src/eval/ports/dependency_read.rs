@@ -11,6 +11,10 @@ use crate::model::CellAddress;
 pub enum DependencyRead {
     /// Value read from a cell, including an implicit blank.
     Cell(EvaluationTarget),
+    /// Cell metadata dependency, recorded independently of any calculated-value read.
+    CellMetadata(EvaluationTarget),
+    /// Authored formula source dependency that must survive equal-value source edits.
+    FormulaMetadata(EvaluationTarget),
     /// Source formula and row visibility consumed without evaluating excluded cells.
     SubtotalMetadata(EvaluationTarget),
     /// Defined-name lookup and its selected workbook entry, if any.
@@ -54,6 +58,8 @@ pub enum DependencyRead {
     Formatting,
     /// Numeric input tokens consumed while parsing a text argument.
     NumberLocale,
+    /// Selected language class read by a legacy byte text function.
+    ByteTextLanguage,
     /// Executed extension binding and declared volatility.
     Extension(ExtensionInvocation),
     /// Access to a cell-local random stream.

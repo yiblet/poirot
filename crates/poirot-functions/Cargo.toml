@@ -12,6 +12,7 @@ include = ["/src/**", "/README.md", "/LICENSES/**"]
 
 [dependencies]
 thiserror = { workspace = true }
+roxmltree.workspace = true
 statrs = { workspace = true }
 libm = { workspace = true }
 bigdecimal = { workspace = true }
@@ -23,6 +24,8 @@ pcre2 = { workspace = true }
 nom = { workspace = true }
 regex = { workspace = true }
 num-bigint = { workspace = true }
+sxd-document = "=0.3.2"
+sxd-xpath = "=0.4.2"
 
 
 [lints]

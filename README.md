@@ -186,6 +186,15 @@ for lifecycle details.
 
 ## Acknowledgements
 
+- [SXD-Document](https://github.com/shepmaster/sxd-document) and
+  [SXD-XPath](https://github.com/shepmaster/sxd-xpath) provide XML processing and XPath
+  evaluation for `FILTERXML` under MIT licenses. See
+  [provenance and notices](LICENSES/SXD.md).
+
+- [Unicode 17.0.0](https://www.unicode.org/Public/17.0.0/ucd/UnicodeData.txt)
+  supplies the selected Japanese width and voiced-kana mappings, under
+  [Unicode License V3](LICENSES/Unicode-17.txt).
+
 - [Calamine](https://github.com/tafia/calamine) provides streaming XLSX decoding and shared-formula translation.
 - [rust_xlsxwriter](https://github.com/jmcnamara/rust_xlsxwriter) authors fresh XLSX packages.
 - [Apache POI](https://poi.apache.org/) shaped Poirot from the start: our first few

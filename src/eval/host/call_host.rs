@@ -35,6 +35,13 @@ pub(in crate::eval) struct CallHost<'call, 'workbook> {
 }
 
 impl<'call, 'workbook> CallHost<'call, 'workbook> {
+    /// Read the selected byte-text language and record the dependency for cache reuse.
+    pub(in crate::eval) fn byte_text_language(&mut self) -> crate::eval::config::ByteTextLanguage {
+        crate::eval::session::ReadRecorder::new(self.session)
+            .read(crate::eval::ports::DependencyRead::ByteTextLanguage);
+        self.session.policies.byte_text_language
+    }
+
     /// Regex execution guards selected independently of calculation budgets.
     pub(in crate::eval) fn regex_settings(&self) -> poirot_functions::text::regex::ExecutionLimits {
         self.session.policies.regex

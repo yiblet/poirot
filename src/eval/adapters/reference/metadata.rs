@@ -5,7 +5,9 @@ use crate::eval::adapters::elementwise::{
     Signature, SourceIdentity, WholeCollection,
 };
 use crate::eval::functions::registry::ReferenceFunction;
-use crate::eval::host::{ArgumentCoercion, CallHost};
+use crate::eval::host::{
+    ArgumentCoercion, CallHost, CellInformation, FormulaMetadata, SelectionAccess,
+};
 use crate::eval::limits::CapabilityId;
 use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value};
 use crate::model::CellValue::{Number, Text};
@@ -133,6 +135,53 @@ pub(super) fn execute(
         _ => Axis::Column,
     };
     match function {
+        ReferenceFunction::Cell => {
+            let request = host.scalar_argument(0)?;
+            let request = ArgumentCoercion::new(host).coerce_scalar_text(&request)?;
+            if host.len() < 2 || SelectionAccess::new(host).is_missing(1) {
+                return Err(host.unsupported(
+                    CapabilityId::FunctionAdapter,
+                    crate::eval::limits::EvaluationReasonError::CellSelectedUiReference,
+                ));
+            }
+            let (_, reference) = <(SourceIdentity, SourceIdentity)>::bind(host.len());
+            let value = reference.read(host)?;
+            if matches!(value, Value::Missing) {
+                return Err(host.unsupported(
+                    CapabilityId::FunctionAdapter,
+                    crate::eval::limits::EvaluationReasonError::CellSelectedUiReference,
+                ));
+            }
+            let geometry = SourceIdentity::geometry(&value)?;
+            let address = crate::model::CellAddress {
+                row: u32::try_from(geometry.row).map_err(|_| crate::model::CellError::Ref)?,
+                col: u32::try_from(geometry.column).map_err(|_| crate::model::CellError::Ref)?,
+            };
+            CellInformation::new(host)
+                .read(&request, geometry.sheet, address)
+                .map(Into::into)
+        }
+        ReferenceFunction::Sheets => {
+            let value = if host.len() == 0 {
+                None
+            } else {
+                Some(source.read(host)?)
+            };
+            FormulaMetadata::new(host)
+                .sheets(value.as_ref())
+                .map(Into::into)
+        }
+        ReferenceFunction::FormulaText => {
+            let value = source.read(host)?;
+            let geometry = SourceIdentity::geometry(&value)?;
+            let address = crate::model::CellAddress {
+                row: u32::try_from(geometry.row).map_err(|_| crate::model::CellError::Ref)?,
+                col: u32::try_from(geometry.column).map_err(|_| crate::model::CellError::Ref)?,
+            };
+            FormulaMetadata::new(host)
+                .text(geometry.sheet, address)
+                .map(Into::into)
+        }
         ReferenceFunction::Address => elementwise::execute(host, host.target().address, Address),
         ReferenceFunction::Areas => source.areas(host).map(Into::into),
         ReferenceFunction::Sheet if host.len() == 0 => {

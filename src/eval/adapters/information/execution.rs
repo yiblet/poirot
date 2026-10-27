@@ -3,7 +3,7 @@ use crate::eval::adapters::elementwise::{
     Broadcast, Kernel, MemberContext, SourceIdentity, execute as execute_kernel,
 };
 use crate::eval::functions::registry::{FunctionId, InformationFunction};
-use crate::eval::host::CallHost;
+use crate::eval::host::{CallHost, FormulaMetadata};
 use crate::eval::limits::{EvalResult, EvaluationError};
 use crate::eval::session::Session;
 use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
@@ -49,7 +49,9 @@ impl Kernel for Information {
             IsNonText => Boolean(!present || value.text_ref().is_none()),
             N => poirot_functions::coercion::compatibility::coerce_information_n(value),
             T => poirot_functions::coercion::compatibility::coerce_information_t(value),
-            Type | Na => return Err(EvaluationError::StalePlan.into()),
+            Type | Na | InformationFunction::IsFormula => {
+                return Err(EvaluationError::StalePlan.into());
+            }
         })
     }
 }
@@ -117,7 +119,45 @@ pub(in crate::eval) fn execute(
         return Ok(err(VALUE_ERROR));
     }
     let mut host = CallHost::new_array(session, s, at, args, args.len());
-    let result = if function == InformationFunction::Na {
+    let result = if function == InformationFunction::IsFormula {
+        use crate::eval::adapters::elementwise::Signature;
+        let (source,) = <(SourceIdentity,)>::bind(host.len());
+        source.read(&mut host).and_then(|value| {
+            let geometry = SourceIdentity::geometry(&value)?;
+            let address = CellAddress {
+                row: u32::try_from(geometry.row).map_err(|_| crate::model::CellError::Ref)?,
+                col: u32::try_from(geometry.column).map_err(|_| crate::model::CellError::Ref)?,
+            };
+            if geometry.rows == 1 && geometry.columns == 1 {
+                return FormulaMetadata::new(&mut host)
+                    .is_formula(geometry.sheet, address)
+                    .map(Into::into);
+            }
+            crate::eval::adapters::elementwise::matrices::generate(
+                &mut host,
+                geometry.rows,
+                geometry.columns,
+                address,
+                |host, row, column| {
+                    let address = CellAddress {
+                        row: address
+                            .row
+                            .checked_add(
+                                u32::try_from(row).map_err(|_| crate::model::CellError::Ref)?,
+                            )
+                            .ok_or(crate::model::CellError::Ref)?,
+                        col: address
+                            .col
+                            .checked_add(
+                                u32::try_from(column).map_err(|_| crate::model::CellError::Ref)?,
+                            )
+                            .ok_or(crate::model::CellError::Ref)?,
+                    };
+                    FormulaMetadata::new(host).is_formula(geometry.sheet, address)
+                },
+            )
+        })
+    } else if function == InformationFunction::Na {
         execute_kernel(&mut host, at, NotAvailable)
     } else if function == InformationFunction::Type {
         execute_kernel(&mut host, at, TypeInformation)

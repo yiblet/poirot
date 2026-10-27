@@ -18,10 +18,13 @@ pub(in crate::eval) fn execute(
 ) -> EvalResult<Value> {
     if matches!(
         function,
-        ReferenceFunction::Address
+        ReferenceFunction::Cell
+            | ReferenceFunction::Address
             | ReferenceFunction::Areas
             | ReferenceFunction::Hyperlink
             | ReferenceFunction::Sheet
+            | ReferenceFunction::Sheets
+            | ReferenceFunction::FormulaText
             | ReferenceFunction::Rows
             | ReferenceFunction::Columns
             | ReferenceFunction::Row

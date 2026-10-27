@@ -17,6 +17,8 @@ pub enum CriteriaFunction {
     MaxIfs,
     /// MINIFS handler.
     MinIfs,
+    /// AGGREGATE handler.
+    Aggregate,
     /// SUBTOTAL handler.
     Subtotal,
 }

@@ -90,7 +90,9 @@ impl Reads {
                 trace.value_read((cell.sheet, cell.address));
                 trace.cell((cell.sheet, cell.address));
             }
-            DependencyRead::SubtotalMetadata(cell) => {
+            DependencyRead::CellMetadata(cell)
+            | DependencyRead::FormulaMetadata(cell)
+            | DependencyRead::SubtotalMetadata(cell) => {
                 trace.metadata_reads = true;
                 trace.cell((cell.sheet, cell.address));
             }
@@ -168,6 +170,7 @@ impl Reads {
             },
             DependencyRead::Formatting => trace.formatting = true,
             DependencyRead::NumberLocale => trace.number_locale = true,
+            DependencyRead::ByteTextLanguage => trace.byte_text_language = true,
             _ => {}
         }
     }

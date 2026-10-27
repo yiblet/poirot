@@ -1,6 +1,12 @@
 /// Text construction, parsing, formatting, and matching handlers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TextFunction {
+    /// Japanese fullwidth-to-halfwidth text conversion.
+    Asc,
+    /// Japanese halfwidth-to-fullwidth text conversion (also JIS).
+    Dbcs,
+    /// Thai currency spelling handler.
+    BahtText,
     /// NUMBERVALUE handler.
     NumberValue,
     /// PROPER handler.
@@ -54,6 +60,8 @@ pub enum TextFunction {
     Code,
     /// UNICHAR handler.
     UniChar,
+    /// ENCODEURL percent-encoding handler.
+    EncodeUrl,
     /// UNICODE handler.
     Unicode,
     /// TEXTBEFORE delimiter extraction.
@@ -72,4 +80,20 @@ pub enum TextFunction {
     RegexExtract,
     /// REGEXREPLACE occurrence-aware replacement.
     RegexReplace,
+    /// FILTERXML bounded local XPath selection.
+    FilterXml,
+    /// Legacy non-DBCS LENB handler.
+    LenB,
+    /// Legacy non-DBCS LEFTB handler.
+    LeftB,
+    /// Legacy non-DBCS RIGHTB handler.
+    RightB,
+    /// Legacy non-DBCS MIDB handler.
+    MidB,
+    /// Legacy non-DBCS FINDB handler.
+    FindB,
+    /// Legacy non-DBCS SEARCHB handler.
+    SearchB,
+    /// Legacy non-DBCS REPLACEB handler.
+    ReplaceB,
 }

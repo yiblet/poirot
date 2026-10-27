@@ -14,6 +14,8 @@ pub struct ConfigurationFingerprint {
     pub formatting: FormattingConfiguration,
     /// Exact numeric input token profile.
     pub number_locale: poirot_parsing::number::NumberLocale,
+    /// Selected Excel language class for legacy byte text functions.
+    pub byte_text_language: super::byte_text_language::ByteTextLanguage,
 
     /// Selected array publication behavior.
     pub array_result_policy: ArrayResultPolicy,

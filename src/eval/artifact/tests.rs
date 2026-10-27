@@ -980,3 +980,93 @@ fn compiler_caches_with_older_template_keys_are_rejected_while_their_source_rest
         assert!(decode_default(&relabeled).is_err());
     }
 }
+
+#[test]
+fn expanded_catalog_checkpoint_preserves_source_and_policy_dependencies() {
+    use crate::eval::artifact::restored_checkpoint::RestoredCheckpoint;
+    use crate::eval::config::ByteTextLanguage;
+
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    for (cell, formula) in [
+        ("A1", "1+1"),
+        ("B1", "FORMULATEXT(A1)"),
+        ("C1", "LENB(\"😀\")"),
+        ("D1", "C1+1"),
+        ("E1", "ENCODEURL(\"a b\")"),
+    ] {
+        sheet.set_formula(cell, formula).unwrap();
+    }
+    let context = EvaluationContext::default();
+    let mut original = Overlay::with_workbook(&book).build().unwrap();
+    let source = original.target("S!A1").unwrap();
+    let metadata = original.target("S!B1").unwrap();
+    let bytes_target = original.target("S!C1").unwrap();
+    let dependent = original.target("S!D1").unwrap();
+    let url = original.target("S!E1").unwrap();
+    {
+        let mut run = original.evaluation(&context).unwrap();
+        assert_eq!(run.cell(metadata).unwrap(), CellValue::Text("=1+1".into()));
+        assert_eq!(run.cell(dependent).unwrap(), CellValue::Number(3.));
+        assert_eq!(run.cell(url).unwrap(), CellValue::Text("a%20b".into()));
+    }
+    let mut bytes = encode_workspace(original.snapshot(), SnapshotLimits::default()).unwrap();
+    let restored = decode(
+        &bytes,
+        Default::default(),
+        PreparedPolicy::RequireCompatible,
+    )
+    .unwrap();
+    let RestoredCheckpoint::Prepared(mut restored) = restored.into_checkpoint().unwrap() else {
+        panic!("expected compatible preparation")
+    };
+    {
+        let mut run = restored.evaluation(&context).unwrap();
+        assert_eq!(run.cell(metadata).unwrap(), CellValue::Text("=1+1".into()));
+        assert_eq!(run.cell(dependent).unwrap(), CellValue::Number(3.));
+        assert_eq!(run.cell(url).unwrap(), CellValue::Text("a%20b".into()));
+        assert_eq!(run.usage().formula_executions, 0);
+    }
+    // The numeric result stays equal: FORMULATEXT depends on authored source.
+    restored.set_formula(source, "2").unwrap();
+    assert_eq!(
+        restored
+            .evaluation(&context)
+            .unwrap()
+            .cell(metadata)
+            .unwrap(),
+        CellValue::Text("=2".into())
+    );
+    let mut policy = restored.policy().clone();
+    policy.byte_text_language = ByteTextLanguage::Dbcs;
+    restored.set_policy(policy).unwrap();
+    assert!(restored.cached_value(bytes_target).is_none());
+    assert!(restored.cached_value(dependent).is_none());
+    assert!(restored.cached_value(url).is_some());
+    let dbcs = encode_workspace(restored.snapshot(), SnapshotLimits::default()).unwrap();
+    let RestoredCheckpoint::Prepared(restored) =
+        decode_default(&dbcs).unwrap().into_checkpoint().unwrap()
+    else {
+        panic!("expected compatible preparation")
+    };
+    assert_eq!(restored.policy().byte_text_language, ByteTextLanguage::Dbcs);
+
+    // Revision 79 predates the expanded catalog. Its optional preparation must
+    // never be decoded, even if the durable workbook source is still current.
+    bytes[16..24].copy_from_slice(&79_u64.to_le_bytes());
+    let split = HEADER + u64::from_le_bytes(bytes[24..32].try_into().unwrap()) as usize;
+    bytes[split..].fill(255);
+    let fallback = decode_default(&bytes).unwrap();
+    assert_eq!(
+        fallback.prepared_status,
+        PreparedStatus::DiscardedIncompatible
+    );
+    assert_eq!(fallback.workbook, book);
+    assert!(fallback.workspace.is_none());
+    let mut run = Evaluation::with_workbook(&fallback.workbook)
+        .build(context)
+        .unwrap();
+    assert_eq!(run.cell(dependent).unwrap(), CellValue::Number(3.));
+    assert!(matches!(decode(&bytes, Default::default(), PreparedPolicy::RequireCompatible),
+        Err(SnapshotError::Envelope(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::IncompatiblePreparedEngineRevision))));
+}

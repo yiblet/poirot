@@ -37,6 +37,15 @@ let bytes = evaluation.save_xlsx().to_buffer()?;
 
 The builder captures one default context when built. `.context(context)` replaces clock, seed, locale and limits; a later `.limits(limits)` overrides only quotas. `.policy(policy)` selects shared spreadsheet semantics. `.profiling(true)` enables detailed reports, available through `finish()`; otherwise report counters are `None`. No cell is evaluated during construction.
 
+`EvaluationPolicy::byte_text_language` defaults to `ByteTextLanguage::NonDbcs`.
+It controls the legacy `LENB`/`LEFTB`/`RIGHTB`/`MIDB`/`FINDB`/`SEARCHB`/`REPLACEB`
+family. In `NonDbcs` mode these functions count UTF-16 code units, so
+`LENB("😀")` returns 2 while ordinary `LEN("😀")` returns 1. Selecting `Dbcs`
+returns an unsupported-capability error when a byte-text function executes.
+In an overlay, changing this policy marks cached results that used it and their
+dependents for recalculation. Functions in skipped lazy branches do not create this dependency.
+See the [language limits](compatibility.md#internationalization).
+
 Resolve string targets once for repeated reads. Resolution accepts quoted sheet names such as `'Annual summary'!B12`. A missing sheet is an error; an unstored coordinate on an existing sheet is a valid target. It calculates as blank when no source, scenario edit or spill supplies a value. Targets bind to the source workbook's sheet topology and are not guaranteed to survive structural edits. Worksheet errors such as `#DIV/0!` are calculated values; operational refusals are Rust errors.
 
 Use `book.stored_cell(sheet, address)` to inspect authored formulas, style and saved values without calculation. Saved values may be stale. It accepts A1 text, a typed address, or zero-based `(row, column)` integers. Invalid coordinates return an error; `Ok(None)` means either a missing sheet or an unstored cell. Resolve `book.sheet_by_name(name)` first when you need to distinguish those cases.

@@ -91,6 +91,8 @@ impl<'a, W: Borrow<Workbook>> Overlay<'a, W> {
             || previous.producers != policy.producers
         {
             self.clear_cache();
+        } else if previous.byte_text_language != policy.byte_text_language {
+            self.cache.get_mut().invalidate_byte_text_language();
         }
     }
 

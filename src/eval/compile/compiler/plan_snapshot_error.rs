@@ -1,6 +1,9 @@
 /// Structural rejection of persisted compiled programs.
 #[derive(Debug, thiserror::Error)]
 pub enum PlanSnapshotError {
+    /// Allocation failed while checking which call owns each contextual reducer.
+    #[error("could not reserve contextual reducer validation state")]
+    AggregationReservation(#[source] std::collections::TryReserveError),
     /// Call source UTF-8.
     #[error("call source UTF-8")]
     CallSourceUTF8,

@@ -12,7 +12,20 @@ use crate::eval::values::{FunctionResult, VALUE_ERROR, Value};
 use crate::model::CellAddress;
 use crate::model::CellError::Ref;
 
-/// Reads SUBTOTAL members after checking row visibility and nested-subtotal metadata.
+/// Metadata exclusions applied before a total reads a referenced cell.
+#[derive(Clone, Copy)]
+enum TotalFilter {
+    /// SUBTOTAL always excludes nested subtotals and filtered rows.
+    Subtotal { exclude_hidden: bool },
+    /// AGGREGATE can exclude both nested SUBTOTAL and AGGREGATE calls;
+    /// filtered rows are always excluded and hidden rows are optional.
+    Aggregate {
+        exclude_hidden: bool,
+        exclude_nested: bool,
+    },
+}
+
+/// Reads total members after checking row visibility and nested-total metadata.
 pub(in crate::eval) struct SubtotalReader<'h, 'call, 'workbook> {
     /// The call whose collection argument is read.
     host: &'h mut CallHost<'call, 'workbook>,
@@ -31,6 +44,57 @@ impl<'h, 'call, 'workbook> SubtotalReader<'h, 'call, 'workbook> {
         offset: usize,
         exclude_hidden: bool,
     ) -> FunctionResult<Option<ScalarOperand>> {
+        self.filtered_cell(index, offset, TotalFilter::Subtotal { exclude_hidden })
+    }
+
+    /// Validate AGGREGATE's reference form and reject unsupported 3-D references.
+    pub(in crate::eval) fn aggregate_source(
+        &mut self,
+        index: usize,
+        require_reference: bool,
+    ) -> FunctionResult<()> {
+        self.host.prepare(index)?;
+        let value = &self.host.operand(index).ok_or(VALUE_ERROR)?.value;
+        if matches!(value, Value::SheetSpan(_))
+            || (require_reference && !matches!(value, Value::Refs(_) | Value::SignedRefs(_)))
+        {
+            return Err(VALUE_ERROR.into());
+        }
+        Ok(())
+    }
+
+    /// Apply AGGREGATE exclusions to references; calculated arrays retain every row.
+    pub(in crate::eval) fn aggregate_cell(
+        &mut self,
+        index: usize,
+        offset: usize,
+        exclude_hidden: bool,
+        exclude_nested: bool,
+    ) -> FunctionResult<Option<ScalarOperand>> {
+        self.filtered_cell(
+            index,
+            offset,
+            TotalFilter::Aggregate {
+                exclude_hidden,
+                exclude_nested,
+            },
+        )
+    }
+
+    /// Read metadata first so excluded formulas never execute.
+    fn filtered_cell(
+        &mut self,
+        index: usize,
+        offset: usize,
+        filter: TotalFilter,
+    ) -> FunctionResult<Option<ScalarOperand>> {
+        let (exclude_hidden, exclude_nested, aggregate) = match filter {
+            TotalFilter::Subtotal { exclude_hidden } => (exclude_hidden, true, false),
+            TotalFilter::Aggregate {
+                exclude_hidden,
+                exclude_nested,
+            } => (exclude_hidden, exclude_nested, true),
+        };
         self.host.prepare(index)?;
         let slot = self
             .host
@@ -108,7 +172,10 @@ impl<'h, 'call, 'workbook> SubtotalReader<'h, 'call, 'workbook> {
                 self.host.session.sources.inputs,
             )
             .cell(sheet, address);
-            if let Some(source) = cell.and_then(|cell| cell.formula.as_deref()) {
+            if let Some(source) = cell
+                .and_then(|cell| cell.formula.as_deref())
+                .filter(|_| exclude_nested)
+            {
                 self.host.session.state.runtime.budget.text(source.len())?;
                 self.host.charge_work(source.len() as u64)?;
                 let prepared = self
@@ -129,6 +196,13 @@ impl<'h, 'call, 'workbook> SubtotalReader<'h, 'call, 'workbook> {
                                 crate::eval::compile::bytecode::CallTarget::Builtin(
                                     crate::eval::functions::registry::FunctionId::Criteria(
                                         crate::eval::functions::registry::CriteriaFunction::Subtotal
+                                    )
+                                )
+                            ) || aggregate && matches!(
+                                call.target,
+                                crate::eval::compile::bytecode::CallTarget::Builtin(
+                                    crate::eval::functions::registry::FunctionId::Criteria(
+                                        crate::eval::functions::registry::CriteriaFunction::Aggregate
                                     )
                                 )
                             )

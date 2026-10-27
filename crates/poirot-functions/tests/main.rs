@@ -27,6 +27,7 @@ mod matrix_grouping;
 mod matrix_modern_arrays;
 mod matrix_selection;
 mod matrix_unit;
+mod statistics_aggregate_function;
 mod statistics_distribution_source;
 mod statistics_grouped;
 mod statistics_iteration;

@@ -96,7 +96,7 @@ pub(super) fn compile_inner(
         },
         error: None,
         pending_labels: [None; DEPTH * 2],
-        aggregation_roles: [false; DEPTH],
+        aggregation_roles: [None; DEPTH],
         registry,
     };
     let mut preparation = Preparation {

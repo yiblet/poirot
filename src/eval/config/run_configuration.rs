@@ -31,6 +31,7 @@ pub struct RunConfiguration {
     context: EvaluationInputs,
     formatting: FormattingConfiguration,
     number_locale: poirot_parsing::number::NumberLocale,
+    byte_text_language: super::byte_text_language::ByteTextLanguage,
 
     array_result_policy: ArrayResultPolicy,
     producer_policy: ProducerPolicy,
@@ -44,6 +45,7 @@ impl RunConfiguration {
             context,
             formatting,
             number_locale: Default::default(),
+            byte_text_language: Default::default(),
 
             array_result_policy: ArrayResultPolicy::default(),
             producer_policy: ProducerPolicy::default(),
@@ -78,6 +80,21 @@ impl RunConfiguration {
         &self.number_locale
     }
 
+    /// Select the Excel language class used by legacy byte text operations.
+    /// Selecting DBCS refuses those operations; other text functions are unaffected.
+    pub fn with_byte_text_language(
+        mut self,
+        language: super::byte_text_language::ByteTextLanguage,
+    ) -> Self {
+        self.byte_text_language = language;
+        self
+    }
+
+    /// Return the captured byte-text language independently of the host locale.
+    pub fn byte_text_language(&self) -> super::byte_text_language::ByteTextLanguage {
+        self.byte_text_language
+    }
+
     /// Select scalar intersection or dynamic spill publication.
     pub fn with_array_result_policy(mut self, policy: ArrayResultPolicy) -> Self {
         self.array_result_policy = policy;
@@ -106,6 +123,7 @@ impl RunConfiguration {
             context: self.context.fingerprint(),
             formatting: self.formatting.clone(),
             number_locale: self.number_locale.clone(),
+            byte_text_language: self.byte_text_language,
 
             array_result_policy: self.array_result_policy,
             producer_policy: self.producer_policy,

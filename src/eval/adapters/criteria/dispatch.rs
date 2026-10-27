@@ -23,7 +23,11 @@ pub(in crate::eval) fn execute(
     function: CriteriaFunction,
     arguments: ArgumentsRef<'_>,
 ) -> EvalResult<Value> {
-    let mut host = CallHost::new(session, sheet, address, arguments);
+    let mut host = if function == CriteriaFunction::Aggregate {
+        CallHost::new_array_slots(session, sheet, address, arguments, &[2, 3])
+    } else {
+        CallHost::new(session, sheet, address, arguments)
+    };
     match evaluate(&mut host, address, function) {
         Ok(value) => Ok(value),
         Err(FunctionError::Spreadsheet(e)) => Ok(err(e)),
@@ -62,6 +66,9 @@ pub(super) fn evaluate(
     use CriteriaFunction::{
         AverageIf, AverageIfs, CountIf, CountIfs, MaxIfs, MinIfs, Subtotal, SumIf, SumIfs,
     };
+    if function == CriteriaFunction::Aggregate {
+        return super::aggregate::AggregateExecutor::new(host).evaluate();
+    }
     if function == Subtotal {
         return subtotal(host);
     }
@@ -70,7 +77,7 @@ pub(super) fn evaluate(
         SumIf | AverageIf => PairLayout::OptionalPayload,
         CountIfs => PairLayout::Repeated,
         SumIfs | AverageIfs | MaxIfs | MinIfs => PairLayout::LeadingPayload,
-        Subtotal => return Err(VALUE_ERROR.into()),
+        Subtotal | CriteriaFunction::Aggregate => return Err(VALUE_ERROR.into()),
     };
     let roles =
         PairedCollections::<crate::eval::adapters::elementwise::Broadcast>::admit(host, layout)?;
@@ -130,7 +137,7 @@ pub(super) fn aggregate(
         AverageIfs => AggregateKind::Average,
         MinIfs => AggregateKind::Min,
         MaxIfs => AggregateKind::Max,
-        Subtotal => return Err(VALUE_ERROR.into()),
+        Subtotal | CriteriaFunction::Aggregate => return Err(VALUE_ERROR.into()),
     };
     let source = roles.source(
         host,

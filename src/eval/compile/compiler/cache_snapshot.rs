@@ -190,6 +190,7 @@ impl<'a> CacheSnapshot<'a> {
                     )
                     .map_err(|_| PlanSnapshotError::CallSourceUTF8)?;
                 }
+                template_validation::validate_aggregation_roles(&p.template, &p.calls)?;
                 let program = Arc::new(p.into_owned());
                 templates
                     .structural

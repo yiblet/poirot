@@ -22,8 +22,14 @@ pub use distribution_error::DistributionError;
 use crate::scalar::CellError;
 
 mod aggregate;
+mod aggregate_function;
+mod aggregate_input;
 mod grouped;
+mod pivot_members;
+mod pivot_relative_to;
 pub use grouped::{BuiltinAggregator, count_member, median};
+pub use pivot_members::PivotMembers;
+pub use pivot_relative_to::PivotRelativeTo;
 mod commons_gamma;
 mod distribution;
 pub mod ets;
@@ -41,6 +47,8 @@ mod reduction;
 
 // Statistical reduction over already collected numeric operands.
 pub use aggregate::aggregate;
+pub use aggregate_function::AggregateFunction;
+pub use aggregate_input::AggregateInput;
 pub use reduction::{NumericReduction, NumericReductionState};
 // Distribution probability/inverse kernels with optional host metering.
 pub use distribution::{

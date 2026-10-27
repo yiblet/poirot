@@ -52,6 +52,8 @@ pub enum ResultRule {
     FirstNumericArgument,
     /// Lift an optional third numeric parameter while consuming earlier collections.
     ThirdNumericArgument,
+    /// Broadcast the optional fourth numeric argument while reducing earlier collections.
+    FourthNumericArgument,
     /// Lift only the second scalar argument, reducing the first collection.
     SecondNumericArgument,
     /// Lift alternating criteria after each criteria range.
@@ -130,6 +132,9 @@ impl ResultRule {
             }
             Self::ThirdNumericArgument => {
                 Self::ElementwiseNumber.apply(args.get(2..3).unwrap_or(&[]))
+            }
+            Self::FourthNumericArgument => {
+                Self::ElementwiseNumber.apply(args.get(3..4).unwrap_or(&[]))
             }
             Self::SecondNumericArgument => {
                 Self::ElementwiseNumber.apply(args.get(1..2).unwrap_or(&[]))
@@ -283,6 +288,7 @@ impl ResultRule {
                 .fold(ShapeBounds::SCALAR, ShapeBounds::join),
             Self::FirstNumericArgument => args.first().copied().unwrap_or(ShapeBounds::SCALAR),
             Self::ThirdNumericArgument => args.get(2).copied().unwrap_or(ShapeBounds::SCALAR),
+            Self::FourthNumericArgument => args.get(3).copied().unwrap_or(ShapeBounds::SCALAR),
             Self::SecondNumericArgument => args.get(1).copied().unwrap_or(ShapeBounds::SCALAR),
             Self::PairedCriteria | Self::PayloadCriteria => args
                 .iter()

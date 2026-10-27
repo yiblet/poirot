@@ -4,6 +4,9 @@
 //! functions (identities and failures), limits (budgets) and values (value channels and
 //! criteria semantics); sibling elementwise (shared broadcast kernels).
 
+/// AGGREGATE argument checks, workbook filtering and calculation.
+mod aggregate;
+
 /// Criteria family dispatch and its shared helpers.
 mod dispatch;
 

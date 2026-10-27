@@ -11,6 +11,8 @@ pub(in crate::eval) struct RunPolicies<'a> {
     pub(in crate::eval) currency: Option<&'a CurrencyContext>,
     /// Numeric token conventions for parsing text arguments.
     pub(in crate::eval) number_locale: &'a poirot_parsing::number::NumberLocale,
+    /// Selected Excel language class used only by legacy byte text functions.
+    pub(in crate::eval) byte_text_language: crate::eval::config::ByteTextLanguage,
 
     /// Builtin contracts selected at execution time.
 
@@ -29,6 +31,7 @@ impl<'a> RunPolicies<'a> {
             context,
             currency: None,
             number_locale: &poirot_parsing::number::NumberLocale::EN_US,
+            byte_text_language: Default::default(),
 
             array_result_policy: ArrayResultPolicy::default(),
             producer_policy: ProducerPolicy::default(),
@@ -42,6 +45,7 @@ impl<'a> RunPolicies<'a> {
             context: configuration.context(),
             currency: configuration.formatting().currency(),
             number_locale: configuration.number_locale(),
+            byte_text_language: configuration.byte_text_language(),
 
             array_result_policy: configuration.array_result_policy(),
             producer_policy: configuration.producer_policy(),
@@ -58,6 +62,7 @@ impl<'a> RunPolicies<'a> {
             context: context.inputs(),
             currency: context.formatting.currency(),
             number_locale: &context.number_locale,
+            byte_text_language: policy.byte_text_language,
 
             array_result_policy: policy.arrays,
             producer_policy: policy.producers,

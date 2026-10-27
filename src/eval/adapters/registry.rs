@@ -285,7 +285,6 @@ mod tests {
         );
         let name = FunctionName::Known(CommonFunction::RankEq);
         assert!(registry.resolve(&name).is_some());
-        assert!(registry.resolve(&name).is_some());
         assert!(registry.resolve(&"_xlfn.RANK.EQ".into()).is_some());
         assert!(registry.resolve(&"_XLFN.RANK.EQ".into()).is_none());
     }

@@ -13,6 +13,7 @@ fn descriptor_contracts_and_family_owned_execution_are_not_stubs() {
     let mut workbook = crate::model::Workbook::new();
     workbook.add_sheet("Sheet1").unwrap();
     let address = crate::model::CellAddress { row: 0, col: 0 };
+    assert_eq!(SUPPORTED_FUNCTIONS.len(), 496);
     assert_eq!(SUPPORTED_FUNCTIONS.len(), FUNCTION_DESCRIPTORS.len());
     let mut names = std::collections::HashSet::new();
     for descriptor in FUNCTION_DESCRIPTORS {

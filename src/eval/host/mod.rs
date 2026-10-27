@@ -8,7 +8,8 @@
 //! calendar, locale and currency),
 //! `RandomDraws` (per-cell random streams), `SelectionAccess` (selected arguments,
 //! rectangles and branch masks), `DynamicReferences` (sheet names, cells and reference
-//! text), `LookupService`, `SubtotalReader` and `ErrorHandler`. `execute_extension` runs a registered provider
+//! text), `FormulaMetadata` (authored sources), `CellInformation` (modeled CELL requests),
+//! `LookupService`, `SubtotalReader` and `ErrorHandler`. `execute_extension` runs a registered provider
 //! behind a capability-checked view of the host. This module does not resolve function
 //! names or select a family implementation.
 //!
@@ -28,6 +29,8 @@ mod argument_coercion;
 mod argument_demand;
 /// Budgeted bridge from function adapters to a running evaluator and its deferred arguments.
 mod call_host;
+/// Modeled CELL location, content and formatting requests.
+mod cell_information;
 /// Selected worksheet read planned without reading cells.
 mod cell_read_plan;
 /// Candidate comparison contract of a classic lookup.
@@ -40,6 +43,8 @@ mod dynamic_references;
 mod error_handler;
 /// Capability-checked provider invocation for registered extension functions.
 mod extension_invocation;
+/// Effective authored formulas and modeled worksheet counts.
+mod formula_metadata;
 /// Evaluated argument retained before scalar, array or reference access.
 mod host_operand;
 /// Classic lookup candidate selection and result reads.
@@ -79,11 +84,13 @@ mod traversal_policy;
 pub(in crate::eval) use aggregators::Aggregators;
 pub(in crate::eval) use argument_coercion::ArgumentCoercion;
 pub(in crate::eval) use call_host::CallHost;
+pub(in crate::eval) use cell_information::CellInformation;
 pub(in crate::eval) use classic_lookup_kind::ClassicLookupKind;
 pub(in crate::eval) use context_reads::ContextReads;
 pub(in crate::eval) use dynamic_references::DynamicReferences;
 pub(in crate::eval) use error_handler::ErrorHandler;
 pub(in crate::eval) use extension_invocation::execute_extension;
+pub(in crate::eval) use formula_metadata::FormulaMetadata;
 pub(in crate::eval) use host_operand::HostOperand;
 pub(in crate::eval) use lookup_service::LookupService;
 pub(in crate::eval) use missing_policy::MissingPolicy;

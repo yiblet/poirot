@@ -18,6 +18,24 @@ pub(in crate::eval) fn execute(
     name: TextFunction,
     length: usize,
 ) -> EvalResult<Value> {
+    if name == TextFunction::FilterXml {
+        return adapters::text::execute_xml(host, at, length);
+    }
+    if matches!(
+        name,
+        TextFunction::LenB
+            | TextFunction::LeftB
+            | TextFunction::RightB
+            | TextFunction::MidB
+            | TextFunction::FindB
+            | TextFunction::SearchB
+            | TextFunction::ReplaceB
+    ) {
+        return adapters::text::execute_units(host, name, length);
+    }
+    if name == TextFunction::BahtText {
+        return adapters::text::execute_baht(host, at, length);
+    }
     if matches!(
         name,
         TextFunction::RegexTest | TextFunction::RegexExtract | TextFunction::RegexReplace

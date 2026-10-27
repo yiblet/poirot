@@ -6,6 +6,8 @@
 /// Worksheet publication of final array results.
 mod array_result_policy;
 
+mod byte_text_language;
+
 /// Calculation calendar bounds and workbook serial conversion.
 pub(in crate::eval) mod calendar;
 /// Numeric conversion of captured evaluation instants.
@@ -49,6 +51,8 @@ mod tests;
 pub(in crate::eval) mod timestamp;
 
 pub use array_result_policy::ArrayResultPolicy;
+
+pub use byte_text_language::ByteTextLanguage;
 pub use computation_fingerprint::ComputationFingerprint;
 pub use configuration_fingerprint::ConfigurationFingerprint;
 pub use context_fingerprint::ContextFingerprint;

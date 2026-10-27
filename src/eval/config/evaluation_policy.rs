@@ -26,6 +26,9 @@ pub struct EvaluationPolicy {
     pub arrays: ArrayResultPolicy,
     /// Compute possible producers or trust saved source results.
     pub producers: ProducerPolicy,
+    /// Selected Excel language class for legacy byte text operations.
+    #[serde(default)]
+    pub byte_text_language: super::byte_text_language::ByteTextLanguage,
 }
 
 impl Default for EvaluationPolicy {
@@ -36,6 +39,7 @@ impl Default for EvaluationPolicy {
 
             arrays: configuration.array_result_policy(),
             producers: configuration.producer_policy(),
+            byte_text_language: configuration.byte_text_language(),
         }
     }
 }

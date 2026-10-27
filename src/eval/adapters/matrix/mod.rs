@@ -8,6 +8,8 @@
 mod dispatch;
 mod grouping;
 mod modern;
+mod pivot_axis;
+mod pivot_executor;
 mod random_trim;
 mod regression;
 mod selection;
