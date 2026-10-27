@@ -186,17 +186,9 @@ for lifecycle details.
 
 ## Acknowledgements
 
-- [SXD-Document](https://github.com/shepmaster/sxd-document) and
-  [SXD-XPath](https://github.com/shepmaster/sxd-xpath) provide XML processing and XPath
-  evaluation for `FILTERXML` under MIT licenses. See
-  [provenance and notices](LICENSES/SXD.md).
-
 - [Unicode 17.0.0](https://www.unicode.org/Public/17.0.0/ucd/UnicodeData.txt)
   supplies the selected Japanese width and voiced-kana mappings, under
   [Unicode License V3](LICENSES/Unicode-17.txt).
-
-- [Calamine](https://github.com/tafia/calamine) provides streaming XLSX decoding and shared-formula translation.
-- [rust_xlsxwriter](https://github.com/jmcnamara/rust_xlsxwriter) authors fresh XLSX packages.
 - [Apache POI](https://poi.apache.org/) shaped Poirot from the start: our first few
   commits translated portions of its code into Rust. Our name is a nod to the
   project. Statistical kernels also adapt
@@ -206,22 +198,8 @@ for lifecycle details.
   and validate our implementation.
 - We adapted date handling and regression tests from
   [ClosedXML](https://github.com/ClosedXML/ClosedXML).
-  [IronCalc](https://github.com/ironcalc/IronCalc) provided design inspiration.
-
-- [PCRE2](https://github.com/PCRE2Project/pcre2) provides the regex engine through
-  the MIT-licensed [Rust bindings](https://github.com/BurntSushi/rust-pcre2).
-  See [PCRE2 provenance and notices](LICENSES/PCRE2.md).
-
 - [Boost.Math](https://github.com/boostorg/math) supplies the adapted binary64
   Bessel K approximations. See [source attribution and license](LICENSES/Boost-Math.md).
-
-- [MLIR shape inference](https://mlir.llvm.org/docs/ShapeInference/) and
-  [Futhark size types](https://futhark.readthedocs.io/en/latest/language-reference.html#size-types)
-  and [Julia broadcasting](https://docs.julialang.org/en/v1/manual/arrays/#Broadcasting)
-  informed the independently implemented formula type system. Their documentation,
-  consulted on 2026-10-23, helped separate element types, dimensions and inference
-  rules; no upstream implementation or tests were copied or translated. See the
-  [architecture overview](docs/architecture.md#types-and-spills).
 
 See [LICENSES/ACKNOWLEDGEMENTS](LICENSES/ACKNOWLEDGEMENTS) for credits and notices.
 Poirot's code is licensed under [MIT](LICENSES/MIT.txt).

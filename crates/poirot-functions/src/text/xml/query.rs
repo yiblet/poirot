@@ -11,9 +11,7 @@ use std::collections::BTreeMap;
 /// <https://support.microsoft.com/en-us/excel/functions/filterxml-function>.
 /// Its VBA reference limits XPath to 1,024 characters:
 /// <https://learn.microsoft.com/en-us/office/vba/api/excel.worksheetfunction.filterxml>.
-/// XML/XPath semantics come from the MIT-licensed SXD libraries; dependency
-/// revisions and notices are recorded in LICENSES/SXD.md. No upstream source,
-/// examples, or tests were copied or adapted into this implementation.
+/// XML parsing and XPath evaluation use the SXD libraries.
 ///
 /// XML is limited to 256 KiB and a combined count of 1,024 XML nodes, attributes
 /// and in-scope namespace bindings. Depth is at most 64, counting the document

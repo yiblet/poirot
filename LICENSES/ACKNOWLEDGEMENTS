@@ -16,13 +16,8 @@ Howard Hinnant date — MIT (MIT.txt); Gregorian calendar conversions.
 https://github.com/HowardHinnant/date/blob/5bdb7e6f31fac909c090a46dbd9fea27b6e609a4/include/date/date.h
 Published formulas are also public domain: https://howardhinnant.github.io/date_algorithms.html
 
-calamine 0.37.0 — MIT (MIT.txt); streaming XLSX decoding/shared-formula translation dependency and BIFF/CFB framing influence.
-https://github.com/tafia/calamine/tree/f2c5948242fdfe390e292313a1f87f9db19b9633
+calamine — MIT (MIT.txt); BIFF/CFB framing influence.
 https://github.com/tafia/calamine/tree/0a24c2a9f1e38c0932c1299e633270dc730db505
-
-rust_xlsxwriter 0.101.0 — MIT OR Apache-2.0, used under MIT (MIT.txt); XLSX package authoring dependency.
-https://github.com/jmcnamara/rust_xlsxwriter/tree/7d7a2ad88da602294658d489eb0275b24b3216c6
-No upstream source code or test fixtures copied.
 
 casefold — MIT (MIT.txt); adapted character lookup and Unicode 16 folding tables.
 https://github.com/github/rust-gems/tree/b8c6e27652f7f198a3a0f2183179948cd69be0c1/crates/casefold
@@ -52,9 +47,6 @@ Copyright (c) 2019 Jiangang Zhuang
 
 calamine
 Copyright (c) 2016 Johann Tuffe
-
-rust_xlsxwriter
-Copyright 2022-2026, John McNamara, jmcnamara@cpan.org
 
 casefold
 Copyright (c) 2023 GitHub Inc.
