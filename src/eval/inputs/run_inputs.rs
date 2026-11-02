@@ -9,7 +9,6 @@ use std::collections::BTreeMap;
 /// Sparse scenario assignments prepared for one shared workbook source.
 /// The source token prevents applying a batch to another baseline, while unique
 /// resolved coordinates let evaluation merge edits without ambiguous duplicates.
-/// Cloning copies edits and preserves the original source binding.
 #[derive(Clone)]
 pub struct RunInputs {
     /// Exclusive source edits in sparse coordinate order.

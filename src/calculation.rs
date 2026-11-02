@@ -200,14 +200,6 @@ impl<'a, W: Borrow<model::Workbook>> EvaluationBuilder<'a, W> {
 ///     CellValue::Number(15.));
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-///
-/// Cloning preserves edits, compiled preparation, and warm results in independent
-/// mutable storage. It clones the baseline handle: owned workbooks are copied,
-/// references stay borrowed, and `Arc` handles remain shared. Compiled programs
-/// and extension providers retain their existing shared ownership; providers are
-/// not deep copied. Cloning can be expensive.
-/// Work usage, failure state, and random-stream positions are also preserved;
-/// start a new cycle to reset execution.
 #[derive(Clone)]
 pub struct Evaluation<'a, W = &'a model::Workbook> {
     inner: eval::overlay::Calculation<'a, W>,
@@ -443,12 +435,6 @@ impl<'a, W: Borrow<model::Workbook>> OverlayBuilder<'a, W> {
 ///     CellValue::Number(15.));
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-///
-/// Cloning preserves edits, compiled preparation, and warm results in independent
-/// mutable storage. It clones the baseline handle: owned workbooks are copied,
-/// references stay borrowed, and `Arc` handles remain shared. Compiled programs
-/// and extension providers retain their existing shared ownership; providers are
-/// not deep copied. Cloning can be expensive.
 #[derive(Clone)]
 pub struct Overlay<'a, W = &'a model::Workbook> {
     inner: eval::overlay::Overlay<'a, W>,

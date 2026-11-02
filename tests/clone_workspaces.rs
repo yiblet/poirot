@@ -1,4 +1,3 @@
-//! Clone contracts use arithmetic expectations and compare independently edited branches.
 use poirot::calculation;
 use poirot::eval::{EvaluationContext, EvaluationLimits, EvaluationTarget, overlay};
 use poirot::model::{CellAddress, CellStore, CellValue, Workbook};
@@ -236,7 +235,6 @@ fn evaluation_clone_keeps_consumed_budget_and_failure_until_reset() {
 
 #[test]
 fn borrowed_cursors_clone_without_clone_payloads_at_the_current_position() {
-    /// Deliberately non-Clone payload for borrowed traversal.
     #[derive(Debug, PartialEq)]
     struct Payload(u32);
     let mut store: CellStore<Payload> = CellStore::default();

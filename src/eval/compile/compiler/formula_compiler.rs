@@ -23,7 +23,6 @@ type SourcePool = HashMap<Arc<str>, Arc<PreparedFormula>>;
 /// Each distinct source/policy pair is retained for this compiler's lifetime.
 /// Dropping it releases its references; compiled plans and prepared formulas held
 /// elsewhere keep their shared artifacts alive.
-/// Cloning copies cache membership and accounting while sharing immutable programs.
 #[derive(Clone, Default)]
 pub struct FormulaCompiler {
     // Policy groups are expected to be few, so only these use linear full-Eq search.
