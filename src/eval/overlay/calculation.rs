@@ -28,6 +28,15 @@ use std::borrow::Borrow;
 /// # Ok(())
 /// # }
 /// ```
+///
+/// Cloning preserves edits, compiled preparation, and warm results in independent
+/// mutable storage. It clones the baseline handle: owned workbooks are copied,
+/// references stay borrowed, and `Arc` handles remain shared. Compiled programs
+/// and extension providers retain their existing shared ownership; providers are
+/// not deep copied. Cloning can be expensive.
+/// Work usage, failure state, and random-stream positions are also preserved;
+/// start a new cycle to reset execution.
+#[derive(Clone)]
 pub struct Calculation<'a, W = &'a Workbook> {
     pub(super) inner: Evaluation<'a, W>,
     pub(super) profiling: bool,

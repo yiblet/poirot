@@ -7,7 +7,7 @@ use crate::model::CellAddress;
 /// Records a producer's blank and sparse reads that may overlap its eventual array output.
 /// Settlement uses this evidence to diagnose self-dependencies after the actual
 /// footprint is known and clears it together with the producer's attempt.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(in crate::eval) struct ProducerReadEvidence {
     pub(super) blank_points: CellMap<CellSet>,
     pub(super) sparse_ranges: CellMap<Vec<Area>>,

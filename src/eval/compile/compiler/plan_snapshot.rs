@@ -28,7 +28,7 @@ type Result<T> = std::result::Result<T, PlanSnapshotError>;
 pub(super) const VERSION: u32 = 23;
 
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct PlanSnapshot<'a> {
     pub(super) version: u32,
     pub(super) identity: Cow<'a, SourceIdentity>,

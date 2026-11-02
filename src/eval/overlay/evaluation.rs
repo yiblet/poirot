@@ -29,6 +29,15 @@ use std::cell::RefCell;
 /// Input edits and compiled formulas remain available between requests.
 /// Work usage accumulates across requests and edits. An operational failure remains
 /// active until [`Self::begin`] starts a new context and resets usage and results.
+///
+/// Cloning preserves edits, compiled preparation, and warm results in independent
+/// mutable storage. It clones the baseline handle: owned workbooks are copied,
+/// references stay borrowed, and `Arc` handles remain shared. Compiled programs
+/// and extension providers retain their existing shared ownership; providers are
+/// not deep copied. Cloning can be expensive.
+/// Work usage, failure state, and random-stream positions are also preserved;
+/// start a new cycle to reset execution.
+#[derive(Clone)]
 pub struct Evaluation<'a, W = &'a Workbook> {
     source: Source<'a, W>,
     context: EvaluationContext,
@@ -292,5 +301,61 @@ impl Evaluation<'static, &'static Workbook> {
         snapshot: snapshot::Snapshot<'_>,
     ) -> Result<(Workbook, WorkspaceState), OverlayError> {
         snapshot.restore()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Evaluation;
+    use crate::eval::config::EvaluationContext;
+    use crate::eval::coordinates::EvaluationTarget;
+    use crate::model::Workbook;
+
+    #[test]
+    fn clone_preserves_random_stream_position_without_sharing_mutation() {
+        let mut book = Workbook::new();
+        book.add_sheet("S")
+            .unwrap()
+            .set_formula("A1", "RAND()+RAND()")
+            .unwrap();
+        let target = EvaluationTarget {
+            sheet: 0,
+            address: "A1".parse().unwrap(),
+        };
+        let mut original = Evaluation::with_workbook(book)
+            .build(EvaluationContext {
+                randomness_seed: 73,
+                ..Default::default()
+            })
+            .unwrap();
+        original.cell(target).unwrap();
+        let mut sibling = original.clone();
+        let key = (target.sheet, target.address);
+        let left = &mut original
+            .state
+            .runtime
+            .effects
+            .random_streams
+            .get_mut(&key)
+            .unwrap()
+            .0;
+        let right = &mut sibling
+            .state
+            .runtime
+            .effects
+            .random_streams
+            .get_mut(&key)
+            .unwrap()
+            .0;
+        let mut fresh =
+            crate::eval::config::random::Stream::new(73, 0, target.address.row, target.address.col);
+        fresh.unit();
+        fresh.unit();
+        let next = fresh.unit();
+        let after = fresh.unit();
+        assert_eq!(left.unit(), next);
+        assert_eq!(left.unit(), after);
+        assert_eq!(right.unit(), next);
+        assert_eq!(right.unit(), after);
     }
 }

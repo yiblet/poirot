@@ -5,7 +5,7 @@ use crate::model::{Cell, CellAddress, ModelError};
 use std::collections::{BTreeMap, BTreeSet, btree_map};
 
 /// One sheet's exclusive edits, kept sparse even for isolated deletions.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(in crate::eval) struct InputCells {
     pub(super) edits: BTreeMap<CellAddress, CellEdit>,
     /// Derived coordinate-only column order; edit meaning lives exclusively in `edits`.

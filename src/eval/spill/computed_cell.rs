@@ -2,6 +2,7 @@ use crate::eval::values::ArrayView;
 use crate::model::CellValue;
 
 /// A completed worksheet value and its optional unpublished rectangular footprint.
+#[derive(Clone)]
 pub(in crate::eval) struct ComputedCell {
     pub(in crate::eval) value: CellValue,
     pub(in crate::eval) rows: Option<ArrayView>,

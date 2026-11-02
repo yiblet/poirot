@@ -24,6 +24,7 @@ use std::sync::Arc;
 pub const COMPATIBILITY_REVISION: u64 = 80;
 
 /// Serde view of a baseline workbook and its sparse overlay state.
+#[derive(Clone)]
 pub struct Snapshot<'a> {
     pub(super) state: SnapshotState<'a>,
 }

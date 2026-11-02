@@ -6,7 +6,7 @@ use crate::eval::values::Value;
 /// Reusable value and argument stacks for bytecode execution within a run.
 /// Nested calls retain their operands here so deferred adapters can revisit an
 /// argument without executing it again.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(in crate::eval) struct Machine {
     pub(in crate::eval) values: Vec<Value>,
     pub(in crate::eval) operands: Vec<Option<host::HostOperand>>,

@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 /// Runtime provider owner, excluded from serialized binding identity.
+#[derive(Clone)]
 pub(super) enum RegistryHandle<'a> {
     /// Caller-managed immutable registry.
     Borrowed(&'a crate::eval::functions::extensions::ExtensionRegistry),

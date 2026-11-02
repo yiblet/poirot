@@ -5,6 +5,7 @@ use crate::eval::values::Value;
 /// An evaluated argument retained before a consumer chooses scalar, array, or reference access.
 /// Syntax omission is kept separately so a blank worksheet cell cannot acquire
 /// omitted-argument defaults during coercion.
+#[derive(Clone)]
 pub(in crate::eval) struct HostOperand {
     /// Unprojected engine value.
     pub(super) value: Value,

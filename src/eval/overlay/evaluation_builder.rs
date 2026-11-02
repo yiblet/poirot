@@ -10,6 +10,7 @@ use std::borrow::Borrow;
 use std::sync::Arc;
 
 /// Configures the workbook, formula policies, and extensions for an evaluation.
+#[derive(Clone)]
 pub struct EvaluationBuilder<'a, W> {
     pub(super) source: OverlayBuilder<'a, W>,
 }

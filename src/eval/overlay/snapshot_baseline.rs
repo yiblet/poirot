@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Where restoration finds the workbook that serialized prepared state was built against.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub(super) enum SnapshotBaseline<'a> {
     /// Stored in the payload: detached snapshots and checkpoints with authored edits,
     /// whose baseline differs from the effective source saved beside them.

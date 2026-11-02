@@ -16,21 +16,21 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Portable compiled-source cache preserving shared executable ownership.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub(in crate::eval) struct CacheSnapshot<'a> {
     programs: Vec<Cow<'a, crate::eval::compile::bytecode::Executable>>,
     formulas: Vec<Formula<'a>>,
 }
 
 /// Exact source and its compiled body or deferred parse failure.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 struct Formula<'a> {
     source: CachedSource<'a>,
     body: Body<'a>,
 }
 
 /// Serialized compiler-cache entry retaining ready programs or preparation failures.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 enum Body<'a> {
     Ready {
         program: usize,

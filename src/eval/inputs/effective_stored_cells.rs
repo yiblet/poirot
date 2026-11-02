@@ -11,6 +11,7 @@ use crate::model::{Cell, CellAddress};
 /// Iterates stored cells after merging baseline content with scenario edits and deletions.
 /// Row and column queries visit the effective sparse union without materializing a
 /// second membership index; counters include source seeks and prefetched lookups.
+#[derive(Clone)]
 pub struct EffectiveStoredCells<'a> {
     pub(super) baseline: crate::model::WorksheetCells<'a>,
     pub(super) baseline_sheet: &'a crate::model::Worksheet,

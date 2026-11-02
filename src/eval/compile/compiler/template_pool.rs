@@ -9,7 +9,7 @@ use std::{
 /// Reuse indexes for one compiler policy: proven non-spilling formula classes,
 /// reference-rebinding candidates, and identical executable programs.
 /// Candidate hashes narrow lookup; exact comparisons still authorize sharing.
-#[derive(Default)]
+#[derive(Clone, Default)]
 // Hashes select candidate buckets only. Sharing still requires normalized-source
 // equality for rebinding, or full executable equality for structural interning.
 pub(super) struct TemplatePool {

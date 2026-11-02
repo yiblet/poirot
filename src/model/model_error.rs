@@ -2,7 +2,7 @@ use crate::model::snapshot_collection::SnapshotCollection;
 use crate::model::{CellAddress, FormulaSource};
 
 /// Failure to validate or mutate workbook source data.
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum ModelError {
     /// Serialized scalar-kind flags contain unknown alternatives.
     #[error("unknown scalar kind bits {bits:#x}")]

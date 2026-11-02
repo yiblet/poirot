@@ -4,7 +4,7 @@ use crate::model::query::RangeMembership;
 /// Finds cached consumers whose read rectangles include an edited cell on one sheet.
 /// Row-sorted entries and subtree bounds prune unrelated rectangles; matched entries
 /// can be consumed as invalidation advances through the dependency graph.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct RangeTree {
     pub(super) entries: Vec<(RangeMembership, Key)>,
     pub(super) max_end: Vec<Option<u32>>,

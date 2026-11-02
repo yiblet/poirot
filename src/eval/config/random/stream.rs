@@ -9,6 +9,7 @@ pub const STREAM_VERSION: u32 = 1;
 pub const INTEGER_WORK: u64 = 128;
 
 /// Reproducible generator owned by one evaluation cell.
+#[derive(Clone)]
 pub(in crate::eval) struct Stream {
     rng: ChaCha8Rng,
 }

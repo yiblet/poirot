@@ -1,7 +1,7 @@
 use crate::eval::inputs::InputError;
 
 /// A caller's preparation callback or assignment admission rejected shared inputs.
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum InputPreparationError<E> {
     /// The caller could not produce assignments.
     #[error("could not prepare scenario inputs")]

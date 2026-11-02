@@ -14,6 +14,7 @@ use std::cell::RefCell;
 use std::sync::Arc;
 
 /// Validated detached source and optional incremental results, awaiting a baseline handle.
+#[derive(Clone)]
 pub struct WorkspaceState {
     /// Postcard-encoded source snapshot of the baseline. It is decoded only to check a
     /// caller-supplied workbook, so restoration keeps no second owned model.

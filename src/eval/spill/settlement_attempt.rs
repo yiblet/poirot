@@ -7,6 +7,7 @@ use crate::model::CellAddress;
 /// Rollback state for one connected group of competing array producers.
 /// It tracks provisional admissions and delayed notifications so retries can discard
 /// this attempt without removing results settled earlier in the run.
+#[derive(Clone)]
 pub(super) struct SettlementAttempt {
     pub(super) selected: std::collections::BTreeSet<(usize, CellAddress)>,
     pub(super) blocked: CellSet,

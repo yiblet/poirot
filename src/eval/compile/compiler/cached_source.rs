@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 /// Formula text of a compiler-cache entry: borrowed from the compiler while capturing,
 /// and decoded straight into the shared allocation the restored compiler keeps.
+#[derive(Clone)]
 pub(super) enum CachedSource<'a> {
     /// Source key borrowed from the captured compiler.
     Borrowed(&'a str),

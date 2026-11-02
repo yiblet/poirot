@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 /// Shared bytecode template and serialized call bindings.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub(super) struct ProgramDto<'a> {
     pub(super) typing: Cow<'a, crate::eval::compile::typing::FormulaTyping>,
     pub(super) template: Cow<'a, Template>,

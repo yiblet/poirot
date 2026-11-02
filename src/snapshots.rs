@@ -43,7 +43,7 @@ pub use crate::model::snapshot::Snapshot as WorkbookSnapshot;
 ///     .from_bytes(&bytes).is_err());
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct RestoreBuilder {
     inner: eval::artifact::SnapshotLoadBuilder,
 }
@@ -99,6 +99,7 @@ impl RestoreBuilder {
 ///     poirot::model::CellValue::Number(42.));
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[derive(Clone)]
 pub struct RestoredWorkbook {
     inner: eval::artifact::RestoredArtifact,
 }
@@ -158,6 +159,7 @@ impl RestoredWorkbook {
 /// assert_eq!(run.evaluation.cell(input)?, poirot::model::CellValue::Number(42.));
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[derive(Clone)]
 pub struct RestoredEvaluation {
     /// Ordinary direct execution, with effective file export.
     pub evaluation: Evaluation<'static, model::Workbook>,

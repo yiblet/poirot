@@ -3,7 +3,7 @@ use crate::{CellError, CellValue, ExcelText};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 /// Lossless snapshot value encoding numeric bits and exact UTF-16 units.
-#[derive(PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Value<'a> {
     /// Empty saved value.
     Blank,

@@ -1,5 +1,5 @@
 /// A retained-result mutation could not preserve cache coordinates or accounting.
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum CacheError {
     /// Cell coordinates are outside the worksheet grid.
     #[error("invalid cached coordinate")]
