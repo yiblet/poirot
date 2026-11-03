@@ -5,7 +5,7 @@ use crate::model::CellValue;
 
 /// A borrowed observation after each recursive cell call resolves, including
 /// semantic errors and operational aborts. No result copy is retained by the engine.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct CellCompletion<'a> {
     /// Formula that requested this cell, when available.
     pub consumer: Option<EvaluationTarget>,

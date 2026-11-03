@@ -4,6 +4,7 @@ use crate::eval::coordinates::EvaluationTarget;
 
 /// A requested cell, prepared formula, or bound expression evaluated at a target cell.
 /// Several probes in one [`EvaluationRun`](super::EvaluationRun) share that run's memoized dependencies.
+#[derive(Clone)]
 pub enum EvaluationProbe<'a> {
     /// Evaluate the workbook cell at the requested target.
     Cell(EvaluationTarget),

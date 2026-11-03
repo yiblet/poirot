@@ -4,6 +4,7 @@ use crate::model::CellValue;
 use std::sync::Arc;
 
 /// One retained result and the dependencies needed to validate its reuse.
+#[derive(Clone)]
 pub(in crate::eval) struct Cached {
     /// Shared result storage, independent of the evaluation that produced it.
     pub value: Arc<CellValue>,

@@ -3,7 +3,7 @@ use super::preparation_policy::PreparationPolicy;
 /// Recognizes formulas that differ only in point-cell references and are proven not to spill.
 /// Exact literal gaps and checked coordinates let discovery reuse that classification
 /// without parsing each similar formula again.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct ScalarMatcher {
     pub(super) source: String,
     pub(super) cells: Vec<(usize, usize)>,

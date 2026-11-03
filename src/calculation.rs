@@ -103,6 +103,7 @@ pub use poirot_parsing::formula::FormulaParsePolicy;
 /// assert_eq!(run.cell(output)?, CellValue::Number(12.));
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[derive(Clone)]
 pub struct EvaluationBuilder<'a, W = &'a model::Workbook> {
     inner: eval::overlay::EvaluationBuilder<'a, W>,
     context: Option<EvaluationContext>,
@@ -199,6 +200,7 @@ impl<'a, W: Borrow<model::Workbook>> EvaluationBuilder<'a, W> {
 ///     CellValue::Number(15.));
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[derive(Clone)]
 pub struct Evaluation<'a, W = &'a model::Workbook> {
     inner: eval::overlay::Calculation<'a, W>,
 }
@@ -362,6 +364,7 @@ impl<'a, W: Borrow<model::Workbook>> Evaluation<'a, W> {
 ///     CellValue::Number(4.));
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[derive(Clone)]
 pub struct OverlayBuilder<'a, W = &'a model::Workbook> {
     inner: eval::overlay::OverlayBuilder<'a, W>,
 }
@@ -432,6 +435,7 @@ impl<'a, W: Borrow<model::Workbook>> OverlayBuilder<'a, W> {
 ///     CellValue::Number(15.));
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[derive(Clone)]
 pub struct Overlay<'a, W = &'a model::Workbook> {
     inner: eval::overlay::Overlay<'a, W>,
 }

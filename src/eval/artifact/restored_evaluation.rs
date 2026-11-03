@@ -3,6 +3,7 @@ use crate::eval::overlay::Evaluation;
 use crate::model::Workbook;
 
 /// Direct calculation restored with an explicit disposition of persisted preparation.
+#[derive(Clone)]
 pub struct RestoredEvaluation {
     /// Direct execution with source and compilation ready to use.
     pub evaluation: Evaluation<'static, Workbook>,

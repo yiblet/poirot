@@ -11,6 +11,7 @@ use crate::eval::vm::Machine;
 
 /// Execution storage retained across cell and output calls, composed of one
 /// component per concern. A persistent workspace lends it to each session it starts.
+#[derive(Clone)]
 pub(in crate::eval) struct Runtime {
     /// Value and operand stacks of the bytecode VM.
     pub(in crate::eval) vm: Machine,

@@ -6,6 +6,7 @@ use crate::eval::limits::EvaluationBudgets;
 /// Use with [`run_formula_with_extensions`](crate::eval::run_formula_with_extensions) or
 /// [`run_cell_with_extensions`](crate::eval::run_cell_with_extensions); the overlay
 /// builder accepts the runtime extension registry.
+#[derive(Clone)]
 pub struct ExtensionExecution<'a> {
     /// Installed providers and exact binding identities.
     pub registry: &'a ExtensionRegistry,

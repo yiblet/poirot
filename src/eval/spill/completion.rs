@@ -4,6 +4,7 @@ use crate::eval::ports::CellProvenance;
 use crate::model::CellValue;
 
 /// Owned cell completion withheld until actual ownership has settled.
+#[derive(Clone)]
 pub(super) struct Completion {
     pub(super) consumer: Option<EvaluationTarget>,
     pub(super) target: EvaluationTarget,

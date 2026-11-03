@@ -8,6 +8,7 @@ use crate::model::Workbook;
 use std::{borrow::Borrow, cell::RefCell, sync::Arc};
 
 /// Configures an overlay's workbook, formula policies, and custom functions.
+#[derive(Clone)]
 pub struct OverlayBuilder<'a, W> {
     pub(super) workbook: W,
     pub(super) policy: EvaluationPolicy,

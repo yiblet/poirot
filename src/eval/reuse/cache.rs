@@ -16,7 +16,7 @@ use std::collections::BTreeSet;
 type Entries = CellMap<Cached>;
 
 /// Persistent overlay results with reverse edges for transitive invalidation.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(in crate::eval) struct Cache {
     /// Live results keyed without worksheet spatial indexes.
     pub entries: Entries,
@@ -364,5 +364,73 @@ impl Cache {
         self.ranges = RangeIndex::new(&self.entries);
         self.spill_ranges = RangeIndex::build(&self.entries, RangePurpose::SpillGeometry);
         self.ranges_dirty = false;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Cache;
+    use crate::eval::reuse::cached::Cached;
+    use crate::eval::reuse::dependencies::Dependencies;
+    use crate::eval::reuse::validity::Validity;
+    use crate::model::CellValue;
+    use crate::model::query::RangeMembership;
+    use std::sync::Arc;
+
+    #[test]
+    fn clone_preserves_versions_accounting_and_built_range_indexes() {
+        let input = (0, "A1".parse().unwrap());
+        let output = (0, "B1".parse().unwrap());
+        let area = RangeMembership::new(0, input.1, "A100".parse().unwrap()).unwrap();
+        let mut original = Cache::default();
+        original
+            .insert(
+                output,
+                Cached {
+                    value: Arc::new(CellValue::Number(2.)),
+                    version: 0,
+                    validity: Validity::Clean,
+                    dependencies: Box::new(Dependencies {
+                        cells: vec![input],
+                        ranges: vec![area],
+                        ..Default::default()
+                    }),
+                },
+            )
+            .unwrap();
+        original.rebuild_ranges();
+        original.spill_resets.insert(output);
+        let mut sibling = original.clone();
+        assert_eq!(original.next_version, sibling.next_version);
+        assert_eq!(original.retained_bytes, sibling.retained_bytes);
+        assert_eq!(original.ranges_dirty, sibling.ranges_dirty);
+        assert_eq!(original.spill_resets, sibling.spill_resets);
+        assert_eq!(
+            original.ranges.sheets[&0].entries,
+            sibling.ranges.sheets[&0].entries
+        );
+        assert_eq!(
+            original.ranges.sheets[&0].max_end,
+            sibling.ranges.sheets[&0].max_end
+        );
+        let before = original.retained(output).unwrap();
+        let after = sibling.retained(output).unwrap();
+        assert_eq!(before.version, after.version);
+        assert_eq!(before.dependencies, after.dependencies);
+        assert!(Arc::ptr_eq(&before.value, &after.value));
+        assert!(!std::ptr::eq(
+            before.dependencies.as_ref(),
+            after.dependencies.as_ref()
+        ));
+        sibling.invalidate_values([(0, "A50".parse().unwrap())]);
+        assert!(sibling.get(output).is_none());
+        assert!(original.get(output).is_some());
+        let mut dirty = sibling.clone();
+        assert!(dirty.get(output).is_none());
+        assert_eq!(dirty.next_version, sibling.next_version);
+        assert_eq!(dirty.retained_bytes, sibling.retained_bytes);
+        dirty.remove(output);
+        assert!(sibling.retained(output).is_some());
+        assert!(original.get(output).is_some());
     }
 }

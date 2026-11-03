@@ -6,7 +6,7 @@ use crate::model::CellAddress;
 
 /// Memoized cell results, the admissions of the current call and the retained
 /// memo size checked against retention limits.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(in crate::eval) struct ResultMemo {
     /// Evaluated cell results keyed by target.
     pub(in crate::eval) cache: CellMemo,

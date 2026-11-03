@@ -6,6 +6,7 @@ use crate::model::CellAddress;
 use crate::model::query::{QueryCounters, RangeMembership};
 
 /// Column-ordered key cursor borrowing authoritative edits without scanning other columns.
+#[derive(Clone)]
 pub(super) struct InputColumn<'a> {
     pub(super) range: std::collections::btree_set::Range<'a, (u32, u32)>,
     pub(super) edits: &'a InputCells,

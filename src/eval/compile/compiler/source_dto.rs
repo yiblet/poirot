@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 /// One source's program index, concrete references, and conservative dependency guards.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub(super) struct SourceDto<'a> {
     pub(super) source: Cow<'a, str>,
     pub(super) program: usize,

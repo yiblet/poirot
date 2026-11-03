@@ -20,6 +20,7 @@ use std::path::Path;
 /// ```
 #[derive(Default)]
 #[must_use]
+#[derive(Clone)]
 pub struct SnapshotLoadBuilder {
     pub(super) limits: SnapshotLimits,
     pub(super) policy: PreparedPolicy,

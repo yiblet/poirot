@@ -39,7 +39,7 @@ pub use poirot_io::{
 /// assert_eq!(loaded.sheets().len(), 1);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 #[must_use]
 pub struct LoadBuilder {
     options: io::ReadOptions,

@@ -16,7 +16,7 @@ use crate::model::CellAddress;
 /// Tracks array discovery, provisional producer results, and settled spill ownership for a run.
 /// Settlement keeps competing footprints private here until they can be admitted
 /// and published without exposing a partially resolved component.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(in crate::eval) struct SpillPreparation {
     pub(super) failure: Option<EvaluationError>,
     pub(super) candidates: CandidateIndex,

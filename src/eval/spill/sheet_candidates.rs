@@ -8,7 +8,7 @@ use crate::model::CellAddress;
 /// A sheet's possible array producers and the source regions already inspected for them.
 /// The inspected prefixes prove discovery is complete for a demand; candidate
 /// rectangles only bound possible footprints and do not establish ownership.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(in crate::eval) struct SheetCandidates {
     pub(super) candidates: Vec<ProducerCandidate>,
     /// Monotone maximum possible ending row through each ordered candidate.

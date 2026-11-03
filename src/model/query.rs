@@ -140,6 +140,13 @@ impl WorkbookRead for Workbook {
 pub struct WorkbookView<'a, R: WorkbookRead + ?Sized> {
     source: &'a R,
 }
+impl<R: WorkbookRead + ?Sized> Clone for WorkbookView<'_, R> {
+    fn clone(&self) -> Self {
+        Self {
+            source: self.source,
+        }
+    }
+}
 impl<'a, R: WorkbookRead + ?Sized> WorkbookView<'a, R> {
     /// Borrow a workbook-readable source without copying its cells.
     pub fn new(source: &'a R) -> Self {
@@ -218,6 +225,7 @@ impl<'a, R: WorkbookRead + ?Sized> WorkbookView<'a, R> {
 /// Sparse iterator over stored cells in one rectangular query area, with traversal costs.
 /// It seeks occupied rows and requested columns directly rather than retaining a
 /// separate index that could become stale after model mutations.
+#[derive(Clone)]
 pub struct StoredCells<'a> {
     sheet: &'a Worksheet,
     area: RangeMembership,
@@ -274,6 +282,7 @@ impl<'a> Iterator for StoredCells<'a> {
 }
 
 /// Reverse counterpart to StoredCells: seeks occupied rows and visits only selected columns.
+#[derive(Clone)]
 pub struct StoredCellsReverse<'a> {
     sheet: &'a Worksheet,
     area: RangeMembership,

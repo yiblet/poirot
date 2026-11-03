@@ -28,6 +28,7 @@ use std::borrow::Borrow;
 /// # Ok(())
 /// # }
 /// ```
+#[derive(Clone)]
 pub struct Calculation<'a, W = &'a Workbook> {
     pub(super) inner: Evaluation<'a, W>,
     pub(super) profiling: bool,

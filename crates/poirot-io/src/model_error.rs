@@ -1,5 +1,5 @@
 /// Invalid file-model values that cannot be represented faithfully.
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum ModelError {
     /// Invalid scalar input.
     #[error("invalid scalar value")]

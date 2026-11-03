@@ -16,6 +16,7 @@ use std::borrow::Borrow;
 use std::cell::RefCell;
 
 /// Baseline handle plus authored diff and compilation; contains no evaluated results.
+#[derive(Clone)]
 pub(super) struct Source<'a, W> {
     /// Immutable borrowed or shared baseline handle.
     pub workbook: W,

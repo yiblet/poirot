@@ -3,6 +3,7 @@ use crate::eval::overlay::Overlay;
 use crate::model::Workbook;
 
 /// Restored preparation or independently recovered source awaiting an explicit policy.
+#[derive(Clone)]
 pub enum RestoredCheckpoint {
     /// Validated preparation attached to its owned original baseline.
     Prepared(Box<Overlay<'static, Workbook>>),

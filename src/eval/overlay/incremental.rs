@@ -20,6 +20,7 @@ use std::{borrow::Borrow, cell::RefCell, sync::Arc};
 /// Edits and intermediate results remain available between evaluations.
 /// Input edits leave the baseline unchanged until explicitly applied or flushed.
 /// Select outputs through [`Overlay::evaluation`].
+#[derive(Clone)]
 pub struct Overlay<'a, W = &'a Workbook> {
     pub(super) source: Source<'a, W>,
     pub(super) cache: RefCell<Cache>,

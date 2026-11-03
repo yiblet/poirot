@@ -1,5 +1,5 @@
 /// Structural rejection of persisted compiled programs.
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum PlanSnapshotError {
     /// Allocation failed while checking which call owns each contextual reducer.
     #[error("could not reserve contextual reducer validation state")]

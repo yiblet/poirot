@@ -1,5 +1,5 @@
 /// Structural rejection of persisted lookup search evidence.
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum LookupPrefixError {
     /// Lookup prefix axis geometry.
     #[error("lookup prefix axis geometry")]
