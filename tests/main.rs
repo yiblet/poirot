@@ -2,7 +2,7 @@
 //! Add a new test file here as a module; Cargo does not discover it automatically.
 mod absent_source_reads;
 mod cell_lifecycle;
-mod clone_workspaces;
+mod clone_overlays_and_evaluations;
 mod cohesive_io;
 mod complex_artifacts;
 mod database_blank_criteria;

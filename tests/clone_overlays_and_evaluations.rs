@@ -267,7 +267,7 @@ fn borrowed_cursors_clone_without_clone_payloads_at_the_current_position() {
 }
 
 #[test]
-fn public_clone_bounds_cover_workspace_ownership_and_retained_state() {
+fn public_clone_bounds_cover_baseline_ownership_and_retained_state() {
     fn cloneable<T: Clone>() {}
     cloneable::<overlay::Overlay<'static, Workbook>>();
     cloneable::<overlay::Overlay<'static, &'static Workbook>>();
