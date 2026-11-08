@@ -39,14 +39,14 @@ class MatrixTests(unittest.TestCase):
             self.assertIsNotNone(trigger)
             return {item.strip() for item in trigger.group(1).split(',')}
 
-        for filename in ('ci.yml', 'release-validation.yml'):
+        for filename in ('ci.yml', 'rust-tests.yml', 'release-validation.yml'):
             with self.subTest(workflow=filename):
                 self.assertEqual(actions(filename), {'opened', 'synchronize', 'reopened'})
         self.assertEqual(actions('additional-ci.yml'), {'labeled'})
 
     def test_routine_release_and_label_expansion(self):
         """Run two routine builds, six release builds, or four extra label builds."""
-        program = script('Select build configurations', WORKFLOW.with_name('ci.yml'))
+        program = script('Select build configurations', WORKFLOW.with_name('rust-tests.yml'))
         program = program.split("python3 - <<'PYTHON'\n", 1)[1].split('\nPYTHON', 1)[0]
         for expanded, label, flags in [(False, False, ['']),
                                        (True, False, ['', '--no-default-features', '--all-features']),
@@ -61,48 +61,6 @@ class MatrixTests(unittest.TestCase):
                 expected = {(toolchain, flag) for toolchain in ('stable', '1.90.0') for flag in flags}
                 self.assertEqual({(item['toolchain'], item['flags']) for item in matrix}, expected)
                 self.assertEqual(len(matrix), len(expected))
-
-
-class RustChangeTests(unittest.TestCase):
-    """Run Rust tests for Rust inputs and explicitly requested release checks."""
-
-    def test_changed_paths_and_explicit_requests(self):
-        """Handle nested crates, removals, docs-only PRs, and manual releases."""
-        program = script('Detect Rust changes', WORKFLOW.with_name('ci.yml'))
-        program = program.split("python3 - <<'PYTHON'\n", 1)[1].split('\nPYTHON', 1)[0]
-        cases = [
-            ('pull_request', False, 'base', ['README.md', 'docs/guide.md'], False),
-            ('pull_request', False, 'base', ['.github/workflows/ci.yml'], False),
-            ('pull_request', False, 'base', ['tools/test_release.py'], False),
-            ('pull_request', False, 'base', [], False),
-            ('pull_request', False, 'base', ['src/lib.rs'], True),
-            ('pull_request', False, 'base', ['crates/functions/src/test.rs'], True),
-            ('pull_request', False, 'base', ['Cargo.toml'], True),
-            ('pull_request', False, 'base', ['Cargo.lock'], True),
-            ('push', False, 'base', ['benchmarks/rust/Cargo.lock'], True),
-            ('push', False, 'base', ['crates/parsing/Cargo.toml'], True),
-            ('push', False, 'base', ['README.md'], False),
-            ('push', False, '0' * 40, [], True),
-            ('pull_request', True, 'base', ['README.md'], True),
-            ('workflow_dispatch', False, '', [], True),
-            ('workflow_call', False, '', [], True),
-        ]
-        for event, expanded, base, paths, expected in cases:
-            with self.subTest(event=event, paths=paths, expanded=expanded), tempfile.TemporaryDirectory() as directory:
-                output = Path(directory) / 'output'
-                with patch.dict(os.environ, {'GITHUB_OUTPUT': str(output),
-                                              'EVENT_NAME': event, 'BASE_SHA': base,
-                                              'HEAD_SHA': 'head', 'ALL_BUILDS': str(expanded).lower()}):
-                    with patch('subprocess.check_output', return_value='\0'.join(paths).encode()) as diff:
-                        exec(program, {})
-                        if not expanded and event in ('pull_request', 'push') and base == 'base':
-                            separator = '...' if event == 'pull_request' else '..'
-                            diff.assert_called_once_with([
-                                'git', 'diff', '--name-only', '--no-renames', '-z',
-                                'base' + separator + 'head', '--'])
-                        else:
-                            diff.assert_not_called()
-                self.assertEqual(output.read_text(), f'rust-changes={str(expected).lower()}\n')
 
 
 class PreparationTests(unittest.TestCase):

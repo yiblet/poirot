@@ -7,17 +7,8 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
-    inputs:
-      all-builds:
-        description: Run the complete feature matrix
-        type: boolean
-        default: false
   workflow_call:
     inputs:
-      all-builds:
-        description: Run the feature matrix before publishing
-        type: boolean
-        default: false
       ref:
         type: string
         default: ''
@@ -30,7 +21,6 @@ env:
 
 jobs:
   linux:
-    if: github.event.action != 'labeled'
     concurrency:
       group: ${{ github.workflow }}-quality-${{ github.event.pull_request.number || github.ref }}
       cancel-in-progress: true
@@ -67,103 +57,3 @@ jobs:
           python3 tools/test_error_patterns.py --self-test
           python3 tools/test_error_patterns.py
           python3 crates/poirot-test-excel-specs/tools/maintain.py --check
-
-  build-matrix:
-    name: Configure builds
-    runs-on: ubuntu-latest
-    env:
-      ALL_BUILDS: >-
-        ${{ inputs.all-builds == true ||
-            contains(github.event.pull_request.labels.*.name, 'release') ||
-            contains(github.event.pull_request.labels.*.name, 'all-builds') }}
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-      rust-changes: ${{ steps.changes.outputs.rust-changes }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.ref || github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Detect Rust changes
-        id: changes
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: |
-          python3 - <<'PYTHON'
-          import os
-          from pathlib import PurePosixPath
-          import subprocess
-
-          event = os.environ["EVENT_NAME"]
-          base = os.environ["BASE_SHA"]
-          run = os.environ["ALL_BUILDS"] == "true" or event not in ("pull_request", "push")
-          if not run:
-              if not base or set(base) == {"0"}:
-                  run = True
-              else:
-                  separator = "..." if event == "pull_request" else ".."
-                  changes = subprocess.check_output([
-                      "git", "diff", "--name-only", "--no-renames", "-z",
-                      base + separator + os.environ["HEAD_SHA"], "--",
-                  ]).decode().split("\0")
-                  run = any(path.endswith(".rs") or PurePosixPath(path).name in
-                            ("Cargo.toml", "Cargo.lock") for path in changes)
-          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-              output.write(f"rust-changes={str(run).lower()}\n")
-          PYTHON
-      - name: Select build configurations
-        id: matrix
-        env:
-          LABEL_EXPANSION: ${{ github.event.action == 'labeled' }}
-        run: |
-          python3 - <<'PYTHON'
-          import json
-          import os
-
-          features = [("default features", "")]
-          if os.environ["ALL_BUILDS"] == "true":
-              if os.environ["LABEL_EXPANSION"] == "true":
-                  features = []
-              features += [
-                  ("no default features", "--no-default-features"),
-                  ("all features", "--all-features"),
-              ]
-          builds = [
-              {
-                  "name": f"{rust} / {feature}",
-                  "os": "ubuntu-latest",
-                  "toolchain": toolchain,
-                  "flags": flags,
-              }
-              for rust, toolchain in [("stable", "stable"), ("MSRV", "1.90.0")]
-              for feature, flags in features
-          ]
-          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-              output.write("matrix=" + json.dumps({"include": builds}) + "\n")
-          PYTHON
-
-  features:
-    name: Builds (${{ matrix.name }})
-    needs: build-matrix
-    if: needs.build-matrix.outputs.rust-changes == 'true'
-    concurrency:
-      group: ${{ github.workflow }}-build-${{ github.event.pull_request.number || github.ref }}-${{ matrix.toolchain }}-${{ matrix.flags }}
-      cancel-in-progress: true
-    runs-on: ${{ matrix.os }}
-    env:
-      RUSTUP_TOOLCHAIN: ${{ matrix.toolchain }}
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.build-matrix.outputs.matrix) }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.ref || github.sha }}
-          persist-credentials: false
-      - name: Install Rust
-        run: rustup toolchain install ${{ matrix.toolchain }} --profile minimal
-      - name: Test workspace
-        run: cargo test --workspace ${{ matrix.flags }} --locked
