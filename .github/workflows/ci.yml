@@ -6,12 +6,21 @@ on:
       - master
   pull_request:
     types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+    inputs:
+      all-builds:
+        description: Run the complete feature matrix
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       all-builds:
         description: Run the feature matrix before publishing
         type: boolean
         default: false
+      ref:
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -30,6 +39,9 @@ jobs:
       RUSTUP_TOOLCHAIN: stable
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
       - name: Install Rust
         run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
       - name: Check formatting
@@ -45,6 +57,7 @@ jobs:
           python3 tools/test_package_contents.py
           python3 tools/test_release.py
           python3 tools/test_set_release_version.py
+          python3 tools/test_release_workflows.py
       - name: Check architecture and authored specifications
         run: |
           python3 tools/test_function_architecture.py
@@ -114,6 +127,9 @@ jobs:
       matrix: ${{ fromJSON(needs.build-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
       - name: Install Rust
         run: rustup toolchain install ${{ matrix.toolchain }} --profile minimal
       - name: Test workspace

@@ -1,9 +1,15 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  pull_request:
+    branches: [master]
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'Merged commit to release or retry (defaults to current master)'
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -17,14 +23,22 @@ env:
 
 jobs:
   version:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged && contains(github.event.pull_request.labels.*.name, 'release'))
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      commit: ${{ steps.version.outputs.commit }}
     steps:
       - uses: actions/checkout@v7
-      - name: Match the tag to every production crate version
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha || inputs.commit || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify merged commit and aligned production versions
+        id: version
         run: |
-          python3 - <<'PY'
+          git merge-base --is-ancestor HEAD origin/master
+          python3 - <<'PYCODE'
           import json
           import os
           import subprocess
@@ -32,47 +46,95 @@ jobs:
           metadata = json.loads(subprocess.check_output([
               'cargo', 'metadata', '--no-deps', '--locked', '--format-version', '1',
           ]))
-          tag = os.environ['RELEASE_TAG']
-          for package in metadata['packages']:
-              if package['id'] not in metadata['workspace_members'] or package['publish'] == []:
-                  continue
-              expected = 'v' + package['version']
-              if tag != expected:
-                  raise SystemExit(f"{package['name']}: expected tag {expected}, got {tag}")
-          PY
+          versions = {
+              package['version'] for package in metadata['packages']
+              if package['id'] in metadata['workspace_members'] and package['publish'] != []
+          }
+          if len(versions) != 1:
+              raise SystemExit(f'Production crate versions differ: {sorted(versions)}')
+          tag = 'v' + versions.pop()
+          commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'tag={tag}\ncommit={commit}\n')
+          PYCODE
+          tag=$(sed -n 's/^tag=//p' "$GITHUB_OUTPUT")
+          if git show-ref --verify --quiet "refs/tags/$tag"; then
+            test "$(git rev-parse "$tag^{commit}")" = "$(git rev-parse HEAD)" || {
+              echo 'This version is already tagged at another commit'; exit 1;
+            }
+          fi
 
   checks:
     needs: version
     uses: ./.github/workflows/ci.yml
     with:
       all-builds: true
+      ref: ${{ needs.version.outputs.commit }}
 
   validation:
     needs: version
     uses: ./.github/workflows/release-validation.yml
+    with:
+      ref: ${{ needs.version.outputs.commit }}
 
   publish:
-    needs: [checks, validation]
+    needs: [version, checks, validation]
     runs-on: ubuntu-latest
     environment: release
     permissions:
       contents: write
+    env:
+      RELEASE_TAG: ${{ needs.version.outputs.tag }}
+      RELEASE_COMMIT: ${{ needs.version.outputs.commit }}
+      RUSTUP_TOOLCHAIN: stable
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
       - name: Install Rust
         run: rustup toolchain install stable --profile minimal
+      - name: Determine publication order
+        run: python3 tools/verify_release.py --order > "$RUNNER_TEMP/publish-order.txt"
+      - name: Create annotated release tag
+        env:
+          RELEASE_SSH_KEY: ${{ secrets.RELEASE_SSH_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test -n "$RELEASE_SSH_KEY" || { echo 'RELEASE_SSH_KEY environment secret is missing'; exit 1; }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            test "$(git cat-file -t "$RELEASE_TAG")" = tag
+            test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$RELEASE_COMMIT"
+            test "$(git for-each-ref --format='%(contents:subject)' "refs/tags/$RELEASE_TAG")" = "chore: release $RELEASE_TAG"
+          else
+            git tag -a "$RELEASE_TAG" "$RELEASE_COMMIT" -m "chore: release $RELEASE_TAG"
+          fi
+          umask 077
+          trap 'rm -f "$RUNNER_TEMP/release-key" "$RUNNER_TEMP/release-known-hosts"' EXIT
+          printf '%s\n' "$RELEASE_SSH_KEY" > "$RUNNER_TEMP/release-key"
+          gh api meta --jq '.ssh_keys[] | "github.com " + .' > "$RUNNER_TEMP/release-known-hosts"
+          export GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/release-key -o IdentitiesOnly=yes -o UserKnownHostsFile=$RUNNER_TEMP/release-known-hosts -o StrictHostKeyChecking=yes"
+          git push "git@github.com:$GITHUB_REPOSITORY.git" "refs/tags/$RELEASE_TAG"
       - name: Publish production crates in dependency order
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-          RUSTUP_TOOLCHAIN: stable
         run: |
-          test -n "$CARGO_REGISTRY_TOKEN" || { echo 'CARGO_REGISTRY_TOKEN secret is missing'; exit 1; }
-          python3 tools/verify_release.py --order > "$RUNNER_TEMP/publish-order.txt"
+          test -n "$CARGO_REGISTRY_TOKEN" || { echo 'CARGO_REGISTRY_TOKEN environment secret is missing'; exit 1; }
           while read -r package version; do
-            cargo publish -p "$package" --locked
+            status=$(curl --silent --show-error --retry 3 --user-agent 'poirot-release (https://github.com/yiblet/poirot)' --output "$RUNNER_TEMP/registry-version.json" --write-out '%{http_code}' "https://crates.io/api/v1/crates/$package/$version")
+            case "$status" in
+              200) echo "$package $version is already published" ;;
+              404) cargo publish -p "$package" --locked --no-verify ;;
+              *) echo "Could not check $package $version: HTTP $status"; exit 1 ;;
+            esac
           done < "$RUNNER_TEMP/publish-order.txt"
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: gh release create "$RELEASE_TAG" --verify-tag --generate-notes --title "Poirot $RELEASE_TAG"
+        run: |
+          if ! gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag --generate-notes --title "Poirot $RELEASE_TAG"
+          fi

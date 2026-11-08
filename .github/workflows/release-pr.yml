@@ -1,0 +1,87 @@
+name: Prepare release
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-pr
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Check for an active release
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      prepare: ${{ steps.plan.outputs.prepare }}
+    steps:
+      - name: Decide whether to prepare a release
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            echo 'prepare=true' >> "$GITHUB_OUTPUT"
+          else
+            active=$(gh pr list --repo "$GITHUB_REPOSITORY" --base master --state open --limit 100 --json headRefName,isCrossRepository --jq 'any(.[]; (.isCrossRepository == false) and (.headRefName | startswith("release/next-")))')
+            echo "prepare=$active" >> "$GITHUB_OUTPUT"
+          fi
+
+  prepare:
+    needs: plan
+    if: needs.plan.outputs.prepare == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal
+      - name: Choose versions and prepare release PR
+        id: release
+        # release-plz/action, Apache-2.0; pinned official action for release PRs.
+        # https://github.com/release-plz/action/tree/66b324fd6c72d05d2a08568492ecdd62bfb8a62b
+        uses: release-plz/action@66b324fd6c72d05d2a08568492ecdd62bfb8a62b # v0.5
+        with:
+          command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RUSTUP_TOOLCHAIN: stable
+      - name: Align release files and run candidate checks
+        if: steps.release.outputs.pr != '' && steps.release.outputs.pr != 'null'
+        env:
+          RELEASE_PR: ${{ steps.release.outputs.pr }}
+          GH_TOKEN: ${{ github.token }}
+          RUSTUP_TOOLCHAIN: stable
+        run: |
+          branch=$(jq -er '.head_branch' <<< "$RELEASE_PR")
+          case "$branch" in release/next-*) ;; *) echo 'Unexpected release branch'; exit 1 ;; esac
+          git check-ref-format --branch "$branch"
+          gh auth setup-git
+          git fetch origin "$branch"
+          git checkout -B "$branch" FETCH_HEAD
+          version=$(python3 -c 'import pathlib, tomllib; print(tomllib.loads(pathlib.Path("Cargo.toml").read_text())["workspace"]["package"]["version"])')
+          python3 tools/set_release_version.py "$version"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Cargo.toml Cargo.lock README.md crates benchmarks
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: release v$version"
+            git push origin "$branch"
+          fi
+          number=$(jq -er '.number' <<< "$RELEASE_PR")
+          gh pr edit "$number" --title "chore: release v$version"
+          gh workflow run ci.yml --ref "$branch" -f all-builds=true
+          gh workflow run release-validation.yml --ref "$branch"

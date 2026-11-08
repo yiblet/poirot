@@ -66,17 +66,14 @@ the test matrix without rerunning formatting, lint, or documentation checks.
 ## Preparing a release
 
 Release `poirot-parsing`, `poirot-functions`, `poirot-io`, and `poirot` together.
-In a release PR, update the workspace version, internal dependency requirements,
-and `Cargo.lock`. Add the `release` label to validate packaged archives in CI;
-new commits rerun validation while the label remains. The `release` and
-`all-builds` labels expand the build matrix with no-default-features and
-all-features tests on both stable Rust and MSRV. Routine builds test default
-features on both Rust versions. Tagged releases run the expanded matrix before
-publishing. To verify locally,
-run `python3 tools/verify_release.py` from a clean checkout. Validation does not check
-crates.io ownership, name availability, or registry acceptance.
+Run the **Prepare release** workflow when ready to start a release PR. Automation
+chooses the next version, adds the `release` label, and updates that PR as changes
+merge into `master`. After it closes, another manual run starts the next release.
+Review the changes and wait for CI and archive validation to pass. Merging the PR
+reruns the expanded build matrix and archive validation on that exact commit, then
+waits for approval through the `release` environment before creating the version
+tag, publishing, and creating a GitHub release.
 
-After the PR merges and checks pass, tag the merged commit with the matching
-version, such as `v0.1.1`. The tag workflow reruns CI and archive validation, then
-publishes in dependency order and creates a GitHub release after approval through
-the `release` environment.
+To verify locally, run `python3 tools/verify_release.py` from a clean checkout.
+Validation does not check crates.io ownership, name availability, or registry
+acceptance.

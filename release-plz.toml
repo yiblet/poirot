@@ -1,0 +1,33 @@
+[workspace]
+changelog_update = false
+dependencies_update = false
+features_always_increment_minor = false
+git_release_enable = false
+git_tag_enable = false
+git_tag_name = "v{{ version }}"
+pr_branch_prefix = "release/next-"
+pr_labels = ["release"]
+
+[[package]]
+name = "poirot-parsing"
+version_group = "poirot"
+
+[[package]]
+name = "poirot-functions"
+version_group = "poirot"
+
+[[package]]
+name = "poirot-io"
+version_group = "poirot"
+
+[[package]]
+name = "poirot"
+version_group = "poirot"
+
+[[package]]
+name = "poirot-test-runner"
+release = false
+
+[[package]]
+name = "poirot-test-excel-specs"
+release = false
