@@ -59,9 +59,10 @@ URL, revision, license, and what was reused. Preserve required notices and credi
 substantial influences in the README. Leave material with unclear provenance or
 licensing out until resolved.
 
-CI runs for pull requests and pushes to `master`. Rust tests run when `.rs`,
-`Cargo.toml`, or `Cargo.lock` files change. New commits cancel superseded checks
-for the same build configuration. Adding `release` or `all-builds` expands the
+CI runs for pull requests and pushes to `master`. Rust tests, formatting, Clippy,
+and rustdoc checks run when `.rs`, `Cargo.toml`, or `Cargo.lock` files change.
+New commits cancel superseded checks for the same build configuration.
+Adding `release` or `all-builds` expands the
 test matrix without rerunning formatting, lint, or documentation checks.
 
 ## Preparing a release
