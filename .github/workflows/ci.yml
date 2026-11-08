@@ -53,35 +53,59 @@ jobs:
           python3 tools/test_error_patterns.py
           python3 crates/poirot-test-excel-specs/tools/maintain.py --check
 
-  msrv:
+  build-matrix:
+    name: Configure builds
     runs-on: ubuntu-latest
-    env:
-      RUSTUP_TOOLCHAIN: 1.90.0
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v7
-      - name: Install minimum supported Rust
-        run: rustup toolchain install 1.90.0 --profile minimal
-      - name: Check MSRV
-        run: cargo check --workspace --all-features --locked
+      - name: Select build configurations
+        id: matrix
+        env:
+          ALL_BUILDS: >-
+            ${{ inputs.all-builds == true ||
+                contains(github.event.pull_request.labels.*.name, 'release') ||
+                contains(github.event.pull_request.labels.*.name, 'all-builds') }}
+        run: |
+          python3 - <<'PYTHON'
+          import json
+          import os
+
+          builds = [{
+              "name": "MSRV",
+              "os": "ubuntu-latest",
+              "toolchain": "1.90.0",
+              "command": "check",
+              "flags": "--all-features",
+          }]
+          if os.environ["ALL_BUILDS"] == "true":
+              for name, flags in [
+                  ("no default features", "--no-default-features"),
+                  ("all features", "--all-features"),
+              ]:
+                  builds.append({
+                      "name": name,
+                      "os": "ubuntu-latest",
+                      "toolchain": "stable",
+                      "command": "test",
+                      "flags": flags,
+                  })
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write("matrix=" + json.dumps({"include": builds}) + "\n")
+          PYTHON
 
   features:
-    name: Features (${{ matrix.name }})
-    if: >-
-      inputs.all-builds == true ||
-      contains(github.event.pull_request.labels.*.name, 'release') ||
-      contains(github.event.pull_request.labels.*.name, 'all-builds')
-    runs-on: ubuntu-latest
+    name: Builds (${{ matrix.name }})
+    needs: build-matrix
+    runs-on: ${{ matrix.os }}
+    env:
+      RUSTUP_TOOLCHAIN: ${{ matrix.toolchain }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: no default features
-            flags: --no-default-features
-          - name: all features
-            flags: --all-features
+      matrix: ${{ fromJSON(needs.build-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v7
       - name: Install Rust
-        run: rustup toolchain install stable --profile minimal
-      - name: Test workspace
-        run: cargo test --workspace ${{ matrix.flags }} --locked
+        run: rustup toolchain install ${{ matrix.toolchain }} --profile minimal
+      - name: Build workspace
+        run: cargo ${{ matrix.command }} --workspace ${{ matrix.flags }} --locked
