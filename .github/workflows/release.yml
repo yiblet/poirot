@@ -44,6 +44,8 @@ jobs:
   checks:
     needs: version
     uses: ./.github/workflows/ci.yml
+    with:
+      all-builds: true
 
   validation:
     needs: version

@@ -1,9 +1,10 @@
-//! PCRE2-backed spreadsheet text operations. Microsoft specifies the PCRE2 flavor:
+//! Spreadsheet regex operations use Rust regex by default. The opt-in pcre2
+//! feature selects PCRE2 syntax and iteration semantics. Microsoft specifies PCRE2:
 //! <https://support.microsoft.com/en-us/excel/functions/regexextract-function>
 //! <https://support.microsoft.com/en-us/excel/functions/regexreplace-function>
 //! <https://support.microsoft.com/en-us/excel/functions/regextest-function>
 //! The implementation and tests are independently authored. Global matching
-//! follows PCRE2's documented empty-match iteration rule (see Cursor below); no
+//! follows the selected engine's empty-match iteration rule (see Cursor below); no
 //! upstream source or tests were copied.
 /// Case comparison selected by the spreadsheet argument.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -23,9 +24,10 @@ pub enum Extraction {
     /// Capturing groups from the first match, in group-number order.
     Groups,
 }
-/// Native PCRE2 execution guards, separate from caller work estimates.
-/// These guards interrupt native backtracking; consumed native work is unavailable.
-/// JIT remains disabled so depth and heap guards apply. PCRE2's own ceilings remain.
+/// Backend execution guards, separate from caller work estimates.
+/// PCRE2 guards interrupt backtracking; consumed backend work is unavailable.
+/// PCRE2 JIT remains disabled so depth and heap guards apply. Rust regex uses
+/// heap_kib as its compiled-program size limit; match_steps and depth do not apply.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ExecutionLimits {
     /// Maximum native match-loop steps per search.
@@ -61,11 +63,11 @@ impl ExecutionLimits {
         self
     }
 }
-/// Caller-controlled admission before native searches and owned allocations.
+/// Caller-controlled admission before backend searches and owned allocations.
 pub trait Host {
     /// Operational failure propagated unchanged to the caller.
     type Error;
-    /// Native execution guards independent of estimated caller work.
+    /// Backend execution guards independent of estimated caller work.
     fn execution_limits(&self) -> ExecutionLimits {
         ExecutionLimits::default()
     }
@@ -77,9 +79,12 @@ pub trait Host {
     fn values(&mut self, count: usize) -> Result<(), Self::Error>;
 }
 
+use super::regex_backend::RegexBackend;
 use super::regex_error::RegexError;
+#[cfg(feature = "pcre2")]
 use pcre2::bytes::{CaptureLocations, Regex, RegexBuilder};
 
+#[cfg(feature = "pcre2")]
 fn compile_failure<E>(error: pcre2::Error) -> RegexError<E> {
     // Numeric codes are the PCRE2 public ABI, verified in pcre2-sys 0.2.10's
     // src/bindings.rs at fd05026e1bf3ad62b3876cf9bd952dc742368462:
@@ -95,11 +100,23 @@ fn compile_failure<E>(error: pcre2::Error) -> RegexError<E> {
         | 135 | 187 | 200 // native lookbehind complexity/length limits
     );
     if matches!(error.kind(), pcre2::ErrorKind::Compile) && !operational {
-        RegexError::Pattern(error)
+        RegexError::Pattern(error.into())
     } else {
-        RegexError::Native(error)
+        RegexError::Native(error.into())
     }
 }
+#[cfg(not(feature = "pcre2"))]
+use ::regex::{Regex, RegexBuilder};
+
+#[cfg(not(feature = "pcre2"))]
+fn compile_failure<E>(error: ::regex::Error) -> RegexError<E> {
+    match error {
+        error @ ::regex::Error::Syntax(_) => RegexError::Pattern(error.into()),
+        error @ ::regex::Error::CompiledTooBig(_) => RegexError::Native(error.into()),
+        error => RegexError::Native(error.into()),
+    }
+}
+
 /// A growing result with a running UTF-16 length, avoiding repeated prefix scans.
 #[derive(Default)]
 struct TextBuffer {
@@ -158,16 +175,24 @@ fn active_byte_escape(pattern: &str) -> bool {
     }
     false
 }
-/// A compiled Unicode PCRE2 pattern with bounded native searches.
+/// A compiled Unicode pattern with caller admission and backend execution guards.
 /// The 8-bit backend does not represent isolated UTF-16 surrogates or Excel
 /// code-unit escapes such as \C. Callers must reject malformed UTF-16 before
 /// conversion; this type rejects active \C escapes instead of changing meaning.
 pub struct Program {
     regex: Regex,
+    #[cfg(feature = "pcre2")]
     case: Case,
 }
 impl Program {
-    /// Compile a pattern after caller admission, retaining native resource guards.
+    /// Syntax and matching semantics of patterns compiled by this build.
+    pub const BACKEND: RegexBackend = if cfg!(feature = "pcre2") {
+        RegexBackend::Pcre2
+    } else {
+        RegexBackend::Rust
+    };
+
+    /// Compile a pattern after caller admission, retaining backend resource guards.
     pub fn compile<H: Host>(
         pattern: &str,
         case: Case,
@@ -180,6 +205,7 @@ impl Program {
             return Err(RegexError::ByteEscape);
         }
         let limits = host.execution_limits();
+        #[cfg(feature = "pcre2")]
         let guards = if limits == ExecutionLimits::default() {
             std::borrow::Cow::Borrowed("(*LIMIT_MATCH=1000000)(*LIMIT_DEPTH=256)(*LIMIT_HEAP=8192)")
         } else {
@@ -188,6 +214,8 @@ impl Program {
                 limits.match_steps, limits.depth, limits.heap_kib
             ))
         };
+        #[cfg(not(feature = "pcre2"))]
+        let guards = std::borrow::Cow::Borrowed("");
         let mut source = String::new();
         let bytes = guards
             .len()
@@ -202,23 +230,47 @@ impl Program {
         source.push_str(&guards);
         // SAFETY: guards.len()+pattern.len() was checked and reserved locally above.
         source.push_str(pattern);
+        #[cfg(feature = "pcre2")]
         let regex = RegexBuilder::new()
             .utf(true)
             .ucp(true)
             .caseless(case == Case::Insensitive)
             .build(&source)
             .map_err(compile_failure)?;
+        #[cfg(not(feature = "pcre2"))]
+        let regex = {
+            let bytes = usize::try_from(limits.heap_kib)
+                .map_err(|_| RegexError::SizeOverflow)?
+                .checked_mul(1024)
+                .ok_or(RegexError::SizeOverflow)?;
+            RegexBuilder::new(&source)
+                .case_insensitive(case == Case::Insensitive)
+                .size_limit(bytes)
+                .build()
+                .map_err(compile_failure)?
+        };
         host.values(regex.captures_len())
             .map_err(RegexError::Host)?;
-        Ok(Self { regex, case })
+        Ok(Self {
+            regex,
+            #[cfg(feature = "pcre2")]
+            case,
+        })
     }
-    /// Test whether any substring matches, preserving all native failures.
+    /// Test whether any substring matches, preserving all backend failures.
     pub fn test<H: Host>(&self, text: &str, host: &mut H) -> Result<bool, RegexError<H::Error>> {
         host.work(text.len().saturating_add(1))
             .map_err(RegexError::Host)?;
-        self.regex
-            .is_match(text.as_bytes())
-            .map_err(RegexError::Native)
+        #[cfg(feature = "pcre2")]
+        {
+            self.regex
+                .is_match(text.as_bytes())
+                .map_err(|error| RegexError::Native(error.into()))
+        }
+        #[cfg(not(feature = "pcre2"))]
+        {
+            Ok(self.regex.is_match(text))
+        }
     }
     /// Extract the first match, all matches, or the first match's capture groups.
     pub fn extract<H: Host>(
@@ -227,16 +279,16 @@ impl Program {
         mode: Extraction,
         host: &mut H,
     ) -> Result<Vec<String>, RegexError<H::Error>> {
-        let mut cursor = Cursor::new(self, host)?;
+        let mut cursor = Cursor::new(self, text, host)?;
         let mut result = Vec::new();
-        while cursor.next(text, host)? {
+        while cursor.next(host)? {
             let groups = if mode == Extraction::Groups {
                 1..self.regex.captures_len()
             } else {
                 0..1
             };
             for group in groups {
-                let value = cursor.group(text, group)?.unwrap_or("");
+                let value = cursor.group(group)?.unwrap_or("");
                 host.values(result.len().saturating_add(1))
                     .map_err(RegexError::Host)?;
                 result.try_reserve(1).map_err(|_| RegexError::Resource)?;
@@ -265,9 +317,9 @@ impl Program {
         host: &mut H,
     ) -> Result<String, RegexError<H::Error>> {
         let selected = if occurrence < 0 {
-            let mut cursor = Cursor::new(self, host)?;
+            let mut cursor = Cursor::new(self, text, host)?;
             let mut count = 0u64;
-            while cursor.next(text, host)? {
+            while cursor.next(host)? {
                 count = count.saturating_add(1);
             }
             count
@@ -281,22 +333,22 @@ impl Program {
         if occurrence < 0 && selected.is_none() {
             return copy_text(text, host);
         }
-        let mut cursor = Cursor::new(self, host)?;
+        let mut cursor = Cursor::new(self, text, host)?;
         let mut out = TextBuffer::default();
         let mut copied = 0;
         let mut ordinal = 0u64;
-        while cursor.next(text, host)? {
+        while cursor.next(host)? {
             ordinal = ordinal.saturating_add(1);
             if occurrence != 0 && selected != Some(ordinal) {
                 continue;
             }
-            let (start, end) = cursor.locations.get(0).ok_or(RegexError::InvalidState)?;
+            let (start, end) = cursor.range(0).ok_or(RegexError::InvalidState)?;
             push_text(
                 &mut out,
                 text.get(copied..start).ok_or(RegexError::MatchBoundary)?,
                 host,
             )?;
-            expand(replacement, text, &cursor, &mut out, host)?;
+            expand(replacement, &cursor, &mut out, host)?;
             copied = end;
             if occurrence != 0 {
                 break;
@@ -312,65 +364,111 @@ impl Program {
 }
 /// State for successive regex matches, reusing capture storage between searches.
 /// It handles empty-match retries and advances on Unicode boundaries so global extraction or replacement makes progress.
-struct Cursor<'a> {
+struct Cursor<'a, 's> {
     program: &'a Program,
+    text: &'s str,
+    #[cfg(feature = "pcre2")]
     locations: CaptureLocations,
+    #[cfg(not(feature = "pcre2"))]
+    matches: ::regex::CaptureMatches<'a, 's>,
+    #[cfg(not(feature = "pcre2"))]
+    captures: Option<::regex::Captures<'s>>,
     offset: Option<usize>,
+    #[cfg(feature = "pcre2")]
     retry_empty: bool,
+    #[cfg(feature = "pcre2")]
     retry_regex: Option<Regex>,
 }
-impl<'a> Cursor<'a> {
-    fn new<H: Host>(program: &'a Program, host: &mut H) -> Result<Self, RegexError<H::Error>> {
+impl<'a, 's> Cursor<'a, 's> {
+    fn new<H: Host>(
+        program: &'a Program,
+        text: &'s str,
+        host: &mut H,
+    ) -> Result<Self, RegexError<H::Error>> {
         host.values(program.regex.captures_len())
             .map_err(RegexError::Host)?;
         Ok(Self {
             program,
+            text,
+            #[cfg(feature = "pcre2")]
             locations: program.regex.capture_locations(),
+            #[cfg(not(feature = "pcre2"))]
+            matches: program.regex.captures_iter(text),
+            #[cfg(not(feature = "pcre2"))]
+            captures: None,
             offset: Some(0),
+            #[cfg(feature = "pcre2")]
             retry_empty: false,
+            #[cfg(feature = "pcre2")]
             retry_regex: None,
         })
     }
-    fn next<H: Host>(&mut self, text: &str, host: &mut H) -> Result<bool, RegexError<H::Error>> {
+    fn next<H: Host>(&mut self, host: &mut H) -> Result<bool, RegexError<H::Error>> {
         let Some(offset) = self.offset else {
             return Ok(false);
         };
-        host.work(text.len().saturating_sub(offset).saturating_add(1))
+        host.work(self.text.len().saturating_sub(offset).saturating_add(1))
             .map_err(RegexError::Host)?;
-        let regex = if self.retry_empty {
-            if self.retry_regex.is_none() {
-                self.retry_regex = Some(retry_regex(self.program, host)?);
-            }
-            self.retry_regex.as_ref().ok_or(RegexError::InvalidState)?
-        } else {
-            &self.program.regex
+        #[cfg(feature = "pcre2")]
+        let found = {
+            let regex = if self.retry_empty {
+                if self.retry_regex.is_none() {
+                    self.retry_regex = Some(retry_regex(self.program, host)?);
+                }
+                self.retry_regex.as_ref().ok_or(RegexError::InvalidState)?
+            } else {
+                &self.program.regex
+            };
+            regex
+                .captures_read_at(&mut self.locations, self.text.as_bytes(), offset)
+                .map_err(|error| RegexError::Native(error.into()))?
+                .map(|found| (found.start(), found.end()))
         };
-        let found = regex
-            .captures_read_at(&mut self.locations, text.as_bytes(), offset)
-            .map_err(RegexError::Native)?;
-        let Some(found) = found else {
+        #[cfg(not(feature = "pcre2"))]
+        let found = {
+            self.captures = self.matches.next();
+            self.captures
+                .as_ref()
+                .and_then(|captures| captures.get(0))
+                .map(|found| (found.start(), found.end()))
+        };
+        let Some((start, end)) = found else {
             self.offset = None;
             return Ok(false);
         };
-        let start = found.start();
-        let end = found.end();
-        if start > end || !text.is_char_boundary(start) || !text.is_char_boundary(end) {
+        if start > end || !self.text.is_char_boundary(start) || !self.text.is_char_boundary(end) {
             return Err(RegexError::MatchBoundary);
         }
-        if self.retry_empty && end <= offset {
-            return Err(RegexError::InvalidState);
+        #[cfg(feature = "pcre2")]
+        {
+            if self.retry_empty && end <= offset {
+                return Err(RegexError::InvalidState);
+            }
+            self.retry_empty = start == end;
         }
         self.offset = Some(end);
-        self.retry_empty = start == end;
         Ok(true)
     }
-    fn group<'s, E>(&self, text: &'s str, group: usize) -> Result<Option<&'s str>, RegexError<E>> {
-        self.locations
-            .get(group)
-            .map(|(start, end)| text.get(start..end).ok_or(RegexError::CaptureBoundary))
+    fn range(&self, group: usize) -> Option<(usize, usize)> {
+        #[cfg(feature = "pcre2")]
+        {
+            self.locations.get(group)
+        }
+        #[cfg(not(feature = "pcre2"))]
+        {
+            self.captures
+                .as_ref()?
+                .get(group)
+                .map(|found| (found.start(), found.end()))
+        }
+    }
+    fn group<E>(&self, group: usize) -> Result<Option<&'s str>, RegexError<E>> {
+        self.range(group)
+            .map(|(start, end)| self.text.get(start..end).ok_or(RegexError::CaptureBoundary))
             .transpose()
     }
 }
+#[cfg(feature = "pcre2")]
 fn retry_regex<H: Host>(program: &Program, host: &mut H) -> Result<Regex, RegexError<H::Error>> {
     // Iteration rule from PCRE2's documented NOTEMPTY_ATSTART semantics:
     // https://www.pcre.org/current/doc/html/pcre2api.html (match option and
@@ -405,8 +503,7 @@ fn retry_regex<H: Host>(program: &Program, host: &mut H) -> Result<Regex, RegexE
 }
 fn expand<H: Host>(
     replacement: &str,
-    text: &str,
-    cursor: &Cursor<'_>,
+    cursor: &Cursor<'_, '_>,
     out: &mut TextBuffer,
     host: &mut H,
 ) -> Result<(), RegexError<H::Error>> {
@@ -433,8 +530,8 @@ fn expand<H: Host>(
         let number = remaining
             .get(..digits)
             .and_then(|s| s.parse::<usize>().ok());
-        if let Some(number) = number.filter(|n| *n < cursor.locations.len()) {
-            push_text(out, cursor.group(text, number)?.unwrap_or(""), host)?;
+        if let Some(number) = number.filter(|n| *n < cursor.program.regex.captures_len()) {
+            push_text(out, cursor.group(number)?.unwrap_or(""), host)?;
         } else {
             push_text(out, "$", host)?;
             push_text(
@@ -447,5 +544,9 @@ fn expand<H: Host>(
     }
     push_text(out, remaining, host)
 }
-#[cfg(test)]
+#[cfg(all(test, feature = "pcre2"))]
 mod tests;
+
+#[cfg(all(test, not(feature = "pcre2")))]
+#[path = "regex/rust_tests.rs"]
+mod rust_tests;

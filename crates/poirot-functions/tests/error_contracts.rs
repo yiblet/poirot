@@ -67,7 +67,20 @@ fn regex_dependency_error_remains_a_typed_cause() {
         Ok(_) => panic!("invalid regex was accepted"),
     };
     assert!(matches!(error, RegexError::Pattern(_)));
-    assert!(error.source().unwrap().is::<pcre2::Error>());
+    let backend = error
+        .source()
+        .unwrap()
+        .downcast_ref::<poirot_functions::text::RegexBackendError>()
+        .unwrap();
+    match backend {
+        #[cfg(feature = "pcre2")]
+        poirot_functions::text::RegexBackendError::Pcre2(_) => {
+            assert!(backend.source().unwrap().is::<pcre2::Error>())
+        }
+        poirot_functions::text::RegexBackendError::Rust(_) => {
+            assert!(backend.source().unwrap().is::<::regex::Error>())
+        }
+    }
 }
 
 #[test]
@@ -77,4 +90,5 @@ fn public_operation_errors_are_owned_and_thread_safe() {
     check::<BesselError<AdmissionError>>();
     check::<StatisticalKernelError<AdmissionError>>();
     check::<RegexError<AdmissionError>>();
+    check::<poirot_functions::text::RegexBackendError>();
 }

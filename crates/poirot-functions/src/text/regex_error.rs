@@ -1,9 +1,11 @@
+use super::regex_backend_error::RegexBackendError;
+
 /// Formula-domain failures remain distinct from backend and caller failures.
 #[derive(Debug, thiserror::Error)]
 pub enum RegexError<E> {
-    /// Invalid PCRE2 pattern syntax.
-    #[error("invalid pcre2 pattern syntax")]
-    Pattern(#[source] pcre2::Error),
+    /// Invalid or unsupported pattern syntax for the selected backend.
+    #[error("invalid regex pattern syntax")]
+    Pattern(#[source] RegexBackendError),
     /// No matching text, or no groups in capture-group mode.
     #[error("no matching text, or no groups in capture-group mode")]
     NoMatch,
@@ -19,9 +21,9 @@ pub enum RegexError<E> {
     /// Native capture split a Unicode scalar.
     #[error("native capture split a unicode scalar")]
     CaptureBoundary,
-    /// Native execution or compilation failed; this is never a valid no-match.
-    #[error("native execution or compilation failed; this is never a valid no-match")]
-    Native(#[source] pcre2::Error),
+    /// Backend execution or compilation failed; this is never a valid no-match.
+    #[error("backend execution or compilation failed; this is never a valid no-match")]
+    Native(#[source] RegexBackendError),
     /// A fallible allocation could not be admitted.
     #[error("a fallible allocation could not be admitted")]
     Resource,

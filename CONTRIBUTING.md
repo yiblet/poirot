@@ -59,13 +59,21 @@ URL, revision, license, and what was reused. Preserve required notices and credi
 substantial influences in the README. Leave material with unclear provenance or
 licensing out until resolved.
 
+CI runs for pull requests and pushes to `master`. New commits cancel superseded
+checks for the same build configuration. Adding `release` or `all-builds` expands
+the test matrix without rerunning formatting, lint, or documentation checks.
+
 ## Preparing a release
 
 Release `poirot-parsing`, `poirot-functions`, `poirot-io`, and `poirot` together.
 In a release PR, update the workspace version, internal dependency requirements,
 and `Cargo.lock`. Add the `release` label to validate packaged archives in CI;
-new commits rerun validation while the label remains. To verify locally, run
-`python3 tools/verify_release.py` from a clean checkout. Validation does not check
+new commits rerun validation while the label remains. The `release` and
+`all-builds` labels expand the build matrix with no-default-features and
+all-features tests on both stable Rust and MSRV. Routine builds test default
+features on both Rust versions. Tagged releases run the expanded matrix before
+publishing. To verify locally,
+run `python3 tools/verify_release.py` from a clean checkout. Validation does not check
 crates.io ownership, name availability, or registry acceptance.
 
 After the PR merges and checks pass, tag the merged commit with the matching

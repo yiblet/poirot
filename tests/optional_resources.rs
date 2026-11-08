@@ -279,13 +279,19 @@ fn iferror_cannot_swallow_caller_refusals_or_native_regex_guards() {
     calculation
         .set_formula(target, "IFERROR(REGEXTEST(\"aaa\",\"a+\"),42)")
         .unwrap();
-    assert!(matches!(
-        calculation.cell(target),
-        Err(EvaluationError::Resource {
-            kind: ResourceFailureKind::BackendGuard,
-            ..
-        })
-    ));
+    match poirot_functions::text::regex::Program::BACKEND {
+        poirot_functions::text::RegexBackend::Pcre2 => assert!(matches!(
+            calculation.cell(target),
+            Err(EvaluationError::Resource {
+                kind: ResourceFailureKind::BackendGuard,
+                ..
+            })
+        )),
+        // Rust regex has no backtracking step guard; caller admission still applies.
+        poirot_functions::text::RegexBackend::Rust => {
+            assert_eq!(calculation.cell(target).unwrap(), CellValue::Boolean(true))
+        }
+    }
 }
 #[test]
 fn snapshot_refusals_are_not_malformed_payload_errors() {

@@ -10,6 +10,7 @@ can omit workbook features such as charts and macros. Use the sections below to
 check your model, then [validate it with representative inputs](#checking-your-workbook).
 
 - [Supported functions](#supported-functions)
+- [Regex backends](#regex-backends)
 - [Formula evaluation](#formula-evaluation)
 - [Calculation settings](#calculation-settings)
 - [Internationalization](#internationalization)
@@ -70,6 +71,26 @@ These available functions have restrictions that may affect your workbook:
 | `GROUPBY` | Supports built-in aggregation functions and lists of them supplied with `HSTACK` or `VSTACK`. User-defined lambdas are unsupported. | [Grouping tests](https://github.com/yiblet/poirot/blob/master/tests/eval_grouping.rs) |
 | `PIVOTBY` | Groups rows and columns with multiple grouping fields, one value column and one built-in aggregation function, such as `SUM`. Supports totals, sorting, filtering and `PERCENTOF` relative modes 0–4. `field_headers=0` uses all rows as data; `1` skips the first row. Automatic header detection requires one field per axis. Output field headers, multiple aggregation functions and callable values are unsupported. | [Pivot tests](https://github.com/yiblet/poirot/blob/master/tests/eval_pivotby.rs) |
 | `FILTERXML` | XPath paths with simple predicates return a vertical array; numeric/date text uses the evaluation locale. Unrestricted XPath, DTDs and namespace prefixes that change meaning within a document are unsupported. Input, query and output limits apply even without application quotas; see the [query contract](https://github.com/yiblet/poirot/blob/master/crates/poirot-functions/src/text/xml/query.rs). | [XML tests](https://github.com/yiblet/poirot/blob/master/tests/eval_filterxml.rs) |
+
+## Regex backends
+
+By default, `REGEXTEST`, `REGEXEXTRACT` and `REGEXREPLACE` use the
+[Rust regex engine](https://docs.rs/regex/1.13.1/regex/).
+Enable the `pcre2` feature for PCRE2 semantics on native targets. Cargo features
+are additive: any dependency enabling `pcre2` selects PCRE2 and its C dependency.
+
+Rust regex rejects lookarounds, backreferences, recursion and PCRE2 directives as
+pattern errors (`#VALUE!`, catchable by `IFERROR`). Its global iteration skips
+PCRE2's nonempty retry after an empty match: replacing `(?:|a)` with `x` in `a`
+returns `xax`, compared with PCRE2's `xxx`. Captures, numbered replacement groups,
+occurrence selection, Unicode case matching and caller resource admission remain
+available; pattern syntax and Unicode tables can produce other engine differences.
+
+With Rust regex, `heap_kib` bounds compiled-program size. PCRE2's backtracking
+`match_steps` and `depth` guards do not apply to Rust's finite-automata engine.
+Pattern-size refusals remain operational failures. Prepared snapshots from a
+different backend are rejected or discarded according to the restore policy;
+authored source remains portable.
 
 ## Formula evaluation
 

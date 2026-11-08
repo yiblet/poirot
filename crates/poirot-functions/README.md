@@ -43,3 +43,13 @@ separate module-owned `thiserror` types, such as `lookup::LookupError` and
 `statistics::StatisticalKernelError`. Match their variants and typed payloads;
 their source chains retain dependency and host causes. Consult each function's contract for admitted inputs,
 error precedence and compatibility policy.
+
+## Regex backend
+
+Rust regex is the default backend and requires no C dependency. Enable
+`features = ["pcre2"]` to select PCRE2 on native targets.
+`text::regex::Program::BACKEND` identifies the
+selected semantics. Lookarounds, backreferences and PCRE2 directives are
+unsupported with Rust regex, and empty-match iteration differs. Caller admission
+still applies; `ExecutionLimits::heap_kib` bounds compiled-program size, while
+PCRE2's backtracking step and depth guards are unused.

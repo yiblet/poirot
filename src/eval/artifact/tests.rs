@@ -1070,3 +1070,21 @@ fn expanded_catalog_checkpoint_preserves_source_and_policy_dependencies() {
     assert!(matches!(decode(&bytes, Default::default(), PreparedPolicy::RequireCompatible),
         Err(SnapshotError::Envelope(crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::IncompatiblePreparedEngineRevision))));
 }
+
+#[test]
+fn prepared_results_from_the_other_regex_backend_are_discarded() {
+    let book = workbook();
+    let evaluation = Overlay::with_workbook(&book).build().unwrap();
+    let mut bytes = encode_workspace(evaluation.snapshot(), SnapshotLimits::default()).unwrap();
+    let current = crate::eval::overlay::snapshot::COMPATIBILITY_REVISION;
+    let other = current ^ (1 << 63);
+    bytes[16..24].copy_from_slice(&other.to_le_bytes());
+    assert!(matches!(decode(&bytes, SnapshotLimits::default(), PreparedPolicy::RequireCompatible),
+        Err(SnapshotError::Envelope(super::snapshot_envelope_error::SnapshotEnvelopeError::IncompatiblePreparedEngineRevision))));
+    let restored = decode_default(&bytes).unwrap();
+    assert_eq!(
+        restored.prepared_status,
+        PreparedStatus::DiscardedIncompatible
+    );
+    assert_eq!(restored.workbook(), &book);
+}

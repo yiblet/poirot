@@ -59,6 +59,20 @@ Use `as_number()` or `as_boolean()` to extract a scalar without coercion; each
 returns `None` for other value kinds. Match `CellValue` when those distinctions
 matter.
 
+## Regex backend
+
+Regex functions use the pure Rust regex engine by default. Enable PCRE2 for
+Excel-compatible pattern syntax and empty-match iteration:
+
+```toml
+[dependencies]
+poirot = { version = "0.1.1", features = ["pcre2"] }
+```
+
+Enabling `pcre2` through any dependency selects PCRE2 and adds its C build
+dependency. The default backend rejects lookarounds, backreferences and PCRE2
+directives. See [regex compatibility](docs/compatibility.md#regex-backends).
+
 ## Calculate the way your application needs
 
 Poirot is optimized for fast evaluation, including repeated changes to a model.

@@ -1123,13 +1123,13 @@ fn numeric_locale_identity_and_consumption_survive_retained_snapshot() {
 fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let workbook = book();
     let overlay = Overlay::with_workbook(&workbook).build().unwrap();
-    for previous in 8..82 {
-        let mut bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
-        // Payload's first field is its small postcard varint version.
-        let version = bytes.first_mut().unwrap();
-        assert_eq!(*version, 82);
-        *version = previous;
-        let snapshot = postcard::from_bytes(&bytes).unwrap();
+    let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
+    let (version, payload) = postcard::take_from_bytes::<u32>(&bytes).unwrap();
+    assert_eq!(version, super::super::snapshot_payload::VERSION);
+    for previous in (8..82).chain([version ^ (1 << 31)]) {
+        let mut incompatible = postcard::to_allocvec(&previous).unwrap();
+        incompatible.extend_from_slice(payload);
+        let snapshot = postcard::from_bytes(&incompatible).unwrap();
         assert!(
             matches!(Overlay::from_snapshot(snapshot), Err(OverlayError::Snapshot(crate::eval::overlay::overlay_snapshot_error::OverlaySnapshotError::UnsupportedSnapshotVersion)))
         );
@@ -1141,9 +1141,11 @@ fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
 fn without_stored_baseline(overlay: &Overlay<'_, &Workbook>) -> Vec<u8> {
     let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
     let model = postcard::to_allocvec(&overlay.workbook().snapshot()).unwrap();
-    assert_eq!(bytes[1], 0);
-    let mut stripped = vec![bytes[0], 1];
-    stripped.extend_from_slice(&bytes[2 + model.len()..]);
+    let (version, payload) = postcard::take_from_bytes::<u32>(&bytes).unwrap();
+    assert_eq!(payload[0], 0);
+    let mut stripped = postcard::to_allocvec(&version).unwrap();
+    stripped.push(1);
+    stripped.extend_from_slice(&payload[1 + model.len()..]);
     stripped
 }
 

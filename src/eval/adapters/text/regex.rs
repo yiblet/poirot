@@ -1,4 +1,4 @@
-//! Modern PCRE2 functions retain operational failures and dynamic array geometry.
+//! Regex functions retain operational failures and dynamic array geometry.
 use crate::eval::adapters::elementwise::{Broadcast, MemberContext, Variadic, text as shared};
 use crate::eval::functions::registry::TextFunction;
 use crate::eval::host::{ArgumentCoercion, CallHost};
@@ -56,13 +56,13 @@ fn failure(
             CapabilityId::FunctionAdapter,
             crate::eval::limits::EvaluationReasonError::Pcre2CaptureGeometryDidNotSatisfyTheCheckedAdapterState,
         ),
-        // PCRE2 public ABI: NOMEMORY=-48, HEAP_FAILED=121. The verified
-        // pcre2-sys revision/source is recorded beside compile_failure in the domain crate.
-        error @ poirot_functions::text::RegexError::Native(_) => {
-            let kind = match &error {
-                poirot_functions::text::RegexError::Native(source) if matches!(source.code(), -48 | 121) => crate::eval::limits::ResourceFailureKind::Allocation,
-                _ => crate::eval::limits::ResourceFailureKind::BackendGuard,
+        poirot_functions::text::RegexError::Native(source) => {
+            let kind = if source.is_allocation_failure() {
+                crate::eval::limits::ResourceFailureKind::Allocation
+            } else {
+                crate::eval::limits::ResourceFailureKind::BackendGuard
             };
+            let error = poirot_functions::text::RegexError::Native(source);
             host.resource_failure(kind, crate::eval::limits::EvaluationReasonError::Regex(std::sync::Arc::new(error))).into()
         },
     }
