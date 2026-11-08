@@ -28,8 +28,6 @@ jobs:
       - uses: actions/checkout@v7
       - name: Install Rust
         run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
-      - name: Test workspace
-        run: cargo test --workspace --locked
       - name: Check formatting
         run: cargo fmt --all -- --check
       - name: Lint all targets and features
@@ -71,25 +69,22 @@ jobs:
           import json
           import os
 
-          builds = [{
-              "name": "MSRV",
-              "os": "ubuntu-latest",
-              "toolchain": "1.90.0",
-              "command": "check",
-              "flags": "--all-features",
-          }]
+          features = [("default features", "")]
           if os.environ["ALL_BUILDS"] == "true":
-              for name, flags in [
+              features += [
                   ("no default features", "--no-default-features"),
                   ("all features", "--all-features"),
-              ]:
-                  builds.append({
-                      "name": name,
-                      "os": "ubuntu-latest",
-                      "toolchain": "stable",
-                      "command": "test",
-                      "flags": flags,
-                  })
+              ]
+          builds = [
+              {
+                  "name": f"{rust} / {feature}",
+                  "os": "ubuntu-latest",
+                  "toolchain": toolchain,
+                  "flags": flags,
+              }
+              for rust, toolchain in [("stable", "stable"), ("MSRV", "1.90.0")]
+              for feature, flags in features
+          ]
           with open(os.environ["GITHUB_OUTPUT"], "a") as output:
               output.write("matrix=" + json.dumps({"include": builds}) + "\n")
           PYTHON
@@ -107,5 +102,5 @@ jobs:
       - uses: actions/checkout@v7
       - name: Install Rust
         run: rustup toolchain install ${{ matrix.toolchain }} --profile minimal
-      - name: Build workspace
-        run: cargo ${{ matrix.command }} --workspace ${{ matrix.flags }} --locked
+      - name: Test workspace
+        run: cargo test --workspace ${{ matrix.flags }} --locked
