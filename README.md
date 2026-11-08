@@ -78,7 +78,7 @@ calculation state and resume it later.
 Selected outputs need no explicit default context. Calculate first, then export the
 scenario directly with `evaluation.save_xlsx()` or `overlay.save_xlsx()`. Export
 preserves edits and warm state, and does not calculate untouched formulas; their
-saved results may still be stale. See [evaluation and export](docs/evaluation.md)
+saved results may still be stale. See [evaluation and export](https://github.com/yiblet/poirot/blob/master/docs/evaluation.md)
 for modes, cycle boundaries, lifecycle operations and snapshot recovery.
 
 The component crates let you use formula parsing, file codecs, or pure function
@@ -118,7 +118,7 @@ Use the component crates independently when you need only
 Poirot targets modern Excel, including dynamic arrays, with partial compatibility.
 It does not claim complete Excel equivalence or lossless workbook round trips.
 Validate the input cases and edits your application uses. The
-[compatibility guide](docs/compatibility.md) lists feature status, default policies,
+[compatibility guide](https://github.com/yiblet/poirot/blob/master/docs/compatibility.md) lists feature status, default policies,
 observable differences, file losses and ways to verify your model. A registered
 function or a passing comparison case does not establish every Excel edge case.
 
@@ -146,7 +146,7 @@ ongoing goals; custom functions and component crates are available today, with
 broader customization still ahead.
 
 We're looking for contributors. AI-written PRs are welcome: review the changes,
-include evidence for expected behavior, and follow [Contributing](CONTRIBUTING.md).
+include evidence for expected behavior, and follow [Contributing](https://github.com/yiblet/poirot/blob/master/CONTRIBUTING.md).
 
 Imported shared formulas become independent, complete formula strings; replacing
 an original anchor leaves its former followers independent. The compiler reuses
@@ -175,11 +175,11 @@ cargo run --example public_workbook -- input.xlsx output.xlsx
 
 Browse the API and task guide with `cargo doc -p poirot --no-deps --open`.
 The [API reference](https://docs.rs/poirot/0.1.0/poirot/) is available on docs.rs.
-See [Contributing](CONTRIBUTING.md) to work on Poirot.
+See [Contributing](https://github.com/yiblet/poirot/blob/master/CONTRIBUTING.md) to work on Poirot.
 
 The application API uses `Evaluation` for direct scenarios and `Overlay` for
 incremental scenarios. Both provide explicit editing, evaluation, reporting and
-export methods. See the [evaluation guide](docs/evaluation.md#public-vocabulary)
+export methods. See the [evaluation guide](https://github.com/yiblet/poirot/blob/master/docs/evaluation.md#public-vocabulary)
 for lifecycle details.
 
 ## Acknowledgements
@@ -203,5 +203,5 @@ See [LICENSES/ACKNOWLEDGEMENTS](LICENSES/ACKNOWLEDGEMENTS) for credits and notic
 Poirot's code is licensed under [MIT](LICENSES/MIT.txt).
 
 Resource quotas are optional. Ordinary calculation can omit detailed profiling; see
-[resource configuration](docs/resources.md) for loading defaults, cycle boundaries,
+[resource configuration](https://github.com/yiblet/poirot/blob/master/docs/resources.md) for loading defaults, cycle boundaries,
 quota errors, and profiling.

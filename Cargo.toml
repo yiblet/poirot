@@ -53,7 +53,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "README.md"
-include = ["/src/**", "/examples/**", "/README.md", "/CONTRIBUTING.md", "/docs/compatibility.md", "/docs/resources.md", "/docs/evaluation.md", "/docs/architecture.md", "/LICENSES/**"]
+include = ["/src/**", "/examples/**", "/README.md", "/LICENSES/**"]
 
 [dependencies]
 # MIT, used to retain the typed allocation diagnostics of function ParamVec storage.

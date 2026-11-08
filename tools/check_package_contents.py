@@ -9,10 +9,6 @@ import tarfile
 from urllib.parse import unquote, urlsplit
 
 
-ROOT_DOCUMENTS = {
-    'CONTRIBUTING.md', 'docs/compatibility.md', 'docs/resources.md',
-    'docs/evaluation.md', 'docs/architecture.md',
-}
 PACKAGE_RECORDS = {
     'poirot-functions': {
         'src/matrix/REGRESSION_SOURCES.md', 'src/math/SOURCES.sha256',
@@ -32,13 +28,10 @@ def validate_archive(archive, package, root):
     common = {'Cargo.toml', 'Cargo.toml.orig', 'Cargo.lock', '.cargo_vcs_info.json',
               'README.md'}
     extra = PACKAGE_RECORDS.get(package['name'], set())
-    is_root = Path(package['manifest_path']).parent == root
-    allowed = common | extra | (ROOT_DOCUMENTS if is_root else set())
+    allowed = common | extra
     legal = {path.relative_to(root).as_posix(): path.read_bytes()
              for path in sorted((root / 'LICENSES').iterdir()) if path.is_file()}
     required = {'README.md'} | set(legal) | extra
-    if is_root:
-        required |= ROOT_DOCUMENTS
     with tarfile.open(archive) as contents:
         files = {}
         for item in contents:
