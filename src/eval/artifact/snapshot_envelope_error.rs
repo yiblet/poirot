@@ -1,5 +1,5 @@
 /// Semantic rejection of persisted artifact state.
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum SnapshotEnvelopeError {
     /// Compatible prepared state required but absent.
     #[error("compatible prepared state required but absent")]

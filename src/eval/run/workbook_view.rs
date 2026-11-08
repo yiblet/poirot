@@ -5,6 +5,7 @@ use crate::model::Workbook;
 /// Pairs a workbook with a compiled plan validated against its formula topology and policy.
 /// New runs read current literal values through this view while reusing the checked
 /// formula preparation.
+#[derive(Clone, Copy)]
 pub struct WorkbookView<'a> {
     pub(super) workbook: &'a Workbook,
     pub(super) plan: &'a CompiledWorkbook,

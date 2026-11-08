@@ -16,6 +16,7 @@ use super::work_snapshot::WorkSnapshot;
 use crate::eval::coordinates::EvaluationTarget;
 
 /// Mutable run accounting with nested per-formula work frames.
+#[derive(Clone)]
 pub(in crate::eval) struct BudgetMeter {
     /// Validated limits applied before each charge or reservation.
     pub limits: EvaluationBudgets,

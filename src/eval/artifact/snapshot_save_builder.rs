@@ -20,6 +20,7 @@ use std::path::Path;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 #[must_use]
+#[derive(Clone)]
 pub struct SnapshotSaveBuilder<'a> {
     pub(super) source: SnapshotSource<'a>,
     pub(super) limits: SnapshotLimits,

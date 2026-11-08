@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 /// Targets and defined names currently being evaluated: detects cell and name
 /// cycles and attributes reads and charges to the innermost consuming target.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(in crate::eval) struct EvaluationStack {
     /// Innermost target whose evaluation consumes the current reads.
     pub(in crate::eval) consumer: Option<EvaluationTarget>,

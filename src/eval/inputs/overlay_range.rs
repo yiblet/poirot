@@ -6,6 +6,7 @@ use crate::model::CellAddress;
 use std::collections::btree_map;
 
 /// Merged bounded base/overlay iterator used by sparse range consumers.
+#[derive(Clone)]
 pub(super) enum OverlayRange<'a> {
     Base(crate::model::CellRange<'a>),
     Input(btree_map::Range<'a, CellAddress, CellEdit>),

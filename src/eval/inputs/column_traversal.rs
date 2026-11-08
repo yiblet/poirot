@@ -7,6 +7,7 @@ use crate::model::CellAddress;
 use crate::model::query::{QueryCounters, RangeMembership};
 
 /// Merge baseline and override column cursors without a separate accounting walk.
+#[derive(Clone)]
 pub(super) struct ColumnTraversal<'a> {
     pub(super) base: crate::model::ColumnCells<'a>,
     pub(super) input: Option<InputColumn<'a>>,

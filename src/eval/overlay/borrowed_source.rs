@@ -5,6 +5,7 @@ use crate::model::Workbook;
 use std::cell::RefCell;
 
 /// Type-erased borrowed source; snapshots do not depend on the workbook handle type.
+#[derive(Clone)]
 pub(super) struct BorrowedSource<'a> {
     pub(super) workbook: &'a Workbook,
     pub(super) inputs: &'a crate::eval::inputs::RunInputs,

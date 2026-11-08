@@ -6,7 +6,7 @@ use crate::eval::coordinates::CellMap;
 use std::collections::BTreeMap;
 
 /// Per-sheet lookup of consumers whose read rectangles contain a changed cell.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct RangeIndex {
     pub(super) sheets: BTreeMap<usize, RangeTree>,
 }

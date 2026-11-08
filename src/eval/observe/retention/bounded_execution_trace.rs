@@ -8,6 +8,7 @@ use crate::model::CellValue;
 /// An execution observer that owns evidence under explicit retention limits.
 /// Capacity refusal aborts the run. Call [`BoundedExecutionTrace::finish`] even when
 /// failure occurred before the first event, so partial status reflects the run outcome.
+#[derive(Clone)]
 pub struct BoundedExecutionTrace {
     limits: RetentionLimits,
     events: Vec<RetainedEvent>,

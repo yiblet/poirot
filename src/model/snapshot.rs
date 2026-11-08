@@ -37,7 +37,7 @@ pub const SCHEMA_VERSION: u16 = 8;
 
 /// Borrowed-or-owned Serde transport for source state, separate from runtime workbook types.
 /// See the [module example](crate::model::snapshot) for capturing an owned copy before editing the source.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Snapshot<'a> {
     sheets: Vec<Sheet<'a>>,
     date_system: DateSystem,
@@ -56,7 +56,7 @@ type SnapshotCell<'a> = (
 );
 
 /// Serde worksheet payload including authored rows and saved spill provenance.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 struct Sheet<'a> {
     name: Cow<'a, str>,
     presentation: SheetPresentation,

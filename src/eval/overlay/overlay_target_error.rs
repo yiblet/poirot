@@ -1,5 +1,5 @@
 /// Rejection of a local sheet-qualified evaluation target.
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum OverlayTargetError {
     /// Input is not one local sheet-qualified cell.
     #[error("target must be one local sheet-qualified cell")]

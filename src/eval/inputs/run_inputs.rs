@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 /// Sparse scenario assignments prepared for one shared workbook source.
 /// The source token prevents applying a batch to another baseline, while unique
 /// resolved coordinates let evaluation merge edits without ambiguous duplicates.
+#[derive(Clone)]
 pub struct RunInputs {
     /// Exclusive source edits in sparse coordinate order.
     pub(in crate::eval) sheets: BTreeMap<usize, InputCells>,

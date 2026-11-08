@@ -14,7 +14,7 @@ use std::borrow::Cow;
 pub(super) const VERSION: u32 = 82;
 
 /// Versioned wire payload; runtime providers are reattached during restoration.
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub(super) struct SnapshotPayload<'a> {
     pub(super) version: u32,
     pub(super) baseline: SnapshotBaseline<'a>,

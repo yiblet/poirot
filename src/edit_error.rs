@@ -3,7 +3,7 @@ use poirot_parsing::formula::ParseError;
 
 /// A workbook edit rejected by model validation, identifier comparison, or formula parsing.
 /// The formula source is retained when a particular cell or defined name caused failure.
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum EditError {
     /// Source mutation violates canonical model constraints.
     #[error("workbook edit rejected")]

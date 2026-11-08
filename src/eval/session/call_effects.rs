@@ -6,7 +6,7 @@ use crate::eval::functions;
 
 /// Effects recorded by function calls: each cell's random stream, its numeric
 /// date coercion effects and the extension call trace.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(in crate::eval) struct CallEffects {
     /// Random stream and usage slot assigned to each drawing cell.
     pub(in crate::eval) random_streams: CellMap<(config::random::Stream, usize)>,

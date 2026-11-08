@@ -8,6 +8,7 @@ use crate::model::{Workbook, WorkbookChange};
 use std::borrow::Borrow;
 
 /// Owned run state whose stacks, caches and budgets stay in place across outputs.
+#[derive(Clone)]
 pub(super) struct Continuation {
     /// Execution storage lent to each session resumed from this owner.
     pub(super) runtime: crate::eval::session::Runtime,

@@ -11,6 +11,7 @@ use crate::model::Workbook;
 /// With a workspace, the workbook is its exact baseline; otherwise it is effective authored
 /// source including all persisted edits. The pair stays private so the conversions below
 /// can attach the workspace without comparing it to its own baseline again.
+#[derive(Clone)]
 pub struct RestoredArtifact {
     pub(super) workbook: Workbook,
     pub(super) workspace: Option<WorkspaceState>,

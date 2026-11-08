@@ -2,7 +2,7 @@ use super::settlement_attempt::SettlementAttempt;
 use crate::eval::limits::MemoRetentionUsage;
 
 /// One lazily allocated component workspace, active only during private settlement.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct SettlementSlot {
     pub(super) workspace: Option<Box<SettlementAttempt>>,
     pub(super) running: bool,

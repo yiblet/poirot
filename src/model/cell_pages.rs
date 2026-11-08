@@ -321,6 +321,15 @@ pub struct CellIter<'a, T = Cell, const HEIGHT: u32 = 32, const WIDTH: u32 = 4> 
     range: CellRange<'a, T, HEIGHT, WIDTH>,
     remaining: usize,
 }
+impl<T, const HEIGHT: u32, const WIDTH: u32> Clone for CellIter<'_, T, HEIGHT, WIDTH> {
+    fn clone(&self) -> Self {
+        Self {
+            range: self.range.clone(),
+            remaining: self.remaining,
+        }
+    }
+}
+
 impl<'a, T, const HEIGHT: u32, const WIDTH: u32> Iterator for CellIter<'a, T, HEIGHT, WIDTH> {
     /// Borrowed stored coordinate and payload.
     type Item = (&'a CellAddress, &'a T);
@@ -351,6 +360,18 @@ struct RowCursor<'a, T = Cell, const HEIGHT: u32 = 32, const WIDTH: u32 = 4> {
     page: Option<(&'a PageId, &'a Page<T, HEIGHT, WIDTH>)>,
     col: i32,
 }
+impl<T, const HEIGHT: u32, const WIDTH: u32> Clone for RowCursor<'_, T, HEIGHT, WIDTH> {
+    fn clone(&self) -> Self {
+        Self {
+            store: self.store,
+            row: self.row,
+            pages: self.pages.clone(),
+            page: self.page,
+            col: self.col,
+        }
+    }
+}
+
 impl<'a, T, const HEIGHT: u32, const WIDTH: u32> RowCursor<'a, T, HEIGHT, WIDTH> {
     fn new(
         store: &'a CellStore<T, HEIGHT, WIDTH>,
@@ -447,6 +468,18 @@ pub struct CellRange<'a, T = Cell, const HEIGHT: u32 = 32, const WIDTH: u32 = 4>
     forward: Option<RowCursor<'a, T, HEIGHT, WIDTH>>,
     backward: Option<RowCursor<'a, T, HEIGHT, WIDTH>>,
 }
+impl<T, const HEIGHT: u32, const WIDTH: u32> Clone for CellRange<'_, T, HEIGHT, WIDTH> {
+    fn clone(&self) -> Self {
+        Self {
+            store: self.store,
+            first: self.first,
+            last: self.last,
+            forward: self.forward.clone(),
+            backward: self.backward.clone(),
+        }
+    }
+}
+
 fn after(a: CellAddress) -> Option<CellAddress> {
     if a.col + 1 < crate::model::MAX_COLUMNS {
         Some(CellAddress {
@@ -582,6 +615,7 @@ impl<T, const HEIGHT: u32, const WIDTH: u32> DoubleEndedIterator
 
 /// Iterator over rows containing stored payloads within inclusive row bounds.
 /// Explicitly authored empty-row records do not count as occupied storage rows.
+#[derive(Clone)]
 pub struct OccupiedRows<'a> {
     blocks: btree_map::Range<'a, u32, RowBlock>,
     first: u32,
@@ -693,6 +727,20 @@ pub struct ColumnCells<'a, T = Cell, const HEIGHT: u32 = 32, const WIDTH: u32 = 
     page: Option<(u32, &'a Page<T, HEIGHT, WIDTH>)>,
     counters: crate::model::query::QueryCounters,
 }
+impl<T, const HEIGHT: u32, const WIDTH: u32> Clone for ColumnCells<'_, T, HEIGHT, WIDTH> {
+    fn clone(&self) -> Self {
+        Self {
+            store: self.store,
+            pages: self.pages.clone(),
+            column: self.column,
+            next: self.next,
+            last: self.last,
+            page: self.page,
+            counters: self.counters,
+        }
+    }
+}
+
 impl<T, const HEIGHT: u32, const WIDTH: u32> ColumnCells<'_, T, HEIGHT, WIDTH> {
     /// Report the column-index bound seek, page-map seeks, and stored slots visited.
     /// Each page seek admits at most HEIGHT slot probes; holes are skipped locally.

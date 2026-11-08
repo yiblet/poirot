@@ -1,7 +1,7 @@
 use crate::model::{CellAddress, ModelError};
 
 /// Rejection of scenario assignments before they can change a workbook.
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum InputError {
     /// A coordinate or source model value was rejected.
     #[error("scenario input model validation rejected")]
