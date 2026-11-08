@@ -21,6 +21,14 @@ mod modern_text_error;
 
 pub use modern_text_error::ModernTextError;
 
+mod regex_backend;
+
+pub use regex_backend::RegexBackend;
+
+mod regex_backend_error;
+
+pub use regex_backend_error::RegexBackendError;
+
 mod regex_error;
 
 pub use regex_error::RegexError;
@@ -36,7 +44,7 @@ pub mod java_case;
 pub mod modern;
 /// NUMBERVALUE parsing with spreadsheet/source failure separation.
 pub mod numeric;
-/// Bounded PCRE2 matching, extraction and replacement.
+/// Bounded matching, extraction and replacement with the selected regex backend.
 pub mod regex;
 /// Allocation-free UTF-16 selection and output-reservation plans.
 pub mod units;

@@ -57,3 +57,12 @@ jobs:
         run: rustup toolchain install 1.90.0 --profile minimal
       - name: Check MSRV
         run: cargo check --workspace --all-features --locked
+
+  pcre2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal
+      - name: Test PCRE2 backend
+        run: cargo test --workspace --features pcre2 --locked

@@ -55,6 +55,9 @@ repository.workspace = true
 readme = "README.md"
 include = ["/src/**", "/examples/**", "/README.md", "/LICENSES/**"]
 
+[features]
+pcre2 = ["poirot-functions/pcre2"]
+
 [dependencies]
 # MIT, used to retain the typed allocation diagnostics of function ParamVec storage.
 smallvec = { workspace = true }

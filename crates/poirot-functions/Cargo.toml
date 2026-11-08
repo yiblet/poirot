@@ -10,6 +10,9 @@ readme = "README.md"
 description = "Workbook-independent spreadsheet functions, coercion, and display formatting"
 include = ["/src/**", "/README.md", "/LICENSES/**"]
 
+[features]
+pcre2 = ["dep:pcre2"]
+
 [dependencies]
 thiserror = { workspace = true }
 roxmltree.workspace = true
@@ -20,7 +23,7 @@ poirot-parsing = { version = "0.1.1", path = "../poirot-parsing" }
 smallvec = { workspace = true }
 serde = { workspace = true }
 unicode-general-category = "1.1.0"
-pcre2 = { workspace = true }
+pcre2 = { workspace = true, optional = true }
 nom = { workspace = true }
 regex = { workspace = true }
 num-bigint = { workspace = true }

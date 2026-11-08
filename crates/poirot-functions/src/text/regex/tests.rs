@@ -1,6 +1,7 @@
 //! Independent PCRE2/text examples derived from the Microsoft function contracts
 //! linked by the parent module. No upstream tests or spreadsheet fixtures reused.
 use super::*;
+use crate::text::RegexBackendError;
 /// Test-controlled host refusal.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 #[error("host refused admission")]
@@ -150,20 +151,20 @@ fn invalid_patterns_and_native_resource_exhaustion_are_distinct() {
     let deeply_nested = format!("{}a{}", "(".repeat(500), ")".repeat(500));
     assert!(matches!(
         Program::compile(&deeply_nested, Case::Sensitive, &mut host),
-        Err(RegexError::Native(error)) if error.code() == 119
+        Err(RegexError::Native(RegexBackendError::Pcre2(error))) if error.code() == 119
     ));
     let p = program(r"(*LIMIT_MATCH=10)(*NO_START_OPT)(a+)+$");
     assert!(matches!(
         p.test("aaaaaaaaaaaaaaaaaaaa!", &mut host),
-        Err(RegexError::Native(error)) if error.code() == -47
+        Err(RegexError::Native(RegexBackendError::Pcre2(error))) if error.code() == -47
     ));
     assert!(matches!(
         p.extract("aaaaaaaaaaaaaaaaaaaa!", Extraction::All, &mut host),
-        Err(RegexError::Native(error)) if error.code() == -47
+        Err(RegexError::Native(RegexBackendError::Pcre2(error))) if error.code() == -47
     ));
     assert!(matches!(
         p.replace("aaaaaaaaaaaaaaaaaaaa!", "x", 0, &mut host),
-        Err(RegexError::Native(error)) if error.code() == -47
+        Err(RegexError::Native(RegexBackendError::Pcre2(error))) if error.code() == -47
     ));
 }
 #[test]

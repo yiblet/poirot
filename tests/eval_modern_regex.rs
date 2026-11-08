@@ -4,6 +4,7 @@
 use poirot::eval::overlay::{Evaluation, Overlay};
 use poirot::eval::*;
 use poirot::model::{CellError, CellValue, ExcelText, Workbook};
+use poirot_functions::text::{RegexBackend, regex::Program};
 fn at(cell: &str) -> EvaluationTarget {
     EvaluationTarget {
         sheet: 0,
@@ -29,11 +30,25 @@ fn formula(source: &str) -> CellValue {
     }
 }
 #[test]
-fn matching_uses_pcre2_lookarounds_backreferences_and_case_options() {
+fn matching_uses_selected_backend_syntax_and_case_options() {
+    for source in [
+        r#"REGEXTEST("id:42;","(?<=id:)\d+(?=;)")"#,
+        r#"REGEXTEST("elm elm","\b(\w+)\s+\1\b")"#,
+    ] {
+        let expected = match Program::BACKEND {
+            RegexBackend::Pcre2 => CellValue::Boolean(true),
+            RegexBackend::Rust => CellValue::Error(CellError::Value),
+        };
+        assert_eq!(formula(source), expected);
+    }
+    assert_eq!(
+        formula(r#"REGEXTEST("elm oak","\b(\w+)\s+\1\b")"#),
+        match Program::BACKEND {
+            RegexBackend::Pcre2 => CellValue::Boolean(false),
+            RegexBackend::Rust => CellValue::Error(CellError::Value),
+        }
+    );
     for (f, expected) in [
-        (r#"REGEXTEST("id:42;","(?<=id:)\d+(?=;)")"#, true),
-        (r#"REGEXTEST("elm elm","\b(\w+)\s+\1\b")"#, true),
-        (r#"REGEXTEST("elm oak","\b(\w+)\s+\1\b")"#, false),
         (r#"REGEXTEST("Ä","ä")"#, false),
         (r#"REGEXTEST("Ä","ä",1)"#, true),
         (r#"REGEXTEST(812,"^8")"#, true),
@@ -73,7 +88,13 @@ fn extraction_and_replacement_preserve_text_capture_and_occurrence_contracts() {
         (r#"REGEXREPLACE("a1","z","x")"#, "a1"),
         (r#"REGEXREPLACE("AA","a","x",,1)"#, "xx"),
         (r#"REGEXREPLACE("é😀","","|")"#, "|é|😀|"),
-        (r#"REGEXREPLACE("a","(?:|a)","x")"#, "xxx"),
+        (
+            r#"REGEXREPLACE("a","(?:|a)","x")"#,
+            match Program::BACKEND {
+                RegexBackend::Pcre2 => "xxx",
+                RegexBackend::Rust => "xax",
+            },
+        ),
         (r#"REGEXEXTRACT("8","\d",,0)"#, "8"),
     ] {
         assert_eq!(formula(f), CellValue::Text(expected.into()), "{f}");
@@ -212,6 +233,10 @@ fn native_exhaustion_and_unsupported_unicode_cannot_be_caught_by_iferror() {
         r#"IFERROR(REGEXREPLACE("aaaaaaaaaaaaaaaaaaaa!","(*LIMIT_MATCH=10)(*NO_START_OPT)(a+)+$","x"),99)"#,
         r#"IFERROR(REGEXTEST("é","^\C$"),99)"#,
     ] {
+        if Program::BACKEND == RegexBackend::Rust && f.contains("(*LIMIT_MATCH") {
+            assert_eq!(formula(f), CellValue::Number(99.));
+            continue;
+        }
         assert!(
             matches!(
                 run_formula(
