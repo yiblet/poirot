@@ -23,7 +23,10 @@ thiserror = "2.0.21"
 allocation-counter = "0.8.1"
 smallvec = "1.16.3"
 num-bigint = "0.5.1"
-bigdecimal = "0.4.11"
+# MIT, used for bounded decimal rounding in spreadsheet functions.
+rust_decimal = { version = "1.43.0", default-features = false, features = ["std"] }
+# MIT OR Apache-2.0, used under MIT: checked conversions for exact integer arithmetic.
+num-traits = "0.2.19"
 statrs = { version = "0.19.1", default-features = false }
 libm = "0.2.16"
 regex = "1.13.1"

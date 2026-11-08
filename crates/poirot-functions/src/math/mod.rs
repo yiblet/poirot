@@ -6,6 +6,10 @@
 //!
 //! The caller converts arguments, resolves references, and selects the operation.
 //! The [`transcendental`](crate::math::transcendental) module provides shared floating-point calculations.
+//!
+//! Decimal rounding uses a coefficient of at most `2^96 - 1` and a scale from
+//! zero through 28. Unsupported decimal inputs, overflowing results and rounding
+//! digit counts below -28 return [`CellError::Num`](crate::scalar::CellError::Num).
 
 // Rust adaptations of Apache POI (Apache-2.0); class bindings are described below.
 // <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/formula/functions>
@@ -17,8 +21,9 @@ pub mod modern;
 /// Source-compatible transcendental kernels shared by the math entry points.
 pub mod transcendental;
 use crate::scalar::CellError;
-use bigdecimal::{BigDecimal, RoundingMode, ToPrimitive};
-use std::str::FromStr;
+use num_bigint::BigUint;
+use num_traits::{FromPrimitive, ToPrimitive};
+use rust_decimal::{Decimal, RoundingStrategy};
 /// Numeric kernel result; invalid domains and non-finite outputs become spreadsheet errors.
 pub type MathResult = Result<f64, CellError>;
 fn finite(n: f64) -> MathResult {
@@ -44,55 +49,50 @@ pub fn approximate(n: f64) -> f64 {
         .parse()
         .unwrap_or(f64::NAN)
 }
-fn decimal(n: f64) -> Result<BigDecimal, CellError> {
-    // TODO(coercion-non-argument): [LOW] Decimal normalization round-trips a numeric intermediate through 15-digit text and can discard binary64 precision.
-    BigDecimal::from_str(&crate::coercion::compatibility::coerce_number_to_text(n))
+/// Convert Excel's decimal text exactly, rejecting unsupported magnitudes and scales.
+fn decimal(n: f64) -> Result<Decimal, CellError> {
+    let text = crate::coercion::compatibility::coerce_number_to_text(n);
+    Decimal::from_scientific(&text)
+        .or_else(|_| Decimal::from_str_exact(&text))
         .map_err(|_| CellError::Num)
 }
 fn truncate(n: f64) -> f64 {
     approximate(n).trunc()
 }
-fn round_decimal(n: f64, digits: f64, mode: RoundingMode) -> MathResult {
+/// Round within the decimal coefficient and scale limits without unchecked arithmetic.
+fn round_decimal(n: f64, digits: f64, mode: RoundingStrategy) -> MathResult {
     inputs(&[n, digits])?;
     let value = decimal(n)?;
-    // Finite binary64 numbers need fewer than 400 decimal places. Bound both
-    // scales locally before BigDecimal performs scale subtraction or allocates
-    // powers of ten; huge user-provided digit counts must not allocate huge ints.
-    if !(-400..=400).contains(&value.fractional_digit_count()) {
-        return Err(CellError::Num);
-    }
     let digits = digits.trunc();
-    let rounded = if digits > 400.0 {
-        value
-    } else if digits < -400.0 {
-        return if mode == RoundingMode::Up && value != 0 {
-            Err(CellError::Num)
-        } else {
-            Ok(0.0)
-        };
+    let rounded = if digits >= 0.0 {
+        value.round_dp_with_strategy(digits.min(f64::from(Decimal::MAX_SCALE)) as u32, mode)
     } else {
-        // SAFETY: Both scales are locally bounded to -400..=400, so scale
-        // arithmetic cannot overflow and at most 800 powers of ten are needed.
-        value.with_scale_round(digits as i64, mode)
+        if digits < -f64::from(Decimal::MAX_SCALE) {
+            return Err(CellError::Num);
+        }
+        // SAFETY: digits is finite and bounded to -28..0 above, so the power
+        // is at most 10^28, which fits in u128 and Decimal's 96-bit coefficient.
+        let factor = Decimal::from_u128(10_u128.pow((-digits) as u32)).ok_or(CellError::Num)?;
+        rounded_multiple(value, factor, mode)?
     };
-    // Parse the final decimal once: BigDecimal's ToPrimitive conversion scales
-    // binary intermediates and introduces extra ULPs at extreme exponents.
+    // Parse once to obtain the nearest binary64 representation of the result.
     let result = finite(rounded.to_string().parse().map_err(|_| CellError::Num)?)?;
-    // Spreadsheet decimal rounding has one zero, including negative inputs
-    // rounded to zero; do not leak a binary signed zero into later comparisons.
     Ok(if result == 0.0 { 0.0 } else { result })
 }
 /// Round Excel's decimal view to the nearest place, with ties away from zero.
+/// Returns `#NUM!` outside the decimal coefficient/scale limits or for digits below -28.
 pub fn round(n: f64, digits: f64) -> MathResult {
-    round_decimal(n, digits, RoundingMode::HalfUp)
+    round_decimal(n, digits, RoundingStrategy::MidpointAwayFromZero)
 }
 /// Round Excel's decimal view away from zero at the requested decimal place.
+/// Returns `#NUM!` outside the decimal coefficient/scale limits or for digits below -28.
 pub fn round_up(n: f64, digits: f64) -> MathResult {
-    round_decimal(n, digits, RoundingMode::Up)
+    round_decimal(n, digits, RoundingStrategy::AwayFromZero)
 }
 /// Round Excel's decimal view toward zero; also implements TRUNC.
+/// Returns `#NUM!` outside the decimal coefficient/scale limits or for digits below -28.
 pub fn round_down(n: f64, digits: f64) -> MathResult {
-    round_decimal(n, digits, RoundingMode::Down)
+    round_decimal(n, digits, RoundingStrategy::ToZero)
 }
 /// Compute inverse hyperbolic cosine with spreadsheet domain checks.
 pub fn acosh(n: f64) -> MathResult {
@@ -172,10 +172,10 @@ pub fn factdouble(n: f64) -> MathResult {
     if !(0.0..=300.0).contains(&n) {
         return Err(CellError::Num);
     }
-    let mut r = BigDecimal::from(1);
+    let mut r = BigUint::from(1_u32);
     let mut k = n as u32;
     while k > 0 {
-        r *= BigDecimal::from(k);
+        r *= k;
         k = k.saturating_sub(2);
     }
     finite(r.to_f64().ok_or(CellError::Num)?)
@@ -207,11 +207,10 @@ pub fn combin(n: f64, k: f64) -> MathResult {
 /// reject a finite result. At most 1023 iterations are needed: when both counts
 /// are at least 1024, C(a+b,a) >= 2^1024 exceeds finite binary64.
 fn binomial_from_counts<E: From<CellError>>(
-    left: bigdecimal::num_bigint::BigUint,
-    right: bigdecimal::num_bigint::BigUint,
+    left: BigUint,
+    right: BigUint,
     visit: &mut impl FnMut() -> Result<(), E>,
 ) -> Result<f64, E> {
-    use bigdecimal::num_bigint::BigUint;
     // Bound input limbs here so the intermediate-size proof is local.
     if left.bits() > 1024 || right.bits() > 1024 {
         return Err(CellError::Num.into());
@@ -252,7 +251,6 @@ pub fn combina_metered<E: From<CellError>>(
     k: f64,
     visit: &mut impl FnMut() -> Result<(), E>,
 ) -> Result<f64, E> {
-    use bigdecimal::{FromPrimitive, num_bigint::BigUint};
     let (n, k) = crate::coercion::combinations::coerce_combina_counts(n, k)?;
     if n == 0.0 {
         return Ok(0.0);
@@ -277,26 +275,53 @@ pub fn quotient(n: f64, d: f64) -> MathResult {
     }
     finite(truncate(finite(n / d)?))
 }
-fn scaled(n: f64, s: f64, round: RoundingMode) -> MathResult {
+/// Round to a positive decimal multiple without losing tiny remainders in division.
+fn rounded_multiple(
+    value: Decimal,
+    step: Decimal,
+    mode: RoundingStrategy,
+) -> Result<Decimal, CellError> {
+    let remainder = value.checked_rem(step).ok_or(CellError::Num)?;
+    let base = value.checked_sub(remainder).ok_or(CellError::Num)?;
+    if remainder.is_zero() {
+        return Ok(base);
+    }
+    let increment = match mode {
+        RoundingStrategy::MidpointAwayFromZero => {
+            let magnitude = remainder.abs();
+            magnitude >= step.checked_sub(magnitude).ok_or(CellError::Num)?
+        }
+        RoundingStrategy::AwayFromZero => true,
+        RoundingStrategy::ToZero => false,
+        RoundingStrategy::ToPositiveInfinity => !value.is_sign_negative(),
+        RoundingStrategy::ToNegativeInfinity => value.is_sign_negative(),
+        _ => return Err(CellError::Num),
+    };
+    if !increment {
+        return Ok(base);
+    }
+    if value.is_sign_negative() {
+        base.checked_sub(step).ok_or(CellError::Num)
+    } else {
+        base.checked_add(step).ok_or(CellError::Num)
+    }
+}
+fn scaled(n: f64, s: f64, round: RoundingStrategy) -> MathResult {
     inputs(&[n, s])?;
     if s == 0.0 {
         return Ok(0.0);
     }
     let step = decimal(s.abs())?;
-    if step == 0 {
-        return Err(CellError::Num);
-    }
-    // SAFETY: The local zero check returned above, so the decimal divisor is nonzero.
-    let q = (decimal(n)? / &step).with_scale_round(0, round);
-    finite((q * step).to_f64().ok_or(CellError::Num)?)
+    let result = rounded_multiple(decimal(n)?, step, round)?;
+    finite(result.to_string().parse().map_err(|_| CellError::Num)?)
 }
 /// Round upward to a multiple of the absolute significance.
 pub fn ceiling_precise(n: f64, s: f64) -> MathResult {
-    scaled(n, s, RoundingMode::Ceiling)
+    scaled(n, s, RoundingStrategy::ToPositiveInfinity)
 }
 /// Round downward to a multiple of the absolute significance.
 pub fn floor_precise(n: f64, s: f64) -> MathResult {
-    scaled(n, s, RoundingMode::Floor)
+    scaled(n, s, RoundingStrategy::ToNegativeInfinity)
 }
 /// POI currently treats only negative mode as reversing negative-number rounding.
 pub fn ceiling_math(n: f64, s: f64, mode: f64) -> MathResult {
@@ -305,9 +330,9 @@ pub fn ceiling_math(n: f64, s: f64, mode: f64) -> MathResult {
         n,
         s,
         if n < 0.0 && mode < 0.0 {
-            RoundingMode::Floor
+            RoundingStrategy::ToNegativeInfinity
         } else {
-            RoundingMode::Ceiling
+            RoundingStrategy::ToPositiveInfinity
         },
     )
 }
@@ -318,9 +343,9 @@ pub fn floor_math(n: f64, s: f64, mode: f64) -> MathResult {
         n,
         s,
         if n < 0.0 && mode < 0.0 {
-            RoundingMode::Ceiling
+            RoundingStrategy::ToPositiveInfinity
         } else {
-            RoundingMode::Floor
+            RoundingStrategy::ToNegativeInfinity
         },
     )
 }
@@ -332,7 +357,7 @@ pub fn mround(n: f64, m: f64) -> MathResult {
     if n * m < 0.0 {
         return Err(CellError::Num);
     }
-    scaled(n, m, RoundingMode::HalfUp)
+    scaled(n, m, RoundingStrategy::MidpointAwayFromZero)
 }
 fn gcd_integer(mut a: u64, mut b: u64) -> u64 {
     while b != 0 {
@@ -406,12 +431,9 @@ mod tests {
         // from a generic 15-digit scientific formatter.
         let tiny = f64::from_bits(0x0036319916D67853);
         assert_eq!(approximate(tiny), 1.2345678901235e-307);
-        assert_eq!(
-            decimal(tiny).unwrap(),
-            BigDecimal::from_str("1.2345678901235e-307").unwrap()
-        );
+        assert_eq!(decimal(tiny), Err(CellError::Num));
         assert_eq!(approximate(f64::from_bits(1)), 0.);
-        assert_eq!(decimal(f64::from_bits(1)).unwrap(), BigDecimal::from(0));
+        assert_eq!(decimal(f64::from_bits(1)).unwrap(), Decimal::ZERO);
 
         // approxValue preserves exact integers and short binary fractions, but
         // toBigDecimal always passes through NumberToTextConverter, even here.
@@ -419,7 +441,7 @@ mod tests {
         assert_eq!(approximate(integer).to_bits(), integer.to_bits());
         assert_eq!(
             decimal(integer).unwrap(),
-            BigDecimal::from_str("12345678901234600000").unwrap()
+            Decimal::from_str_exact("12345678901234600000").unwrap()
         );
         assert_eq!(approximate(1. / 2048.).to_bits(), (1f64 / 2048.).to_bits());
         assert_eq!(approximate(-0.).to_bits(), (-0f64).to_bits());
@@ -506,25 +528,30 @@ mod tests {
         }
     }
     #[test]
-    fn decimal_rounding_bounds_extreme_scales_without_float_scaling() {
-        assert_eq!(round(1e300, 300.0), Ok(1e300));
-        assert_eq!(round(1e-300, 300.0), Ok(1e-300));
-        assert_eq!(round(1e308, -308.0), Ok(1e308));
-        assert_eq!(round(f64::MAX, -308.0), Err(CellError::Num));
-        assert_eq!(round(1e308, -309.0), Ok(0.0));
-        assert_eq!(round_up(1.0, -309.0), Err(CellError::Num));
-        assert_eq!(round(1.25, f64::MAX), Ok(1.25));
-        assert_eq!(round(1.25, -f64::MAX), Ok(0.0));
-        assert_eq!(round_up(-1.25, -f64::MAX), Err(CellError::Num));
-        assert_eq!(round_down(-1.25, -f64::MAX), Ok(0.0));
+    fn decimal_rounding_rejects_unsupported_ranges_and_scales() {
+        // rust_decimal 1.43.0 documents a 96-bit coefficient and scales 0..=28:
+        // https://docs.rs/rust_decimal/1.43.0/rust_decimal/struct.Decimal.html
         for f in [round, round_up, round_down] {
-            assert_eq!(f(f64::INFINITY, 0.0), Err(CellError::Num));
+            for value in [1e300, 1e-300, 1e29, 1e-29, f64::INFINITY] {
+                assert_eq!(f(value, 2.0), Err(CellError::Num));
+            }
             assert_eq!(f(1.0, f64::NAN), Err(CellError::Num));
+            assert_eq!(f(1.25, -29.0), Err(CellError::Num));
+            assert_eq!(f(1.25, f64::MAX), Ok(1.25));
             assert_eq!(f(-0.0, 0.0).unwrap().to_bits(), 0.0f64.to_bits());
-            assert_eq!(f(0.0, -f64::MAX).unwrap().to_bits(), 0.0f64.to_bits());
         }
+        assert_eq!(round(1e-28, 28.0), Ok(1e-28));
+        assert_eq!(round(1e28, -28.0), Ok(1e28));
+        assert_eq!(round(7e28, -28.0), Ok(7e28));
+        assert_eq!(round(7.9e28, -28.0), Err(CellError::Num));
+        assert_eq!(round_down(7.9e28, -28.0), Ok(7e28));
         assert_eq!(round(-0.01, 0.0).unwrap().to_bits(), 0.0f64.to_bits());
         assert_eq!(round_down(-0.01, 0.0).unwrap().to_bits(), 0.0f64.to_bits());
+        assert_eq!(ceiling_precise(1.0, 1e-28), Ok(1.0));
+        assert_eq!(ceiling_precise(10.0, 1e-28), Ok(10.0));
+        assert_eq!(round_up(1e-28, -1.0), Ok(10.0));
+        assert_eq!(ceiling_precise(1e-28, 10.0), Ok(10.0));
+        assert_eq!(floor_precise(-1e-28, 10.0), Ok(-10.0));
     }
     #[test]
     fn integral_arithmetic_and_errors() {
@@ -553,8 +580,8 @@ mod tests {
     }
     #[test]
     fn mround_sign_validation_preserves_product_underflow() {
-        assert_eq!(mround(-1e-300, 1e-300), Ok(-1e-300));
-        assert_eq!(mround(1e-300, -1e-300), Ok(1e-300));
+        assert_eq!(mround(-1e-300, 1e-300), Err(CellError::Num));
+        assert_eq!(mround(1e-300, -1e-300), Err(CellError::Num));
         assert_eq!(mround(-1e-100, 1e-100), Err(CellError::Num));
     }
 }
@@ -596,7 +623,6 @@ mod replacement_combination_tests {
     }
     #[test]
     fn exact_primitive_obeys_pascal_symmetry_and_small_enumeration() {
-        use bigdecimal::num_bigint::BigUint;
         let coefficient = |n: u32, k: u32| {
             binomial_from_counts::<CellError>(
                 BigUint::from(k),

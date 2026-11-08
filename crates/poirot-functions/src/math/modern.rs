@@ -70,7 +70,7 @@ pub fn reciprocal(value: f64, operation: Reciprocal) -> MathResult {
 /// It retains the cumulative count instead of collecting every input, and meters the recurrence steps.
 #[derive(Clone, Debug)]
 pub struct Multinomial {
-    sum: bigdecimal::num_bigint::BigUint,
+    sum: num_bigint::BigUint,
     result: f64,
 }
 impl Default for Multinomial {
@@ -92,12 +92,11 @@ impl Multinomial {
         value: f64,
         mut visit: impl FnMut() -> Result<(), E>,
     ) -> Result<(), E> {
-        use bigdecimal::num_traits::FromPrimitive;
+        use num_traits::FromPrimitive;
         if !value.is_finite() || value < 0.0 {
             return Err(CellError::Num.into());
         }
-        let count =
-            bigdecimal::num_bigint::BigUint::from_f64(value.trunc()).ok_or(CellError::Num)?;
+        let count = num_bigint::BigUint::from_f64(value.trunc()).ok_or(CellError::Num)?;
         let factor = super::binomial_from_counts(self.sum.clone(), count.clone(), &mut visit)?;
         self.result = finite(self.result * factor)?;
         self.sum += count;

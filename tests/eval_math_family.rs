@@ -194,7 +194,8 @@ fn exact_binary_operands_reach_excel_arithmetic_through_references() {
             poirot::eval::EvaluationOutcome::Complete { value, .. } => value,
             outcome => panic!("evaluation aborted: {outcome:?}"),
         },
-        CellValue::Number(1.2345678901235e-307)
+        // The referenced operand is outside the supported decimal range.
+        CellValue::Error(CellError::Num)
     );
 }
 
@@ -233,8 +234,9 @@ fn lcm_enforces_documented_output_limits() {
 fn mround_sign_validation_uses_source_floating_product() {
     let workbook = workbook();
     for (formula, expected) in [
-        ("MROUND(-1E-300,1E-300)", CellValue::Number(-1e-300)),
-        ("MROUND(1E-300,-1E-300)", CellValue::Number(1e-300)),
+        // These operands are outside the supported decimal range.
+        ("MROUND(-1E-300,1E-300)", CellValue::Error(CellError::Num)),
+        ("MROUND(1E-300,-1E-300)", CellValue::Error(CellError::Num)),
         ("MROUND(-1E-100,1E-100)", CellValue::Error(CellError::Num)),
     ] {
         assert_eq!(

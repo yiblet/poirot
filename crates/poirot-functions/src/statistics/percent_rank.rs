@@ -1,26 +1,28 @@
 use crate::scalar::CellError;
 use crate::statistics::{PercentRankKind, Result, checked, finite};
-use bigdecimal::{BigDecimal, RoundingMode, ToPrimitive};
+use num_traits::ToPrimitive;
+use rust_decimal::{Decimal, RoundingStrategy};
 
 fn percent_round(value: f64, significance: u32) -> Result {
     decimal_round(decimal_value(value)?, significance)
 }
 
-fn decimal_value(value: f64) -> std::result::Result<BigDecimal, CellError> {
+fn decimal_value(value: f64) -> std::result::Result<Decimal, CellError> {
     // BigDecimal.valueOf in POI uses the shortest decimal representation.
-    value.to_string().parse().map_err(|_| CellError::Num)
+    Decimal::from_str_exact(&value.to_string()).map_err(|_| CellError::Num)
 }
 
-fn decimal_round(value: BigDecimal, significance: u32) -> Result {
-    let digits = i64::from(significance.min(20));
+fn decimal_round(value: Decimal, significance: u32) -> Result {
+    let digits = significance.min(20);
     value
-        .with_scale_round(digits + 3, RoundingMode::HalfUp)
-        .with_scale_round(digits, RoundingMode::Down)
+        .round_dp_with_strategy(digits + 3, RoundingStrategy::MidpointAwayFromZero)
+        .round_dp_with_strategy(digits, RoundingStrategy::ToZero)
         .to_f64()
         .ok_or(CellError::Num)
 }
 
 /// Reproduces POI's count-based rank, including its positive MIN_VALUE sentinel.
+/// Unrepresentable decimal operands or overflowing interpolation return `#NUM!`.
 pub fn percent_rank(
     values: &[f64],
     number: f64,
@@ -73,11 +75,16 @@ pub fn percent_rank(
     };
     let low_rank = endpoint(values, below, intermediate, kind)?;
     let high_rank = endpoint(values, above, intermediate, kind)?;
+    // Preserve POI's 15-digit decimal view of the intermediate rank difference.
+    let difference = crate::coercion::compatibility::coerce_number_to_text(high_rank - low_rank);
+    let difference = Decimal::from_scientific(&difference)
+        .or_else(|_| Decimal::from_str_exact(&difference))
+        .map_err(|_| CellError::Num)?;
+    let offset = difference
+        .checked_mul(decimal_value((number - below) / (above - below))?)
+        .ok_or(CellError::Num)?;
     let result = decimal_value(low_rank)?
-        // TODO(coercion-non-argument): [LOW] Numeric interpolation precision depends on the text spelling of an intermediate rank difference.
-        + crate::coercion::compatibility::coerce_number_to_text(high_rank - low_rank)
-            .parse::<BigDecimal>()
-            .map_err(|_| CellError::Num)?
-            * decimal_value((number - below) / (above - below))?;
+        .checked_add(offset)
+        .ok_or(CellError::Num)?;
     checked(decimal_round(result, significance)?)
 }

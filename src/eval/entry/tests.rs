@@ -58,11 +58,13 @@ fn decimal_rounding_matches_spreadsheet_modes_and_zero_branches() {
         ("ROUNDDOWN(0.3*3,1)", 0.9),
         ("TRUNC(0.3*3,1)", 0.9),
         ("TRUNC(-1.9)", -1.0),
-        ("ROUND(1E300,300)", 1e300),
+        ("ROUND(1E28,-28)", 1e28),
     ] {
         assert_eq!(eval(&w, formula), Number(expected), "{formula}");
     }
     assert_eq!(eval(&w, "ROUNDUP(1,-309)"), Error(Num));
+    // Decimal rounding deliberately rejects values beyond rust_decimal's range.
+    assert_eq!(eval(&w, "ROUND(1E300,300)"), Error(Num));
     for formula in [
         "ROUND(-0.01,0)",
         "ROUNDUP(-0.0,0)",

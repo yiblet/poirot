@@ -22,6 +22,7 @@ mod lookup_intersection;
 mod lookup_lookup;
 mod lookup_safety;
 mod math_modern;
+mod math_rounding;
 mod matrix_flatten_wrap;
 mod matrix_grouping;
 mod matrix_modern_arrays;

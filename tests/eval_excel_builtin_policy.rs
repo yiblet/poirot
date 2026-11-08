@@ -316,8 +316,12 @@ fn rounding_modes_and_zero_domains_follow_function_policies() {
             ("CEILING(5.5,-2)", CellValue::Error(CellError::Num)),
             ("CEILING.PRECISE(-5.5,-2)", CellValue::Number(-4.)),
             ("FLOOR.PRECISE(-5.5,-2)", CellValue::Number(-6.)),
-            ("FLOOR.MATH(1E100,1)", CellValue::Number(1e100)),
-            ("FLOOR.MATH(1E-100,1E-100)", CellValue::Number(1e-100)),
+            // Decimal intermediates outside the supported range return #NUM!.
+            ("FLOOR.MATH(1E100,1)", CellValue::Error(CellError::Num)),
+            (
+                "FLOOR.MATH(1E-100,1E-100)",
+                CellValue::Error(CellError::Num),
+            ),
         ] {
             assert_eq!(value(formula, configuration), expected, "{formula}");
         }
