@@ -2,7 +2,7 @@ name: Release validation
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -23,8 +23,7 @@ jobs:
     name: Release validation
     if: >-
       github.event_name != 'pull_request' ||
-      (contains(github.event.pull_request.labels.*.name, 'release') &&
-       (github.event.action != 'labeled' || github.event.label.name == 'release'))
+      contains(github.event.pull_request.labels.*.name, 'release')
     concurrency:
       group: release-validation-${{ github.event.pull_request.number || github.ref }}
       cancel-in-progress: true

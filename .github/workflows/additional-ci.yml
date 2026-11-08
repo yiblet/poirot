@@ -1,0 +1,21 @@
+name: Additional CI
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  builds:
+    name: Additional feature builds
+    if: github.event.label.name == 'release' || github.event.label.name == 'all-builds'
+    uses: ./.github/workflows/rust-tests.yml
+    with:
+      all-builds: true
+
+  release-validation:
+    name: Release package checks
+    if: github.event.label.name == 'release'
+    uses: ./.github/workflows/release-validation.yml

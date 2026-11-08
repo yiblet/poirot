@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -28,9 +29,24 @@ def script(name, workflow=WORKFLOW):
 class MatrixTests(unittest.TestCase):
     """Keep release builds expanded across toolchains and feature configurations."""
 
+    def test_label_events_cannot_replace_normal_ci_checks(self):
+        """Publish label-triggered checks separately from routine PR results."""
+        def actions(filename):
+            """Read the PR activity list from a workflow's trigger declaration."""
+            workflow = WORKFLOW.with_name(filename).read_text()
+            trigger = re.search(r'^  pull_request:\n    types: \[([^]]+)\]',
+                                workflow, re.MULTILINE)
+            self.assertIsNotNone(trigger)
+            return {item.strip() for item in trigger.group(1).split(',')}
+
+        for filename in ('ci.yml', 'rust-tests.yml', 'release-validation.yml'):
+            with self.subTest(workflow=filename):
+                self.assertEqual(actions(filename), {'opened', 'synchronize', 'reopened'})
+        self.assertEqual(actions('additional-ci.yml'), {'labeled'})
+
     def test_routine_release_and_label_expansion(self):
         """Run two routine builds, six release builds, or four extra label builds."""
-        program = script('Select build configurations', WORKFLOW.with_name('ci.yml'))
+        program = script('Select build configurations', WORKFLOW.with_name('rust-tests.yml'))
         program = program.split("python3 - <<'PYTHON'\n", 1)[1].split('\nPYTHON', 1)[0]
         for expanded, label, flags in [(False, False, ['']),
                                        (True, False, ['', '--no-default-features', '--all-features']),

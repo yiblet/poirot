@@ -83,5 +83,6 @@ jobs:
           fi
           number=$(jq -er '.number' <<< "$RELEASE_PR")
           gh pr edit "$number" --title "chore: release v$version"
-          gh workflow run ci.yml --ref "$branch" -f all-builds=true
+          gh workflow run ci.yml --ref "$branch"
+          gh workflow run rust-tests.yml --ref "$branch" -f all-builds=true
           gh workflow run release-validation.yml --ref "$branch"

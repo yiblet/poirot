@@ -1,6 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: cargo
+    labels: []
     directories:
       - /
       - /benchmarks/rust
@@ -20,6 +21,7 @@ updates:
         applies-to: security-updates
         patterns: ["*"]
   - package-ecosystem: github-actions
+    labels: []
     directory: /
     schedule:
       interval: monthly

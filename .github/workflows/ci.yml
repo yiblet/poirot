@@ -5,19 +5,10 @@ on:
     branches:
       - master
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
-    inputs:
-      all-builds:
-        description: Run the complete feature matrix
-        type: boolean
-        default: false
   workflow_call:
     inputs:
-      all-builds:
-        description: Run the feature matrix before publishing
-        type: boolean
-        default: false
       ref:
         type: string
         default: ''
@@ -30,7 +21,6 @@ env:
 
 jobs:
   linux:
-    if: github.event.action != 'labeled'
     concurrency:
       group: ${{ github.workflow }}-quality-${{ github.event.pull_request.number || github.ref }}
       cancel-in-progress: true
@@ -43,15 +33,7 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
           persist-credentials: false
       - name: Install Rust
-        run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
-      - name: Check formatting
-        run: cargo fmt --all -- --check
-      - name: Lint all targets and features
-        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
-      - name: Build API documentation
-        env:
-          RUSTDOCFLAGS: -D warnings
-        run: cargo doc --workspace --no-deps --all-features --locked
+        run: rustup toolchain install stable --profile minimal
       - name: Test release tools
         run: |
           python3 tools/test_package_contents.py
@@ -67,70 +49,3 @@ jobs:
           python3 tools/test_error_patterns.py --self-test
           python3 tools/test_error_patterns.py
           python3 crates/poirot-test-excel-specs/tools/maintain.py --check
-
-  build-matrix:
-    name: Configure builds
-    if: >-
-      github.event.action != 'labeled' ||
-      github.event.label.name == 'release' ||
-      github.event.label.name == 'all-builds'
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - name: Select build configurations
-        id: matrix
-        env:
-          LABEL_EXPANSION: ${{ github.event.action == 'labeled' }}
-          ALL_BUILDS: >-
-            ${{ inputs.all-builds == true ||
-                contains(github.event.pull_request.labels.*.name, 'release') ||
-                contains(github.event.pull_request.labels.*.name, 'all-builds') }}
-        run: |
-          python3 - <<'PYTHON'
-          import json
-          import os
-
-          features = [("default features", "")]
-          if os.environ["ALL_BUILDS"] == "true":
-              if os.environ["LABEL_EXPANSION"] == "true":
-                  features = []
-              features += [
-                  ("no default features", "--no-default-features"),
-                  ("all features", "--all-features"),
-              ]
-          builds = [
-              {
-                  "name": f"{rust} / {feature}",
-                  "os": "ubuntu-latest",
-                  "toolchain": toolchain,
-                  "flags": flags,
-              }
-              for rust, toolchain in [("stable", "stable"), ("MSRV", "1.90.0")]
-              for feature, flags in features
-          ]
-          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-              output.write("matrix=" + json.dumps({"include": builds}) + "\n")
-          PYTHON
-
-  features:
-    name: Builds (${{ matrix.name }})
-    needs: build-matrix
-    concurrency:
-      group: ${{ github.workflow }}-build-${{ github.event.pull_request.number || github.ref }}-${{ matrix.toolchain }}-${{ matrix.flags }}
-      cancel-in-progress: true
-    runs-on: ${{ matrix.os }}
-    env:
-      RUSTUP_TOOLCHAIN: ${{ matrix.toolchain }}
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.build-matrix.outputs.matrix) }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.ref || github.sha }}
-          persist-credentials: false
-      - name: Install Rust
-        run: rustup toolchain install ${{ matrix.toolchain }} --profile minimal
-      - name: Test workspace
-        run: cargo test --workspace ${{ matrix.flags }} --locked
