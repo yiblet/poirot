@@ -22,7 +22,7 @@ wildcard_imports = "deny"
 thiserror = "2.0.21"
 allocation-counter = "0.8.1"
 smallvec = "1.16.3"
-num-bigint = "0.4.8"
+num-bigint = "0.5.1"
 bigdecimal = "0.4.11"
 statrs = { version = "0.19.1", default-features = false }
 libm = "0.2.16"
