@@ -20,7 +20,7 @@ Poirot requires Rust 1.90 or newer. Add it to `Cargo.toml`:
 
 ```toml
 [dependencies]
-poirot = "0.1.0"
+poirot = "0.1.1"
 ```
 
 To use the latest development version, use the Git dependency:
@@ -174,7 +174,7 @@ cargo run --example public_workbook -- input.xlsx output.xlsx
 ```
 
 Browse the API and task guide with `cargo doc -p poirot --no-deps --open`.
-The [API reference](https://docs.rs/poirot/0.1.0/poirot/) is available on docs.rs.
+The [API reference](https://docs.rs/poirot/0.1.1/poirot/) is available on docs.rs.
 See [Contributing](https://github.com/yiblet/poirot/blob/master/CONTRIBUTING.md) to work on Poirot.
 
 The application API uses `Evaluation` for direct scenarios and `Overlay` for
