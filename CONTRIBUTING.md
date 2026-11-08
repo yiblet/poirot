@@ -70,7 +70,7 @@ comment records provenance for review; it does not exempt other error rules.
 
 Use a Conventional Commit title, such as `fix(eval): handle empty ranges`. The
 `Conventional Commit title` check requires a type (`build`, `chore`, `ci`, `docs`,
-`feat`, `fix`, `perf`, `refactor`, `revert`, `style`, or `test`) and a description.
+`feat`, `fix`, `perf`, `ref`, `revert`, `style`, or `test`) and a description.
 Scopes are optional; add `!` before the colon for a breaking change. Explain
 what changed, why, and how you tested it. Mention any known compatibility gaps.
 

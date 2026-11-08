@@ -21,7 +21,7 @@ jobs:
 
           event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text())
           title = event['pull_request']['title']
-          types = 'build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
+          types = 'build|chore|ci|docs|feat|fix|perf|ref|revert|style|test'
           pattern = rf'({types})(\([^()\s]+\))?!?: \S[^\r\n]*'
           if re.fullmatch(pattern, title) is None or title != title.rstrip():
               raise SystemExit(
