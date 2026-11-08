@@ -112,4 +112,5 @@ To publish a release, set the four production crate versions and their internal
 dependency requirements, commit the changes, then push a matching tag such as
 `v0.1.1`. The release workflow checks that the tag matches every production crate,
 runs the full CI workflow, publishes in dependency order, and creates a GitHub
-release. Publishing requires the repository's `CARGO_REGISTRY_TOKEN` Actions secret.
+release. The publishing job uses the `release` GitHub environment; configure its
+protection rules and store `CARGO_REGISTRY_TOKEN` as an environment secret.
