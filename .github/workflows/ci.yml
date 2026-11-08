@@ -36,6 +36,7 @@ jobs:
         run: |
           python3 tools/test_package_contents.py
           python3 tools/test_release.py
+          python3 tools/test_set_release_version.py
       - name: Check architecture and authored specifications
         run: |
           python3 tools/test_function_architecture.py
