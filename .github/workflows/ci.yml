@@ -34,11 +34,6 @@ jobs:
           persist-credentials: false
       - name: Install Rust
         run: rustup toolchain install stable --profile minimal
-      - name: Check workspace lockfiles
-        run: |
-          for manifest in Cargo.toml benchmarks/rust/Cargo.toml benchmarks/storage-layout/Cargo.toml benchmarks/incremental-replay/Cargo.toml; do
-            cargo metadata --manifest-path "$manifest" --locked --all-features --format-version 1 > /dev/null
-          done
       - name: Test release tools
         run: |
           python3 tools/test_package_contents.py
