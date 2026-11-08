@@ -63,6 +63,48 @@ class MatrixTests(unittest.TestCase):
                 self.assertEqual(len(matrix), len(expected))
 
 
+class RustChangeTests(unittest.TestCase):
+    """Run Rust tests for Rust inputs and explicitly requested release checks."""
+
+    def test_changed_paths_and_explicit_requests(self):
+        """Handle nested crates, removals, docs-only PRs, and manual releases."""
+        program = script('Detect Rust changes', WORKFLOW.with_name('ci.yml'))
+        program = program.split("python3 - <<'PYTHON'\n", 1)[1].split('\nPYTHON', 1)[0]
+        cases = [
+            ('pull_request', False, 'base', ['README.md', 'docs/guide.md'], False),
+            ('pull_request', False, 'base', ['.github/workflows/ci.yml'], False),
+            ('pull_request', False, 'base', ['tools/test_release.py'], False),
+            ('pull_request', False, 'base', [], False),
+            ('pull_request', False, 'base', ['src/lib.rs'], True),
+            ('pull_request', False, 'base', ['crates/functions/src/test.rs'], True),
+            ('pull_request', False, 'base', ['Cargo.toml'], True),
+            ('pull_request', False, 'base', ['Cargo.lock'], True),
+            ('push', False, 'base', ['benchmarks/rust/Cargo.lock'], True),
+            ('push', False, 'base', ['crates/parsing/Cargo.toml'], True),
+            ('push', False, 'base', ['README.md'], False),
+            ('push', False, '0' * 40, [], True),
+            ('pull_request', True, 'base', ['README.md'], True),
+            ('workflow_dispatch', False, '', [], True),
+            ('workflow_call', False, '', [], True),
+        ]
+        for event, expanded, base, paths, expected in cases:
+            with self.subTest(event=event, paths=paths, expanded=expanded), tempfile.TemporaryDirectory() as directory:
+                output = Path(directory) / 'output'
+                with patch.dict(os.environ, {'GITHUB_OUTPUT': str(output),
+                                              'EVENT_NAME': event, 'BASE_SHA': base,
+                                              'HEAD_SHA': 'head', 'ALL_BUILDS': str(expanded).lower()}):
+                    with patch('subprocess.check_output', return_value='\0'.join(paths).encode()) as diff:
+                        exec(program, {})
+                        if not expanded and event in ('pull_request', 'push') and base == 'base':
+                            separator = '...' if event == 'pull_request' else '..'
+                            diff.assert_called_once_with([
+                                'git', 'diff', '--name-only', '--no-renames', '-z',
+                                'base' + separator + 'head', '--'])
+                        else:
+                            diff.assert_not_called()
+                self.assertEqual(output.read_text(), f'rust-changes={str(expected).lower()}\n')
+
+
 class PreparationTests(unittest.TestCase):
     """Start candidates manually and update only active release PRs on pushes."""
 

@@ -71,17 +71,53 @@ jobs:
   build-matrix:
     name: Configure builds
     runs-on: ubuntu-latest
+    env:
+      ALL_BUILDS: >-
+        ${{ inputs.all-builds == true ||
+            contains(github.event.pull_request.labels.*.name, 'release') ||
+            contains(github.event.pull_request.labels.*.name, 'all-builds') }}
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
+      rust-changes: ${{ steps.changes.outputs.rust-changes }}
     steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Detect Rust changes
+        id: changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          from pathlib import PurePosixPath
+          import subprocess
+
+          event = os.environ["EVENT_NAME"]
+          base = os.environ["BASE_SHA"]
+          run = os.environ["ALL_BUILDS"] == "true" or event not in ("pull_request", "push")
+          if not run:
+              if not base or set(base) == {"0"}:
+                  run = True
+              else:
+                  separator = "..." if event == "pull_request" else ".."
+                  changes = subprocess.check_output([
+                      "git", "diff", "--name-only", "--no-renames", "-z",
+                      base + separator + os.environ["HEAD_SHA"], "--",
+                  ]).decode().split("\0")
+                  run = any(path.endswith(".rs") or PurePosixPath(path).name in
+                            ("Cargo.toml", "Cargo.lock") for path in changes)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"rust-changes={str(run).lower()}\n")
+          PYTHON
       - name: Select build configurations
         id: matrix
         env:
           LABEL_EXPANSION: ${{ github.event.action == 'labeled' }}
-          ALL_BUILDS: >-
-            ${{ inputs.all-builds == true ||
-                contains(github.event.pull_request.labels.*.name, 'release') ||
-                contains(github.event.pull_request.labels.*.name, 'all-builds') }}
         run: |
           python3 - <<'PYTHON'
           import json
@@ -112,6 +148,7 @@ jobs:
   features:
     name: Builds (${{ matrix.name }})
     needs: build-matrix
+    if: needs.build-matrix.outputs.rust-changes == 'true'
     concurrency:
       group: ${{ github.workflow }}-build-${{ github.event.pull_request.number || github.ref }}-${{ matrix.toolchain }}-${{ matrix.flags }}
       cancel-in-progress: true
