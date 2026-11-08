@@ -3,7 +3,12 @@ name: Release validation
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -27,6 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ inputs.ref || github.sha }}
           persist-credentials: false
       - name: Install Rust
         run: rustup toolchain install stable --profile minimal
@@ -37,6 +43,7 @@ jobs:
           python3 tools/test_package_contents.py
           python3 tools/test_release.py
           python3 tools/test_set_release_version.py
+          python3 tools/test_release_workflows.py
       - name: Verify release archives
         run: python3 tools/verify_release.py --offline
       - name: Show publication order
