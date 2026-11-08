@@ -36,10 +36,6 @@ jobs:
         run: |
           python3 tools/test_package_contents.py
           python3 tools/test_release.py
-      - name: Verify release archives
-        env:
-          RUSTDOCFLAGS: -D warnings
-        run: python3 tools/verify_release.py --offline
       - name: Check architecture and authored specifications
         run: |
           python3 tools/test_function_architecture.py

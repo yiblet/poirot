@@ -1,0 +1,36 @@
+name: Release validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTUP_TOOLCHAIN: stable
+  RUSTDOCFLAGS: -D warnings
+
+jobs:
+  validate:
+    name: Release validation
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal
+      - name: Fetch locked dependencies
+        run: cargo fetch --locked
+      - name: Test release tools
+        run: |
+          python3 tools/test_package_contents.py
+          python3 tools/test_release.py
+      - name: Verify release archives
+        run: python3 tools/verify_release.py --offline
+      - name: Show publication order
+        run: python3 tools/verify_release.py --order --offline

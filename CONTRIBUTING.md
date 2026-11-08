@@ -1,115 +1,74 @@
 # Contributing
 
-Help make Poirot a fast, lightweight, Excel-compatible calculation engine.
 Bug reports, fixes, tests, and documentation improvements are welcome, including
 AI-written PRs. Review what you submit and make the behavior easy to verify.
 
-## Where to contribute
-
-Our roadmap is more modern Excel compatibility, new evaluation modes, faster
-existing modes, and more extensibility. Useful contributions include a small
-reproduction of an Excel edge case, a missing function, a measured speedup, or an
-extension point that lets applications adapt calculation to their needs.
-
-Read the [compatibility guide](docs/compatibility.md) for current scope and known
-gaps. Keep intentional deviations explicit and preserve default compatibility
-behavior.
-
-Read the [architecture guide](docs/architecture.md) for the component boundaries
-and a staged walkthrough of an ordinary cell calculation.
-
 ## Getting started
 
-Open an issue to discuss larger changes before starting. For bugs, include a small
-reproduction, input values, the Excel version used, the expected result, and what
-happened instead. A small workbook or formula is especially helpful. Edge cases
-involving blanks, text, errors, or references are worth reporting even when the
-formula itself looks simple.
+Use Rust 1.90 or newer with rustfmt and Clippy, and Python 3.11 or newer.
+Run commands from the repository root. Read the
+[architecture guide](docs/architecture.md) for component boundaries and the
+[compatibility guide](docs/compatibility.md) for supported behavior and known gaps.
 
-## Pull requests
+Discuss larger changes in an issue before starting. For bug reports, include a
+small workbook or formula, inputs, expected and actual results, and the Excel
+version used when comparing against Excel.
 
-Keep changes focused and follow the surrounding code. Add regression tests for
-bug fixes, and base expected spreadsheet results on Excel, documented behavior,
-or another reliable reference. Record that evidence rather than deriving expected
-results from Poirot's output alone. For performance changes, include a repeatable
-workload and before/after measurements. Keep component boundaries intact so
-applications can use the parts they need.
+## Preparing a change
 
-For compatibility changes, update the relevant feature or file-loss row in the
-[compatibility guide](docs/compatibility.md). Describe supported inputs, remaining
-restrictions and observable errors or warnings. Identify whether expectations come
-from Excel observations, Microsoft documentation or another implementation; record
-versions and settings where relevant. A known-gap baseline is historical evidence,
-not a compatibility exemption, and changing it does not fix the underlying gap.
+Keep changes focused, follow the surrounding code, and preserve component
+boundaries. Add regression tests for fixes. Derive expected spreadsheet results
+from Excel, documentation, or another reliable reference, and record the source
+and relevant versions or settings. For performance changes, include a repeatable
+workload and before/after measurements.
 
-From the repository root, run:
+Update API documentation when behavior changes. For compatibility changes, update
+the relevant row in the compatibility guide, including remaining restrictions and
+observable errors or warnings. Keep known gaps explicit.
+
+Use module-owned `<Purpose>Error` types with `thiserror` and typed dependency
+causes. Avoid generic message variants and dynamic error erasure; spreadsheet
+errors remain ordinary values. The [error checker](tools/test_error_patterns.py)
+documents the detailed rules and the exception for dependencies exposing only text.
+
+## Submitting a PR
+
+Run these checks before submitting:
 
 ```sh
 cargo test --workspace
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
+python3 tools/test_module_layout.py
+python3 tools/test_eval_dependencies.py
 python3 tools/test_error_patterns.py --self-test
 python3 tools/test_error_patterns.py
 ```
 
-Operation errors use module-owned `<Purpose>Error` types with `thiserror`, typed
-categories and contextual payloads. Preserve typed dependency causes. Locally
-authored diagnostic strings, generic message variants and dynamic error erasure
-are prohibited. Spreadsheet error values remain ordinary values.
-
-The error checker screens production Rust sources; its fixtures also run in CI.
-It recognizes operation errors through derives, error trait implementations and
-explicit `Result` error arguments in the same file. It follows simple non-generic
-type alias chains in their declaring module and checks grouped or renamed
-`anyhow`/`eyre` imports. It does not resolve cross-module types, generic or
-associated aliases, aliases inside function bodies, or macro expansions. Review
-conversions, payload meaning and failure handling as well. Dependency APIs that supply only diagnostic text must have a
-specifically named variant with `message: String` and an immediately preceding
-`// ERROR-DEPENDENCY: dependency::api` comment recording the actual API. The
-comment records provenance for review; it does not exempt other error rules.
-
-Use a Conventional Commit title, such as `fix(eval): handle empty ranges`. Explain
-what changed, why, and how you tested it. Mention any known compatibility gaps.
+CI runs additional checks defined in the [workflow](.github/workflows/ci.yml).
+Use a Conventional Commit title, such as `fix(eval): handle empty ranges`.
+Scopes are optional; add `!` before the colon for a breaking change. Use `ref`
+for refactoring; the [title check](.github/workflows/pr-title.yml) lists accepted
+types. Explain what changed, why, how you tested it, and any compatibility limits.
 
 ## Crediting others
 
-Use only permissively licensed material compatible with Poirot’s MIT license.
-If you adapt code, tests, data, or algorithms, credit the project and record its
-source URL, revision, and license. Preserve required notices. If the terms or
-provenance are unclear, leave the material out and raise the question in your PR.
+Use only permissively licensed material compatible with Poirot's MIT license.
+For adapted code, tests, data, or algorithms, record the upstream project, source
+URL, revision, license, and what was reused. Preserve required notices and credit
+substantial influences in the README. Leave material with unclear provenance or
+licensing out until resolved.
 
 ## Preparing a release
 
-Release the four production crates together: `poirot-parsing`, `poirot-functions`,
-`poirot-io`, and `poirot`. The test runner and authored specifications stay
-unpublished. Keep package versions and internal dependency requirements aligned.
-Use Rust 1.90 or newer and Python 3.11 or newer for the release tools.
+Release `poirot-parsing`, `poirot-functions`, `poirot-io`, and `poirot` together.
+In a release PR, update the workspace version, internal dependency requirements,
+and `Cargo.lock`. Add the `release` label to validate packaged archives in CI;
+new commits rerun validation while the label remains. To verify locally, run
+`python3 tools/verify_release.py` from a clean checkout. Validation does not check
+crates.io ownership, name availability, or registry acceptance.
 
-After the workspace checks above, run:
-
-```sh
-cargo +1.90.0 check --workspace --all-features --locked
-python3 tools/test_package_contents.py
-python3 tools/test_release.py
-python3 tools/verify_release.py --offline
-python3 tools/verify_release.py --order --offline
-```
-
-The verification command packages the publishable dependency closure, checks legal
-records and README links, then builds all targets, doctests and API documentation
-from the normalized archives in a temporary workspace. Local patches point only
-to those extracted archives, so unpublished siblings can be verified together.
-It writes the current release archives under `target/release-artifacts/package/`.
-The final command prints dependency-first publication order.
-
-Offline verification requires dependencies already cached by Cargo. Omit
-`--offline` to let Cargo fetch missing dependencies, or add `--allow-dirty` while
-reviewing uncommitted changes. Run again from a clean checkout before release.
-This does not upload anything or check crates.io name availability, ownership or
-registry acceptance. Those checks and publication are a separate release step.
-
-To publish a release, set the four production crate versions and their internal
-dependency requirements, commit the changes, then push a matching tag such as
-`v0.1.1`. The release workflow checks that the tag matches every production crate,
-runs the full CI workflow, publishes in dependency order, and creates a GitHub
-release. Publishing requires the repository's `CARGO_REGISTRY_TOKEN` Actions secret.
+After the PR merges and checks pass, tag the merged commit with the matching
+version, such as `v0.1.1`. The tag workflow reruns CI and archive validation, then
+publishes in dependency order and creates a GitHub release after approval through
+the `release` environment.

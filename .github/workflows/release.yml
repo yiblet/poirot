@@ -45,9 +45,14 @@ jobs:
     needs: version
     uses: ./.github/workflows/ci.yml
 
+  validation:
+    needs: version
+    uses: ./.github/workflows/release-validation.yml
+
   publish:
-    needs: checks
+    needs: [checks, validation]
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: write
     steps:

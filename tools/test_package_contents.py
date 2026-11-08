@@ -5,7 +5,7 @@ import tarfile
 import tempfile
 import unittest
 
-from check_package_contents import ROOT_DOCUMENTS, validate_archive
+from check_package_contents import validate_archive
 
 
 class ArchiveTests(unittest.TestCase):
@@ -46,11 +46,22 @@ class ArchiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'differs from workspace copy'):
             self.validate()
 
-    def test_root_documents_allowed(self):
-        """Accept the root's deliberate packaged guide set."""
+    def test_root_archive_without_repository_documents(self):
+        """Accept the facade with source, README and legal records alone."""
+        self.package['name'] = 'poirot'
         self.package['manifest_path'] = str(self.root / 'Cargo.toml')
-        self.files.update({name: b'# Guide' for name in ROOT_DOCUMENTS})
         self.validate()
+
+    def test_root_repository_documents_rejected(self):
+        """Keep contributor instructions and standalone guides out of releases."""
+        self.package['name'] = 'poirot'
+        self.package['manifest_path'] = str(self.root / 'Cargo.toml')
+        for name in ('CONTRIBUTING.md', 'docs/compatibility.md', 'docs/evaluation.md'):
+            with self.subTest(name=name):
+                self.files[name] = b'# Repository documentation'
+                with self.assertRaisesRegex(ValueError, 'unexpected package files'):
+                    self.validate()
+                del self.files[name]
 
     def test_unexpected_file_rejected(self):
         """Reject accidental extra documents outside the package policy."""
