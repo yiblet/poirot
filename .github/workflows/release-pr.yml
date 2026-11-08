@@ -13,10 +13,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  plan:
+    name: Check for an active release
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      prepare: ${{ steps.plan.outputs.prepare }}
+    steps:
+      - name: Decide whether to prepare a release
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            echo 'prepare=true' >> "$GITHUB_OUTPUT"
+          else
+            active=$(gh pr list --repo "$GITHUB_REPOSITORY" --base master --state open --limit 100 --json headRefName,isCrossRepository --jq 'any(.[]; (.isCrossRepository == false) and (.headRefName | startswith("release/next-")))')
+            echo "prepare=$active" >> "$GITHUB_OUTPUT"
+          fi
+
   prepare:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      !startsWith(github.event.head_commit.message, 'chore: release v')
+    needs: plan
+    if: needs.plan.outputs.prepare == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write

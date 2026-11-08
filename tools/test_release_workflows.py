@@ -47,6 +47,45 @@ class MatrixTests(unittest.TestCase):
                 self.assertEqual(len(matrix), len(expected))
 
 
+class PreparationTests(unittest.TestCase):
+    """Start candidates manually and update only active release PRs on pushes."""
+
+    def test_manual_start_and_active_release_detection(self):
+        """Ignore ordinary or fork PRs and do no API lookup for a manual start."""
+        workflow = WORKFLOW.with_name('release-pr.yml')
+        cases = [('workflow_dispatch', [], True),
+                 ('push', [], False),
+                 ('push', [{'headRefName': 'feat/feature', 'isCrossRepository': False}], False),
+                 ('push', [{'headRefName': 'release/next-master', 'isCrossRepository': False}], True),
+                 ('push', [{'headRefName': 'release/next-master', 'isCrossRepository': True}], False)]
+        for event, pulls, expected in cases:
+            with self.subTest(event=event, pulls=pulls), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                gh = root / 'gh'
+                gh.write_text('''#!/usr/bin/env python3
+import os
+import subprocess
+import sys
+if os.environ['GITHUB_EVENT_NAME'] == 'workflow_dispatch':
+    raise SystemExit('Manual preparation should not query GitHub')
+assert sys.argv[1:3] == ['pr', 'list']
+assert sys.argv[sys.argv.index('--base') + 1] == 'master'
+assert sys.argv[sys.argv.index('--state') + 1] == 'open'
+query = sys.argv[sys.argv.index('--jq') + 1]
+subprocess.run(['jq', '-r', query], input=os.environ['PULLS_FIXTURE'], text=True, check=True)
+''')
+                gh.chmod(0o755)
+                output = root / 'output'
+                env = {**os.environ, 'PATH': str(root) + os.pathsep + os.environ['PATH'],
+                       'GITHUB_EVENT_NAME': event, 'GITHUB_REPOSITORY': 'fixture/repository',
+                       'GITHUB_OUTPUT': str(output), 'PULLS_FIXTURE': json.dumps(pulls)}
+                result = subprocess.run(['bash', '-e', '-o', 'pipefail', '-c',
+                                         script('Decide whether to prepare a release', workflow)],
+                                        env=env, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(output.read_text(), f'prepare={str(expected).lower()}\n')
+
+
 class VersionTests(unittest.TestCase):
     """Require one production version and pin outputs to the checked-out commit."""
 
