@@ -64,8 +64,10 @@ licensing out until resolved.
 Release `poirot-parsing`, `poirot-functions`, `poirot-io`, and `poirot` together.
 In a release PR, update the workspace version, internal dependency requirements,
 and `Cargo.lock`. Add the `release` label to validate packaged archives in CI;
-new commits rerun validation while the label remains. To verify locally, run
-`python3 tools/verify_release.py` from a clean checkout. Validation does not check
+new commits rerun validation while the label remains. The `release` and
+`all-builds` labels also enable the no-default-features and all-features test
+matrix. Tagged releases always run this matrix before publishing. To verify locally,
+run `python3 tools/verify_release.py` from a clean checkout. Validation does not check
 crates.io ownership, name availability, or registry acceptance.
 
 After the PR merges and checks pass, tag the merged commit with the matching

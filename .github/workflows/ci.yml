@@ -5,7 +5,13 @@ on:
     branches:
       - '**'
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
   workflow_call:
+    inputs:
+      all-builds:
+        description: Run the feature matrix before publishing
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -58,11 +64,24 @@ jobs:
       - name: Check MSRV
         run: cargo check --workspace --all-features --locked
 
-  pcre2:
+  features:
+    name: Features (${{ matrix.name }})
+    if: >-
+      inputs.all-builds == true ||
+      contains(github.event.pull_request.labels.*.name, 'release') ||
+      contains(github.event.pull_request.labels.*.name, 'all-builds')
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: no default features
+            flags: --no-default-features
+          - name: all features
+            flags: --all-features
     steps:
       - uses: actions/checkout@v7
       - name: Install Rust
         run: rustup toolchain install stable --profile minimal
-      - name: Test PCRE2 backend
-        run: cargo test --workspace --features pcre2 --locked
+      - name: Test workspace
+        run: cargo test --workspace ${{ matrix.flags }} --locked
