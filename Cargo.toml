@@ -37,7 +37,7 @@ quick-xml = "0.42.0"
 zip = { version = "9.0.5", default-features = false, features = ["deflate"] }
 calamine = "=0.38.0"
 # MIT OR Apache-2.0, used under MIT: fresh XLSX package authoring.
-rust_xlsxwriter = { version = "=0.101.0", default-features = false }
+rust_xlsxwriter = { version = "=0.102.0", default-features = false }
 rayon = "1.12.0"
 roxmltree = "0.21.1"
 clap = { version = "4.6.7", features = ["derive"] }
