@@ -88,6 +88,13 @@ Release the four production crates together: `poirot-parsing`, `poirot-functions
 unpublished. Keep package versions and internal dependency requirements aligned.
 Use Rust 1.90 or newer and Python 3.11 or newer for the release tools.
 
+Add the `release` label to a release PR to run the `Release validation` check.
+It verifies the packaged archives and prints publication order without publishing
+or accessing the registry token. New commits rerun validation while the label is
+present. Ordinary CI continues to run workspace tests, linting and documentation
+checks on every PR; archive verification runs on release-labeled PRs and again
+for every release tag before publication.
+
 After the workspace checks above, run:
 
 ```sh
