@@ -2,7 +2,7 @@ name: Release validation
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
+    types: [opened, synchronize, reopened, labeled]
   workflow_call:
 
 permissions:
@@ -16,7 +16,13 @@ env:
 jobs:
   validate:
     name: Release validation
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'release')
+    if: >-
+      github.event_name != 'pull_request' ||
+      (contains(github.event.pull_request.labels.*.name, 'release') &&
+       (github.event.action != 'labeled' || github.event.label.name == 'release'))
+    concurrency:
+      group: release-validation-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

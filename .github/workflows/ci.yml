@@ -3,9 +3,9 @@ name: CI
 on:
   push:
     branches:
-      - '**'
+      - master
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
+    types: [opened, synchronize, reopened, labeled]
   workflow_call:
     inputs:
       all-builds:
@@ -21,6 +21,10 @@ env:
 
 jobs:
   linux:
+    if: github.event.action != 'labeled'
+    concurrency:
+      group: ${{ github.workflow }}-quality-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     env:
       RUSTUP_TOOLCHAIN: stable
@@ -53,6 +57,10 @@ jobs:
 
   build-matrix:
     name: Configure builds
+    if: >-
+      github.event.action != 'labeled' ||
+      github.event.label.name == 'release' ||
+      github.event.label.name == 'all-builds'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
@@ -60,6 +68,7 @@ jobs:
       - name: Select build configurations
         id: matrix
         env:
+          LABEL_EXPANSION: ${{ github.event.action == 'labeled' }}
           ALL_BUILDS: >-
             ${{ inputs.all-builds == true ||
                 contains(github.event.pull_request.labels.*.name, 'release') ||
@@ -71,6 +80,8 @@ jobs:
 
           features = [("default features", "")]
           if os.environ["ALL_BUILDS"] == "true":
+              if os.environ["LABEL_EXPANSION"] == "true":
+                  features = []
               features += [
                   ("no default features", "--no-default-features"),
                   ("all features", "--all-features"),
@@ -92,6 +103,9 @@ jobs:
   features:
     name: Builds (${{ matrix.name }})
     needs: build-matrix
+    concurrency:
+      group: ${{ github.workflow }}-build-${{ github.event.pull_request.number || github.ref }}-${{ matrix.toolchain }}-${{ matrix.flags }}
+      cancel-in-progress: true
     runs-on: ${{ matrix.os }}
     env:
       RUSTUP_TOOLCHAIN: ${{ matrix.toolchain }}
