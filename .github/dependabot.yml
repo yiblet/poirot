@@ -2,11 +2,7 @@ version: 2
 updates:
   - package-ecosystem: cargo
     labels: []
-    directories:
-      - /
-      - /benchmarks/rust
-      - /benchmarks/storage-layout
-      - /benchmarks/incremental-replay
+    directory: /
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
@@ -16,10 +12,23 @@ updates:
       cargo-version-updates:
         applies-to: version-updates
         patterns: ["*"]
-        group-by: dependency-name
       cargo-security-updates:
         applies-to: security-updates
         patterns: ["*"]
+  # Grouped Cargo updates drop parent manifests needed by these path dependencies.
+  # Keep shared version changes in the root job and refresh benchmark locks separately.
+  - package-ecosystem: cargo
+    labels: []
+    directories:
+      - /benchmarks/rust
+      - /benchmarks/storage-layout
+      - /benchmarks/incremental-replay
+    versioning-strategy: lockfile-only
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore(deps)
   - package-ecosystem: github-actions
     labels: []
     directory: /
