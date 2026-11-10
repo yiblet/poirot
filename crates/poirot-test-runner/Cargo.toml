@@ -12,8 +12,8 @@ repository.workspace = true
 readme = "README.md"
 
 [dependencies]
-poirot = { version = "0.1.2", path = "../.." }
-poirot-parsing = { version = "0.1.2", path = "../poirot-parsing" }
+poirot = { version = "0.2.0", path = "../.." }
+poirot-parsing = { version = "0.2.0", path = "../poirot-parsing" }
 rayon.workspace = true
 roxmltree.workspace = true
 regex.workspace = true

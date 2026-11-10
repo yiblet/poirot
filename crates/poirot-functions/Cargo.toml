@@ -19,7 +19,7 @@ roxmltree.workspace = true
 statrs = { workspace = true }
 libm = { workspace = true }
 bigdecimal = { workspace = true }
-poirot-parsing = { version = "0.1.2", path = "../poirot-parsing" }
+poirot-parsing = { version = "0.2.0", path = "../poirot-parsing" }
 smallvec = { workspace = true }
 serde = { workspace = true }
 unicode-general-category = "1.1.0"
