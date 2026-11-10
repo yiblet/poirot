@@ -11,7 +11,7 @@ repository.workspace = true
 readme = "README.md"
 
 [dev-dependencies]
-poirot-test-runner = { version = "0.1.1", path = "../poirot-test-runner" }
+poirot-test-runner = { version = "0.1.2", path = "../poirot-test-runner" }
 
 [[test]]
 name = "workbook_e2e"
