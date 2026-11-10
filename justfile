@@ -60,6 +60,24 @@ msrv:
 runner *args:
     cargo run --release -p poirot-test-runner -- run {{args}}
 
+# Run the full corpus and replace its baseline, optionally recording a reason.
+[positional-arguments]
+update-baseline reason="Refresh compatibility baseline":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    scratch_dir=$(mktemp -d)
+    trap 'rm -rf "$scratch_dir"' EXIT
+    status=0
+    cargo run --release --locked -p poirot-test-runner -- run --format json > "$scratch_dir/results.jsonl" || status=$?
+    if [ "$status" -gt 1 ]; then
+        exit "$status"
+    fi
+    cargo run --release --locked -p poirot-test-runner -- baseline update \
+        --results "$scratch_dir/results.jsonl" \
+        --output "$scratch_dir/baseline.json" \
+        --reason "$1"
+    cp "$scratch_dir/baseline.json" crates/poirot-test-runner/baseline.json
+
 # Build the incremental-replay benchmark in release mode.
 bench-build:
     PCRE2_SYS_STATIC=1 cargo build --release --manifest-path benchmarks/incremental-replay/Cargo.toml

@@ -22,7 +22,7 @@ ENGINES = {
     "poirot-evaluation-batch": ("poirot", ["evaluation-batch"], "poirot", "evaluation-batch", "0.1.0"),
     "poirot-overlay-batch": ("poirot", ["overlay-batch"], "poirot", "overlay-batch", "0.1.0"),
     "poirot-workbook-cell": ("poirot", ["workbook-cell"], "poirot", "workbook-cell", "0.1.0"),
-    "ironcalc": ("ironcalc", [], "ironcalc", "model", "0.9.0"),
+    "ironcalc": ("ironcalc", [], "ironcalc", "model", "0.9.1"),
     "hyperformula": ("hyperformula", [], "hyperformula", "automatic", "3.5.0"),
     "hyperformula-array": ("hyperformula", ["array"], "hyperformula", "automatic-array-arithmetic", "3.5.0"),
     "apache-poi": ("apache-poi", [], "apache-poi", "formula-evaluator", "5.5.1"),

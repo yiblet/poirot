@@ -21,7 +21,7 @@ wildcard_imports = "deny"
 # MIT OR Apache-2.0, used under MIT: derive typed error implementations.
 thiserror = "2.0.21"
 allocation-counter = "0.8.1"
-smallvec = "1.16.3"
+smallvec = "1.16.5"
 num-bigint = "0.5.1"
 bigdecimal = "0.4.11"
 statrs = { version = "0.19.1", default-features = false }
@@ -34,12 +34,12 @@ postcard = { version = "1.1.3", default-features = false, features = ["alloc"] }
 sha2 = "0.11.1"
 cfb = "0.16.0"
 quick-xml = "0.42.0"
-zip = { version = "9.0.5", default-features = false, features = ["deflate"] }
+zip = { version = "9.5.0", default-features = false, features = ["deflate"] }
 calamine = "=0.38.0"
 # MIT OR Apache-2.0, used under MIT: fresh XLSX package authoring.
 rust_xlsxwriter = { version = "=0.102.0", default-features = false }
 rayon = "1.12.0"
-roxmltree = "0.21.1"
+roxmltree = "0.21.2"
 clap = { version = "4.6.7", features = ["derive"] }
 serde = { version = "1.0.229", features = ["derive", "rc"] }
 
@@ -66,7 +66,7 @@ poirot-parsing = { version = "0.1.1", path = "crates/poirot-parsing" }
 poirot-io = { version = "0.1.1", path = "crates/poirot-io" }
 foldhash = "0.2.0"
 # MIT OR Apache-2.0, used under MIT: checksums identify snapshot source sections.
-crc32fast = "1.5.0"
+crc32fast = "1.5.5"
 serde = { workspace = true }
 serde_bytes = "0.11.19"
 nom = { workspace = true }

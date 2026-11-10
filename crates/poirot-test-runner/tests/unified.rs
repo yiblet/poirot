@@ -200,17 +200,49 @@ fn explicit_skips_are_not_executed_or_reported_as_improvements() {
 fn normal_runs_do_not_mutate_baseline_and_partial_reports_cannot_replace_it() {
     let fixture = Fixture::new(1, false);
     let bytes = std::fs::read(&fixture.options.baseline).unwrap();
+    let previous = Baseline::load(&fixture.options.baseline).unwrap();
     let report = fixture.run();
     assert_eq!(std::fs::read(&fixture.options.baseline).unwrap(), bytes);
-    assert!(baseline::candidate(&report, "reviewed").is_err());
+    assert!(baseline::candidate(&report, &previous, "reviewed").is_err());
     let mut full = report;
     full.header.complete_inventory = true;
-    let candidate = baseline::candidate(&full, "reviewed arithmetic contract").unwrap();
+    let candidate = baseline::candidate(&full, &previous, "reviewed arithmetic contract").unwrap();
     let path = fixture.root.join("baseline.next.json");
     baseline::write_candidate(&path, &candidate).unwrap();
     assert!(baseline::write_candidate(&path, &candidate).is_err());
     full.cases[0].observation.outcome = Outcome::HarnessError;
-    assert!(baseline::candidate(&full, "cannot waive infrastructure errors").is_err());
+    assert!(baseline::candidate(&full, &previous, "cannot waive infrastructure errors").is_err());
+}
+
+#[test]
+fn baseline_refresh_preserves_unchanged_review_notes_and_reviews_changed_gaps() {
+    let fixture = Fixture::new(2, true);
+    fixture.accept(&fixture.run());
+    let previous = Baseline::load(&fixture.options.baseline).unwrap();
+    let mut report = fixture.run();
+    report.header.complete_inventory = true;
+    let id = report.cases[0].case.id.clone();
+    let candidate = baseline::candidate(&report, &previous, "new review").unwrap();
+    assert_eq!(candidate.cases[&id].reason, previous.cases[&id].reason);
+
+    fixture.suite(3, true);
+    let mut changed = fixture.run();
+    changed.header.complete_inventory = true;
+    assert_eq!(changed.cases[0].change, Change::ChangedGap);
+    let candidate = baseline::candidate(&changed, &previous, "new review").unwrap();
+    assert!(
+        candidate.cases[&id]
+            .reason
+            .as_deref()
+            .unwrap()
+            .starts_with("new review:")
+    );
+
+    fixture.suite(1, false);
+    let mut fixed = fixture.run();
+    fixed.header.complete_inventory = true;
+    let candidate = baseline::candidate(&fixed, &previous, "new review").unwrap();
+    assert!(candidate.cases[&id].reason.is_none());
 }
 
 #[test]

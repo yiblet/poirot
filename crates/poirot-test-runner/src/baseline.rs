@@ -208,9 +208,10 @@ pub fn compare(previous: Option<&Observation>, current: &Observation) -> Change 
     Change::ChangedGap
 }
 
-/// Produce an explicit candidate from a complete report. Partial runs cannot erase history.
+/// Produce a candidate from a complete report, retaining review notes for unchanged observations.
 pub fn candidate(
     report: &crate::runner::EvaluationReport,
+    previous: &Baseline,
     reason: &str,
 ) -> Result<Baseline, RunnerError> {
     if !report.header.complete_inventory
@@ -242,8 +243,14 @@ pub fn candidate(
                     group: result.case.group.clone(),
                     suite: result.case.suite.clone(),
                     observation: result.observation.clone(),
-                    reason: (result.observation.outcome != Outcome::Passed)
-                        .then(|| format!("{reason}: {}", result.reason)),
+                    reason: (result.observation.outcome != Outcome::Passed).then(|| {
+                        previous
+                            .cases
+                            .get(&result.case.id)
+                            .filter(|entry| entry.observation == result.observation)
+                            .and_then(|entry| entry.reason.clone())
+                            .unwrap_or_else(|| format!("{reason}: {}", result.reason))
+                    }),
                     fods: result.case.fods.clone(),
                 },
             )
