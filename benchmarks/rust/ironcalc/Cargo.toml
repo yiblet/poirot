@@ -8,7 +8,7 @@ publish = false
 
 [dependencies]
 benchmark-common.workspace = true
-ironcalc_base = "=0.9.0"
+ironcalc_base = "=0.9.1"
 
 [lints]
 workspace = true

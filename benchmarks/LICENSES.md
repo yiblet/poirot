@@ -8,7 +8,7 @@ benchmark algorithms, or fixtures were copied or translated.
 | Component | Pinned source | License selected | Use |
 | --- | --- | --- | --- |
 | Poirot and original Rust/Python benchmark tools | Local checkout; revision and worktree fingerprint recorded in results | MIT, [license text](../LICENSES/MIT.txt) | Model generation, orchestration, Rust harness, and Poirot adapter. |
-| IronCalc | [`ironcalc_base` 0.9.0](https://crates.io/crates/ironcalc_base/0.9.0), revision [`297553dc3a37ec6b0f4821055220e3d26c4ac6a1`](https://github.com/ironcalc/IronCalc/tree/297553dc3a37ec6b0f4821055220e3d26c4ac6a1/base) | MIT option of MIT OR Apache-2.0 | Calls to the public raw `Model` API in a separate executable/image. |
+| IronCalc | [`ironcalc_base` 0.9.1](https://crates.io/crates/ironcalc_base/0.9.1), revision [`eb9ca75bd99160c17902359d2d87225c4571c468`](https://github.com/ironcalc/IronCalc/tree/eb9ca75bd99160c17902359d2d87225c4571c468/base) | MIT option of MIT OR Apache-2.0 | Calls to the public raw `Model` API in a separate executable/image. |
 | HyperFormula | [3.5.0](https://www.npmjs.com/package/hyperformula/v/3.5.0), revision [`99a45ea1d7ee88755607d8ae0153fb6d13efc36c`](https://github.com/handsontable/hyperformula/tree/99a45ea1d7ee88755607d8ae0153fb6d13efc36c) | GPL-3.0-only, configured with `licenseKey: 'gpl-v3'` | Separate Node adapter/image; the original `hyperformula/adapter.cjs` is GPL-3.0-only too. |
 
 Cargo and npm lockfiles record exact transitive versions and integrity hashes.

@@ -70,5 +70,5 @@ impl Engine for Adapter {
 
 /// Execute the shared timing and correctness protocol against the pinned engine.
 fn main() -> Result<(), Error> {
-    benchmark_common::run("ironcalc", "0.9.0", "model", build)
+    benchmark_common::run("ironcalc", "0.9.1", "model", build)
 }

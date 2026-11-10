@@ -34,7 +34,7 @@ with a recorded seed; repeat with different `--seed` values to investigate drift
 | `poirot-overlay` | [poirot](poirot/Dockerfile) | Local checkout | Retains dependency information and unaffected results across edits. |
 | `poirot-evaluation-batch` | [poirot](poirot/Dockerfile) | Local checkout | Evaluation with one ordered `.outputs()` request. |
 | `poirot-overlay-batch` | [poirot](poirot/Dockerfile) | Local checkout | Overlay with one atomic `.outputs()` publication. |
-| `ironcalc` | [ironcalc](ironcalc/Dockerfile) | IronCalc 0.9.0 | Raw `Model` with explicit whole-model `evaluate()`. |
+| `ironcalc` | [ironcalc](ironcalc/Dockerfile) | IronCalc 0.9.1 | Raw `Model` with explicit whole-model `evaluate()`. |
 | `hyperformula` | [hyperformula](hyperformula/Dockerfile) | HyperFormula 3.5.0 | Automatic calculation during construction and input edits. |
 | `apache-poi` | [apache-poi](apache-poi/Dockerfile) | Apache POI 5.5.1 | In-memory `XSSFWorkbook`; demand-driven `FormulaEvaluator`, with `notifyUpdateCell` after edits. |
 | `libreoffice` | [libreoffice](libreoffice/Dockerfile) | LibreOffice 26.8.1 | In-memory Calc document over Java UNO; manual population, dirty `calculate()` after each edit. |
