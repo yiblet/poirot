@@ -447,7 +447,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "poirot"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "crc32fast",
  "foldhash",
@@ -466,7 +466,7 @@ dependencies = [
 
 [[package]]
 name = "poirot-functions"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "bigdecimal",
  "libm",
@@ -498,7 +498,7 @@ dependencies = [
 
 [[package]]
 name = "poirot-io"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "calamine",
  "cfb",
@@ -514,7 +514,7 @@ dependencies = [
 
 [[package]]
 name = "poirot-parsing"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "nom",
  "num-bigint 0.5.1",
