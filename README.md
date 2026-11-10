@@ -20,7 +20,7 @@ Poirot requires Rust 1.90 or newer. Add it to `Cargo.toml`:
 
 ```toml
 [dependencies]
-poirot = "0.1.1"
+poirot = "0.2.0"
 ```
 
 To use the latest development version, use the Git dependency:
@@ -66,12 +66,12 @@ Excel-compatible pattern syntax and empty-match iteration:
 
 ```toml
 [dependencies]
-poirot = { version = "0.1.1", features = ["pcre2"] }
+poirot = { version = "0.2.0", features = ["pcre2"] }
 ```
 
 Enabling `pcre2` through any dependency selects PCRE2 and adds its C build
 dependency. The default backend rejects lookarounds, backreferences and PCRE2
-directives. See [regex compatibility](docs/compatibility.md#regex-backends).
+directives. See [regex compatibility](https://github.com/yiblet/poirot/blob/master/docs/compatibility.md#regex-backends).
 
 ## Calculate the way your application needs
 
@@ -188,7 +188,7 @@ cargo run --example public_workbook -- input.xlsx output.xlsx
 ```
 
 Browse the API and task guide with `cargo doc -p poirot --no-deps --open`.
-The [API reference](https://docs.rs/poirot/0.1.1/poirot/) is available on docs.rs.
+The [API reference](https://docs.rs/poirot/0.2.0/poirot/) is available on docs.rs.
 See [Contributing](https://github.com/yiblet/poirot/blob/master/CONTRIBUTING.md) to work on Poirot.
 
 The application API uses `Evaluation` for direct scenarios and `Overlay` for

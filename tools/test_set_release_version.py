@@ -97,6 +97,21 @@ poirot-functions = { path = "../crates/poirot-functions" }
                          'poirot = "0.1.1"\nhttps://docs.rs/poirot/0.1.1/poirot/\nFixture 0.1.0\n')
         self.assertEqual((self.root / 'src/lib.rs').read_text(), '// Fixture 0.1.0\n')
 
+    def test_readme_inline_dependency_versions(self):
+        """Update featured dependency examples while preserving their options."""
+        readme = self.root / 'README.md'
+        readme.write_text('''poirot = { version = "0.1.0", features = ["pcre2"] }
+poirot = { features = ["pcre2"], version = '0.1.0' }
+other = { version = "0.1.0", features = ["pcre2"] }
+poirot = { path = ".", features = ["pcre2"] }
+''')
+        set_release_version(self.root, '0.2.0', offline=True)
+        self.assertEqual(readme.read_text(), '''poirot = { version = "0.2.0", features = ["pcre2"] }
+poirot = { features = ["pcre2"], version = "0.2.0" }
+other = { version = "0.1.0", features = ["pcre2"] }
+poirot = { path = ".", features = ["pcre2"] }
+''')
+
     def test_prerelease_and_repeated_runs(self):
         """Accept Cargo prereleases and leave a repeated update unchanged."""
         set_release_version(self.root, '0.2.0-rc.1', offline=True)

@@ -648,7 +648,7 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 
 [[package]]
 name = "poirot"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "allocation-counter",
  "calamine",
@@ -672,7 +672,7 @@ dependencies = [
 
 [[package]]
 name = "poirot-functions"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "bigdecimal",
  "libm",
@@ -693,7 +693,7 @@ dependencies = [
 
 [[package]]
 name = "poirot-io"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "calamine",
  "cfb",
@@ -709,7 +709,7 @@ dependencies = [
 
 [[package]]
 name = "poirot-parsing"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "allocation-counter",
  "nom",
@@ -720,14 +720,14 @@ dependencies = [
 
 [[package]]
 name = "poirot-test-excel-specs"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "poirot-test-runner",
 ]
 
 [[package]]
 name = "poirot-test-runner"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "clap",
  "poirot",

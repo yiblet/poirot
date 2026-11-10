@@ -95,6 +95,8 @@ def set_release_version(root, version, offline=False):
     text = originals[readme].decode()
     text = re.sub(r'(?m)^(poirot\s*=\s*)"[^"]+"',
                   lambda match: match[1] + json.dumps(version), text)
+    text = re.sub(r'''(?m)^(poirot[ \t]*=[ \t]*\{[^\n}]*\bversion[ \t]*=[ \t]*)["'][^"']*["']''',
+                  lambda match: match[1] + json.dumps(version), text)
     updates[readme] = re.sub(rf'(https://docs\.rs/poirot/){VERSION}(/poirot/)',
                              lambda match: match[1] + version + match[2], text)
     try:
