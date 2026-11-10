@@ -236,11 +236,12 @@ impl Cli {
                         baseline: current,
                     },
             } => {
+                let previous = baseline::Baseline::load(&current)?;
                 let report = report::read(&results)?;
                 if digest(&std::fs::read(current)?) != report.header.baseline_digest {
                     return Err(RunnerError::BaselineChanged);
                 }
-                let baseline = baseline::candidate(&report, &reason)?;
+                let baseline = baseline::candidate(&report, &previous, &reason)?;
                 baseline::write_candidate(&candidate, &baseline)?;
                 writeln!(
                     output,

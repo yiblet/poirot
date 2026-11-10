@@ -16,6 +16,17 @@ Use `list` to preview the selection. Add `--strict` to fail on unchanged known g
 and skips as well as regressions. Normal runs do not update baselines. This crate
 is not published.
 
+To run the full corpus and replace the checked-in baseline, use
+`just update-baseline`. An optional argument records the review reason:
+
+```sh
+just update-baseline "Refresh after dependency updates"
+```
+
+The recipe validates a complete run before replacing the baseline and retains
+review notes for unchanged observations. Review the resulting diff; fixtures and
+authored expected values remain unchanged.
+
 Known gaps remain compatibility bugs. Baselines distinguish them from new
 regressions so a fix can be reviewed against established behavior. When adding a
 case, record the expected Excel result and its evidence; a passing Poirot run
