@@ -550,3 +550,27 @@ fn snapshot_rejects_lambda_minimum_arity_above_full_arity() {
         Err(PlanSnapshotError::SnapshotLambdaDescriptor)
     ));
 }
+
+#[test]
+fn snapshot_rejects_a_reversed_table_section_pair() {
+    use super::super::plan_snapshot_error::PlanSnapshotError;
+
+    let mut book = Workbook::new();
+    book.add_sheet("S")
+        .unwrap()
+        .set_formula("A1", "ROWS(Sales[[#Headers],[#Data],[Amount]])")
+        .unwrap();
+    let plan = FormulaCompiler::new().compile_workbook(&book, &PreparationPolicy::default());
+    assert!(PlanSnapshot::capture(&plan).unwrap().restore().is_ok());
+    let mut dto = PlanSnapshot::capture(&plan).unwrap();
+    let bytes = &mut dto.sources[0].references.to_mut().data;
+    let offset = bytes
+        .windows(b"#Headers,#Data".len())
+        .position(|window| window == b"#Headers,#Data")
+        .unwrap();
+    bytes[offset..offset + b"#Headers,#Data".len()].copy_from_slice(b"#Data,#Headers");
+    assert!(matches!(
+        dto.restore(),
+        Err(PlanSnapshotError::SnapshotReferenceIndex)
+    ));
+}

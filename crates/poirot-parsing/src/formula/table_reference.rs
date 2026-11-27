@@ -26,7 +26,7 @@ impl TableReference {
         } else {
             let (rest, text, section) = item(input)?;
             let (section, columns) = if section {
-                (TableSection::parse(&text)?, TableColumns::All)
+                (TableSection::keyword(&text)?, TableColumns::All)
             } else {
                 (TableSection::Data, TableColumns::One(text))
             };
@@ -47,14 +47,22 @@ impl TableReference {
         if let Some(table) = &self.table {
             out.push_str(table);
         }
+        let spelling = self.section.spelling();
         match (self.section, &self.columns) {
-            (section, TableColumns::All) => bracket(section.spelling(), out),
+            (_, TableColumns::All) if !spelling.contains(',') => bracket(spelling, out),
             (TableSection::Data, TableColumns::One(column)) => caption(column, out),
             (section, columns) => {
                 out.push('[');
                 if section != TableSection::Data {
-                    bracket(section.spelling(), out);
-                    out.push(',');
+                    for (index, keyword) in spelling.split(',').enumerate() {
+                        if index != 0 {
+                            out.push(',');
+                        }
+                        bracket(keyword, out);
+                    }
+                    if !matches!(columns, TableColumns::All) {
+                        out.push(',');
+                    }
                 }
                 match columns {
                     TableColumns::All => {}
@@ -103,20 +111,23 @@ fn current_row(input: &str) -> Option<(&str, TableColumns)> {
 
 /// Read a section or first caption, followed by an optional column range.
 fn nested(input: &str) -> Option<(&str, TableSection, TableColumns)> {
-    let (rest, first, section) = item(input)?;
-    let (rest, section, first) = if section {
-        let section = TableSection::parse(&first)?;
-        if let Some(rest) = rest.trim_start().strip_prefix(']') {
-            return Some((rest, section, TableColumns::All));
+    let (mut rest, mut first, is_section) = item(input)?;
+    let mut section = TableSection::Data;
+    if is_section {
+        section = TableSection::keyword(&first)?;
+        loop {
+            if let Some(rest) = rest.trim_start().strip_prefix(']') {
+                return Some((rest, section, TableColumns::All));
+            }
+            let (next, text, is_section) = item(rest.trim_start().strip_prefix(',')?.trim_start())?;
+            rest = next;
+            if !is_section {
+                first = text;
+                break;
+            }
+            section = section.combine(TableSection::keyword(&text)?)?;
         }
-        let (rest, column, is_section) = item(rest.trim_start().strip_prefix(',')?.trim_start())?;
-        if is_section {
-            return None;
-        }
-        (rest, section, column)
-    } else {
-        (rest, TableSection::Data, first)
-    };
+    }
     let (rest, columns) = columns(rest, first)?;
     Some((rest, section, columns))
 }

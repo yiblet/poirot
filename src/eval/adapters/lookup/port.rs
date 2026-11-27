@@ -539,11 +539,25 @@ impl helper::Workbook for Port<'_, '_> {
 
     fn structured_reference(
         &mut self,
-        _: &str,
-        _: helper::Context,
+        text: &str,
+        context: helper::Context,
     ) -> Result<helper::Value, helper::LookupError> {
-        Err(helper::LookupError::Unsupported(
-            helper::LookupUnsupportedError::DynamicReference,
-        ))
+        use poirot_parsing::formula::{Expr, ParsedFormula, parse_formula_with_policy};
+
+        let mut references = DynamicReferences::new(&mut self.host);
+        let policy = references.parse_policy();
+        references.record_dynamic_parse();
+        let reference_error = helper::LookupValueError::Ref;
+        let syntax = parse_formula_with_policy(text, policy)
+            .map(ParsedFormula::into_expression)
+            .map_err(|_| reference_error)?;
+        if !matches!(syntax, Expr::Table(_)) {
+            return Err(reference_error.into());
+        }
+        let value = references.dynamic_reference(context.sheet as usize, &syntax);
+        match self.function(value)? {
+            value @ Value::Refs(_) => self.convert(value),
+            _ => Err(reference_error.into()),
+        }
     }
 }

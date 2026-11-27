@@ -46,15 +46,54 @@ pub fn parse_dynamic_reference(
     a1: bool,
     w: &mut impl Workbook,
 ) -> Result<DynamicReference, LookupError> {
-    charge(w, Work::SearchText, checked_product(text.len(), 4)?)?;
-    parse_qualifiers(text, a1)
+    admit_dynamic_reference(text, w)?;
+    let (prefix, reference) = split_qualifier(text);
+    parse_qualifiers(prefix, reference, a1)
 }
-/// Budget-free qualifier grammar; callers admit storage before allocation.
-fn parse_qualifiers(text: &str, a1: bool) -> Result<DynamicReference, LookupError> {
-    let (prefix, reference) = match text.rsplit_once('!') {
-        Some((p, r)) => (Some(p), r),
-        None => (None, text),
-    };
+
+/// Admit the full text before scanning it or allocating parsed reference fields.
+pub(super) fn admit_dynamic_reference(
+    text: &str,
+    w: &mut impl Workbook,
+) -> Result<(), LookupError> {
+    charge(w, Work::SearchText, checked_product(text.len(), 4)?)
+}
+
+/// Split on the last sheet separator outside workbook and table brackets.
+pub(super) fn split_qualifier(text: &str) -> (Option<&str>, &str) {
+    if !text.contains('[') {
+        return text
+            .rsplit_once('!')
+            .map_or((None, text), |(prefix, reference)| {
+                (Some(prefix), reference)
+            });
+    }
+    let mut depth = 0usize;
+    let mut separator = None;
+    let mut characters = text.char_indices().peekable();
+    while let Some((index, character)) = characters.next() {
+        match character {
+            '[' => depth = depth.saturating_add(1),
+            ']' => depth = depth.saturating_sub(1),
+            '\'' if depth != 0 => {
+                characters.next_if(|(_, next)| matches!(next, '[' | ']' | '#' | '\'' | '@'));
+            }
+            '!' if depth == 0 => separator = Some(index),
+            _ => {}
+        }
+    }
+    separator
+        .and_then(|index| text.split_at_checked(index))
+        .and_then(|(prefix, suffix)| Some((Some(prefix), suffix.strip_prefix('!')?)))
+        .unwrap_or((None, text))
+}
+
+/// Decode previously admitted qualifier and reference text.
+pub(super) fn parse_qualifiers(
+    prefix: Option<&str>,
+    reference: &str,
+    a1: bool,
+) -> Result<DynamicReference, LookupError> {
     let mut workbook = None;
     let mut sheet = None;
     if let Some(prefix) = prefix {

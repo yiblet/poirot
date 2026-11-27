@@ -99,3 +99,39 @@ fn empty_table_selector_is_short_for_data() {
         assert_eq!(FormulaPrinter::print(&expression).unwrap(), canonical);
     }
 }
+
+#[test]
+fn table_section_pairs_follow_spreadsheetml_order_and_brackets() {
+    for (source, canonical) in [
+        ("Sales[[#headers], [#DATA]]", "Sales[[#Headers],[#Data]]"),
+        (
+            "Sales[[#data],[#totals],[Amount]:[Twice]]",
+            "Sales[[#Data],[#Totals],[Amount]:[Twice]]",
+        ),
+        (
+            "[[#Headers],[#Data],[Amount]]",
+            "[[#Headers],[#Data],[Amount]]",
+        ),
+    ] {
+        let expression = parse(source);
+        let printed = FormulaPrinter::print(&expression).unwrap();
+        assert_eq!(printed, canonical);
+        assert_eq!(parse(&printed), expression);
+    }
+    for source in [
+        "Sales[[#Data],[#Headers]]",
+        "Sales[[#Totals],[#Data]]",
+        "Sales[[#Headers],[#Totals]]",
+        "Sales[[#Data],[#Data]]",
+        "Sales[[#Headers],[#Data],[#Totals]]",
+        "Sales[[#All],[#Data]]",
+        "Sales[[#This Row],[#Data]]",
+        "Sales[#Headers,#Data]",
+    ] {
+        assert_eq!(
+            parse_formula(source).unwrap_err().reason,
+            ParseReasonError::InvalidTableReference,
+            "{source}"
+        );
+    }
+}

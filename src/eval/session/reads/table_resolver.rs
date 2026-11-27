@@ -172,6 +172,13 @@ fn table_rows(
             .then_some((table.last.row, table.last.row))
             .ok_or(CellError::Ref),
         TableSection::Data => data_rows(table).ok_or(CellError::Ref),
+        TableSection::HeadersAndData if table.header_row => data_rows(table)
+            .map(|(_, last)| (table.first.row, last))
+            .ok_or(CellError::Ref),
+        TableSection::DataAndTotals if table.totals_row => data_rows(table)
+            .map(|(first, _)| (first, table.last.row))
+            .ok_or(CellError::Ref),
+        TableSection::HeadersAndData | TableSection::DataAndTotals => Err(CellError::Ref),
         TableSection::CurrentRow => data_rows(table)
             .filter(|(first, last)| (*first..=*last).contains(&row))
             .map(|_| (row, row))
