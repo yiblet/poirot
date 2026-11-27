@@ -16,7 +16,9 @@ impl TableReference {
     /// Decode a bracketed selector with an optional workbook-wide table name.
     pub(super) fn parse(table: Option<String>, input: &str) -> Option<(&str, Self)> {
         let inner = input.strip_prefix('[')?;
-        let (rest, section, columns) = if let Some(inner) = inner.strip_prefix('@') {
+        let (rest, section, columns) = if let Some(rest) = inner.strip_prefix(']') {
+            (rest, TableSection::Data, TableColumns::All)
+        } else if let Some(inner) = inner.strip_prefix('@') {
             let (rest, columns) = current_row(inner)?;
             (rest, TableSection::CurrentRow, columns)
         } else if inner.trim_start().starts_with('[') {

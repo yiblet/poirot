@@ -64,6 +64,24 @@ fn tables_and_formula_text_round_trip_through_xlsx_and_source_snapshot() {
 }
 
 #[test]
+fn empty_table_selector_reads_only_the_data_rows() {
+    use poirot::model::CellValue;
+
+    // MS-OI29500 defines [] as an alias for [#Data].
+    let mut book = read_workbook_bytes::<Workbook>(FIXTURE).unwrap();
+    let sheet = book.sheet_mut(0).unwrap();
+    sheet.set_formula("D1", "SUM(Sales[])").unwrap();
+    sheet.set_formula("D2", "SUM(Sales[#Data])").unwrap();
+    book.recalculate().unwrap();
+    for address in ["D1", "D2"] {
+        assert_eq!(
+            book.stored_cell("Data", address).unwrap().unwrap().value,
+            CellValue::Number(30.)
+        );
+    }
+}
+
+#[test]
 fn invalid_column_metadata_is_refused() {
     let bytes =
         rewrite_table(|xml| xml.replace(r#"id="2" name="Twice""#, r#"id="1" name="Twice""#));
