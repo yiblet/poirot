@@ -55,6 +55,7 @@ pub(in crate::eval) use branch_selector::BranchSelector;
 pub(in crate::eval) use bytecode_vm::Vm;
 pub(in crate::eval) use executable_ref::ExecutableRef;
 pub(in crate::eval) use expression_runner::ExpressionRunner;
+pub(in crate::eval) use lambda_executor::LambdaExecutor;
 pub(in crate::eval) use machine::Machine;
 pub(in crate::eval) use rectangular_traversal::RectangularTraversal;
 #[cfg(test)]

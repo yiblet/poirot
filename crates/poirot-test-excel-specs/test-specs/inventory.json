@@ -14284,6 +14284,78 @@
       }
     },
     {
+      "id": "function.MAP",
+      "kind": "function",
+      "name": "MAP",
+      "family": "Matrix",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/map-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.MAP.valid",
+          "behavior": "Invoke a callback on corresponding cells from matching rectangles.",
+          "applicability": "applicable"
+        }
+      ]
+    },
+    {
+      "id": "function.BYROW",
+      "kind": "function",
+      "name": "BYROW",
+      "family": "Matrix",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/byrow-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.BYROW.valid",
+          "behavior": "Invoke a callback once per row and return one result per row.",
+          "applicability": "applicable"
+        }
+      ]
+    },
+    {
+      "id": "function.BYCOL",
+      "kind": "function",
+      "name": "BYCOL",
+      "family": "Matrix",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/bycol-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.BYCOL.valid",
+          "behavior": "Invoke a callback once per column and return one result per column.",
+          "applicability": "applicable"
+        }
+      ]
+    },
+    {
+      "id": "function.MAKEARRAY",
+      "kind": "function",
+      "name": "MAKEARRAY",
+      "family": "Matrix",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/makearray-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.MAKEARRAY.valid",
+          "behavior": "Build a rectangle by passing one-based row and column positions to a callback.",
+          "applicability": "applicable"
+        }
+      ]
+    },
+    {
       "id": "function.ISOMITTED",
       "kind": "function",
       "name": "ISOMITTED",
@@ -14352,6 +14424,8 @@
     "BITOR",
     "BITRSHIFT",
     "BITXOR",
+    "BYCOL",
+    "BYROW",
     "CEILING",
     "CEILING.MATH",
     "CEILING.PRECISE",
@@ -14580,6 +14654,8 @@
     "LOGNORMDIST",
     "LOOKUP",
     "LOWER",
+    "MAKEARRAY",
+    "MAP",
     "MATCH",
     "MAX",
     "MAXA",

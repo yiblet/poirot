@@ -3,7 +3,7 @@ use super::external_behavior::ExternalBehavior;
 use super::formula_effects::FormulaEffects;
 use crate::eval::{
     compile::bytecode::{CallTarget, CompileError},
-    functions::registry::DependencyPolicy,
+    functions::registry::{DependencyPolicy, FunctionId},
 };
 use crate::model::{FormulaType, ScalarKinds, ShapeBounds};
 use poirot_parsing::formula::{BinaryOp, Expr, LambdaForm, LetForm, UnaryOp};
@@ -198,10 +198,15 @@ pub(super) fn transfer(
                             effects.possible_reads =
                                 effects.possible_reads.union(DependencyPolicy::DATE_SYSTEM);
                         }
-                        if let crate::eval::functions::registry::FunctionId::Reference(kind) = id
+                        if let FunctionId::Reference(kind) = id
                             && kind.helper().is_some_and(|helper| helper.policy().volatile)
                         {
                             effects.external = effects.external.max(ExternalBehavior::Volatile);
+                        }
+                        if let FunctionId::Matrix(kind) = id
+                            && kind.uses_array_callback_adapter()
+                        {
+                            effects = callable_effects(effects);
                         }
                         shape = descriptor.result.shape(&shapes, &constants);
                         descriptor.result.apply(&types)
@@ -336,9 +341,6 @@ fn callable_effects(mut effects: FormulaEffects) -> FormulaEffects {
     effects.external = ExternalBehavior::Opaque;
     effects.possible_reads = effects
         .possible_reads
-        .union(DependencyPolicy::REFERENCE_READS)
-        .union(DependencyPolicy::TIME_READS)
-        .union(DependencyPolicy::SEED)
-        .union(DependencyPolicy::CURRENCY);
+        .union(DependencyPolicy::CALLABLE_READS);
     effects
 }

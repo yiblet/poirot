@@ -64,7 +64,6 @@ registry! {
 "SHEETS" => Reference(ReferenceFunction::Sheets), 0, 1, FamilyControlled, REFERENCE_READS, Scalar;
 "FORMULATEXT" => Reference(ReferenceFunction::FormulaText), 1, 1, FamilyControlled, REFERENCE_READS, Scalar;
 "ISFORMULA" => Information(InformationFunction::IsFormula), 1, 1, FamilyControlled, REFERENCE_READS, Any;
-"ISOMITTED" => Information(InformationFunction::IsOmitted), 1, 1, FamilyControlled, ARGUMENTS, Scalar;
 "ENCODEURL" => Text(TextFunction::EncodeUrl), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
 "RAND" => Math(MathFunction::Rand), 0, 0, FamilyControlled, RANDOM_READS, Number;
 "RANDBETWEEN" => Math(MathFunction::Randbetween), 2, 2, FamilyControlled, RANDOM_NUMERIC, ElementwiseNumber;
@@ -272,6 +271,7 @@ registry! {
 "ISNA" => Information(InformationFunction::IsNa), 1, 1, FamilyControlled, ARGUMENTS, ElementwiseBoolean;
 "ISNUMBER" => Information(InformationFunction::IsNumber), 1, 1, FamilyControlled, ARGUMENTS, ElementwiseBoolean;
 "ISTEXT" => Information(InformationFunction::IsText), 1, 1, FamilyControlled, ARGUMENTS, ElementwiseBoolean;
+"ISOMITTED" => Information(InformationFunction::IsOmitted), 1, 1, FamilyControlled, ARGUMENTS, Scalar;
 "ISBLANK" => Information(InformationFunction::IsBlank), 1, 1, FamilyControlled, ARGUMENTS, ElementwiseBoolean;
 "ISLOGICAL" => Information(InformationFunction::IsLogical), 1, 1, FamilyControlled, ARGUMENTS, ElementwiseBoolean;
 "ISNONTEXT" => Information(InformationFunction::IsNonText), 1, 1, FamilyControlled, ARGUMENTS, ElementwiseBoolean;
@@ -519,6 +519,10 @@ registry! {
 "WRAPROWS" => Matrix(MatrixFunction::Wraprows), 2, 3, FamilyControlled, NUMERIC_COERCION, Array;
 "RANDARRAY" => Matrix(MatrixFunction::Randarray), 0, 5, FamilyControlled, RANDOM_NUMERIC, RandomArray;
 "TRIMRANGE" => Matrix(MatrixFunction::Trimrange), 1, 3, FamilyControlled, NUMERIC_COERCION, TrimRange;
+"MAP" => Matrix(MatrixFunction::Map), 2, 254, FamilyControlled, CALLABLE_READS, Array;
+"BYROW" => Matrix(MatrixFunction::Byrow), 2, 2, FamilyControlled, CALLABLE_READS, Array;
+"BYCOL" => Matrix(MatrixFunction::Bycol), 2, 2, FamilyControlled, CALLABLE_READS, Array;
+"MAKEARRAY" => Matrix(MatrixFunction::Makearray), 3, 3, FamilyControlled, CALLABLE_READS, Array;
 "SEQUENCE" => Matrix(MatrixFunction::Sequence), 1, 4, FamilyControlled, NUMERIC_COERCION, Sequence;
 "ANCHORARRAY" => Reference(ReferenceFunction::AnchorArray), 1, 1, FamilyControlled, REFERENCE_READS, SpillRange;
 

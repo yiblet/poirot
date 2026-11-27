@@ -79,6 +79,12 @@ impl DependencyPolicy {
         .union(Self::POSITION)
         .union(Self::NAMESPACE);
 
+    /// Possible reads through a dynamically invoked worksheet callable.
+    pub const CALLABLE_READS: Self = Self::REFERENCE_READS
+        .union(Self::TIME_READS)
+        .union(Self::SEED)
+        .union(Self::CURRENCY);
+
     /// Reference reads plus currency formatting settings.
     pub const CURRENCY_FORMATTING: Self = Self::REFERENCE_READS.union(Self::CURRENCY);
 

@@ -318,6 +318,162 @@ fn registered_extension_stays_authoritative_in_named_call_position() {
 }
 
 #[test]
+fn callback_arrays_publish_values_and_dimensions() {
+    use poirot::eval::{ArrayResultPolicy, EvaluationPolicy};
+
+    let mut book = worksheet();
+    book.define_name("Twice", "LAMBDA(value,value*2)", None)
+        .unwrap();
+    let sheet = book.sheet_mut(0).unwrap();
+    // The Microsoft examples apply a scalar operation for each MAP member,
+    // summarize whole rows and columns, and use one-based MAKEARRAY coordinates.
+    for (cell, formula) in [
+        ("D1", "MAP({1,2;3,4},Twice)"),
+        ("G1", "BYROW({1,2,3;4,5,6},LAMBDA(row,SUMSQ(row)))"),
+        ("I1", "BYCOL({1,2,3;4,5,6},LAMBDA(col,MAX(col)))"),
+        (
+            "M1",
+            "_xlfn.MAKEARRAY(2,3,_xlfn.LAMBDA(_xlpm.rr,_xlpm.cc,_xlpm.rr*_xlpm.cc))",
+        ),
+        ("Q1", "MAP({1;2;3},LAMBDA(x,IF(x=2,1/0,x)))"),
+        ("M5", "MAKEARRAY(3,3,LAMBDA(r,c,r*c))"),
+        ("S1", "LET(offset,5,MAP({1,2},LAMBDA(x,x+offset)))"),
+    ] {
+        sheet.set_formula(cell, formula).unwrap();
+    }
+    let mut scenario = book
+        .overlay()
+        .policy(EvaluationPolicy {
+            arrays: ArrayResultPolicy::DynamicSpill,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
+    let context = poirot::calculation::EvaluationContext::default();
+    let checks = [
+        ("D1", CellValue::Number(2.)),
+        ("E1", CellValue::Number(4.)),
+        ("D2", CellValue::Number(6.)),
+        ("E2", CellValue::Number(8.)),
+        ("G1", CellValue::Number(14.)),
+        ("G2", CellValue::Number(77.)),
+        ("H1", CellValue::Blank),
+        ("I1", CellValue::Number(4.)),
+        ("J1", CellValue::Number(5.)),
+        ("K1", CellValue::Number(6.)),
+        ("I2", CellValue::Blank),
+        ("M1", CellValue::Number(1.)),
+        ("N1", CellValue::Number(2.)),
+        ("O1", CellValue::Number(3.)),
+        ("M2", CellValue::Number(2.)),
+        ("M5", CellValue::Number(1.)),
+        ("N6", CellValue::Number(4.)),
+        ("O7", CellValue::Number(9.)),
+        ("N2", CellValue::Number(4.)),
+        ("O2", CellValue::Number(6.)),
+        ("Q1", CellValue::Number(1.)),
+        ("Q2", CellValue::Error(CellError::Div0)),
+        ("Q3", CellValue::Number(3.)),
+        ("S1", CellValue::Number(6.)),
+        ("T1", CellValue::Number(7.)),
+    ]
+    .map(|(at, expected)| {
+        (
+            scenario.target(&format!("Data!{at}")).unwrap(),
+            at,
+            expected,
+        )
+    });
+    let mut evaluation = scenario.evaluation(&context).unwrap();
+    for (target, at, expected) in checks {
+        assert_eq!(evaluation.cell(target).unwrap(), expected, "{at}");
+    }
+}
+
+#[test]
+fn callback_arrays_validate_counts_and_reject_nested_results() {
+    let book = worksheet();
+    for (formula, error) in [
+        ("MAP({1,2},{3,4},LAMBDA(a,a))", CellError::Value),
+        ("BYROW({1,2},LAMBDA(a,b,a))", CellError::Value),
+        ("BYROW({1,2},42)", CellError::Calc),
+        ("BYROW({1,2},LAMBDA(a,a))", CellError::Calc),
+        ("BYCOL({1;2},LAMBDA(a,a))", CellError::Calc),
+        ("MAP({1,2},LAMBDA(a,{1,2}))", CellError::Calc),
+        ("MAKEARRAY(2,3,LAMBDA(rr,rr))", CellError::Value),
+        ("MAKEARRAY(0,3,LAMBDA(rr,cc,rr*cc))", CellError::Value),
+        ("MAKEARRAY(TRUE,3,LAMBDA(rr,cc,rr*cc))", CellError::Value),
+        ("MAKEARRAY(2,3,LAMBDA(rr,cc,LAMBDA(x,x)))", CellError::Calc),
+    ] {
+        assert_eq!(value(&book, formula), CellValue::Error(error), "{formula}");
+    }
+}
+
+#[test]
+fn map_uses_maximum_extents_and_marks_unmatched_positions() {
+    let mut book = worksheet();
+    let sheet = book.sheet_mut(0).unwrap();
+    // An Excel user observed a 2 by 2 spill from perpendicular ranges, with
+    // #N/A outside the shared position. The test values are independently chosen.
+    // https://techcommunity.microsoft.com/discussions/excelgeneral/use-map-function-on-perpendicular-ranges/3886074
+    sheet
+        .set_formula("D1", "MAP({3,7},{11;13},LAMBDA(lhs,rhs,lhs+rhs))")
+        .unwrap();
+    sheet
+        .set_formula("H1", "MAP({5;8;11},{2;3},LAMBDA(lhs,rhs,lhs*rhs))")
+        .unwrap();
+    let context = poirot::calculation::EvaluationContext::default();
+    let mut scenario = book.overlay().build().unwrap();
+    let checks = [
+        ("E2", CellValue::Error(CellError::NA)),
+        ("D1", 14.0.into()),
+        ("E1", CellValue::Error(CellError::NA)),
+        ("D2", CellValue::Error(CellError::NA)),
+        ("H3", CellValue::Error(CellError::NA)),
+        ("H1", 10.0.into()),
+        ("H2", 24.0.into()),
+    ]
+    .map(|(cell, expected)| (scenario.target(&format!("Data!{cell}")).unwrap(), expected));
+    let mut run = scenario.evaluation(&context).unwrap();
+    for (target, expected) in checks {
+        assert_eq!(run.cell(target).unwrap(), expected, "{target:?}");
+    }
+}
+
+#[test]
+fn callbacks_reject_unaffordable_output_before_running_bodies() {
+    use poirot::eval::{EvaluationBudgets, EvaluationError};
+
+    let book = worksheet();
+    for (source, output_size) in [
+        ("MAKEARRAY(100,100,LAMBDA(rr,cc,SEQUENCE(50)))", 10_000),
+        (
+            "MAP(SEQUENCE(12),SEQUENCE(1,12),LAMBDA(lhs,rhs,SEQUENCE(50)))",
+            144,
+        ),
+    ] {
+        let result = run_formula(
+            &book,
+            0,
+            "B1".parse().unwrap(),
+            source,
+            Default::default(),
+            EvaluationBudgets {
+                materialized_values: 20,
+                ..Default::default()
+            },
+        );
+        assert!(matches!(
+            result,
+            EvaluationOutcome::Aborted {
+                failure: EvaluationError::Budget(error),
+                ..
+            } if error.requested == output_size
+        ));
+    }
+}
+
+#[test]
 fn isomitted_distinguishes_a_missing_lambda_argument_from_a_passed_blank() {
     let book = worksheet();
     // Microsoft's example explicitly supplies an empty positional slot.
@@ -392,6 +548,8 @@ fn named_lambda_spill_discovery_uses_the_callers_scope() {
 #[test]
 fn optional_lambda_parameters_fill_omitted_slots() {
     let book = worksheet();
+    // MAP still requires one declared callback parameter per input array:
+    // https://support.microsoft.com/en-us/excel/functions/map-function
     // The Excel team documents bracketed parameter names and the ISOMITTED fallback:
     // https://techcommunity.microsoft.com/blog/microsoft365insiderblog/new-lambda-functions-available-in-excel/4213017
     for (formula, expected) in [
@@ -425,6 +583,14 @@ fn optional_lambda_parameters_fill_omitted_slots() {
         ),
         (
             "LAMBDA(item,[ITEM],item)(3)",
+            CellValue::Error(CellError::Value),
+        ),
+        (
+            "SUM(MAP({1,2},LAMBDA([item],IF(ISOMITTED(item),0,item))))",
+            3.0.into(),
+        ),
+        (
+            "MAP({1,2},LAMBDA(item,[extra],item))",
             CellValue::Error(CellError::Value),
         ),
     ] {

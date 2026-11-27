@@ -4,6 +4,7 @@
 //! config (policies), functions (identities and failures), limits (budgets and copying)
 //! and values (value channels); sibling elementwise (shared broadcast kernels).
 
+mod array_callbacks;
 /// Matrix family dispatch and its shared helpers.
 mod dispatch;
 mod grouping;

@@ -17,8 +17,8 @@ use crate::eval::values::core_projection::semantic;
 use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::values::{OperandOrigin, copy_cell, copy_value};
 use crate::eval::vm::ArgumentsRef;
-use crate::eval::vm::ExpressionRunner;
-use crate::model::{CellAddress, CellValue};
+use crate::eval::vm::{ExpressionRunner, LambdaExecutor};
+use crate::model::{CellAddress, CellError, CellValue};
 
 /// Budgeted bridge from function adapters to a running evaluator and its deferred arguments.
 /// Arguments are evaluated on demand and retained in VM operand slots, allowing
@@ -239,6 +239,33 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             missing: operand.missing,
             array_missing: operand.array_missing.clone(),
         })
+    }
+
+    /// Evaluate and validate a callback once before a helper starts producing results.
+    pub(in crate::eval) fn callback(
+        &mut self,
+        index: usize,
+        arity: usize,
+        invalid: CellError,
+    ) -> FunctionResult<Value> {
+        self.prepare(index)?;
+        let value = self.operand(index).ok_or(VALUE_ERROR)?.value();
+        LambdaExecutor::validate_callback(value, arity, invalid)?;
+        // Successful validation identifies a callable; cloning retains its executable Arc.
+        Ok(value.clone())
+    }
+
+    /// Run a callback through the ordinary VM with already admitted worksheet arguments.
+    pub(in crate::eval) fn invoke_callback(
+        &mut self,
+        callback: &Value,
+        arguments: impl ExactSizeIterator<Item = Value>,
+    ) -> EvalResult<Value> {
+        let target = EvaluationTarget {
+            sheet: self.sheet,
+            address: self.address,
+        };
+        LambdaExecutor::new(self.session, target).invoke_values(callback, arguments)
     }
 
     /// Evaluate one scalar argument with the caller's pinned scalar observation policy.

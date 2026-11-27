@@ -4,18 +4,18 @@
     "evaluation_steps": 2060,
     "assertion_count": 2061,
     "source_count": 262,
-    "feature_count": 297,
-    "potential_obligation_count": 1659,
+    "feature_count": 301,
+    "potential_obligation_count": 1663,
     "obligation_status_counts": {
       "specified_with_evidence": 563,
       "not_applicable": 8,
-      "missing": 1088
+      "missing": 1092
     },
     "evidence_counts": {
       "documented_derivation": 2012,
       "documented_example": 49
     },
-    "registered_function_count": 497,
+    "registered_function_count": 501,
     "registered_functions_with_specifications": 260,
     "registered_functions_without_specifications": [
       "ACCRINT",
@@ -49,6 +49,8 @@
       "BITOR",
       "BITRSHIFT",
       "BITXOR",
+      "BYCOL",
+      "BYROW",
       "CELL",
       "CHIDIST",
       "CHIINV",
@@ -171,6 +173,8 @@
       "LOGNORM.DIST",
       "LOGNORM.INV",
       "LOGNORMDIST",
+      "MAKEARRAY",
+      "MAP",
       "MDURATION",
       "MIDB",
       "MODE.MULT",
@@ -257,7 +261,7 @@
       "ZTEST"
     ],
     "implementation_status_counts": {
-      "registered": 263,
+      "registered": 267,
       "unknown": 17,
       "partial": 10,
       "unsupported": 7
@@ -28123,6 +28127,38 @@
       "feature": "function.SERIESSUM",
       "behavior": "Establish SERIESSUM version under its individual Excel contract.",
       "applicability": "requires_research",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.MAP.valid",
+      "feature": "function.MAP",
+      "behavior": "Invoke a callback on corresponding cells from matching rectangles.",
+      "applicability": "applicable",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.BYROW.valid",
+      "feature": "function.BYROW",
+      "behavior": "Invoke a callback once per row and return one result per row.",
+      "applicability": "applicable",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.BYCOL.valid",
+      "feature": "function.BYCOL",
+      "behavior": "Invoke a callback once per column and return one result per column.",
+      "applicability": "applicable",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.MAKEARRAY.valid",
+      "feature": "function.MAKEARRAY",
+      "behavior": "Build a rectangle by passing one-based row and column positions to a callback.",
+      "applicability": "applicable",
       "specification_status": "missing",
       "assertions": []
     },

@@ -530,6 +530,10 @@ common_functions! {
     IsFormula = 494 => "ISFORMULA";
     EncodeUrl = 495 => "ENCODEURL";
     IsOmitted = 496 => "ISOMITTED";
+    Map = 497 => "MAP";
+    Byrow = 498 => "BYROW";
+    Bycol = 499 => "BYCOL";
+    Makearray = 500 => "MAKEARRAY";
 
 
 

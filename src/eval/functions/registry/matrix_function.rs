@@ -65,4 +65,22 @@ pub enum MatrixFunction {
     Linest,
     /// Exponential least-squares coefficients and optional diagnostics.
     Logest,
+    /// Apply a callable to corresponding array members.
+    Map,
+    /// Apply a callable once per row.
+    Byrow,
+    /// Apply a callable once per column.
+    Bycol,
+    /// Produce a sized array by calling a function at each position.
+    Makearray,
+}
+
+impl MatrixFunction {
+    /// Whether this operation uses the higher-order array adapter.
+    pub(in crate::eval) fn uses_array_callback_adapter(self) -> bool {
+        matches!(
+            self,
+            Self::Map | Self::Byrow | Self::Bycol | Self::Makearray
+        )
+    }
 }
