@@ -82,6 +82,37 @@ fn empty_table_selector_reads_only_the_data_rows() {
 }
 
 #[test]
+fn dynamic_spills_cannot_cross_table_boundaries() {
+    use poirot::model::{CellError, CellValue};
+
+    // Excel rejects spilled array formulas in tables, even when cells are blank.
+    // https://support.microsoft.com/en-us/excel/how-to-correct-a-spill-error
+    let bytes = rewrite_table(|xml| xml.replace(r#"ref="A1:B4""#, r#"ref="B2:C5""#));
+    let mut book = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    let sheet = book.sheet_mut(0).unwrap();
+    sheet.remove("B3").unwrap();
+    sheet.set_formula("B2", "SEQUENCE(1)").unwrap();
+    sheet.set_formula("A3", "SEQUENCE(1,2)").unwrap();
+    sheet.set_formula("B5", "SEQUENCE(2)").unwrap();
+    sheet.set_formula("D5", "SEQUENCE(2)").unwrap();
+
+    book.recalculate().unwrap();
+    let sheet = book.sheet(0).unwrap();
+    for (address, expected) in [
+        ("B2", CellValue::Number(1.)),
+        ("A3", CellValue::Error(CellError::Spill)),
+        ("B5", CellValue::Error(CellError::Spill)),
+        ("D5", CellValue::Number(1.)),
+        ("D6", CellValue::Number(2.)),
+    ] {
+        assert_eq!(sheet.get(address).unwrap().unwrap().value, expected);
+    }
+    for address in ["B3", "B6"] {
+        assert!(sheet.get(address).unwrap().is_none());
+    }
+}
+
+#[test]
 fn invalid_column_metadata_is_refused() {
     let bytes =
         rewrite_table(|xml| xml.replace(r#"id="2" name="Twice""#, r#"id="1" name="Twice""#));
