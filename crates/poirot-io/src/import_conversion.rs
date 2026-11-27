@@ -131,11 +131,37 @@ fn read_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
     };
     for identity in plan.sheets.iter().filter(|s| s.supported) {
         let bytes = package.read(&identity.part)?;
+        let tables = ooxml::read_sheet_tables(
+            &mut package,
+            &identity.part,
+            &bytes,
+            options.xlsx_policy,
+            &mut warnings,
+        )?;
+        for (index, table) in tables.iter().enumerate() {
+            let previous =
+                tables
+                    .get(..index)
+                    .ok_or_else(|| crate::ModelError::InvalidWorksheetTable {
+                        name: table.display_name.clone(),
+                    })?;
+            table.validate(
+                workbook
+                    .sheets()
+                    .iter()
+                    .flat_map(|sheet| sheet.tables())
+                    .chain(previous),
+                previous,
+            )?;
+        }
         let sheet = workbook
             .sheet_by_name_mut(&identity.name)
             .ok_or(IoError::Read(
                 crate::WorkbookReadError::MissingTextWorksheet,
             ))?;
+        for table in tables {
+            sheet.import_table(table)?;
+        }
         if ooxml::apply_sheet_text(&bytes, &shared, sheet, &styles.cells, &mut warnings)? {
             ooxml::apply_sheet_spills(&bytes, &identity.name, &mut workbook)?;
         }

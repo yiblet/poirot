@@ -375,6 +375,9 @@ impl Parser<'_> {
         if self.take('{') {
             return self.array();
         }
+        if self.peek() == Some('[') {
+            return self.table_reference(None);
+        }
         if self.take('#') {
             let start = self.pos - 1;
             for error in [
@@ -433,6 +436,16 @@ impl Parser<'_> {
         }
         self.reference(None)
     }
+    fn table_reference(&mut self, table: Option<String>) -> Result<Expr, ParseError> {
+        let (rest, reference) = super::table_reference::TableReference::parse(table, self.tail()?)
+            .ok_or(ParseError {
+                position: self.pos,
+                reason: ParseReasonError::InvalidTableReference,
+            })?;
+        self.pos = self.input.len() - rest.len();
+        Ok(Expr::Table(reference))
+    }
+
     fn reference(&mut self, sheet: Option<String>) -> Result<Expr, ParseError> {
         let start = self.pos;
         let (rest, text) = identifier(self.input.get(start..).ok_or(ParseError {
@@ -450,6 +463,9 @@ impl Parser<'_> {
                 return self.fail(ParseReasonError::RepeatedQualifier);
             }
             return self.reference(Some(text));
+        }
+        if self.peek() == Some('[') && sheet.is_none() && !text.contains('$') {
+            return self.table_reference(Some(text));
         }
         let saved = self.pos;
         self.space();

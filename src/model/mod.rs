@@ -91,7 +91,7 @@ pub use file_metadata::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagno
 pub use poirot_functions::scalar::DateSystem;
 pub use poirot_io::NamedRange;
 pub use poirot_io::{Cell, CellStyle, SharedFormula, SharedFormulaId};
-pub use poirot_io::{SheetPresentation, SheetVisibility};
+pub use poirot_io::{SheetPresentation, SheetVisibility, TableColumn, WorksheetTable};
 pub use workbook::Workbook;
 pub use worksheet::Worksheet;
 pub(in crate::model) use worksheet::{SavedSpillExtent, SpillCell};

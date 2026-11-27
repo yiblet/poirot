@@ -4,6 +4,10 @@ Poirot reads, edits, calculates and writes XLSX workbooks, and reads BIFF8 XLS
 files (Excel 97–2003). It targets modern Excel, including dynamic arrays, with
 partial compatibility.
 
+Current evaluator compatibility work covers missing worksheet functions and
+structured table references. Iterative circular calculation and external
+workbook links are compatibility non-goals.
+
 Function availability, calculation results and file preservation need separate
 checks. A supported function may have unsupported inputs or behavior, and saving
 can omit workbook features such as charts and macros. Use the sections below to
@@ -12,6 +16,7 @@ check your model, then [validate it with representative inputs](#checking-your-w
 - [Supported functions](#supported-functions)
 - [Regex backends](#regex-backends)
 - [Formula evaluation](#formula-evaluation)
+- [Compatibility non-goals](#compatibility-non-goals)
 - [Calculation settings](#calculation-settings)
 - [Internationalization](#internationalization)
 - [File support and preservation](#file-support-and-preservation)
@@ -96,17 +101,31 @@ authored source remains portable.
 
 | Feature | Supported behavior and limits | Tests or API |
 | --- | --- | --- |
-| Cell and range references | Supports single cells, ranges, sheet-qualified references, whole rows, whole columns and defined names. Excel tables and structured references such as `Sales[Amount]` are unsupported. | [Reference tests](https://github.com/yiblet/poirot/blob/master/tests/eval_reference_ranges.rs), [name tests](https://github.com/yiblet/poirot/blob/master/tests/eval_qualified_names.rs) |
+| Cell and range references | Supports single cells, ranges, sheet-qualified references, whole rows, whole columns and defined names. | [Reference tests](https://github.com/yiblet/poirot/blob/master/tests/eval_reference_ranges.rs), [name tests](https://github.com/yiblet/poirot/blob/master/tests/eval_qualified_names.rs) |
+| Structured table references | Supports table data by name, qualified columns and adjacent column ranges, and one section selector such as `#Headers`, `#Data`, `#Totals` or `#All`. `Table[]` selects the same rows as `Table[#Data]`. Insert placeholders are excluded from data. Supports `@` and `#This Row` for the formula’s row, and unqualified selectors inside the enclosing table. Structured references built with `INDIRECT` are unsupported. | [Table integration tests](../tests/io_worksheet_tables.rs) |
 | Three-dimensional references | Supports aggregates such as `SUM(Sheet1:Sheet3!A1)`, `AVERAGE` and `COUNT`. Reversed sheet endpoints stop evaluation. If only the first endpoint is missing, the reference selects the first worksheet; a missing last endpoint stops evaluation. | [Sheet-span tests](https://github.com/yiblet/poirot/blob/master/tests/eval_sheet_spans.rs) |
 | Dynamic arrays | Implements `FILTER`, `SORT`, `SORTBY`, `UNIQUE`, `SEQUENCE`, `RANDARRAY`, `HSTACK`, `VSTACK`, `TAKE`, `DROP`, `CHOOSECOLS`, `CHOOSEROWS`, `EXPAND`, `TOCOL`, `TOROW`, `WRAPCOLS`, `WRAPROWS` and `TEXTSPLIT`. | [Array tests](https://github.com/yiblet/poirot/blob/master/tests/eval_internal_array_context.rs) |
-| Worksheet spills and `#` references | Tracks spill ranges across edits and removes obsolete spill cells. Formulas and nonblank cells block spills. Competing spills favor the top-left anchor (row, then column); agreement with Excel for that priority is unverified. | [Spill tests](https://github.com/yiblet/poirot/blob/master/tests/dynamic_spills.rs), [spill-reference tests](https://github.com/yiblet/poirot/blob/master/tests/eval_spill_references.rs) |
+| Worksheet spills and `#` references | Tracks spill ranges across edits and removes obsolete spill cells. Formulas and nonblank cells block spills. Multi-cell spills also fail if the output range intersects a worksheet table. Competing spills favor the top-left anchor (row, then column); agreement with Excel for that priority is unverified. | [Spill tests](https://github.com/yiblet/poirot/blob/master/tests/dynamic_spills.rs), [spill-reference tests](https://github.com/yiblet/poirot/blob/master/tests/eval_spill_references.rs) |
 | Explicit `@` and scalar array results | `@A1:A3` selects the cell in the formula's row. `ArrayResultPolicy::ScalarIntersection` returns a scalar final result while preserving intermediate arrays. | [Array policy](../src/eval/config/array_result_policy.rs) |
 | Shared formulas | Imported shared formulas become independent, complete formula strings. Replacing the original anchor does not change its former followers. | [Shared-formula tests](https://github.com/yiblet/poirot/blob/master/tests/shared_formula_lifecycle.rs) |
 | Legacy Ctrl+Shift+Enter arrays | Unsupported. XLS and XLSX imports retain different parts of these formulas; see [known incompatibilities](#known-incompatibilities). | [File-loss table](#known-incompatibilities) |
-| External workbooks | Linked workbooks are not loaded or calculated. | [Reference failure tests](https://github.com/yiblet/poirot/blob/master/tests/eval_reference_host_contracts.rs) |
-| Iterative circular calculation | Unsupported. Recursive cell reads can produce `#REF!`; circular spill dependencies can stop evaluation. | [Cell execution](../src/eval/session/cells/cell_attempt.rs) |
 | Custom functions | Applications can register functions without replacing builtins. | [Custom functions](../README.md#calculate-the-way-your-application-needs) |
 | Excel application features | Excel add-ins, VBA, application automation, PivotTable calculation and what-if data tables are unsupported. | — |
+
+For structured table references, Poirot returns `#NAME?` for an unknown table
+and `#REF!` for an unknown column or missing section. Current-row selectors
+return `#VALUE!` when the formula's row is outside the selected table's data
+rows. An unqualified selector such as `[Amount]` requires a formula cell inside
+a table and selects its data column. An explicit `[@Amount]` selects only the
+current row. Excel's result for a missing totals section has yet to be verified.
+
+## Compatibility non-goals
+
+- **Iterative circular calculation.** Poirot does not iterate circular formulas
+  using Excel's iteration settings. Recursive cell reads can produce `#REF!`,
+  and circular spill dependencies can stop evaluation.
+- **External workbook links.** Poirot does not load linked workbooks or
+  calculate references to them.
 
 ## Calculation settings
 
@@ -183,6 +202,11 @@ XLSX imports and exports preserve cell fonts, pattern fills, four-sided borders,
 common alignment and number-format strings, including styled blanks. Theme and
 indexed colors retain their source identities and tint; Poirot does not resolve
 them to rendered colors.
+
+XLSX import and export preserve table identity, bounds, column captions, and
+header and totals row presence. Worksheet formulas are retained as source text.
+Table styling, filters and calculated-column definitions can be omitted with
+an import warning. A worksheet containing tables cannot be duplicated.
 
 Inspect `Workbook::file_metadata.import_warnings` for content that import changed
 or omitted. Some losses have no warning; check the table below before relying on

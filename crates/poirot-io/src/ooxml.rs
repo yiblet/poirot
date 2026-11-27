@@ -12,6 +12,9 @@ mod package;
 pub(crate) use metadata::apply_workbook_metadata;
 mod shared;
 mod spill;
+mod table_export;
+mod table_import;
+pub(crate) use table_import::read_sheet_tables;
 mod text;
 mod text_overlay;
 mod workbook;
@@ -103,7 +106,14 @@ pub(crate) fn patch_export(
         let size = patch.execute(SizeCounter::default())?.0;
         patched_total = next_total(size, original.len() as u64, patched_total, options)?;
         let updated = patch.execute(Vec::new())?;
-        package.insert(path, updated);
+        package.insert(path.clone(), updated);
+        table_export::install_tables(
+            &mut package,
+            &path,
+            sheet.tables(),
+            options,
+            &mut patched_total,
+        )?;
     }
     let path = plan.styles_part.as_ref().ok_or(IoError::Read(
         crate::WorkbookReadError::GeneratedPackageHasNoStylesPart,

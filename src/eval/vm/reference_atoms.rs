@@ -4,9 +4,9 @@ use super::reference_ref::ReferenceRef;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::ports::DependencyRead;
-use crate::eval::session::{NameResolver, ReadRecorder, Session};
+use crate::eval::session::{NameResolver, ReadRecorder, Session, TableResolver};
 use crate::eval::values::{Area, AreaKind, ReferenceAreas, Value, err};
-use crate::model::CellError::Ref;
+use crate::model::CellError::{Name, Ref};
 use crate::model::{CellAddress, MAX_COLUMNS, MAX_ROWS};
 
 /// Resolves borrowed reference geometry against workbook sheets into value channels.
@@ -28,6 +28,15 @@ impl<'s, 'a> ReferenceAtoms<'s, 'a> {
         reference: ReferenceRef<'_>,
     ) -> EvalResult<Value> {
         match reference {
+            ReferenceRef::Table(reference) => Ok(TableResolver::new(self.session)
+                .resolve(
+                    EvaluationTarget {
+                        sheet: s,
+                        address: at,
+                    },
+                    reference,
+                )?
+                .unwrap_or_else(|| err(Name))),
             ReferenceRef::SheetSpan {
                 first_sheet,
                 last_sheet,

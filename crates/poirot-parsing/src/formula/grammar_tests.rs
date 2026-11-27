@@ -69,3 +69,12 @@ fn atp_prefix_spelling_survives_legacy_function_normalization() {
     };
     assert_eq!(name, "SUM");
 }
+
+#[test]
+fn empty_table_selector_is_short_for_data() {
+    for (source, canonical) in [("Sales[]", "Sales[#Data]"), ("[]", "[#Data]")] {
+        let expression = parse(source);
+        assert_eq!(expression, parse(canonical));
+        assert_eq!(FormulaPrinter::print(&expression).unwrap(), canonical);
+    }
+}

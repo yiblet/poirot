@@ -191,8 +191,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                         self.session.state.runtime.vm.values.push(value);
                     }
                     Opcode::Name => {
-                        let value = NameResolver::new(self.session).defined_name(
-                            sheet,
+                        let value = NameResolver::new(self.session).unqualified_name(
                             sheet,
                             at,
                             program.text(instruction.a, instruction.b)?,
@@ -508,6 +507,11 @@ impl<'s, 'a> Vm<'s, 'a> {
                     },
                 )
             }
+            ReferenceKind::Table => ReferenceAtoms::new(self.session).resolve(
+                sheet,
+                at,
+                ReferenceRef::Table(reader.table()?),
+            ),
             ReferenceKind::SheetSpan => {
                 let first_sheet = reader.string()?;
                 let last_sheet = reader.string()?;

@@ -130,10 +130,12 @@ pub mod numeric_fidelity;
 mod rows_records;
 /// Stored presentation records.
 pub mod styles;
+mod table_column;
 /// Lossless saved scalar serialization.
 pub mod value_wire;
 mod workbook_records;
 mod worksheet_records;
+mod worksheet_table;
 pub use address::{CellAddress, MAX_COLUMNS, MAX_ROWS};
 pub use cell::{Cell, CellStyle, SharedFormula, SharedFormulaId};
 pub use file_metadata::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
@@ -151,8 +153,10 @@ pub use styles::{
     RotationDegrees, StyleColor, StyleContext, TextRotation, ThemeColor, Tint, Underline,
     VerticalAlignment, VisualStyle,
 };
+pub use table_column::TableColumn;
 pub use workbook_records::NamedRange;
 pub use worksheet_records::{SheetPresentation, SheetVisibility};
+pub use worksheet_table::WorksheetTable;
 
 /// Borrowed export and direct streaming import contracts.
 pub mod data;

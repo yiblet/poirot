@@ -28,6 +28,9 @@ pub enum ModelError {
         /// Rejected identifier spelling.
         name: String,
     },
+    /// Copying a table-bearing worksheet requires new workbook-wide table identities.
+    #[error("duplicating a worksheet containing Excel tables is unsupported")]
+    DuplicateWorksheetTables,
     /// Inserted worksheet is absent.
     #[error("inserted worksheet is absent")]
     WorksheetInsertionMissing,

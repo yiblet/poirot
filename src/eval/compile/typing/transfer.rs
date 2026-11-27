@@ -41,6 +41,26 @@ pub(super) fn transfer(
                 effects.possible_reads = DependencyPolicy::REFERENCE_READS;
                 FormulaType::multi_reference(ScalarKinds::ANY).join(error)
             }
+            Expr::Table(reference) => {
+                use poirot_parsing::formula::{TableColumns, TableSection};
+                let rows = match reference.section {
+                    TableSection::CurrentRow | TableSection::Headers | TableSection::Totals => 1,
+                    TableSection::Data | TableSection::All => crate::model::MAX_ROWS,
+                };
+                let columns = if matches!(reference.columns, TableColumns::One(_)) {
+                    1
+                } else {
+                    crate::model::MAX_COLUMNS
+                };
+                shape = ShapeBounds::new(rows, columns);
+                effects.possible_reads = DependencyPolicy::REFERENCE_READS;
+                let reference_type = if rows == 1 && columns == 1 {
+                    FormulaType::single_reference(ScalarKinds::ANY)
+                } else {
+                    FormulaType::multi_reference(ScalarKinds::ANY)
+                };
+                reference_type.join(error)
+            }
             Expr::Name(_) | Expr::QualifiedName { .. } => {
                 shape = ShapeBounds::UNKNOWN;
                 effects.possible_reads = DependencyPolicy::REFERENCE_READS;

@@ -44,6 +44,7 @@ impl ExpressionContract {
             | Expr::Cell(_)
             | Expr::Column { .. }
             | Expr::Row { .. }
+            | Expr::Table(_)
             | Expr::SheetSpan(_) => Self::Reference,
             Expr::Binary {
                 op: BinaryOp::Range | BinaryOp::Union | BinaryOp::Intersection,

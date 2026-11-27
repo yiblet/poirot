@@ -61,8 +61,26 @@ impl<'s, 'a> SpillPublisher<'s, 'a> {
                     .checked_add(u32::try_from(width - 1).unwrap_or(u32::MAX)),
             )
             .map(|(row, col)| CellAddress { row, col });
-        if last.is_none_or(|last| last.validate().is_err()) {
+        let Some(last) = last.filter(|last| last.validate().is_ok()) else {
             return Ok(ComputedCell::scalar(Error(CellError::Spill)));
+        };
+        if last != at
+            && let Some(worksheet) = self.session.sources.workbook.sheet(sheet)
+        {
+            for table in worksheet.tables() {
+                self.session
+                    .state
+                    .runtime
+                    .budget
+                    .charge(WorkKind::SparseScan, 1)?;
+                if at.row <= table.last.row
+                    && table.first.row <= last.row
+                    && at.col <= table.last.col
+                    && table.first.col <= last.col
+                {
+                    return Ok(ComputedCell::scalar(Error(CellError::Spill)));
+                }
+            }
         }
         let count = height.checked_mul(width).ok_or_else(|| {
             unsupported(
@@ -72,8 +90,6 @@ impl<'s, 'a> SpillPublisher<'s, 'a> {
             )
         })?;
         self.session.state.runtime.budget.check_allocation(count)?;
-        // SAFETY: The preceding last.is_none_or guard returns on None before this unwrap; last is not reassigned.
-        let last = last.unwrap();
         ReadRecorder::new(self.session).read_spill_membership(
             sheet,
             CellAddress { row: 0, col: 0 },

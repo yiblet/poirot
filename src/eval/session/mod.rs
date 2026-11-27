@@ -63,6 +63,7 @@ pub(in crate::eval) use observation_recorder::ObservationRecorder;
 pub(in crate::eval) use projection::{Coercer, ResultProjection};
 pub(in crate::eval) use reads::{
     ArgumentReader, ItemFolder, NameResolver, ReadRecorder, SparseMember, SparseReader,
+    TableResolver,
 };
 pub(in crate::eval) use run_policies::RunPolicies;
 pub(in crate::eval) use runtime::Runtime;

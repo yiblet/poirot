@@ -183,6 +183,7 @@ fn write_expr(
             out.push_str(name);
         }
         Expr::Missing => {}
+        Expr::Table(reference) => reference.write(out),
         Expr::SheetSpan(span) => {
             if span.first_sheet.is_empty()
                 || span.last_sheet.is_empty()

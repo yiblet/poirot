@@ -1,6 +1,8 @@
 //! Metered sheet and scoped-name resolution with dependency reporting.
 
 use super::read_recorder::ReadRecorder;
+use super::table_resolver::TableResolver;
+use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{EvalResult, EvaluationError, WorkKind};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::cells::FormulaExecution;
@@ -8,6 +10,7 @@ use crate::eval::session::composition::Session;
 use crate::eval::values::{Value, err, identifier_failure};
 use crate::model::CellAddress;
 use crate::model::CellError::{Name, Ref};
+use poirot_parsing::formula::{TableColumns, TableReference, TableSection};
 
 /// Resolves sheet qualifiers and defined names, reporting the selection as a dependency.
 pub(in crate::eval) struct NameResolver<'s, 'a> {
@@ -69,6 +72,28 @@ impl<'s, 'a> NameResolver<'s, 'a> {
         diagnostic.map_or(Ok(None), |error| Err(identifier_failure(error)))
     }
 
+    /// Resolve an unqualified name, falling back to a workbook table's data rows.
+    pub(in crate::eval) fn unqualified_name(
+        &mut self,
+        sheet: usize,
+        at: CellAddress,
+        name: &str,
+    ) -> EvalResult<Value> {
+        if let Some(value) = self.lookup_defined_name(sheet, sheet, at, name)? {
+            return Ok(value);
+        }
+        Ok(TableResolver::new(self.session)
+            .resolve(
+                EvaluationTarget { sheet, address: at },
+                TableReference {
+                    table: Some(name),
+                    section: TableSection::Data,
+                    columns: TableColumns::All,
+                },
+            )?
+            .unwrap_or_else(|| err(Name)))
+    }
+
     /// Name selection uses explicit scope; token evaluation retains caller context.
     pub(in crate::eval) fn defined_name(
         &mut self,
@@ -77,6 +102,19 @@ impl<'s, 'a> NameResolver<'s, 'a> {
         at: CellAddress,
         name: &str,
     ) -> EvalResult<Value> {
+        Ok(self
+            .lookup_defined_name(caller, scope, at, name)?
+            .unwrap_or_else(|| err(Name)))
+    }
+
+    /// Return absence separately from a selected name's worksheet error.
+    fn lookup_defined_name(
+        &mut self,
+        caller: usize,
+        scope: usize,
+        at: CellAddress,
+        name: &str,
+    ) -> EvalResult<Option<Value>> {
         self.session.state.runtime.budget.text(name.len())?;
         self.session.state.runtime.budget.charge(
             WorkKind::NamespaceScan,
@@ -102,13 +140,13 @@ impl<'s, 'a> NameResolver<'s, 'a> {
             selected,
         });
         let Some(index) = selected else {
-            return Ok(err(Name));
+            return Ok(None);
         };
         // Different qualifiers can select one global NAME record. Cycle identity
         // follows that record and the caller context, rather than its spelling.
         let key = (caller, index);
         if !self.session.state.runtime.stack.names.insert(key) {
-            return Ok(err(Ref));
+            return Ok(Some(err(Ref)));
         }
         let result = (|| {
             let formula = &self
@@ -145,6 +183,6 @@ impl<'s, 'a> NameResolver<'s, 'a> {
             FormulaExecution::new(self.session).prepared_expression(caller, at, &prepared)
         })();
         self.session.state.runtime.stack.names.remove(&key);
-        result
+        result.map(Some)
     }
 }

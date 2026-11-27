@@ -143,6 +143,7 @@ mod io_visual_style_budget;
 mod io_visual_styles;
 mod io_workbooks;
 mod io_worksheet_presentation;
+mod io_worksheet_tables;
 mod io_xml_projection;
 mod legacy_statistics_artifacts;
 mod lookup_optional_arguments;

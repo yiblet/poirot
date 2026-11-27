@@ -12,9 +12,9 @@ use std::borrow::Cow;
 
 /// Wire version of the serialized payload layout.
 pub(super) const VERSION: u32 = match poirot_functions::text::regex::Program::BACKEND {
-    poirot_functions::text::RegexBackend::Pcre2 => 82,
+    poirot_functions::text::RegexBackend::Pcre2 => 96,
     // Source workbooks remain portable; retained results must not cross regex engines.
-    poirot_functions::text::RegexBackend::Rust => 82 | (1 << 31),
+    poirot_functions::text::RegexBackend::Rust => 96 | (1 << 31),
 };
 
 /// Versioned wire payload; runtime providers are reattached during restoration.
