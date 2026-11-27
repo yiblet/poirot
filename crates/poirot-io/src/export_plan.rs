@@ -158,6 +158,23 @@ pub fn plan_xlsx_export<W: WorkbookSource>(
             for column in &table.columns {
                 charge(column.name.len())?;
                 charge(std::mem::size_of::<crate::TableColumn>())?;
+                if let Some(formula) = &column.calculated_formula {
+                    charge(formula.text.len())?;
+                }
+            }
+            if let Some(name) = table.style.as_ref().and_then(|style| style.name.as_deref()) {
+                charge(name.len())?;
+            }
+            if let Some(filter) = &table.auto_filter {
+                for column in &filter.columns {
+                    charge(std::mem::size_of::<crate::TableFilterColumn>())?;
+                    if let Some(criteria) = &column.filters {
+                        for value in &criteria.values {
+                            charge(std::mem::size_of::<String>())?;
+                            charge(value.len())?;
+                        }
+                    }
+                }
             }
         }
         let mut sheet_text_bytes = 0u64;

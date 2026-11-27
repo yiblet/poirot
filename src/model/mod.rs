@@ -33,8 +33,11 @@
 //! ```
 mod model_error;
 mod snapshot_collection;
+mod table_growth;
+mod table_growth_error;
 pub use model_error::ModelError;
 pub use snapshot_collection::SnapshotCollection;
+pub use table_growth_error::TableGrowthError;
 mod formula_types;
 use poirot_io::styles;
 pub use styles::{
@@ -90,8 +93,11 @@ use cell::normalize_formula;
 pub use file_metadata::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
 pub use poirot_functions::scalar::DateSystem;
 pub use poirot_io::NamedRange;
+pub use poirot_io::{
+    CalculatedColumnFormula, SheetPresentation, SheetVisibility, TableAutoFilter, TableColumn,
+    TableFilterColumn, TableFilterValues, TableStyleInfo, WorksheetTable,
+};
 pub use poirot_io::{Cell, CellStyle, SharedFormula, SharedFormulaId};
-pub use poirot_io::{SheetPresentation, SheetVisibility, TableColumn, WorksheetTable};
 pub use workbook::Workbook;
 pub use worksheet::Worksheet;
 pub(in crate::model) use worksheet::{SavedSpillExtent, SpillCell};

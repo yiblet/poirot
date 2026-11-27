@@ -1,10 +1,12 @@
 //! Resolve worksheet-owned table parts and restore their modeled metadata.
 
 use super::package::ImportPackage;
+use super::text;
 use super::xml::{attr, xml};
 use crate::opc::{OpcError, OpcImportPolicy};
 use crate::{
-    CellAddress, ImportDiagnostic, ImportDiagnosticKind, IoError, ModelError, TableColumn,
+    CalculatedColumnFormula, CellAddress, ImportDiagnostic, ImportDiagnosticKind, IoError,
+    ModelError, TableAutoFilter, TableColumn, TableFilterColumn, TableFilterValues, TableStyleInfo,
     WorksheetTable,
 };
 use quick_xml::{
@@ -122,6 +124,7 @@ fn decode_table(
     let mut table = None;
     let mut depth = 0usize;
     let mut columns_depth = false;
+    let mut in_column = false;
     let mut seen_columns = false;
     let mut count = None;
     let mut omitted = false;
@@ -132,8 +135,9 @@ fn decode_table(
                 let in_main = matches!(namespace, ResolveResult::Bound(n) if n.as_ref() == MAIN);
                 match (depth, element.local_name().as_ref(), in_main) {
                     (0, "table", true) if table.is_none() => {
-                        let display_name = required(&element, "displayName", path)?;
-                        let name = attr(&element, "name")?;
+                        let display_name = escaped_attr(&element, "displayName", path)?
+                            .ok_or_else(|| invalid(path))?;
+                        let name = escaped_attr(&element, "name", path)?;
                         let range = required(&element, "ref", path)?;
                         let (first, last) = range.split_once(':').unwrap_or((&range, &range));
                         table = Some(WorksheetTable {
@@ -146,6 +150,8 @@ fn decode_table(
                             totals_row: row_flag(&element, "totalsRowCount", false, path)?,
                             insert_row: flag(&element, "insertRow", path)?.unwrap_or(false),
                             columns: Vec::new(),
+                            style: None,
+                            auto_filter: None,
                         });
                         omitted |= unmodeled_attributes(
                             &element,
@@ -159,6 +165,38 @@ fn decode_table(
                                 "insertRow",
                             ],
                         )?;
+                    }
+                    (1, "tableStyleInfo", true) => {
+                        let record = table.as_mut().ok_or_else(|| invalid(path))?;
+                        if record.style.is_some() {
+                            return Err(invalid(path).into());
+                        }
+                        record.style = Some(TableStyleInfo {
+                            name: escaped_attr(&element, "name", path)?,
+                            show_first_column: flag(&element, "showFirstColumn", path)?,
+                            show_last_column: flag(&element, "showLastColumn", path)?,
+                            show_row_stripes: flag(&element, "showRowStripes", path)?,
+                            show_column_stripes: flag(&element, "showColumnStripes", path)?,
+                        });
+                        omitted |= unmodeled_attributes(
+                            &element,
+                            &[
+                                "name",
+                                "showFirstColumn",
+                                "showLastColumn",
+                                "showRowStripes",
+                                "showColumnStripes",
+                            ],
+                        )?;
+                    }
+                    (1, "autoFilter", true) => {
+                        let record = table.as_mut().ok_or_else(|| invalid(path))?;
+                        if record.auto_filter.is_some() {
+                            return Err(invalid(path).into());
+                        }
+                        record.auto_filter =
+                            Some(read_filter(&mut reader, &element, path, &mut omitted)?);
+                        continue;
                     }
                     (1, "tableColumns", true) => {
                         if seen_columns {
@@ -177,9 +215,27 @@ fn decode_table(
                             .columns
                             .push(TableColumn {
                                 id: number(&element, "id", path)?,
-                                name: required(&element, "name", path)?,
+                                name: escaped_attr(&element, "name", path)?
+                                    .ok_or_else(|| invalid(path))?,
+                                calculated_formula: None,
                             });
+                        in_column = true;
                         omitted |= unmodeled_attributes(&element, &["id", "name"])?;
+                    }
+                    (3, "calculatedColumnFormula", true) if in_column => {
+                        let column = table
+                            .as_mut()
+                            .and_then(|table| table.columns.last_mut())
+                            .ok_or_else(|| invalid(path))?;
+                        if column.calculated_formula.is_some() {
+                            return Err(invalid(path).into());
+                        }
+                        column.calculated_formula = Some(CalculatedColumnFormula {
+                            array: flag(&element, "array", path)?,
+                            text: formula_text(&mut reader, path)?,
+                        });
+                        omitted |= unmodeled_attributes(&element, &["array", "xml:space"])?;
+                        continue;
                     }
                     _ => omitted = true,
                 }
@@ -189,6 +245,9 @@ fn decode_table(
                 depth = depth.saturating_sub(1);
                 if depth == 1 {
                     columns_depth = false;
+                }
+                if depth == 2 {
+                    in_column = false;
                 }
             }
             Event::Eof => break,
@@ -221,6 +280,21 @@ fn unmodeled_attributes(element: &BytesStart<'_>, allowed: &[&str]) -> Result<bo
         }
     }
     Ok(false)
+}
+
+/// Decode a modeled ST_Xstring attribute into Unicode model text.
+fn escaped_attr(
+    element: &BytesStart<'_>,
+    key: &str,
+    path: &str,
+) -> Result<Option<String>, IoError> {
+    let mut value = attr(element, key)?;
+    if let Some(value) = &mut value
+        && value.contains("_x")
+    {
+        *value = text::decode(value).to_utf8().map_err(|_| invalid(path))?;
+    }
+    Ok(value)
 }
 
 /// Read a mandatory nonempty attribute.
@@ -264,5 +338,145 @@ fn flag(element: &BytesStart<'_>, key: &str, path: &str) -> Result<Option<bool>,
         Some("0" | "false") => Ok(Some(false)),
         None => Ok(None),
         Some(_) => Err(invalid(path).into()),
+    }
+}
+
+/// Read text-only formula definitions while decoding predefined XML entities.
+fn formula_text(reader: &mut NsReader<&[u8]>, path: &str) -> Result<String, IoError> {
+    let mut text = String::new();
+    loop {
+        match reader.read_event().map_err(xml)? {
+            Event::Text(value) => text.push_str(&value.xml10_content()),
+            Event::CData(value) => text.push_str(&value.xml10_content()),
+            Event::GeneralRef(reference) => {
+                if let Some(value) = reference.resolve_char_ref().map_err(xml)? {
+                    text.push(value);
+                } else {
+                    let value = quick_xml::escape::resolve_predefined_entity(reference.as_ref())
+                        .ok_or_else(|| invalid(path))?;
+                    text.push_str(value);
+                }
+            }
+            Event::End(_) => return Ok(text),
+            Event::Comment(_) | Event::PI(_) => {}
+            _ => return Err(invalid(path).into()),
+        }
+    }
+}
+
+/// Return whether a direct filter child has the SpreadsheetML namespace and name.
+fn is_main(reader: &NsReader<&[u8]>, element: &BytesStart<'_>, name: &str) -> bool {
+    element.local_name().as_ref() == name
+        && matches!(reader.resolver().resolve_element(element.name()).0,
+            ResolveResult::Bound(namespace) if namespace.as_ref() == MAIN)
+}
+
+/// Consume the AutoFilter part, retaining even an empty filter-control record.
+fn read_filter(
+    reader: &mut NsReader<&[u8]>,
+    root: &BytesStart<'_>,
+    path: &str,
+    omitted: &mut bool,
+) -> Result<TableAutoFilter, IoError> {
+    let range = attr(root, "ref")?
+        .map(|range| {
+            let (first, last) = range.split_once(':').unwrap_or((&range, &range));
+            Ok::<_, IoError>((first.parse()?, last.parse()?))
+        })
+        .transpose()?;
+    let mut filter = TableAutoFilter {
+        range,
+        columns: Vec::new(),
+    };
+    *omitted |= unmodeled_attributes(root, &["ref"])?;
+    loop {
+        match reader.read_event().map_err(xml)? {
+            Event::Start(element) if is_main(reader, &element, "filterColumn") => {
+                filter
+                    .columns
+                    .push(read_filter_column(reader, &element, path, omitted)?);
+            }
+            Event::Start(element) => {
+                *omitted = true;
+                reader.read_to_end(element.name()).map_err(xml)?;
+            }
+            Event::End(_) => return Ok(filter),
+            Event::Eof => return Err(invalid(path).into()),
+            _ => {}
+        }
+    }
+}
+
+/// Read filter-button settings and the supported value selection.
+fn read_filter_column(
+    reader: &mut NsReader<&[u8]>,
+    root: &BytesStart<'_>,
+    path: &str,
+    omitted: &mut bool,
+) -> Result<TableFilterColumn, IoError> {
+    let mut column = TableFilterColumn {
+        index: number(root, "colId", path)?,
+        hidden_button: flag(root, "hiddenButton", path)?,
+        show_button: flag(root, "showButton", path)?,
+        filters: None,
+    };
+    let mut seen_filters = false;
+    let mut lost = false;
+    *omitted |= unmodeled_attributes(root, &["colId", "hiddenButton", "showButton"])?;
+    loop {
+        match reader.read_event().map_err(xml)? {
+            Event::Start(element) if is_main(reader, &element, "filters") => {
+                if seen_filters {
+                    return Err(invalid(path).into());
+                }
+                seen_filters = true;
+                column.filters = read_filter_values(reader, &element, path)?;
+                lost |= column.filters.is_none();
+            }
+            Event::Start(element) => {
+                lost = true;
+                reader.read_to_end(element.name()).map_err(xml)?;
+            }
+            Event::End(_) => {
+                if lost {
+                    *omitted = true;
+                    column.filters = None;
+                }
+                return Ok(column);
+            }
+            Event::Eof => return Err(invalid(path).into()),
+            _ => {}
+        }
+    }
+}
+
+/// Avoid changing a filter's meaning by preserving only its literal-value portion.
+fn read_filter_values(
+    reader: &mut NsReader<&[u8]>,
+    root: &BytesStart<'_>,
+    path: &str,
+) -> Result<Option<TableFilterValues>, IoError> {
+    let mut values = TableFilterValues {
+        blank: flag(root, "blank", path)?,
+        values: Vec::new(),
+    };
+    let mut lost = unmodeled_attributes(root, &["blank"])?;
+    loop {
+        match reader.read_event().map_err(xml)? {
+            Event::Start(element) if is_main(reader, &element, "filter") => {
+                values
+                    .values
+                    .push(escaped_attr(&element, "val", path)?.ok_or_else(|| invalid(path))?);
+                lost |= unmodeled_attributes(&element, &["val"])?;
+                lost |= !reader.read_to_end(element.name()).map_err(xml)?.is_empty();
+            }
+            Event::Start(element) => {
+                lost = true;
+                reader.read_to_end(element.name()).map_err(xml)?;
+            }
+            Event::End(_) => return Ok((!lost).then_some(values)),
+            Event::Eof => return Err(invalid(path).into()),
+            _ => {}
+        }
     }
 }

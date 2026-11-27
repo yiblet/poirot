@@ -205,9 +205,21 @@ indexed colors retain their source identities and tint; Poirot does not resolve
 them to rendered colors.
 
 XLSX import and export preserve table identity, bounds, column captions, and
-header and totals row presence. Worksheet formulas are retained as source text.
-Table styling, filters and calculated-column definitions can be omitted with
-an import warning. A worksheet containing tables cannot be duplicated.
+header and totals row presence. They also retain table style names and display
+flags, calculated-column formula definitions, and table AutoFilter controls with
+value-list and blank criteria. Cell formulas are stored separately. Poirot saves
+filter definitions without applying them to worksheet rows. Custom table-style
+definitions, other filter criteria, sort state, and table extensions are outside
+this preservation scope. A worksheet containing tables cannot be duplicated.
+
+Use `Worksheet::grow_table_rows` to append data rows to an imported table. The
+edit preserves styled blanks, fills ordinary calculated columns using the
+first data row as the formula origin, and extends any filter that reaches the
+current table bottom. Growth requires space free of cell content, other tables
+and saved spills. The edit rejects tables with totals rows, array-style
+calculated columns, or a filter that ends above the table bottom. Ordinary cell
+edits leave table bounds as authored. After growth, start a new evaluation or
+overlay to read the expanded layout.
 
 Inspect `Workbook::file_metadata.import_warnings` for content that import changed
 or omitted. Some losses have no warning; check the table below before relying on

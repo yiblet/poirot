@@ -19,9 +19,9 @@ pub use poirot_parsing::formula::{FormulaLocation, TranslationPolicy};
 
 /// Options for renaming a worksheet and rewriting references to it.
 ///
-/// Unlike a metadata-only rename, this rewrites supported references in cell
-/// formulas and defined names. Untouched formulas keep their exact spelling;
-/// rewritten formulas are printed canonically. Stored formula results are kept.
+/// This rewrites supported references in cell formulas, defined names, and
+/// calculated-column definitions. Untouched formulas keep their exact spelling.
+/// Rewritten formulas are printed canonically. Stored formula results are kept.
 /// Any unsupported formula, including an unrelated one, leaves the workbook unchanged.
 ///
 /// ```
@@ -95,6 +95,24 @@ fn plan_rename_sheet(
                     policy,
                     &mut replacements,
                 )?;
+            }
+        }
+        for (table, table_record) in worksheet.tables().iter().enumerate() {
+            for (column, column_record) in table_record.columns.iter().enumerate() {
+                if let Some(formula) = &column_record.calculated_formula {
+                    plan_formula(
+                        FormulaSource::CalculatedColumn {
+                            sheet,
+                            table,
+                            column,
+                        },
+                        &formula.text,
+                        old,
+                        &name,
+                        policy,
+                        &mut replacements,
+                    )?;
+                }
             }
         }
     }
@@ -484,10 +502,11 @@ pub struct TranslationRequest {
 /// Options for translating references within existing formulas in place.
 ///
 /// Each request translates relative references as if its formula were copied
-/// by the request's displacement; no cells move. All requested formulas are
-/// translated before any change is written, so one failure leaves the workbook
-/// unchanged. Changed cell formulas lose their saved result and shared-formula
-/// provenance.
+/// by the request's displacement; no cells move. Translating a calculated-column
+/// definition updates the source used to fill new rows. Existing cells change
+/// only when requested individually. All requested formulas are translated before
+/// any change is written, so one failure leaves the workbook unchanged. Changed
+/// cell formulas lose their saved result and shared-formula provenance.
 ///
 /// ```
 /// use poirot::{Workbook, editing::{FormulaLocation, FormulaSource, TranslationRequest}};
@@ -572,7 +591,7 @@ impl FormulaTranslationEditPlan {
                     target: request.source.clone(),
                 });
             }
-            let text = formula(workbook, &request.source).ok_or_else(|| {
+            let text = request.source.formula(workbook).ok_or_else(|| {
                 EditError::MissingTranslationFormula {
                     target: request.source.clone(),
                 }
@@ -600,9 +619,11 @@ impl FormulaTranslationEditPlan {
         }
         for (source, plan) in &self.edits {
             let text =
-                formula(workbook, source).ok_or_else(|| EditError::StaleTranslationFormula {
-                    target: source.clone(),
-                })?;
+                source
+                    .formula(workbook)
+                    .ok_or_else(|| EditError::StaleTranslationFormula {
+                        target: source.clone(),
+                    })?;
             plan.verify_source(text)
                 .map_err(|error| EditError::Formula {
                     target: source.clone(),
@@ -633,6 +654,21 @@ impl FormulaTranslationEditPlan {
                         .ok_or(EditError::MissingTranslationName { index: *index })?
                         .formula = plan.replacement().into()
                 }
+                FormulaSource::CalculatedColumn {
+                    sheet,
+                    table,
+                    column,
+                } => {
+                    workbook
+                        .sheet_mut(*sheet)
+                        .and_then(|worksheet| worksheet.tables.get_mut(*table))
+                        .and_then(|table| table.columns.get_mut(*column))
+                        .and_then(|column| column.calculated_formula.as_mut())
+                        .ok_or_else(|| EditError::StaleTranslationFormula {
+                            target: source.clone(),
+                        })?
+                        .text = plan.replacement().into();
+                }
             }
             changed.push(source.clone());
         }
@@ -640,16 +676,6 @@ impl FormulaTranslationEditPlan {
     }
 }
 
-fn formula<'a>(workbook: &'a Workbook, source: &FormulaSource) -> Option<&'a str> {
-    match source {
-        FormulaSource::Cell { sheet, address } => workbook
-            .sheet(*sheet)?
-            .get_validated(*address)?
-            .formula
-            .as_deref(),
-        FormulaSource::DefinedName { index } => Some(&workbook.named_ranges.get(*index)?.formula),
-    }
-}
 fn sheet_names(workbook: &Workbook) -> Vec<String> {
     workbook.sheets().iter().map(|s| s.name().into()).collect()
 }

@@ -1,4 +1,4 @@
-use crate::{CellAddress, ModelError, TableColumn};
+use crate::{CellAddress, ModelError, TableAutoFilter, TableColumn, TableStyleInfo};
 
 /// File metadata describing one fixed rectangular Excel worksheet table.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -21,6 +21,10 @@ pub struct WorksheetTable {
     pub insert_row: bool,
     /// Columns in worksheet order.
     pub columns: Vec<TableColumn>,
+    /// Table appearance selection and flags, when present.
+    pub style: Option<TableStyleInfo>,
+    /// Table filter controls and criteria, when enabled in the source.
+    pub auto_filter: Option<TableAutoFilter>,
 }
 
 impl WorksheetTable {
@@ -78,12 +82,46 @@ impl WorksheetTable {
         for column in &self.columns {
             if column.id == 0
                 || column.name.is_empty()
+                || column
+                    .calculated_formula
+                    .as_ref()
+                    .is_some_and(|formula| !xml_text(&formula.text))
                 || !ids.insert(column.id)
                 || !captions.insert(crate::identifiers::known_case_key(&column.name))
             {
                 return Err(invalid());
             }
         }
+        if let Some(filter) = &self.auto_filter {
+            let filter_width = if let Some((first, last)) = filter.range {
+                first.validate()?;
+                last.validate()?;
+                if first.row < self.first.row
+                    || last.row > self.last.row
+                    || first.row > last.row
+                    || first.col < self.first.col
+                    || last.col > self.last.col
+                    || first.col > last.col
+                {
+                    return Err(invalid());
+                }
+                // SAFETY: Validated coordinates and the local ordering check bound the width.
+                last.col - first.col + 1
+            } else {
+                width
+            };
+            let mut filtered = std::collections::HashSet::new();
+            for column in &filter.columns {
+                if column.index >= filter_width || !filtered.insert(column.index) {
+                    return Err(invalid());
+                }
+            }
+        }
         Ok(())
     }
+}
+
+/// Check text that will be serialized directly to an XML 1.0 document.
+fn xml_text(value: &str) -> bool {
+    value.chars().all(|character| matches!(character, '\t' | '\n' | '\r' | '\u{20}'..='\u{d7ff}' | '\u{e000}'..='\u{fffd}' | '\u{10000}'..='\u{10ffff}'))
 }
