@@ -4,18 +4,18 @@
     "evaluation_steps": 2060,
     "assertion_count": 2061,
     "source_count": 262,
-    "feature_count": 301,
-    "potential_obligation_count": 1663,
+    "feature_count": 302,
+    "potential_obligation_count": 1664,
     "obligation_status_counts": {
       "specified_with_evidence": 563,
       "not_applicable": 8,
-      "missing": 1092
+      "missing": 1093
     },
     "evidence_counts": {
       "documented_derivation": 2012,
       "documented_example": 49
     },
-    "registered_function_count": 501,
+    "registered_function_count": 502,
     "registered_functions_with_specifications": 260,
     "registered_functions_without_specifications": [
       "ACCRINT",
@@ -214,6 +214,7 @@
       "RIGHTB",
       "RRI",
       "RSQ",
+      "SCAN",
       "SEARCHB",
       "SEC",
       "SECH",
@@ -261,7 +262,7 @@
       "ZTEST"
     ],
     "implementation_status_counts": {
-      "registered": 267,
+      "registered": 268,
       "unknown": 17,
       "partial": 10,
       "unsupported": 7
@@ -28158,6 +28159,14 @@
       "id": "function.MAKEARRAY.valid",
       "feature": "function.MAKEARRAY",
       "behavior": "Build a rectangle by passing one-based row and column positions to a callback.",
+      "applicability": "applicable",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.SCAN.valid",
+      "feature": "function.SCAN",
+      "behavior": "Return one intermediate accumulator per input position.",
       "applicability": "applicable",
       "specification_status": "missing",
       "assertions": []

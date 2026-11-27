@@ -473,6 +473,11 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         })
     }
 
+    /// Copy an engine value for publication while retaining its original channel.
+    pub(in crate::eval) fn copy_value(&mut self, value: &Value) -> EvalResult<Value> {
+        copy_value(&mut self.session.state.runtime.budget, value)
+    }
+
     /// Copy one retained cell value after admitting its owned text storage.
     pub(in crate::eval) fn copy_cell_value(
         &mut self,

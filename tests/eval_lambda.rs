@@ -511,6 +511,101 @@ fn isomitted_distinguishes_a_missing_lambda_argument_from_a_passed_blank() {
 }
 
 #[test]
+fn scan_spills_row_major_intermediates_and_recomputes_after_an_edit() {
+    use poirot::calculation::EvaluationContext;
+    use poirot::eval::{ArrayResultPolicy, EvaluationPolicy};
+
+    let mut book = worksheet();
+    let sheet = book.sheet_mut(0).unwrap();
+    // Microsoft documents the cumulative factorial example with an explicit seed.
+    // https://support.microsoft.com/en-us/excel/functions/scan-function
+    sheet
+        .set_formula("D1", "SCAN(1,{1,2,3;4,5,6},LAMBDA(a,b,a*b))")
+        .unwrap();
+    // This Excel example shows that omitting the seed skips the first callback.
+    // https://stackoverflow.com/questions/79857888/excel-nested-scan-formula-by-columns
+    sheet
+        .set_formula("H1", "SCAN(,{3,4;5,6},LAMBDA(a,b,a*10+b+1))")
+        .unwrap();
+    sheet
+        .set_formula("K1", "SCAN(0,A1:A2,LAMBDA(a,b,a+b))")
+        .unwrap();
+    let mut scenario = book
+        .overlay()
+        .policy(EvaluationPolicy {
+            arrays: ArrayResultPolicy::DynamicSpill,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
+    let context = EvaluationContext::default();
+    let checks = [
+        ("D1", 1.),
+        ("E1", 2.),
+        ("F1", 6.),
+        ("D2", 24.),
+        ("E2", 120.),
+        ("F2", 720.),
+        ("H1", 3.),
+        ("I1", 35.),
+        ("H2", 356.),
+        ("I2", 3567.),
+        ("K1", 3.),
+        ("K2", 10.),
+    ]
+    .map(|(address, expected)| {
+        (
+            scenario.target(&format!("Data!{address}")).unwrap(),
+            address,
+            expected,
+        )
+    });
+    {
+        let mut evaluation = scenario.evaluation(&context).unwrap();
+        for (target, address, expected) in checks {
+            assert_eq!(
+                evaluation.cell(target).unwrap(),
+                CellValue::Number(expected),
+                "{address}"
+            );
+        }
+    }
+    let input = scenario.target("Data!A2").unwrap();
+    let output = scenario.target("Data!K2").unwrap();
+    scenario.set_value(input, 9.).unwrap();
+    assert_eq!(
+        scenario.evaluation(&context).unwrap().cell(output).unwrap(),
+        CellValue::Number(12.)
+    );
+    assert_eq!(
+        value(&book, "SCAN(0,{1,2},LAMBDA(a,b,VSTACK(a,b)))"),
+        CellValue::Error(CellError::Calc)
+    );
+}
+
+#[test]
+fn accumulation_refuses_wide_output_through_the_budget_channel() {
+    use poirot::eval::{EvaluationBudgets, EvaluationError};
+
+    let book = worksheet();
+    let result = run_formula(
+        &book,
+        0,
+        "B1".parse().unwrap(),
+        "SCAN(0,A1:A100,LAMBDA(a,b,a+b))",
+        Default::default(),
+        EvaluationBudgets {
+            materialized_values: 20,
+            ..Default::default()
+        },
+    );
+    assert!(
+        matches!(result, EvaluationOutcome::Aborted { failure: EvaluationError::Budget(error), .. }
+        if error.requested == 100)
+    );
+}
+
+#[test]
 fn named_lambda_spill_discovery_uses_the_callers_scope() {
     use poirot::calculation::EvaluationContext;
     use poirot::eval::{ArrayResultPolicy, EvaluationPolicy};

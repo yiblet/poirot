@@ -73,6 +73,8 @@ pub enum MatrixFunction {
     Bycol,
     /// Produce a sized array by calling a function at each position.
     Makearray,
+    /// Publish each intermediate callable accumulator.
+    Scan,
 }
 
 impl MatrixFunction {
@@ -80,7 +82,7 @@ impl MatrixFunction {
     pub(in crate::eval) fn uses_array_callback_adapter(self) -> bool {
         matches!(
             self,
-            Self::Map | Self::Byrow | Self::Bycol | Self::Makearray
+            Self::Map | Self::Byrow | Self::Bycol | Self::Makearray | Self::Scan
         )
     }
 }
