@@ -47,6 +47,7 @@ pub(super) fn validate_sheet_name(name: &str) -> Result<(), ModelError> {
 pub struct Worksheet {
     pub(super) name: String,
     pub(super) presentation: SheetPresentation,
+    pub(crate) tables: Vec<super::WorksheetTable>,
     pub(super) cells: cell_pages::CellStore,
     pub(super) rows: std::collections::BTreeSet<u32>,
     pub(super) visibility: BTreeMap<u32, RowVisibility>,
@@ -61,6 +62,7 @@ impl Worksheet {
         Ok(Self {
             name,
             presentation: SheetPresentation::default(),
+            tables: Vec::new(),
             cells: cell_pages::CellStore::default(),
             rows: std::collections::BTreeSet::new(),
             visibility: BTreeMap::new(),
@@ -72,6 +74,11 @@ impl Worksheet {
     pub fn name(&self) -> &str {
         &self.name
     }
+    /// Borrow the file-authored tables attached to this worksheet.
+    pub fn tables(&self) -> &[super::WorksheetTable] {
+        &self.tables
+    }
+
     /// Read durable sheet metadata.
     pub fn presentation(&self) -> SheetPresentation {
         self.presentation

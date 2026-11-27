@@ -33,7 +33,7 @@ use std::sync::Arc;
 /// Source snapshot wire revision, checked by the public artifact envelope before decoding.
 /// Bump whenever the serialized source layout changes; provide an explicit migration or
 /// reject older revisions. Prepared engine compatibility is versioned separately.
-pub const SCHEMA_VERSION: u16 = 8;
+pub const SCHEMA_VERSION: u16 = 9;
 
 /// Borrowed-or-owned Serde transport for source state, separate from runtime workbook types.
 /// See the [module example](crate::model::snapshot) for capturing an owned copy before editing the source.
@@ -60,6 +60,7 @@ type SnapshotCell<'a> = (
 struct Sheet<'a> {
     name: Cow<'a, str>,
     presentation: SheetPresentation,
+    tables: Cow<'a, [super::WorksheetTable]>,
     rows: Vec<u32>,
     visibility: Vec<(u32, RowVisibility)>,
     cells: Vec<SnapshotCell<'a>>,
@@ -116,6 +117,7 @@ impl<'a> Snapshot<'a> {
             && self.sheets.iter().zip(&other.sheets).all(|(a, b)| {
                 a.name == b.name
                     && a.presentation == b.presentation
+                    && a.tables == b.tables
                     && a.rows == b.rows
                     && a.visibility == b.visibility
                     && a.cells == b.cells
@@ -150,6 +152,7 @@ impl<'a> Snapshot<'a> {
                 .map(|s| Sheet {
                     name: Cow::Borrowed(s.name()),
                     presentation: s.presentation(),
+                    tables: Cow::Borrowed(s.tables()),
                     rows: s.row_indices().collect(),
                     visibility: s.row_visibility_entries().collect(),
                     spill_extents: s
@@ -211,6 +214,7 @@ impl<'a> Snapshot<'a> {
                 .map(|s| Sheet {
                     name: Cow::Owned(s.name.into_owned()),
                     presentation: s.presentation,
+                    tables: Cow::Owned(s.tables.into_owned()),
                     rows: s.rows,
                     visibility: s.visibility,
                     spill_extents: s.spill_extents,
@@ -276,6 +280,11 @@ impl<'a> Snapshot<'a> {
             for (kind, count, limit) in [
                 (SnapshotCollection::Cells, s.cells.len(), 10_000_000),
                 (
+                    SnapshotCollection::Tables,
+                    s.tables.len(),
+                    crate::model::MAX_ROWS as usize,
+                ),
+                (
                     SnapshotCollection::SpillExtents,
                     s.spill_extents.len(),
                     10_000_000,
@@ -296,7 +305,23 @@ impl<'a> Snapshot<'a> {
                     return Err(ModelError::SnapshotLimitExceeded { kind, count, limit });
                 }
             }
+            for (index, table) in s.tables.iter().enumerate() {
+                let previous = s.tables.get(..index).ok_or_else(|| {
+                    poirot_io::ModelError::InvalidWorksheetTable {
+                        name: table.display_name.clone(),
+                    }
+                })?;
+                table.validate(
+                    workbook
+                        .sheets()
+                        .iter()
+                        .flat_map(|sheet| sheet.tables())
+                        .chain(previous),
+                    previous,
+                )?;
+            }
             let sheet = workbook.import_sheet(s.name.into_owned())?;
+            sheet.tables = s.tables.into_owned();
             sheet.set_presentation(s.presentation);
             for row in s.rows {
                 sheet.create_row(row)?;
@@ -444,6 +469,7 @@ mod tests {
             .map(|index| Sheet {
                 name: Cow::Owned(format!("S{index}")),
                 presentation: SheetPresentation::default(),
+                tables: Cow::Borrowed(&[]),
                 rows: vec![],
                 visibility: vec![],
                 cells: vec![],

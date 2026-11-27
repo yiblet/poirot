@@ -108,6 +108,7 @@ impl Workbook {
         self.sheets.push(Worksheet {
             name,
             presentation: SheetPresentation::default(),
+            tables: Vec::new(),
             cells: cell_pages::CellStore::default(),
             rows: std::collections::BTreeSet::new(),
             visibility: BTreeMap::new(),
@@ -218,7 +219,7 @@ impl Workbook {
 
     /// Append a typed sheet copy and copies of its local names. Unqualified formulas
     /// bind the copy; explicitly qualified references keep their named-sheet identity.
-    /// Evaluator caches must be rebuilt by the caller.
+    /// Copying a table-bearing sheet returns an error. Evaluator caches must be rebuilt by the caller.
     pub fn duplicate_sheet(
         &mut self,
         index: usize,
@@ -229,10 +230,13 @@ impl Workbook {
         if self.try_sheet_index_by_name(&name)?.is_some() {
             return Err(ModelError::DuplicateWorksheetName { name });
         }
-        let mut copy = self
+        let source = self
             .sheet(index)
-            .ok_or(ModelError::InvalidWorksheetIndex { index })?
-            .clone();
+            .ok_or(ModelError::InvalidWorksheetIndex { index })?;
+        if !source.tables().is_empty() {
+            return Err(ModelError::DuplicateWorksheetTables);
+        }
+        let mut copy = source.clone();
         copy.name = name;
         copy.presentation.visibility = SheetVisibility::Visible;
         let target = self.sheets.len();

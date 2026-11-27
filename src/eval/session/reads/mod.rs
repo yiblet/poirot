@@ -4,7 +4,7 @@
 //! Depends on: the parent session state and its cells and projection executors, vm
 //! (deferred argument expressions), spill (discovery guards), ports (read events),
 //! inputs (effective workbook), reuse (read recording), config (consumed context
-//! fields), host (operands), limits and values.
+//! fields), coordinates (formula targets), host (operands), limits and values.
 
 /// Function argument evaluation and matrix materialization.
 mod argument_reader;
@@ -18,6 +18,7 @@ mod read_recorder;
 mod sparse_member;
 /// Sparse range membership collection.
 mod sparse_reader;
+mod table_resolver;
 #[cfg(test)]
 mod tests;
 
@@ -27,3 +28,4 @@ pub(in crate::eval) use name_resolver::NameResolver;
 pub(in crate::eval) use read_recorder::ReadRecorder;
 pub(in crate::eval) use sparse_member::SparseMember;
 pub(in crate::eval) use sparse_reader::SparseReader;
+pub(in crate::eval) use table_resolver::TableResolver;

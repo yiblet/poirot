@@ -65,6 +65,7 @@ impl<'a> ExecutableRef<'a> {
                 Expression::Cell(_)
                 | Expression::Row { .. }
                 | Expression::Column { .. }
+                | Expression::Table(_)
                 | Expression::SheetSpan(_) => ArgumentOrigin::Reference,
                 _ => ArgumentOrigin::Computed,
             },

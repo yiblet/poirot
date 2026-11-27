@@ -34,6 +34,8 @@ pub enum Expression {
     Cell(CellReference),
     /// Deferred reference spanning multiple sheets.
     SheetSpan(poirot_parsing::formula::SheetSpanReference),
+    /// Deferred structured reference.
+    Table(poirot_parsing::formula::TableReference),
     /// Whole-column reference.
     Column {
         /// Zero-based column index.

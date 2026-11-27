@@ -485,8 +485,9 @@ fn unsupported_templates_and_stale_literal_members_never_omit_source() {
         let sheet = book.sheet_mut(0).unwrap();
         if unsupported {
             for coordinate in ["B1", "B2", "B3"] {
+                // Combined section selectors are outside the executable grammar.
                 sheet.get_mut(at(coordinate)).unwrap().unwrap().formula =
-                    Some("Table1[Column]".into());
+                    Some("Table1[[#Headers],[#Data],[Column]]".into());
             }
         } else {
             // Public mutation can leave a provenance tag on a newly literal cell.

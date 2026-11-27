@@ -20,6 +20,8 @@ pub enum Expr {
     Cell(CellReference),
     /// A rectangle repeated across ordered sheet endpoints.
     SheetSpan(SheetSpanReference),
+    /// A workbook table with optional row and column selectors.
+    Table(super::table_reference::TableReference),
     /// Whole-column reference; row extent comes from worksheet limits.
     Column {
         /// Zero-based column coordinate.

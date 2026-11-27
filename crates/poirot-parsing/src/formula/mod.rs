@@ -17,6 +17,9 @@ mod parser;
 mod reference_classes;
 mod references;
 mod syntax;
+mod table_columns;
+mod table_reference;
+mod table_section;
 mod tokens;
 mod translation;
 
@@ -27,6 +30,9 @@ pub use function_name::{CommonFunction, FunctionName};
 pub use metadata::{FormulaParsePolicy, FormulaSpan, FunctionInvocation, ParsedFormula};
 pub use parser::{parse_formula, parse_formula_with_policy};
 pub use syntax::{FormulaPrinter, GroupingContext, needs_parentheses};
+pub use table_columns::TableColumns;
+pub use table_reference::TableReference;
+pub use table_section::TableSection;
 // Checked relative-reference translation before source replacement.
 pub use translation::{
     FormulaLocation, TranslationBoundaryPolicy, TranslationPlan, TranslationPolicy,

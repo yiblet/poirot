@@ -7,6 +7,10 @@ use poirot_io::ModelError;
 use poirot_io::data::{SheetSink, SheetSource, WorkbookSink, WorkbookSource};
 
 impl SheetSource for Worksheet {
+    fn tables(&self) -> &[poirot_io::WorksheetTable] {
+        self.tables()
+    }
+
     fn name(&self) -> &str {
         self.name()
     }
@@ -45,6 +49,11 @@ impl SheetSource for Worksheet {
     }
 }
 impl SheetSink for Worksheet {
+    fn import_table(&mut self, table: poirot_io::WorksheetTable) -> Result<(), ModelError> {
+        self.tables.push(table);
+        Ok(())
+    }
+
     fn get_mut(&mut self, address: CellAddress) -> Option<&mut Cell> {
         self.get_mut_validated(address)
     }

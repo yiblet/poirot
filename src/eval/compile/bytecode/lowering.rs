@@ -260,6 +260,24 @@ pub(super) fn reference(e: &Expr, out: &mut impl Bytes) -> Option<ReferenceKind>
             out.optional(sheet.as_deref());
             ReferenceKind::Row
         }
+        Expr::Table(reference) => {
+            use poirot_parsing::formula::TableColumns;
+            out.optional(reference.table.as_deref());
+            out.string(reference.section.spelling());
+            match &reference.columns {
+                TableColumns::All => out.word(0),
+                TableColumns::One(column) => {
+                    out.word(1);
+                    out.string(column);
+                }
+                TableColumns::Range(first, last) => {
+                    out.word(2);
+                    out.string(first);
+                    out.string(last);
+                }
+            }
+            ReferenceKind::Table
+        }
         Expr::SheetSpan(s) => {
             out.string(&s.first_sheet);
             out.string(&s.last_sheet);

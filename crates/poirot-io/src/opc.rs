@@ -76,9 +76,9 @@ pub struct PackageInventory {
 }
 /// Parsed relationship kind and admitted internal target for OPC planning.
 #[derive(Debug)]
-struct Relationship {
-    kind: String,
-    target: Option<String>,
+pub(crate) struct Relationship {
+    pub(crate) kind: String,
+    pub(crate) target: Option<String>,
 }
 fn fail(e: OpcError) -> IoError {
     IoError::Opc(e)
@@ -233,6 +233,84 @@ fn select_relationship(
         })
         .transpose()
 }
+/// Decode and admit relationships using the caller's package catalog.
+pub(crate) fn parse_relationships(
+    owner: &str,
+    bytes: &[u8],
+    warnings: &mut Vec<ImportDiagnostic>,
+    policy: OpcImportPolicy,
+    selected: impl Fn(&str) -> bool,
+    check_target: impl Fn(&str) -> Result<(), IoError>,
+) -> Result<BTreeMap<String, Relationship>, IoError> {
+    let path = relationship_part(owner);
+    let mut reader = NsReader::from_reader(bytes);
+    reader.config_mut().expand_empty_elements = true;
+    let mut result = BTreeMap::new();
+    loop {
+        match reader.read_event().map_err(xml)? {
+            Event::Start(e) if e.local_name().as_ref() == "Relationship" => {
+                let (ns, _) = reader.resolver().resolve_element(e.name());
+                if !matches!(ns, ResolveResult::Bound(n) if n.as_ref() == PKG) {
+                    return Err(fail(OpcError::InvalidNamespace { path: path.clone() }));
+                }
+                let a = attrs(&e)?;
+                let required = |key: &str| {
+                    a.get(key)
+                        .filter(|s| !s.is_empty())
+                        .cloned()
+                        .ok_or_else(|| {
+                            fail(OpcError::MissingRelationshipAttribute {
+                                path: path.clone(),
+                                attribute: key.into(),
+                            })
+                        })
+                };
+                let id = required("Id")?;
+                if !selected(&id) {
+                    continue;
+                }
+                let kind = required("Type")?;
+                let raw = required("Target")?;
+                let target = match a.get("TargetMode").map(String::as_str) {
+                    None | Some("Internal") => {
+                        let target = resolve_target(owner, &raw).map_err(fail)?;
+                        check_target(&target)?;
+                        Some(target)
+                    }
+                    Some("External") => {
+                        if policy.external_relationships == ExternalRelationshipPolicy::Reject {
+                            return Err(fail(OpcError::ExternalRelationship {
+                                owner: Some(owner.into()),
+                                id: id.clone(),
+                            }));
+                        }
+                        warnings.push(ImportDiagnostic { kind: ImportDiagnosticKind::ExternalLink, detail: format!("external relationship {owner}#{id} ({kind}) is not followed or preserved") });
+                        None
+                    }
+                    _ => {
+                        return Err(fail(OpcError::InvalidTargetMode {
+                            path: path.clone(),
+                            id: id.clone(),
+                        }));
+                    }
+                };
+                if result
+                    .insert(id.clone(), Relationship { kind, target })
+                    .is_some()
+                {
+                    return Err(fail(OpcError::DuplicateRelationship {
+                        path: path.clone(),
+                        id: id.clone(),
+                    }));
+                }
+            }
+            Event::Eof => break,
+            _ => {}
+        }
+    }
+    Ok(result)
+}
+
 impl PackageInventory {
     fn part(&self, path: &str) -> Result<&[u8], IoError> {
         self.parts
@@ -247,69 +325,14 @@ impl PackageInventory {
         policy: OpcImportPolicy,
     ) -> Result<BTreeMap<String, Relationship>, IoError> {
         let path = relationship_part(owner);
-        let mut reader = NsReader::from_reader(self.part(&path)?);
-        reader.config_mut().expand_empty_elements = true;
-        let mut result = BTreeMap::new();
-        loop {
-            match reader.read_event().map_err(xml)? {
-                Event::Start(e) if e.local_name().as_ref() == "Relationship" => {
-                    let (ns, _) = reader.resolver().resolve_element(e.name());
-                    if !matches!(ns, ResolveResult::Bound(n) if n.as_ref() == PKG) {
-                        return Err(fail(OpcError::InvalidNamespace { path: path.clone() }));
-                    }
-                    let a = attrs(&e)?;
-                    let required = |key: &str| {
-                        a.get(key)
-                            .filter(|s| !s.is_empty())
-                            .cloned()
-                            .ok_or_else(|| {
-                                fail(OpcError::MissingRelationshipAttribute {
-                                    path: path.clone(),
-                                    attribute: key.into(),
-                                })
-                            })
-                    };
-                    let id = required("Id")?;
-                    let kind = required("Type")?;
-                    let raw = required("Target")?;
-                    let target = match a.get("TargetMode").map(String::as_str) {
-                        None | Some("Internal") => {
-                            let target = resolve_target(owner, &raw).map_err(fail)?;
-                            self.part(&target)?;
-                            Some(target)
-                        }
-                        Some("External") => {
-                            if policy.external_relationships == ExternalRelationshipPolicy::Reject {
-                                return Err(fail(OpcError::ExternalRelationship {
-                                    owner: Some(owner.into()),
-                                    id: id.clone(),
-                                }));
-                            }
-                            warnings.push(ImportDiagnostic { kind: ImportDiagnosticKind::ExternalLink, detail: format!("external relationship {owner}#{id} ({kind}) is not followed or preserved") });
-                            None
-                        }
-                        _ => {
-                            return Err(fail(OpcError::InvalidTargetMode {
-                                path: path.clone(),
-                                id: id.clone(),
-                            }));
-                        }
-                    };
-                    if result
-                        .insert(id.clone(), Relationship { kind, target })
-                        .is_some()
-                    {
-                        return Err(fail(OpcError::DuplicateRelationship {
-                            path: path.clone(),
-                            id: id.clone(),
-                        }));
-                    }
-                }
-                Event::Eof => break,
-                _ => {}
-            }
-        }
-        Ok(result)
+        parse_relationships(
+            owner,
+            self.part(&path)?,
+            warnings,
+            policy,
+            |_| true,
+            |target| self.part(target).map(|_| ()),
+        )
     }
     /// Resolve the root workbook before loading only its planning metadata.
     pub(crate) fn workbook_part(&self, policy: OpcImportPolicy) -> Result<String, IoError> {

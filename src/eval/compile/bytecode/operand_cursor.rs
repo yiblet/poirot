@@ -37,6 +37,26 @@ impl<'a> OperandCursor<'a> {
         }
     }
 
+    /// Read a workbook table selector.
+    pub(in crate::eval) fn table(
+        &mut self,
+    ) -> EvalResult<poirot_parsing::formula::TableReference<&'a str>> {
+        use poirot_parsing::formula::{TableColumns, TableReference, TableSection};
+        let table = self.optional()?;
+        let section = TableSection::parse(self.string()?).ok_or(EvaluationError::StalePlan)?;
+        let columns = match self.word()? {
+            0 => TableColumns::All,
+            1 => TableColumns::One(self.string()?),
+            2 => TableColumns::Range(self.string()?, self.string()?),
+            _ => return Err(EvaluationError::StalePlan),
+        };
+        Ok(TableReference {
+            table,
+            section,
+            columns,
+        })
+    }
+
     /// Read an unqualified cell endpoint.
     pub(in crate::eval) fn cell(&mut self) -> EvalResult<poirot_parsing::formula::CellReference> {
         let row = self.word()?;

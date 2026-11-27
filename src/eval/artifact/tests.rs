@@ -840,8 +840,7 @@ fn prepared_sections_must_end_with_their_source_checksum() {
     );
 }
 
-/// Source-only file written by the previous prepared format (COMPATIBILITY_REVISION 75);
-/// its source section format is unchanged. Workbook: [`workbook`].
+/// Source-only file written using source schema 8. Workbook: [`workbook`].
 #[rustfmt::skip]
 const OLD_SOURCE: &str = concat!(
     "524f49534e415000010008000000000000000000000000004c00000000000000000000000000000001015300",
@@ -913,50 +912,58 @@ fn unhex(hex: &str) -> Vec<u8> {
 }
 
 #[test]
-fn previous_format_prepared_sections_are_rejected_while_their_source_restores() {
-    let source = unhex(OLD_SOURCE);
-    let restored = decode_default(&source).unwrap();
-    assert_eq!(restored.prepared_status, PreparedStatus::Absent);
-    assert_eq!(restored.workbook(), &workbook());
-    assert_eq!(
-        source,
-        encode_workbook(&workbook(), SnapshotLimits::default()).unwrap()
-    );
-
-    let checkpoint = unhex(OLD_CHECKPOINT);
-    assert_eq!(&checkpoint[16..24], &75_u64.to_le_bytes());
-    assert!(matches!(
-        decode(
-            &checkpoint,
-            SnapshotLimits::default(),
-            PreparedPolicy::RequireCompatible
-        ),
-        Err(SnapshotError::Envelope(
-            crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::IncompatiblePreparedEngineRevision
-        ))
-    ));
-    let mut edited = workbook();
-    edited.sheet_mut(0).unwrap().set_value("A1", 7.).unwrap();
-    for policy in [PreparedPolicy::ReuseCompatible, PreparedPolicy::SourceOnly] {
-        let restored = decode(&checkpoint, SnapshotLimits::default(), policy).unwrap();
-        assert_ne!(restored.prepared_status, PreparedStatus::Restored);
-        assert_eq!(restored.workbook(), &edited);
+fn schema_eight_sources_are_refused() {
+    for fixture in [
+        OLD_SOURCE,
+        OLD_CHECKPOINT,
+        REVISION_76_CHECKPOINT,
+        REVISION_77_CHECKPOINT,
+    ] {
+        assert!(matches!(
+            decode_default(&unhex(fixture)),
+            Err(SnapshotError::Envelope(
+                super::snapshot_envelope_error::SnapshotEnvelopeError::UnsupportedSourceSchema
+            ))
+        ));
     }
-    // Even under the current revision, the old payload is refused rather than misread.
-    let mut relabeled = checkpoint;
-    relabeled[16..24]
-        .copy_from_slice(&crate::eval::overlay::snapshot::COMPATIBILITY_REVISION.to_le_bytes());
-    assert!(decode_default(&relabeled).is_err());
+}
+
+/// Pair an unchanged historical prepared payload with a current source section.
+fn checkpoint_with_current_source(
+    fixture: &str,
+    expected_revision: u64,
+    source: &Workbook,
+) -> Vec<u8> {
+    let historical = unhex(fixture);
+    assert_eq!(&historical[16..24], &expected_revision.to_le_bytes());
+    let source_size = u64::from_le_bytes(historical[24..32].try_into().unwrap()) as usize;
+    let mut prepared = historical[HEADER + source_size..].to_vec();
+    if expected_revision >= 76 {
+        // The historical checksum authenticates schema-8 bytes.
+        prepared.truncate(prepared.len() - SOURCE_CHECKSUM);
+    }
+    let current = encode_workbook(source, SnapshotLimits::default()).unwrap();
+    let (current_source, _, _) = sections(&current, usize::MAX).unwrap();
+    prepared.extend_from_slice(&crc32fast::hash(current_source).to_le_bytes());
+    encode(
+        source,
+        &prepared,
+        expected_revision,
+        SnapshotLimits::default(),
+    )
+    .unwrap()
 }
 
 #[test]
-fn compiler_caches_with_older_template_keys_are_rejected_while_their_source_restores() {
-    for (fixture, revision) in [
-        (REVISION_76_CHECKPOINT, 76_u64),
-        (REVISION_77_CHECKPOINT, 77),
+fn old_preparation_is_rejected_while_current_source_restores() {
+    let mut edited = workbook();
+    edited.sheet_mut(0).unwrap().set_value("A1", 7.).unwrap();
+    for (fixture, revision, source) in [
+        (OLD_CHECKPOINT, 75_u64, &edited),
+        (REVISION_76_CHECKPOINT, 76, &workbook()),
+        (REVISION_77_CHECKPOINT, 77, &workbook()),
     ] {
-        let checkpoint = unhex(fixture);
-        assert_eq!(&checkpoint[16..24], &revision.to_le_bytes());
+        let checkpoint = checkpoint_with_current_source(fixture, revision, source);
         assert!(matches!(
             decode(
                 &checkpoint,
@@ -967,13 +974,12 @@ fn compiler_caches_with_older_template_keys_are_rejected_while_their_source_rest
                 crate::eval::artifact::snapshot_envelope_error::SnapshotEnvelopeError::IncompatiblePreparedEngineRevision
             ))
         ));
-        let restored = decode_default(&checkpoint).unwrap();
-        assert_eq!(
-            restored.prepared_status,
-            PreparedStatus::DiscardedIncompatible
-        );
-        assert_eq!(restored.workbook(), &workbook());
-        // Relabeled as current, the old payload is refused rather than misread.
+        for policy in [PreparedPolicy::ReuseCompatible, PreparedPolicy::SourceOnly] {
+            let restored = decode(&checkpoint, SnapshotLimits::default(), policy).unwrap();
+            assert_ne!(restored.prepared_status, PreparedStatus::Restored);
+            assert_eq!(restored.workbook(), source);
+        }
+        // Relabeled as current, the historical payload is refused rather than misread.
         let mut relabeled = checkpoint;
         relabeled[16..24]
             .copy_from_slice(&crate::eval::overlay::snapshot::COMPATIBILITY_REVISION.to_le_bytes());

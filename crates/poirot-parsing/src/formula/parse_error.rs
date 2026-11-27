@@ -32,6 +32,7 @@ impl ParseError {
             | ParseReasonError::RepeatedQualifier
             | ParseReasonError::InvalidFunctionName
             | ParseReasonError::InvalidAbsoluteReference
+            | ParseReasonError::InvalidTableReference
             | ParseReasonError::InvalidSheetReference
             | ParseReasonError::ExpectedSpanCell
             | ParseReasonError::UnboundedSpanReference

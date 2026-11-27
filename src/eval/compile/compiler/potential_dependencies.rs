@@ -53,6 +53,7 @@ pub(super) fn potential(
             Expr::SheetSpan(span) => result
                 .references
                 .push(PotentialReference::SheetSpan(span.clone())),
+            Expr::Table(_) => result.dynamic_references = true,
             Expr::Name(name) => result.names.push(name.clone()),
             Expr::QualifiedName { sheet, name } => {
                 result.qualified_names.push(PotentialQualifiedName {

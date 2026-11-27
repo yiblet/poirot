@@ -207,7 +207,11 @@ pub(super) fn range_pair(left: Expr, right: Expr) -> Result<(Expr, Expr), ParseR
 }
 fn range_operand(expr: &Expr) -> bool {
     match expr {
-        Expr::Cell(_) | Expr::Name(_) | Expr::QualifiedName { .. } | Expr::SheetSpan(_) => true,
+        Expr::Cell(_)
+        | Expr::Name(_)
+        | Expr::QualifiedName { .. }
+        | Expr::SheetSpan(_)
+        | Expr::Table(_) => true,
         Expr::Error(error) => error == "#REF!",
         Expr::Unary {
             op: UnaryOp::SpillRange,

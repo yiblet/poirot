@@ -64,6 +64,9 @@ pub enum ParseReasonError {
     /// Invalid absolute reference.
     #[error("invalid absolute reference")]
     InvalidAbsoluteReference,
+    /// Invalid or unsupported structured table selector.
+    #[error("invalid structured table reference")]
+    InvalidTableReference,
     /// Invalid sheet reference.
     #[error("invalid sheet reference")]
     InvalidSheetReference,

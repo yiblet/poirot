@@ -140,7 +140,26 @@ pub fn plan_xlsx_export<W: WorkbookSource>(
                 crate::ExportLimitError::StyleContextSizeOverflow,
             ))?,
     )?;
+    let mut previous_tables = Vec::new();
     for sheet in workbook.sheets() {
+        let mut previous_in_sheet = Vec::new();
+        for table in sheet.tables() {
+            table.validate(
+                previous_tables.iter().copied(),
+                previous_in_sheet.iter().copied(),
+            )?;
+            previous_tables.push(table);
+            previous_in_sheet.push(table);
+            if let Some(name) = &table.name {
+                charge(name.len())?;
+            }
+            charge(table.display_name.len())?;
+            charge(std::mem::size_of::<crate::WorksheetTable>())?;
+            for column in &table.columns {
+                charge(column.name.len())?;
+                charge(std::mem::size_of::<crate::TableColumn>())?;
+            }
+        }
         let mut sheet_text_bytes = 0u64;
         charge(sheet.name().len())?;
         for row in sheet.row_indices() {

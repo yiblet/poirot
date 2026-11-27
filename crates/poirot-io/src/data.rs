@@ -21,6 +21,10 @@ pub trait SheetSource {
     fn row_visibility(&self, row: u32) -> RowVisibility;
     /// Read persisted worksheet presentation.
     fn presentation(&self) -> SheetPresentation;
+    /// Borrow saved table definitions.
+    fn tables(&self) -> &[crate::WorksheetTable] {
+        &[]
+    }
     /// Iterate declared saved array extents without expanding their coordinates.
     fn spill_extents(&self) -> impl Iterator<Item = (CellAddress, CellAddress)>;
     /// Read a saved array's final coordinate.
@@ -49,6 +53,12 @@ pub trait SheetSink: SheetSource {
     -> Result<(), ModelError>;
     /// Attach persisted worksheet presentation.
     fn set_presentation(&mut self, presentation: SheetPresentation);
+    /// Attach a checked imported table definition.
+    fn import_table(&mut self, table: crate::WorksheetTable) -> Result<(), ModelError> {
+        Err(ModelError::InvalidWorksheetTable {
+            name: table.display_name,
+        })
+    }
     /// Attach a recovered formula and its saved value.
     fn set_formula_with_cached_value(
         &mut self,

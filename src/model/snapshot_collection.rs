@@ -7,6 +7,8 @@ pub enum SnapshotCollection {
     DefinedNames,
     /// Stored worksheet cells.
     Cells,
+    /// Modeled Excel worksheet tables.
+    Tables,
     /// Saved spill rectangles.
     SpillExtents,
     /// Saved spill child records.

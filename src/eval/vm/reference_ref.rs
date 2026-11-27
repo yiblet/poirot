@@ -2,6 +2,8 @@
 
 /// Borrowed decoded reference geometry.
 pub(in crate::eval) enum ReferenceRef<'a> {
+    /// Workbook table selector as stored in bytecode or a bound tree.
+    Table(poirot_parsing::formula::TableReference<&'a str>),
     /// Single-cell coordinates with an optional sheet qualifier.
     Cell {
         /// Zero-based row.

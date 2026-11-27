@@ -106,6 +106,27 @@ impl<'a> ImportPackage<'a> {
         Ok(contents)
     }
 
+    /// Resolve relationships from one original part using the package catalog.
+    pub(crate) fn relationships(
+        &mut self,
+        owner: &str,
+        warnings: &mut Vec<crate::ImportDiagnostic>,
+        policy: crate::opc::OpcImportPolicy,
+        selected: impl Fn(&str) -> bool,
+    ) -> Result<BTreeMap<String, crate::opc::Relationship>, IoError> {
+        let path = crate::opc::relationship_part(owner);
+        let bytes = self.read(&path)?;
+        crate::opc::parse_relationships(owner, &bytes, warnings, policy, selected, |target| {
+            if self.entries.contains_key(target) {
+                Ok(())
+            } else {
+                Err(IoError::Opc(crate::opc::OpcError::MissingPart {
+                    path: target.into(),
+                }))
+            }
+        })
+    }
+
     /// Resolve OPC identities using catalog names and only relationship/workbook XML.
     pub(crate) fn plan(
         &mut self,

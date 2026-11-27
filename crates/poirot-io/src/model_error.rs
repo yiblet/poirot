@@ -1,6 +1,12 @@
 /// Invalid file-model values that cannot be represented faithfully.
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum ModelError {
+    /// Invalid table identity or geometry.
+    #[error("invalid or conflicting worksheet table {name:?}")]
+    InvalidWorksheetTable {
+        /// Table display name.
+        name: String,
+    },
     /// Invalid scalar input.
     #[error("invalid scalar value")]
     Value(#[from] poirot_functions::scalar::ValueError),

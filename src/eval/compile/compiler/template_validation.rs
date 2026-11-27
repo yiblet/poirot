@@ -212,6 +212,22 @@ pub(super) fn validate_references(
                 reader.boolean()?;
                 reader.optional()?;
             }
+            ReferenceKind::Table => {
+                if (reader.boolean()? && reader.string()?.is_empty())
+                    || poirot_parsing::formula::TableSection::parse(reader.string()?).is_none()
+                {
+                    return Err(PlanSnapshotError::SnapshotReferenceIndex);
+                }
+                let columns = reader.word()?;
+                if columns > 2 {
+                    return Err(PlanSnapshotError::SnapshotReferenceIndex);
+                }
+                for _ in 0..columns {
+                    if reader.string()?.is_empty() {
+                        return Err(PlanSnapshotError::SnapshotReferenceIndex);
+                    }
+                }
+            }
             ReferenceKind::SheetSpan => {
                 reader.string()?;
                 reader.string()?;

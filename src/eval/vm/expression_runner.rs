@@ -204,7 +204,12 @@ impl<'s, 'a> ExpressionRunner<'s, 'a> {
                     sheet: sheet.as_deref(),
                 },
             ),
-            Expression::Name(name) => NameResolver::new(self.session).defined_name(s, s, at, name),
+            Expression::Name(name) => NameResolver::new(self.session).unqualified_name(s, at, name),
+            Expression::Table(reference) => ReferenceAtoms::new(self.session).resolve(
+                s,
+                at,
+                ReferenceRef::Table(reference.as_ref()),
+            ),
             Expression::QualifiedName { sheet, name } => {
                 match NameResolver::new(self.session).sheet(s, &Some(sheet.clone()))? {
                     Some(scope) => NameResolver::new(self.session).defined_name(s, scope, at, name),

@@ -41,6 +41,13 @@ pub fn checked_matches(stored: &str, requested: &str) -> Result<bool, Identifier
     }
 }
 
+/// Build a lookup key with the same equality as supported identifier comparison.
+pub(crate) fn known_case_key(text: &str) -> String {
+    text.chars()
+        .map(|value| supported_lower(value).unwrap_or(value))
+        .collect()
+}
+
 fn supported_lower(c: char) -> Option<char> {
     match c {
         'A'..='Z' => Some(c.to_ascii_lowercase()),

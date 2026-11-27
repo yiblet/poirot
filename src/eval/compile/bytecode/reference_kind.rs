@@ -9,4 +9,6 @@ pub enum ReferenceKind {
     Column,
     /// Whole-row reference.
     Row,
+    /// Rectangle selected by table and column names.
+    Table,
 }

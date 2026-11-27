@@ -23,6 +23,7 @@ pub(super) fn bind_at(
         Syntax::Error(e) => Expression::Error(e.clone()),
         Syntax::Missing => Expression::Missing,
         Syntax::Cell(c) => Expression::Cell(c.clone()),
+        Syntax::Table(reference) => Expression::Table(reference.clone()),
         Syntax::SheetSpan(span) => Expression::SheetSpan(span.clone()),
         Syntax::Column {
             column,
