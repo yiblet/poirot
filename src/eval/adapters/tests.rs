@@ -300,6 +300,7 @@ fn borrowed_bytecode_arguments_force_once_and_skip_other_blocks() {
     let parameters = FunctionParameters(crate::eval::vm::ArgumentsRef::Bytecode {
         program: &program,
         first: ip + 2,
+        frame: None,
         count: invoke.b as usize,
     });
     let mut session = Session::with_context(&workbook, EvaluationInputs::default());

@@ -891,3 +891,32 @@ fn assert_result_parity<T: std::fmt::Debug + PartialEq>(
         (actual, expected) => panic!("execution outcome differs: {actual:?}, {expected:?}"),
     }
 }
+
+#[test]
+fn let_binding_failure_restores_the_local_stack_in_the_same_session() {
+    let mut workbook = Workbook::new();
+    workbook.add_sheet("S").unwrap();
+    let compile = |formula| {
+        let syntax = poirot_parsing::formula::parse_formula(formula).unwrap();
+        compile::bytecode::compile(&syntax).unwrap()
+    };
+    let refused = compile("LET(x,1,y,IF(TRUE,SEQUENCE(1024),0),x)");
+    let successful = compile("LET(x,2,IF(TRUE,x,0))");
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    session.state.runtime.budget = BudgetMeter::new(EvaluationBudgets {
+        run_work: 96,
+        ..EvaluationBudgets::default()
+    })
+    .unwrap();
+    assert!(matches!(
+        Vm::new(&mut session).run(0, AT, &refused),
+        Err(EvaluationError::Budget(_))
+    ));
+    assert!(session.state.runtime.vm.is_idle());
+    session.state.runtime.budget = BudgetMeter::new(EvaluationBudgets::default()).unwrap();
+    assert!(matches!(
+        Vm::new(&mut session).run(0, AT, &successful),
+        Ok(Value::Scalar(crate::model::CellValue::Number(2.)))
+    ));
+    assert!(session.state.runtime.vm.is_idle());
+}

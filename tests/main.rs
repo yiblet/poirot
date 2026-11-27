@@ -50,6 +50,7 @@ mod eval_information_arrays;
 mod eval_information_classifiers;
 mod eval_internal_array_context;
 mod eval_legacy_statistics;
+mod eval_let;
 mod eval_logical_execution_services;
 mod eval_lookup_family;
 mod eval_math_family;

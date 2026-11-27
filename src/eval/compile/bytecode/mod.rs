@@ -18,8 +18,8 @@
 //! path as `Invoke`; neither instruction eagerly executes every argument block.
 //! References stay values until an operator or family adapter requests a read.
 //!
-//! Only final buffers and the shared executable owner allocate during compilation;
-//! the streamed preparation events and temporary label bindings allocate nothing.
+//! Preparation streams directly into the final buffers and the shared executable.
+//! Temporary label bindings are fixed-size, and lexical scopes use a compact stack.
 //! Source retention and template interning belong to the caller.
 //!
 //! Depends on: functions (registry identities and external names) and limits
@@ -46,6 +46,7 @@ mod instruction;
 mod instruction_index;
 /// Index into a compiled body's label table, distinct from an instruction offset.
 mod label;
+mod lexical_scope;
 /// Validation and lowering of bound expressions into bytecode.
 mod lowering;
 /// Stack operations and lazy argument descriptors understood by the VM.

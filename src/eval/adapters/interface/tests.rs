@@ -112,6 +112,7 @@ fn first_force_copy_failure_retains_the_successful_evaluation() {
             ExecutableRef::Bytecode {
                 program: &expression,
                 start: 0,
+                frame: None,
             },
         )
         .unwrap();

@@ -71,6 +71,12 @@ pub enum Opcode {
     GreaterEqual,
     /// Conditional over deferred branch labels, with the same operand layout as `Invoke`.
     Conditional,
+    /// Move the initializer value to the next local slot `a`.
+    BindLocal,
+    /// Read a live local slot `a`, preserving its value channel.
+    ReadLocal,
+    /// Drop local slots at and above slot `a`.
+    ClearLocals,
 }
 
 impl Opcode {

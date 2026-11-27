@@ -24,7 +24,7 @@ pub(super) fn potential(
     expression: &poirot_parsing::formula::Expr,
     executable: &crate::eval::compile::bytecode::Compiled,
 ) -> Option<PotentialDependencies> {
-    use poirot_parsing::formula::Expr;
+    use poirot_parsing::formula::{Expr, LetForm};
     let mut result = PotentialDependencies::default();
     let mut pending = vec![expression];
     while let Some(expression) = pending.pop() {
@@ -54,12 +54,20 @@ pub(super) fn potential(
                 .references
                 .push(PotentialReference::SheetSpan(span.clone())),
             Expr::Table(_) => result.dynamic_references = true,
-            Expr::Name(name) => result.names.push(name.clone()),
+            Expr::Name(name) if executable.template.local_slots == 0 => {
+                result.names.push(name.clone())
+            }
             Expr::QualifiedName { sheet, name } => {
                 result.qualified_names.push(PotentialQualifiedName {
                     sheet: sheet.clone(),
                     name: name.clone(),
                 });
+            }
+            Expr::Function { name, args } if LetForm::matches(name) => {
+                if let Some(form) = LetForm::parse(args) {
+                    pending.extend(form.bindings().map(|(_, value)| value));
+                    pending.push(form.result);
+                }
             }
             Expr::Function { name, args } => {
                 match registry::resolve_function(name) {
@@ -82,6 +90,19 @@ pub(super) fn potential(
             }
             Expr::Array(rows) => pending.extend(rows.iter().flatten()),
             _ => {}
+        }
+    }
+    if executable.template.local_slots != 0 {
+        // The emitted Name instructions already exclude lexical slots and declarations.
+        for instruction in executable.template.code.iter().rev() {
+            if instruction.opcode == crate::eval::compile::bytecode::Opcode::Name {
+                result.names.push(
+                    executable
+                        .text(instruction.a, instruction.b)
+                        .ok()?
+                        .to_owned(),
+                );
+            }
         }
     }
     // Resolved call identities distinguish declared providers from opaque calls.

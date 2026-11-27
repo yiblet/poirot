@@ -1126,7 +1126,7 @@ fn raw_snapshot_restore_rejects_previous_execution_semantics_versions() {
     let bytes = postcard::to_allocvec(&overlay.snapshot()).unwrap();
     let (version, payload) = postcard::take_from_bytes::<u32>(&bytes).unwrap();
     assert_eq!(version, super::super::snapshot_payload::VERSION);
-    for previous in (8..83).chain([version ^ (1 << 31)]) {
+    for previous in (8..(version & !(1 << 31))).chain([version ^ (1 << 31)]) {
         let mut incompatible = postcard::to_allocvec(&previous).unwrap();
         incompatible.extend_from_slice(payload);
         let snapshot = postcard::from_bytes(&incompatible).unwrap();

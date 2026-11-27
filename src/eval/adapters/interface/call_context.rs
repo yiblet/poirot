@@ -31,6 +31,7 @@ impl<'call, 'workbook> CallContext<'call, 'workbook> {
             expression: ExecutableRef::Bytecode {
                 program: expression,
                 start: 0,
+                frame: None,
             },
             value: None,
         }

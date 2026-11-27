@@ -21,6 +21,9 @@ impl<'ast> Sink<'ast> for Preparation<'_, 'ast> {
                 .map_err(|_| CompileError::ResourceLimit)
                 .and_then(|instruction| self.inference.enter(expression, *depth, instruction)),
             High::Leave => self.inference.leave(&self.writer.output.calls),
+            High::BindLocal(slot) => self.inference.bind_local(*slot),
+            High::ReadLocal(slot) => self.inference.read_local(*slot),
+            High::ClearLocals(first) => self.inference.clear_locals(*first),
             _ => Ok(()),
         };
         if let Err(error) = inferred {

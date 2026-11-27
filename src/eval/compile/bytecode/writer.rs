@@ -115,6 +115,13 @@ impl<'ast> Sink<'ast> for Writer<'_> {
                 let (a, b) = self.text("#NUM!");
                 Instruction::new(Opcode::Error, a, b)
             }
+            High::InvalidLet => {
+                let (a, b) = self.text("#VALUE!");
+                Instruction::new(Opcode::Error, a, b)
+            }
+            High::BindLocal(slot) => Instruction::new(Opcode::BindLocal, slot as u32, 0),
+            High::ReadLocal(slot) => Instruction::new(Opcode::ReadLocal, slot as u32, 0),
+            High::ClearLocals(first) => Instruction::new(Opcode::ClearLocals, first as u32, 0),
             High::Unary(op) => Instruction::new(Opcode::Unary, unary(op), 0),
             High::Binary(op) => Instruction::new(Opcode::for_binary(op), binary(op), 0),
             High::ArrayAllocate(rows, columns) => {
@@ -183,8 +190,8 @@ impl<'ast> Sink<'ast> for Writer<'_> {
                 target = Some(label);
                 Instruction::new(opcode, index, count as u32)
             }
-            High::Argument(index, label, depth, expression) => {
-                if self.aggregation_roles.get(depth) == Some(&Some(index)) {
+            High::Argument(index, label, depth, expression, uses_local) => {
+                if !uses_local && self.aggregation_roles.get(depth) == Some(&Some(index)) {
                     match aggregation::lower_with_registry(expression, self.registry) {
                         Ok(Some(plan)) => {
                             let start = self.output.template.code.len().saturating_add(1);

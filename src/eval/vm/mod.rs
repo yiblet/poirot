@@ -26,6 +26,7 @@ mod bytecode_vm;
 mod executable_ref;
 /// Deferred expression dispatch to the VM (or the test-only tree oracle).
 mod expression_runner;
+mod local_frame;
 /// Reusable value and argument stacks.
 mod machine;
 /// Scalar and array-aware formula operators.

@@ -258,8 +258,8 @@
     "implementation_status_counts": {
       "registered": 262,
       "unknown": 17,
-      "partial": 8,
-      "unsupported": 9
+      "partial": 9,
+      "unsupported": 8
     },
     "multi_step_cases": 44,
     "named_cases": 17,
@@ -27246,8 +27246,8 @@
     {
       "id": "function.LET.valid",
       "feature": "function.LET",
-      "behavior": "Establish documented valid LET semantics; missing registry handler is an explicit gap, not a successful Excel error oracle.",
-      "applicability": "requires_research",
+      "behavior": "Evaluate each binding once in source order and resolve lexical shadowing.",
+      "applicability": "applicable",
       "specification_status": "missing",
       "assertions": []
     },
@@ -28653,14 +28653,6 @@
       "source_urls": [
         "https://support.microsoft.com/en-gb/excel/using-structured-references-with-excel-tables?nochrome=true",
         "https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/3d025add-118d-4413-9856-ab65712ec1b0"
-      ]
-    },
-    {
-      "id": "function.LET",
-      "name": "LET",
-      "source_urls": [
-        "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-        "https://support.microsoft.com/en-us/excel/excel-functions-alphabetical"
       ]
     },
     {

@@ -9,6 +9,7 @@ pub(super) struct Sizes {
     pub(super) code: usize,
     pub(super) text: usize,
     pub(super) refs: usize,
+    pub(super) local_slots: usize,
     pub(super) reference_bytes: usize,
     pub(super) calls: usize,
     pub(super) expressions: usize,
@@ -25,6 +26,10 @@ impl<'ast> Sink<'ast> for Sizes {
         match op {
             High::Enter(_, _) => self.expressions += 1,
             High::Truncated => self.text += 5,
+            High::InvalidLet => self.text += "#VALUE!".len(),
+            High::BindLocal(slot) => {
+                self.local_slots = self.local_slots.max(slot.saturating_add(1))
+            }
             High::Invoke(s, _, _) => {
                 self.text += 4 + s.len();
                 self.calls += 1;
