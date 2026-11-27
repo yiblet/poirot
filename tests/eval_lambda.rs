@@ -511,6 +511,45 @@ fn isomitted_distinguishes_a_missing_lambda_argument_from_a_passed_blank() {
 }
 
 #[test]
+fn reduce_preserves_accumulator_channels_and_traversal_order() {
+    let book = worksheet();
+    // https://support.microsoft.com/en-gb/excel/functions/reduce-function
+    for (formula, expected) in [
+        (
+            "REDUCE(0,{1,2;3,4},LAMBDA(a,b,a*10+b))",
+            CellValue::Number(1234.),
+        ),
+        ("REDUCE(,{3},LAMBDA(a,b,a+b+100))", CellValue::Number(3.)),
+        (
+            "REDUCE(A9,{3},LAMBDA(a,b,IF(ISBLANK(a),100+b,-1)))",
+            CellValue::Number(103.),
+        ),
+        (
+            "LAMBDA(seed,unused,REDUCE(seed,{3},LAMBDA(a,b,a+b+100)))(,1)",
+            CellValue::Number(3.),
+        ),
+        (
+            "REDUCE(\"\",{\"A\",\"B\";\"C\",\"D\"},LAMBDA(a,b,a&b))",
+            CellValue::Text("ABCD".into()),
+        ),
+        (
+            "ROWS(REDUCE(0,{1;2},LAMBDA(acc,x,VSTACK(acc,x))))",
+            CellValue::Number(3.),
+        ),
+        (
+            "REDUCE(0,{1,2,3},LAMBDA(a,b,IF(b=2,1/0,IFERROR(a,10)+b)))",
+            CellValue::Number(13.),
+        ),
+        (
+            "REDUCE(0,{1,2},LAMBDA(a,a))",
+            CellValue::Error(CellError::Value),
+        ),
+    ] {
+        assert_eq!(value(&book, formula), expected, "{formula}");
+    }
+}
+
+#[test]
 fn scan_spills_row_major_intermediates_and_recomputes_after_an_edit() {
     use poirot::calculation::EvaluationContext;
     use poirot::eval::{ArrayResultPolicy, EvaluationPolicy};

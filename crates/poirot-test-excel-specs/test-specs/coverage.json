@@ -4,18 +4,18 @@
     "evaluation_steps": 2060,
     "assertion_count": 2061,
     "source_count": 262,
-    "feature_count": 302,
-    "potential_obligation_count": 1664,
+    "feature_count": 303,
+    "potential_obligation_count": 1665,
     "obligation_status_counts": {
       "specified_with_evidence": 563,
       "not_applicable": 8,
-      "missing": 1093
+      "missing": 1094
     },
     "evidence_counts": {
       "documented_derivation": 2012,
       "documented_example": 49
     },
-    "registered_function_count": 502,
+    "registered_function_count": 503,
     "registered_functions_with_specifications": 260,
     "registered_functions_without_specifications": [
       "ACCRINT",
@@ -207,6 +207,7 @@
       "RANDARRAY",
       "RANK.AVG",
       "RECEIVED",
+      "REDUCE",
       "REGEXEXTRACT",
       "REGEXREPLACE",
       "REGEXTEST",
@@ -262,7 +263,7 @@
       "ZTEST"
     ],
     "implementation_status_counts": {
-      "registered": 268,
+      "registered": 269,
       "unknown": 17,
       "partial": 10,
       "unsupported": 7
@@ -28159,6 +28160,14 @@
       "id": "function.MAKEARRAY.valid",
       "feature": "function.MAKEARRAY",
       "behavior": "Build a rectangle by passing one-based row and column positions to a callback.",
+      "applicability": "applicable",
+      "specification_status": "missing",
+      "assertions": []
+    },
+    {
+      "id": "function.REDUCE.valid",
+      "feature": "function.REDUCE",
+      "behavior": "Return the final accumulator after visiting input values in row order.",
       "applicability": "applicable",
       "specification_status": "missing",
       "assertions": []

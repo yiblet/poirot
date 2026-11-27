@@ -1879,7 +1879,13 @@
     "fods:information__fods__type__00004",
     "fods:information__fods__type__00005",
     "fods:information__fods__type__00006",
+    "fods:lambda__fods__byrow__00000",
     "fods:lambda__fods__lambda__00025",
+    "fods:lambda__fods__lambda__00044",
+    "fods:lambda__fods__lambda__00045",
+    "fods:lambda__fods__lambda__00048",
+    "fods:lambda__fods__lambda__00049",
+    "fods:lambda__fods__lambda__00050",
     "fods:logical__fods__and__00000",
     "fods:logical__fods__and__00001",
     "fods:logical__fods__and__00002",
@@ -3340,6 +3346,37 @@
     "fods:spreadsheet__fods__indirect__00018",
     "fods:spreadsheet__fods__indirect__00019",
     "fods:spreadsheet__fods__indirect__00020",
+    "fods:spreadsheet__fods__let__00000",
+    "fods:spreadsheet__fods__let__00001",
+    "fods:spreadsheet__fods__let__00002",
+    "fods:spreadsheet__fods__let__00003",
+    "fods:spreadsheet__fods__let__00004",
+    "fods:spreadsheet__fods__let__00005",
+    "fods:spreadsheet__fods__let__00006",
+    "fods:spreadsheet__fods__let__00007",
+    "fods:spreadsheet__fods__let__00008",
+    "fods:spreadsheet__fods__let__00009",
+    "fods:spreadsheet__fods__let__00010",
+    "fods:spreadsheet__fods__let__00011",
+    "fods:spreadsheet__fods__let__00012",
+    "fods:spreadsheet__fods__let__00013",
+    "fods:spreadsheet__fods__let__00014",
+    "fods:spreadsheet__fods__let__00015",
+    "fods:spreadsheet__fods__let__00016",
+    "fods:spreadsheet__fods__let__00051",
+    "fods:spreadsheet__fods__let__00052",
+    "fods:spreadsheet__fods__let__00053",
+    "fods:spreadsheet__fods__let__00054",
+    "fods:spreadsheet__fods__let__00094",
+    "fods:spreadsheet__fods__let__00097",
+    "fods:spreadsheet__fods__let__00098",
+    "fods:spreadsheet__fods__let__00099",
+    "fods:spreadsheet__fods__let__00101",
+    "fods:spreadsheet__fods__let__00102",
+    "fods:spreadsheet__fods__let__00103",
+    "fods:spreadsheet__fods__let__00104",
+    "fods:spreadsheet__fods__let__00105",
+    "fods:spreadsheet__fods__let__00106",
     "fods:spreadsheet__fods__lookup__00000",
     "fods:spreadsheet__fods__lookup__00001",
     "fods:spreadsheet__fods__lookup__00002",
@@ -12565,57 +12602,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "missing_function",
-        "fingerprint": "2ea104ce57eb5dc80c8394a6accd5cd47433945347aa7b13bcc29c2956f0393c"
-      },
-      "reason": "ROI #NAME? result; unsupported function/name must not pass an upstream ISERROR predicate",
-      "cases": [
-        "fods:spreadsheet__fods__let__00000",
-        "fods:spreadsheet__fods__let__00001",
-        "fods:spreadsheet__fods__let__00002",
-        "fods:spreadsheet__fods__let__00003",
-        "fods:spreadsheet__fods__let__00004",
-        "fods:spreadsheet__fods__let__00005",
-        "fods:spreadsheet__fods__let__00006",
-        "fods:spreadsheet__fods__let__00007",
-        "fods:spreadsheet__fods__let__00008",
-        "fods:spreadsheet__fods__let__00009",
-        "fods:spreadsheet__fods__let__00010",
-        "fods:spreadsheet__fods__let__00011",
-        "fods:spreadsheet__fods__let__00012",
-        "fods:spreadsheet__fods__let__00013",
-        "fods:spreadsheet__fods__let__00014",
-        "fods:spreadsheet__fods__let__00015",
-        "fods:spreadsheet__fods__let__00016",
-        "fods:spreadsheet__fods__let__00052",
-        "fods:spreadsheet__fods__let__00053",
-        "fods:spreadsheet__fods__let__00054",
-        "fods:spreadsheet__fods__let__00094",
-        "fods:spreadsheet__fods__let__00097",
-        "fods:spreadsheet__fods__let__00098",
-        "fods:spreadsheet__fods__let__00099",
-        "fods:spreadsheet__fods__let__00101",
-        "fods:spreadsheet__fods__let__00102",
-        "fods:spreadsheet__fods__let__00103",
-        "fods:spreadsheet__fods__let__00104",
-        "fods:spreadsheet__fods__let__00105",
-        "fods:spreadsheet__fods__let__00106"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "missing_function",
-        "fingerprint": "2ea104ce57eb5dc80c8394a6accd5cd47433945347aa7b13bcc29c2956f0393c"
-      },
-      "reason": "actual=Text(\"ERROR\"); upstream Correct predicate=Boolean(false)",
-      "cases": [
-        "fods:spreadsheet__fods__let__00051"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "missing_function",
         "fingerprint": "3ecc23d9a9cd7d28288c6fc4cce6ab9bbaa7a571b8bc8b6c5b65cbfebbb91610"
       },
       "reason": "ROI #NAME? result; unsupported function/name must not pass an upstream ISERROR predicate",
@@ -12680,20 +12666,6 @@
         "fods:date_time__fods__daysinmonth__00005",
         "fods:date_time__fods__daysinmonth__00006",
         "fods:date_time__fods__daysinmonth__00007"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "missing_function",
-        "fingerprint": "559375af6f78616dc092908b6c32979ebdbbec616d97079fe22414db9e360c85"
-      },
-      "reason": "ROI #NAME? result; unsupported function/name must not pass an upstream ISERROR predicate",
-      "cases": [
-        "fods:lambda__fods__lambda__00044",
-        "fods:lambda__fods__lambda__00045",
-        "fods:lambda__fods__lambda__00048",
-        "fods:lambda__fods__lambda__00049"
       ]
     },
     {
@@ -12781,17 +12753,6 @@
         "fods:date_time__fods__years__00007",
         "fods:date_time__fods__years__00009",
         "fods:date_time__fods__years__00010"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "missing_function",
-        "fingerprint": "80c9be3646f5735825e3af2bdaeac4106e0b89c615e1bc9704b4a09299a023bd"
-      },
-      "reason": "ROI #NAME? result; unsupported function/name must not pass an upstream ISERROR predicate",
-      "cases": [
-        "fods:lambda__fods__bycol__00000"
       ]
     },
     {
@@ -13133,17 +13094,6 @@
       "cases": [
         "fods:addin__fods__rot13__00002",
         "fods:addin__fods__rot13__00003"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "missing_function",
-        "fingerprint": "c5d0be7da0b4717acb97b17b0ca79fdedb6da8aaf5fd8f0b13518580c51ce40a"
-      },
-      "reason": "ROI #NAME? result; unsupported function/name must not pass an upstream ISERROR predicate",
-      "cases": [
-        "fods:lambda__fods__byrow__00000"
       ]
     },
     {
@@ -14799,6 +14749,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "0050121b0d63092f37c4803bcb864f286d2033e13b069008ebc2ff86ce324ae4"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 91 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00092"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "0091a56085e3109860fdba55f04bcb1b3cf4c7b36e78412efaa0ff051cf5c797"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 142 column 0",
@@ -14921,17 +14882,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "0353c86d402bd8257487f577b3c2a802e6830596f0a3a9ee41f3d5878c918b17"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 9 column 0",
-      "cases": [
-        "fods:lambda__fods__reduce__00008"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "0399847c7d8c78491fb70b6871aa5633d93b58cc66e6051b52d85238e1d61444"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 48 column 1",
@@ -14989,17 +14939,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 171 column 0",
       "cases": [
         "fods:statistical__fods__forecast_ets_mult__00170"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "055957c367cd01f5dc985d783cea0139e799ef603883928f9761518e5ff5c159"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 4 column 0",
-      "cases": [
-        "fods:lambda__fods__map__00003"
       ]
     },
     {
@@ -15114,6 +15053,17 @@
         "fods:text__fods__t__00020",
         "fods:text__fods__unichar__00021",
         "fods:text__fods__unicode__00021"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "07b4e350dae1ce267e8c2641756e45b05d9519c3a7a541cb9365b3d1ba14020c"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 22 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00021"
       ]
     },
     {
@@ -15247,6 +15197,17 @@
         "fods:statistical__fods__normsdist__00037",
         "fods:statistical__fods__standardize__00037",
         "fods:text__fods__unicode__00037"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "0a50764c8ce8755aa07c272aa19a6fe9952af53a520be5fd08773aa64ee7b5e9"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 38 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00037"
       ]
     },
     {
@@ -15391,6 +15352,20 @@
       "reason": "Refresh after dependency updates: actual: selected unsupported Calc CSE cell at sheet 1 row 4 column 0",
       "cases": [
         "fods:text__fods__lenb__00003"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "0c188aa3028ec80ab01987093cb6d1f47369f1075bdd44f46413690bc2dc5bfe"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 4 column 0",
+      "cases": [
+        "fods:lambda__fods__isomitted__00003",
+        "fods:lambda__fods__lambda__00003",
+        "fods:lambda__fods__map__00003",
+        "fods:lambda__fods__reduce__00003"
       ]
     },
     {
@@ -15717,6 +15692,18 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "113550c26a9b709366f9e6ff6ea0d692e5a4596e09a3ad0f74ee245967bcf01e"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 17 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00016",
+        "fods:lambda__fods__map__00016"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "11a96a763d36201ebd2df8d1c29ff190977f81d4e5c61476f7cd99b718ac6101"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 168 column 12",
@@ -15802,6 +15789,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "12dcb6a8a8a0b38e9af8a9b717881000d6a356fdd7d88a159254c21d7993c2f1"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 76 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00077"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "134a40add6bc11dc99d78ec24c50e29508daa8f2e5680c207f56ffa0d8927528"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 227 column 0",
@@ -15828,6 +15826,17 @@
         "fods:statistical__fods__forecast_ets_mult__00072",
         "fods:statistical__fods__normsdist__00072",
         "fods:text__fods__clean__00072"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "1366a0f33a9f9c3ff35aa844a7d81475cbbf547d93a9742c2c03dbbf9f57c4cc"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 73 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00074"
       ]
     },
     {
@@ -15879,22 +15888,22 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "14ab4beacd718100575e3f778abcdfb25159220bb10544cacf3b3054443cae35"
+        "fingerprint": "139e69ecaca9f47ab61bc33bd1a0fbb9bcfc7295ffe3e3905f6fc0f5894beddc"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 36 column 3",
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 33 column 0",
       "cases": [
-        "fods:spreadsheet__fods__sequence__00063"
+        "fods:lambda__fods__lambda__00032"
       ]
     },
     {
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "14ce6a7925423490e1541290f0b460fbb2488753997cd861c8c56138d6556015"
+        "fingerprint": "14ab4beacd718100575e3f778abcdfb25159220bb10544cacf3b3054443cae35"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 7 column 0",
+      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 36 column 3",
       "cases": [
-        "fods:lambda__fods__map__00006"
+        "fods:spreadsheet__fods__sequence__00063"
       ]
     },
     {
@@ -15958,28 +15967,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "15b65a5a81c771c6a8e5e818bd4b3112701d352491060fa5741f50d67d7c4956"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 1 column 0",
-      "cases": [
-        "fods:lambda__fods__scan__00000"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "16488f67c51c89459468ca50d40169868fac57d0219db67edd8ab8c828cb81c4"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 5 column 0",
-      "cases": [
-        "fods:lambda__fods__reduce__00004"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "166c05fd50957cf0e7d9ea77cfc56c3cca9a2ca84f4ca7aa071c5b0d7d539a50"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 206 column 12",
@@ -16035,17 +16022,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "179f863d231c828e1dde1d6b9dd3c59489aaa66c69fc1507413b5bfec656b5d6"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 1 column 0",
-      "cases": [
-        "fods:lambda__fods__map__00000"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "183d3d31d46fd7e898456723418056d596f053a6705d19a24156fc19addfc472"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 67 column 0",
@@ -16060,6 +16036,17 @@
         "fods:statistical__fods__forecast_ets_add__00066",
         "fods:statistical__fods__forecast_ets_mult__00066",
         "fods:statistical__fods__normsdist__00066"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "183d3d31d46fd7e898456723418056d596f053a6705d19a24156fc19addfc472"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 67 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00068"
       ]
     },
     {
@@ -16165,17 +16152,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "1a249530b091207ff76a95289b5abec787c13bd4cca321c0710d65d237ecd127"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 91 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00092"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "1a77c917314558ec6addb87cbe176137fbd84868b4e16f44da5e2a1b10ac4e68"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 33 column 25",
@@ -16213,6 +16189,17 @@
         "fods:statistical__fods__normsdist__00038",
         "fods:statistical__fods__standardize__00038",
         "fods:text__fods__unicode__00038"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "1ac593ea6e61d970f341071676e979c7023e8c79402e3374c62bf6447bdc5734"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 39 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00038"
       ]
     },
     {
@@ -16268,6 +16255,21 @@
         "fods:statistical__fods__t_inv_2t__00002",
         "fods:statistical__fods__tinv__00002",
         "fods:text__fods__bahttext__00002"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "1ad7f071c1e3a2aa7f2e6c25a6f713ddbca2a1c1c8ef6e2817884f230290a0b5"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 3 column 0",
+      "cases": [
+        "fods:lambda__fods__bycol__00002",
+        "fods:lambda__fods__byrow__00002",
+        "fods:lambda__fods__isomitted__00002",
+        "fods:lambda__fods__lambda__00002",
+        "fods:lambda__fods__reduce__00002"
       ]
     },
     {
@@ -16678,17 +16680,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "23003547bc54c156f1cf7306c3ac432004359d50364c57272d3d78b8517c52e6"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 21 column 0",
-      "cases": [
-        "fods:lambda__fods__map__00020"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "237dcf1a49fa1a58cd9d8a17ace5687ede936d974143f4944e1768d755cd6957"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 228 column 0",
@@ -16939,6 +16930,18 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "2692b1d6d907025e092b84dd7420c905a206f5713b39b5b76291fe68edf37502"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 15 column 0",
+      "cases": [
+        "fods:lambda__fods__bycol__00016",
+        "fods:lambda__fods__lambda__00014"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "26f27518c1f44969b841be467a162f91b8a2a2920ad81cc1edf3402558410eef"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 19 column 9",
@@ -17020,17 +17023,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "28a66aca3acbe6e08ed0d76b8df7ab68ae2a6f9401dce9f99e70ef27c77cc0d0"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 69 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00070"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "28b12dd7587c7274f41de1818eaccd20978dd21cfda949919a95bd236795f723"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 16 column 2",
@@ -17058,17 +17050,6 @@
         "fods:spreadsheet__fods__hstack__00104",
         "fods:spreadsheet__fods__sequence__00066",
         "fods:spreadsheet__fods__sortby__00086"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "29f3025235914fbb95faaabc57b2ed9185d8f1b44b71f1b6354be532ca0d94dd"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 6 column 0",
-      "cases": [
-        "fods:lambda__fods__reduce__00005"
       ]
     },
     {
@@ -17169,55 +17150,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "2ba15eac6e707a030c383356155c2bebdb669a0abb2316933d3e90d39dbe712a"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 14 column 0",
-      "cases": [
-        "fods:lambda__fods__byrow__00013"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "2ba43430292c879bc54c2d35c2f2ed01880924b3c931a99f89e5c711ca39af16"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 2 column 0",
-      "cases": [
-        "fods:lambda__fods__bycol__00001"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "2c1fab15c2737f61f7f015fa544178f77496a149be285e456202a6e17b32c069"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 3 column 0",
-      "cases": [
-        "fods:lambda__fods__bycol__00002"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "2c4323f8cb03ef23c8734300d6d5a58a10dba6e442a077022f586650b3868337"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 97 column 2",
       "cases": [
         "fods:spreadsheet__fods__drop__00188"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "2c55ecb31bf462ddc88b14685953d017b051b0c3bddf44ce3f1828bc59cc499a"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 12 column 0",
-      "cases": [
-        "fods:lambda__fods__byrow__00011"
       ]
     },
     {
@@ -17265,17 +17202,6 @@
       "cases": [
         "fods:spreadsheet__fods__expand__00186",
         "fods:spreadsheet__fods__sort__00124"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "2cdc6b1c0fdaf0c271e8a30d12cbcb22e1462280aea33db531440c0a31fda0a2"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 7 column 0",
-      "cases": [
-        "fods:lambda__fods__reduce__00006"
       ]
     },
     {
@@ -17407,6 +17333,22 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "2db69dc1cff7f49e4368e8d61b4807aa64f05abfd8f2156fad3f2878edd36765"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 5 column 0",
+      "cases": [
+        "fods:lambda__fods__byrow__00004",
+        "fods:lambda__fods__isomitted__00004",
+        "fods:lambda__fods__lambda__00004",
+        "fods:lambda__fods__makearray__00007",
+        "fods:lambda__fods__reduce__00004",
+        "fods:lambda__fods__scan__00004"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "2dc878d057789b3097164e80510170ccb0f1bf4cd5c542cebe2bbbdb24129375"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 33 column 3",
@@ -17530,6 +17472,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "3023c4e10c991cd28ef80575d6f718a58eb6e5b0cf80552acf7ca522b5e22fd3"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 88 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00089"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "302809c3721c907332101363f8c651823c718068d625f61005ce4ef9fe7e87a5"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 33 column 24",
@@ -17611,17 +17564,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 96 column 15",
       "cases": [
         "fods:array__dubious__fods__linest__00097"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "31aca2cce46d82b2bff77026f282136d2e461ca89e28b15c8a3f69613ebb7f49"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 70 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00071"
       ]
     },
     {
@@ -17756,6 +17698,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "33009d222e19621812516a97c337bfb064a4a22ffc68c3292d8426f3e2c4306d"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 86 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00087"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "33337e77cd1e1c0847770fdaca73f02692666f4f313f17ba9afe94582726c907"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 71 column 0",
@@ -17772,6 +17725,17 @@
         "fods:statistical__fods__forecast_ets_mult__00070",
         "fods:statistical__fods__normsdist__00070",
         "fods:text__fods__clean__00070"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "33337e77cd1e1c0847770fdaca73f02692666f4f313f17ba9afe94582726c907"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 71 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00072"
       ]
     },
     {
@@ -17907,6 +17871,20 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "3450e141ec147e2444d6ff15d56be2e06370802b81b0d5539c74a4550b330ce7"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 6 column 0",
+      "cases": [
+        "fods:lambda__fods__bycol__00005",
+        "fods:lambda__fods__byrow__00005",
+        "fods:lambda__fods__lambda__00005",
+        "fods:lambda__fods__reduce__00005"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "34d7dddd3920c5603aeea9b2feefcbb9deb64e94b1cd1f9095d8c17d62e8ab49"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 3 column 10",
@@ -17980,6 +17958,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "34f4af7359ce71f79be10cca4870536eb5b0a828c17c411327e1e8e59b610768"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 23 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00022"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "353b0d75aa05a1e0ab652ee3fdaff6ada8663c5aec6255f05adf832570509e1c"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 21 column 0",
@@ -18004,6 +17993,17 @@
         "fods:statistical__fods__forecast_ets_add__00074",
         "fods:statistical__fods__forecast_ets_mult__00074",
         "fods:statistical__fods__normsdist__00074"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "35452a4f28dc2fa4e7961e37f249450680de2babb5ed71d1ace7287b0633decf"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 75 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00076"
       ]
     },
     {
@@ -18046,6 +18046,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "354eba923c825589444a9146f5a949e60210d5ba8ecbd3f021943314e5f86ea6"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 40 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00039"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "35a7c760194828e888203645c2b35d02663fe285dcc0cc60802613203ac1969a"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 103 column 0",
@@ -18075,6 +18086,17 @@
         "fods:statistical__fods__forecast_ets_mult__00061",
         "fods:statistical__fods__normsdist__00061",
         "fods:text__fods__unicode__00061"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "35d7dfeb7e147ed2a6c9e7da0e587258303a2706bf8026599ef319645499d2ad"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 62 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00063"
       ]
     },
     {
@@ -18189,6 +18211,19 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "371f1d4507571021743ead6c1f79eb352c4fb27cb0a61389306220090ee4fd5a"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 16 column 0",
+      "cases": [
+        "fods:lambda__fods__byrow__00015",
+        "fods:lambda__fods__lambda__00015",
+        "fods:lambda__fods__map__00015"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "3759a44ea0cb3b78508ae083c8682ccc1dbd79b9bfb94290bd584357c8848c90"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 32 column 19",
@@ -18255,17 +18290,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 10 column 13",
       "cases": [
         "fods:array__fods__mmult__00013"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "391aa93eebc63a52210263ed3d8f4acb80fd6c41f2b9d48057f590e6adb2f345"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 1 column 0",
-      "cases": [
-        "fods:lambda__fods__makearray__00000"
       ]
     },
     {
@@ -18371,28 +18395,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "39f13f2d7cf22a5bc206f6dd46e690aae55715fad8aee86efdcd2fc5b72dff9e"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 63 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00064"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "3a688f76e4b9c53c2774f6723def2623739dd0e291aefe8f3e2dc3d5419193c5"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 75 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00076"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "3a73260b907109e5d273d485d00d62e87dffbbb093c813b63ec034aa53f13aca"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 18 column 11",
@@ -18457,17 +18459,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "3be872bc33b3cecb50fbddf351e3b6bbf5793ad3c298f7ee01f407241d91a1bf"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 15 column 0",
-      "cases": [
-        "fods:lambda__fods__bycol__00016"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "3d2641c6ea1540eb0ade743f129a120dad92f1428eb9c574b061f3c10fddcdc3"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 49 column 0",
@@ -18519,44 +18510,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "3d39214d86a1b513a17df7b28a387656e39a38a39b9b9d117894de7e64154206"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 58 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00059"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "3dcc5b64093d648488db2b7cbce2208d4d62f947817d25cdecc4064a4237cc10"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 131 column 1",
       "cases": [
         "fods:spreadsheet__fods__choosecols__00188"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "3de420633348d0869877ce9556a2f501c4e4b6ffd14cda9078e0e589c95aefa1"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 7 column 0",
-      "cases": [
-        "fods:lambda__fods__makearray__00009"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "3e598dd54b79ebf25d5b25661a16f5ae7bc2d3460091b1f37823a296b6aa3ac6"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 4 column 0",
-      "cases": [
-        "fods:lambda__fods__reduce__00003"
       ]
     },
     {
@@ -18781,6 +18739,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "42491801da296c07c8b373d1f38d6cb35c2a39c3c82591f649b105d26897cc3d"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 32 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00031"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "42ae188f62324c831bc31d12d81660b85b8033d10a7aede3e9844a66dc0d74e1"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 31 column 11",
@@ -18895,17 +18864,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "481cbf728fcabb3183ee04aa3ad89b8472fac4d26c411812367db062b2c14065"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 3 column 0",
-      "cases": [
-        "fods:lambda__fods__reduce__00002"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "482fa59bfc0b94fecccbec137c58d1d886ec377b263e8a04e0c9c4724e3fdf28"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 27 column 0",
@@ -18949,6 +18907,17 @@
         "fods:text__fods__t__00025",
         "fods:text__fods__unichar__00026",
         "fods:text__fods__unicode__00026"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "482fa59bfc0b94fecccbec137c58d1d886ec377b263e8a04e0c9c4724e3fdf28"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 27 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00026"
       ]
     },
     {
@@ -19153,6 +19122,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "4ade3921fc1e15ae27f51c46726d5d90b3139ac0cfc67c2a948607baa28ddf2c"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 74 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00075"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "4b0b1ce2a120c6f867b6d462001ef8a312edd01637ddba7167f7bf92f324f7d0"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 14 column 3",
@@ -19195,17 +19175,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 206 column 14",
       "cases": [
         "fods:array__dubious__fods__linest__00208"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "4bcd690bfe0672795f061b667dcb52de919d413ec297e75f62c6f338be8ae89d"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 85 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00086"
       ]
     },
     {
@@ -19481,6 +19450,21 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "5054ac90377ab03f168860ab9a3f309986e48329033421e27954308dc1bfa906"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 2 column 0",
+      "cases": [
+        "fods:lambda__fods__bycol__00001",
+        "fods:lambda__fods__byrow__00001",
+        "fods:lambda__fods__isomitted__00001",
+        "fods:lambda__fods__lambda__00001",
+        "fods:lambda__fods__reduce__00001"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "513473bb0f4a98a09b914ec0d39c45bc1a8825ba79fd6d95457c7555635b650a"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 11 column 3",
@@ -19532,17 +19516,6 @@
       "cases": [
         "fods:spreadsheet__fods__choosecols__00135",
         "fods:spreadsheet__fods__drop__00184"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "52a63aa77ee38138170e231268936c1189d7cef3e5e5e45e6ede7d5873ab9fa7"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 16 column 0",
-      "cases": [
-        "fods:lambda__fods__byrow__00015"
       ]
     },
     {
@@ -19661,6 +19634,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "5456cfd5c244db7526cca4bd5761cbdff1a1c1c4fc819514b1d941658b260422"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 25 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00024"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "54bae7439ff6d2a85fcbca77def8bcb90067a4034d08e4a7433a1643823a7b06"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 24 column 2",
@@ -19750,6 +19734,17 @@
         "fods:statistical__fods__standardize__00034",
         "fods:text__fods__unichar__00034",
         "fods:text__fods__unicode__00034"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "558ddf269099e9b0b6186e5f152ef751ec9ceef497d53053454a5b952a9e7285"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 35 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00034"
       ]
     },
     {
@@ -19860,17 +19855,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "56fd3b9b39ddab235fbb917318bc9412f74048b6d1247f11d8312f5f1629a82d"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 7 column 0",
-      "cases": [
-        "fods:lambda__fods__byrow__00006"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "5706eaa95c43de6d11520d93ae54dfa8716ab46a559febf5ac7596d0a985ca34"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 80 column 10",
@@ -19887,17 +19871,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 156 column 0",
       "cases": [
         "fods:statistical__fods__forecast_ets_mult__00155"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "57deaa1981f05ea9e9f5668da285bf596f70b80cdd50110b1367d7206bcb915c"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 77 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00078"
       ]
     },
     {
@@ -20090,22 +20063,27 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "5b62de4d3d1489c2a2ede9503c1feb17d74c4376a2d1757d782c99726bda0554"
+        "fingerprint": "5ae5e8089c0dbdab8ed9671e866fd36a0d32c6b38ce29a8e320f39fc71a71f06"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 186 column 0",
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 1 column 0",
       "cases": [
-        "fods:statistical__fods__forecast_ets_mult__00185"
+        "fods:lambda__fods__isomitted__00000",
+        "fods:lambda__fods__lambda__00000",
+        "fods:lambda__fods__makearray__00000",
+        "fods:lambda__fods__map__00000",
+        "fods:lambda__fods__reduce__00000",
+        "fods:lambda__fods__scan__00000"
       ]
     },
     {
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "5bf0eed87aba6c4443750b86001e34a49fe552eda460a4a790c3f9b4720c45ff"
+        "fingerprint": "5b62de4d3d1489c2a2ede9503c1feb17d74c4376a2d1757d782c99726bda0554"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 24 column 0",
+      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 186 column 0",
       "cases": [
-        "fods:lambda__fods__lambda__00023"
+        "fods:statistical__fods__forecast_ets_mult__00185"
       ]
     },
     {
@@ -20142,17 +20120,6 @@
       "cases": [
         "fods:spreadsheet__fods__hstack__00063",
         "fods:spreadsheet__fods__wraprows__00067"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "5c38a8e5a98f3016011dd854fd1a6ba2228f24f0433685f1c63621c385058c85"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 19 column 0",
-      "cases": [
-        "fods:lambda__fods__lambda__00018"
       ]
     },
     {
@@ -20295,6 +20262,17 @@
         "fods:text__fods__t__00026",
         "fods:text__fods__unichar__00027",
         "fods:text__fods__unicode__00027"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "5dbeee8a54bc6be9b7ed6c1a590fb79c620e3ae7faffe44b83c53f7771963d2b"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 28 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00027"
       ]
     },
     {
@@ -20447,6 +20425,18 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "5f428a254ff3847223d99958ee5624b8fcd799b398dbf75f1fa5854d3c03cebc"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 31 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00030",
+        "fods:spreadsheet__fods__let__00026"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "5f489876473b38d5056425b383cc990f07e5e58e8704770d564adbc472af4c2c"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 63 column 2",
@@ -20553,17 +20543,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 148 column 13",
       "cases": [
         "fods:array__dubious__fods__linest__00136"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "6196052ddd76dbc2304c1365e7c56a94d839d65c2a7e7b533e57631ee2288036"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 6 column 0",
-      "cases": [
-        "fods:lambda__fods__bycol__00005"
       ]
     },
     {
@@ -20680,6 +20659,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "6411d1be522c0a506dab028cdd17f2f15ae4f32061a7969530f312d2f67ff13a"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 78 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00079"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "643095961ad16628132644364033ce2f57c6e3c9b2e93bc3f6fe85fc3cba0bbd"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 193 column 13",
@@ -20708,17 +20698,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 135 column 1",
       "cases": [
         "fods:spreadsheet__fods__choosecols__00197"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "6489a477368ef6fc207dcc3a33b80103d24ce72761e6ca86b97648c3397542d5"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 5 column 0",
-      "cases": [
-        "fods:lambda__fods__byrow__00004"
       ]
     },
     {
@@ -20778,6 +20757,17 @@
         "fods:statistical__fods__forecast_ets_mult__00060",
         "fods:statistical__fods__normsdist__00060",
         "fods:text__fods__unicode__00060"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "655ba500b903b8ea0555b2dea595311d311e6587ac7ba0d82c0ccdde953d509d"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 61 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00062"
       ]
     },
     {
@@ -21016,6 +21006,18 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "6b2a554b6f0b6585b03cabc9015a16a0db7c017367320f5a673db873d7739ee1"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 21 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00020",
+        "fods:lambda__fods__map__00020"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "6b9c3cf9074c9a42d91ed3d38b16339a8db02aaf0f91f91587338d3f5dcec719"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 54 column 0",
@@ -21034,6 +21036,17 @@
         "fods:statistical__fods__forecast_ets_mult__00053",
         "fods:statistical__fods__normsdist__00053",
         "fods:text__fods__unicode__00053"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "6b9c3cf9074c9a42d91ed3d38b16339a8db02aaf0f91f91587338d3f5dcec719"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 54 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00055"
       ]
     },
     {
@@ -21104,17 +21117,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 92 column 14",
       "cases": [
         "fods:array__dubious__fods__linest__00088"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "6e298a58de4df78715cbd50960f58fa370c29dbd41e33b087161afc37b781fbd"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 10 column 0",
-      "cases": [
-        "fods:lambda__fods__reduce__00009"
       ]
     },
     {
@@ -21192,17 +21194,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 182 column 0",
       "cases": [
         "fods:statistical__fods__forecast_ets_mult__00181"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "6fb40984724d762e0ada3cdc28593b7b7ca71a301cdf28bef32138d7515bf156"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 72 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00073"
       ]
     },
     {
@@ -21339,6 +21330,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "72584e30fb07f86e59dfba8e8790daf53d3e4bfbc9f3d6c32b38b9e1102bc135"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 83 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00084"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "72b6de0a130f344fe87900baaf97e4b0128c389fdf013a0bf7652173bf85ca70"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 5 column 4",
@@ -21383,17 +21385,6 @@
         "fods:spreadsheet__fods__take__00141",
         "fods:spreadsheet__fods__unique__00055",
         "fods:spreadsheet__fods__vstack__00115"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "73e086de47f7d40869012e45b4e26295794b1974b053672e434af12ca8912ce5"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 13 column 0",
-      "cases": [
-        "fods:lambda__fods__map__00012"
       ]
     },
     {
@@ -21481,6 +21472,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "76a215475c35517abc0ac41f8e181c842985b2d884cf913bbdef797a6879db33"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 55 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00056"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "76ca0392011a7f86b4340ef2a7876dbe10e4a0874de39d605fccc9777ffd061f"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 132 column 1",
@@ -21501,6 +21503,17 @@
         "fods:spreadsheet__fods__sort__00159",
         "fods:statistical__fods__forecast_ets_add__00083",
         "fods:statistical__fods__forecast_ets_mult__00083"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "76cf8bc2cb8f4a4f488d0c3e99a9164fdbf076c14f8bed822c3a7fe2f90cda49"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 84 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00085"
       ]
     },
     {
@@ -21625,6 +21638,23 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "76d43e67be3fd92a0c77f6b01d4d172ec544e5b71457bde14fdd605434dc1caa"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 7 column 0",
+      "cases": [
+        "fods:lambda__fods__bycol__00006",
+        "fods:lambda__fods__byrow__00006",
+        "fods:lambda__fods__isomitted__00006",
+        "fods:lambda__fods__lambda__00006",
+        "fods:lambda__fods__makearray__00009",
+        "fods:lambda__fods__map__00006",
+        "fods:lambda__fods__reduce__00006"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "76e5744ad72ffe7f9094f4287f79c15b8155ee532c95194700da56ef5b3b96f8"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 229 column 0",
@@ -21661,6 +21691,17 @@
         "fods:statistical__fods__normsdist__00042",
         "fods:statistical__fods__standardize__00042",
         "fods:text__fods__unicode__00042"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "770ccd3244e50d55c9626beddc5f6cbaf249f31c3421a1ca59e8af4721abb85b"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 43 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00042"
       ]
     },
     {
@@ -21763,6 +21804,17 @@
         "fods:statistical__fods__forecast_ets_add__00065",
         "fods:statistical__fods__forecast_ets_mult__00065",
         "fods:statistical__fods__normsdist__00065"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "7943996b25f933cdde0a31a9e2ab8ff594da4e31f2ba29d08b9ad854f025deb1"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 66 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00067"
       ]
     },
     {
@@ -21944,6 +21996,17 @@
         "fods:text__fods__base__00018",
         "fods:text__fods__unichar__00018",
         "fods:text__fods__unicode__00018"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "7c6504d48cb8454f6a332de85ac6886590f66557db77fee0dfa859031c8d0523"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 19 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00018"
       ]
     },
     {
@@ -22174,28 +22237,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "80d17b3aac3938ec9d6cc54484ddb5df8141eb905e28424cbaa3e97f9c11560d"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 84 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00085"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "81742df692fe6aed2303507a571f5b1addf94942d994a7442db1c2d3d8ab997a"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 4 column 7",
-      "cases": [
-        "fods:lambda__fods__makearray__00006"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "81a65041f1083e0cc93aa1df5e88f1aa104797541edf9d2650bd712ac48d8642"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 123 column 1",
@@ -22244,6 +22285,17 @@
         "fods:statistical__fods__forecast_ets_add__00068",
         "fods:statistical__fods__forecast_ets_mult__00068",
         "fods:statistical__fods__normsdist__00068"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "81b19e57e957dda3c8146316bb0b978bf3ef390cfc0b4feae18da5342bd7774a"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 69 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00070"
       ]
     },
     {
@@ -22309,6 +22361,17 @@
         "fods:statistical__fods__forecast_ets_add__00069",
         "fods:statistical__fods__forecast_ets_mult__00069",
         "fods:statistical__fods__normsdist__00069"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "829f5d050872b576b1984aa9d60e580f1c95699f8b66b363d1748edd2b390a82"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 70 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00071"
       ]
     },
     {
@@ -22391,6 +22454,17 @@
         "fods:text__fods__base__00019",
         "fods:text__fods__unichar__00019",
         "fods:text__fods__unicode__00019"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "82e7cb61f3271c3989bab042b62cf75524f83ab386e3ce5ddeab16f09f97ef85"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 20 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00019"
       ]
     },
     {
@@ -22491,6 +22565,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "841b905857a3c88edc0534b4f9116492c65449e08d5e19d8234ef5d587efe0de"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 36 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00035"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "8476972d14ce447d11fee9245bcaf40a147059894d2425a64a480d8adf248c5e"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 30 column 13",
@@ -22567,17 +22652,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "85e7aac58b76fc2e6fa5b59cdb83e281148a1f697484d7f6765fa2e632417d40"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 9 column 0",
-      "cases": [
-        "fods:lambda__fods__map__00008"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "865bea4296e971caf545eb0da38d61d699ca0b64dad56e0e486951bf067ad126"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 4 column 0",
@@ -22617,17 +22691,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 185 column 12",
       "cases": [
         "fods:array__dubious__fods__linest__00170"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "86f3be9446ee0eecf651102d4b3c6bae0a784dfe0aa930b3376306db6a47f17a"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 78 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00079"
       ]
     },
     {
@@ -22688,17 +22751,6 @@
       "cases": [
         "fods:spreadsheet__fods__choosecols__00131",
         "fods:spreadsheet__fods__drop__00178"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "890a0750525860feaa7ef12d0bb148f16aab34ba53633ea88151362421859107"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 9 column 0",
-      "cases": [
-        "fods:lambda__fods__makearray__00011"
       ]
     },
     {
@@ -22802,6 +22854,17 @@
         "fods:text__fods__t__00028",
         "fods:text__fods__unichar__00029",
         "fods:text__fods__unicode__00029"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "8c2e22aa5012c9644837a67a0cdebed3690c486fe53a3541e207ea52afd5b362"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 30 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00029"
       ]
     },
     {
@@ -22923,11 +22986,15 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "8c59a90b647ec2138b617d5034b304be7bf03a7601aa60caa5b8aeb9f15f4eea"
+        "fingerprint": "8c50621cafae93822af962022c7e8595e5c52f3b1c6c8214f4e2bea056a56f22"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 11 column 0",
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 9 column 0",
       "cases": [
-        "fods:lambda__fods__bycol__00010"
+        "fods:lambda__fods__byrow__00008",
+        "fods:lambda__fods__lambda__00008",
+        "fods:lambda__fods__makearray__00011",
+        "fods:lambda__fods__map__00008",
+        "fods:lambda__fods__reduce__00008"
       ]
     },
     {
@@ -22941,17 +23008,6 @@
         "fods:spreadsheet__fods__choosecols__00152",
         "fods:statistical__fods__forecast_ets_add__00104",
         "fods:statistical__fods__forecast_ets_mult__00104"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "8ce06f1278965aef1f5ec3d1def5574c097b6aa5f5f0968bec8fd99d62edf744"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 8 column 0",
-      "cases": [
-        "fods:lambda__fods__reduce__00007"
       ]
     },
     {
@@ -22977,17 +23033,6 @@
       "cases": [
         "fods:array__dubious__fods__linest__00029",
         "fods:array__fods__logest__00029"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "8d8524f0ebaba68d257ecb138a3e26aa6a1080740b271c1bb4129e1561f83577"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 83 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00084"
       ]
     },
     {
@@ -23082,6 +23127,18 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "8d9df422f5eeedaf591f8a5a1fcb957d83d4cdb0503b3746e1b75c0c85139d70"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 14 column 0",
+      "cases": [
+        "fods:lambda__fods__byrow__00013",
+        "fods:lambda__fods__lambda__00013"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "8daac324940cd1f04409bb85a2bdc688f112ae7e9f0f12cc1ad797c308e97876"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 53 column 2",
@@ -23112,6 +23169,17 @@
         "fods:statistical__fods__forecast_ets_add__00057",
         "fods:statistical__fods__normsdist__00057",
         "fods:text__fods__unicode__00057"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "8dea769165537c721ddce2127da884f18b685ad0476a3ef0580262d165bc1249"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 58 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00059"
       ]
     },
     {
@@ -23206,17 +23274,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 192 column 13",
       "cases": [
         "fods:array__dubious__fods__linest__00186"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "9040877975a59c81fc6cce2f7d608a7a108efd0ede06ab90e124346d06f568e5"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 90 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00091"
       ]
     },
     {
@@ -23338,6 +23395,19 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "90bf2e3ea96d1a91ae95be7876580e9b96eababf85e78a39beac718de8c0b28d"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 11 column 0",
+      "cases": [
+        "fods:lambda__fods__bycol__00010",
+        "fods:lambda__fods__lambda__00010",
+        "fods:lambda__fods__scan__00010"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "9123f611f3dc3fb3fad02e514bdd370669ef7b55940e3d0ef4b1298c32ad8e6d"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 111 column 0",
@@ -23374,6 +23444,17 @@
         "fods:spreadsheet__fods__sortby__00196",
         "fods:statistical__fods__forecast_ets_add__00088",
         "fods:statistical__fods__forecast_ets_mult__00088"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "91e3b687581c6ef5db66244c3f7e58a32493707a035bc5caa138686f12c5a89b"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 89 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00090"
       ]
     },
     {
@@ -23625,17 +23706,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "9780b3f250fd670b04d23433fbec29c5c311f84387f556002ff03f87f840b066"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 59 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00060"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "97e545f0eebf0691f6d0ec84fa70fce10bfaaef362b48fdb1113508d69938039"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 10 column 0",
@@ -23756,6 +23826,18 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "97e545f0eebf0691f6d0ec84fa70fce10bfaaef362b48fdb1113508d69938039"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 10 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00009",
+        "fods:lambda__fods__reduce__00009"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "982224b114df505bb8dd59f03cbb8136f51f68a381201f12f685298c3d7b419b"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 93 column 1",
@@ -23817,6 +23899,17 @@
         "fods:statistical__fods__normsdist__00041",
         "fods:statistical__fods__standardize__00041",
         "fods:text__fods__unicode__00041"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "9958fdfb003d16379897d2524b70cc48f1a284b76b12188c781c51547048d22f"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 42 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00041"
       ]
     },
     {
@@ -23985,17 +24078,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "9ba26d42a6ea895e01e02b2dd20eee9009ec3f7cc853f604b3145dbf5c66329e"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 61 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00062"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "9bba86de1210be856747d7d2503e847ce2f084110d12faac34a04d2ad898eb1a"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 54 column 1",
@@ -24023,6 +24105,17 @@
         "fods:statistical__fods__forecast_ets_add__00081",
         "fods:statistical__fods__forecast_ets_mult__00081",
         "fods:statistical__fods__normsdist__00081"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "9c41771ff8d9ac6ba978c0e5a8dccb50730abb7c2abdd68444fab718ccd55ce7"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 82 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00083"
       ]
     },
     {
@@ -24110,17 +24203,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 47 column 0",
       "cases": [
         "fods:statistical__fods__forecast_ets_mult__00046"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "9ec3a3a023196e230c029f5d4f3ba7d5e940308b50282ae9c199a64993a71bd3"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 7 column 0",
-      "cases": [
-        "fods:lambda__fods__bycol__00006"
       ]
     },
     {
@@ -24314,6 +24396,21 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "9f9ce87663e72cf7794da0800eb774164d9d2cb4f803029d9b1f457d57337dfc"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 8 column 0",
+      "cases": [
+        "fods:lambda__fods__bycol__00007",
+        "fods:lambda__fods__isomitted__00007",
+        "fods:lambda__fods__lambda__00007",
+        "fods:lambda__fods__reduce__00007",
+        "fods:lambda__fods__scan__00007"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "9fa789270e0f24321998ab614c59b5e00933b795081157edb28ca6f32b993e2c"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 18 column 0",
@@ -24373,6 +24470,17 @@
         "fods:text__fods__base__00017",
         "fods:text__fods__unichar__00017",
         "fods:text__fods__unicode__00017"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "9fa789270e0f24321998ab614c59b5e00933b795081157edb28ca6f32b993e2c"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 18 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00017"
       ]
     },
     {
@@ -24471,17 +24579,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "a14a92edbce7acc2900275a138971d8b63c591eac13624b7d4bffa3c45f9469e"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 54 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00055"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "a17adfd8c142ab139fc204dee034c46fb9d7d5135fabf978eccaa1e3df177508"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 83 column 1",
@@ -24520,6 +24617,17 @@
         "fods:statistical__fods__forecast_ets_add__00080",
         "fods:statistical__fods__forecast_ets_mult__00080",
         "fods:statistical__fods__normsdist__00080"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "a292f543d680a7b4ac87a62c77962cfe6c964aee48b49c7fb84d1c1c1af71791"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 81 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00082"
       ]
     },
     {
@@ -24672,6 +24780,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "a58ff1d1a1c578b605bef5b12e89dc3c432a10ca99e8406cee36dd4379da26e8"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 60 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00061"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "a5b3d001805d790b23ad4e6b75c9d9751541ee4c9fe0909a1fbb54ea97ebcfc0"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 3 column 1",
@@ -24708,17 +24827,6 @@
         "fods:spreadsheet__fods__take__00026",
         "fods:spreadsheet__fods__wrapcols__00026",
         "fods:spreadsheet__fods__wraprows__00034"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "a67ac485392a8a6543737c73c4a2fa86b96186ae07d689647e45eacb708220c6"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 16 column 0",
-      "cases": [
-        "fods:lambda__fods__map__00015"
       ]
     },
     {
@@ -24884,6 +24992,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "a90354d21b9541139a0d158f9abaacd69627d09ce9b895de0c72a27dc3ada57a"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 64 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00065"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "a93254cf6990c708b1bcab9b19538dffde1c324b30284a76265516b5be3f35b2"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 17 column 8",
@@ -24978,6 +25097,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "ab093ba6e12a3cfc986aa1e512bc94dc0deb3096b8bdae90c5b1e1ec6938ce84"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 26 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00017"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "ab850b3e103002bb10ed6727c17ece14452b8064e1906df7e365520b2f04ded2"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 247 column 0",
@@ -24994,6 +25124,17 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 4 column 7",
       "cases": [
         "fods:spreadsheet__fods__torow__00025"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "abf96e4f3cf0396f2f37199678aa9586cde6e7026023d601c79dc92b32d3e7e5"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 4 column 7",
+      "cases": [
+        "fods:lambda__fods__makearray__00006"
       ]
     },
     {
@@ -25181,17 +25322,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "af9f4f9a5eab4bd237e015545ea52dd98cd60b5411e9a84bae914480ad08d2eb"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 68 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00069"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "afa32166746a9e25adb9de64480639aeaec0f53e13abf5a83fee3f1d207bdd8d"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 94 column 14",
@@ -25214,33 +25344,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "afc0e810957204d056207348625ea6459239694020a5fa6e18316b994600f7c6"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 9 column 0",
-      "cases": [
-        "fods:lambda__fods__byrow__00008"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "afe2dc30dab2ff6baecc76d1ff61b60f137532479aeae3a9ca74aab4af299b1b"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 170 column 14",
       "cases": [
         "fods:array__dubious__fods__linest__00163"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "b04fce3d1fd1e213d81afb9399e1ce02e92095df886d24dd634f8c0294361724"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 2 column 0",
-      "cases": [
-        "fods:lambda__fods__reduce__00001"
       ]
     },
     {
@@ -25323,17 +25431,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 32 column 23",
       "cases": [
         "fods:array__dubious__fods__linest__00063"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "b247c7774f2de3be9ab9b710ca17ab2a8b6fb556ac25ec02b2d160a4ff2afdcb"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 3 column 0",
-      "cases": [
-        "fods:lambda__fods__byrow__00002"
       ]
     },
     {
@@ -25425,6 +25522,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "b4d270c18cc91208daa00fea56ce9236ee6ed20a2483960d19b2fc48d2e15f6a"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 87 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00088"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "b4f9a2924da3947522454f1b1ebff8115bd789be5ec5c9f0602cb742888f2bb9"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 76 column 2",
@@ -25457,17 +25565,6 @@
       "cases": [
         "fods:spreadsheet__fods__expand__00210",
         "fods:spreadsheet__fods__sortby__00169"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "b5d894f9aa73105141ec0b575de1491f3ffe8da9bcf8f33838da44e9df3d91c7"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 74 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00075"
       ]
     },
     {
@@ -25540,28 +25637,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 141 column 13",
       "cases": [
         "fods:array__dubious__fods__linest__00129"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "b798a6a05957b69e1f2a2e2172a83c6e92e3f42778c02b03e533738933e516ee"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 67 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00068"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "b7a258398e4dedb6efa1ffeed94adffb39f7cb35375b303f2e931c873fa8314a"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 62 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00063"
       ]
     },
     {
@@ -25689,11 +25764,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "baa9cebe4e1d45271dbbf8e95e9ea9e98c245a4599b900c65fc49c98b803a0a1"
+        "fingerprint": "ba539538d74983d7bbfaf42e7a8a5a901cce2389c426189a2fb10de105b2485d"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 2 column 0",
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 65 column 0",
       "cases": [
-        "fods:lambda__fods__byrow__00001"
+        "fods:spreadsheet__fods__let__00066"
       ]
     },
     {
@@ -26125,6 +26200,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "c39b138c890abdc0f8f49e3380d53e69b91a3fa79cf04e1b62ec93b160e383db"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 72 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00073"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "c3eef55b06de32928d08be6cebc7576a390cff10cf1a9097edbeb51661895af9"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 63 column 0",
@@ -26147,22 +26233,22 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "c41128358e86186f095a54a302168b6dbde08b5ce7433076dc31c88a5932cb62"
+        "fingerprint": "c3eef55b06de32928d08be6cebc7576a390cff10cf1a9097edbeb51661895af9"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 149 column 13",
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 63 column 0",
       "cases": [
-        "fods:array__dubious__fods__linest__00137"
+        "fods:spreadsheet__fods__let__00064"
       ]
     },
     {
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "c46d7c5e6dcb8b3e637ca5fcb962ec1546ecfbebb0449fa9a8f68d4518d648cb"
+        "fingerprint": "c41128358e86186f095a54a302168b6dbde08b5ce7433076dc31c88a5932cb62"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 56 column 0",
+      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 149 column 13",
       "cases": [
-        "fods:spreadsheet__fods__let__00057"
+        "fods:array__dubious__fods__linest__00137"
       ]
     },
     {
@@ -26272,28 +26358,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "c6dd0c94e9d415541d5f07fd8937b01e3a09039909f44dcbf4c6a0116e1154b3"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 82 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00083"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "c72884a1ba0dc507544976262ed24533c72e8aef3d087d0069c8161784b4c0ef"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 64 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00065"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "c73ea1f1cadf0b0135853f0ab3a9c533ecf76814ab3b4a27bfc2400fabdef26d"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 68 column 0",
@@ -26308,6 +26372,17 @@
         "fods:statistical__fods__forecast_ets_add__00067",
         "fods:statistical__fods__forecast_ets_mult__00067",
         "fods:statistical__fods__normsdist__00067"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "c73ea1f1cadf0b0135853f0ab3a9c533ecf76814ab3b4a27bfc2400fabdef26d"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 68 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00069"
       ]
     },
     {
@@ -26508,22 +26583,23 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "c9020504631caec799159903f80c378e96caa8a8e62598d85355d256b5a2b949"
+        "fingerprint": "c8f754f238fe6eef1f1994d6738c83287f3852463300d204541c5d35aab083cb"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 243 column 0",
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 13 column 0",
       "cases": [
-        "fods:statistical__fods__forecast_ets_mult__00242"
+        "fods:lambda__fods__lambda__00012",
+        "fods:lambda__fods__map__00012"
       ]
     },
     {
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "c902f5a45d999ec528813e094ef1d4cc5a4d79386e028db1b331203fa0701501"
+        "fingerprint": "c9020504631caec799159903f80c378e96caa8a8e62598d85355d256b5a2b949"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 73 column 0",
+      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 243 column 0",
       "cases": [
-        "fods:spreadsheet__fods__let__00074"
+        "fods:statistical__fods__forecast_ets_mult__00242"
       ]
     },
     {
@@ -26578,17 +26654,6 @@
         "fods:spreadsheet__fods__sort__00020",
         "fods:spreadsheet__fods__sortby__00020",
         "fods:spreadsheet__fods__wrapcols__00020"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "ca3e0740f26e8afc24d65c8d059632eb55338970bd5766701ccf61163d24439f"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 11 column 0",
-      "cases": [
-        "fods:lambda__fods__scan__00010"
       ]
     },
     {
@@ -26800,11 +26865,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "cd0724299610eb5deef6904d82a2e3fa2d5b2c23e1f592013c92a71f2407f5bb"
+        "fingerprint": "cd058a5063f6bb44e8f63097e0e0198eecec1a4b2625931763a58957eef427db"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 17 column 0",
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 85 column 0",
       "cases": [
-        "fods:lambda__fods__map__00016"
+        "fods:spreadsheet__fods__let__00086"
       ]
     },
     {
@@ -26822,33 +26887,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "ce08b0f3cf53b17f7527ab427ca0cd9f54861aab7e701ef06203fb4f21300466"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 8 column 0",
-      "cases": [
-        "fods:lambda__fods__bycol__00007"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "ce84ba61a12807360b8d31fb5a4312f41152ba00ffeeeef5f0a3dc7c32bf39ed"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 33 column 19",
       "cases": [
         "fods:array__dubious__fods__linest__00049"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "cf3b2bda8b86b66a2c27f8f20d5afc844a7844f76abd7410de5154ff79ca526f"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 8 column 0",
-      "cases": [
-        "fods:lambda__fods__scan__00007"
       ]
     },
     {
@@ -26888,17 +26931,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "d0b2d06cf408455b5f59c10320e908efcd32d850a16b054881d1b52ce820b3e4"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 71 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00072"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "d0f06f2c3e4ed167ee5d0383dab3cf813ce73de6056b249f7bcb263d9a1eb514"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 22 column 9",
@@ -26922,17 +26954,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "d157880b2476dab30df1afa3a8f158e1eb42d0c14f4b13763a7cf46991e1d23c"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 57 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00058"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "d183a34297101c8d8becea22e935e0cf21743e0e83cd0feff8452bf20fee39d6"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 6 column 4",
@@ -26950,17 +26971,6 @@
       "cases": [
         "fods:spreadsheet__fods__drop__00143",
         "fods:spreadsheet__fods__expand__00225"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "d251d7bd4eab44adc5f47ea11774cb416771abd49c661c9a9c6c5ec0fdbc25c4"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 33 column 0",
-      "cases": [
-        "fods:lambda__fods__lambda__00032"
       ]
     },
     {
@@ -27037,6 +27047,17 @@
       "reason": "Refresh after dependency updates: actual: selected unsupported Calc CSE cell at sheet 1 row 24 column 0",
       "cases": [
         "fods:text__fods__searchb__00023"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "d2d3a1d0d0f75ce160d0441004e39f71aa94d9e20bb760cca1545c8e41ed12cf"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 24 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00023"
       ]
     },
     {
@@ -27144,17 +27165,6 @@
         "fods:spreadsheet__fods__take__00145",
         "fods:spreadsheet__fods__unique__00061",
         "fods:spreadsheet__fods__vstack__00121"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "d4e793caa19668ccc21928fa3563ed002e87057c55453f26943a05836e501064"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 86 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00087"
       ]
     },
     {
@@ -27395,6 +27405,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "d8233038dbb0d6e04649e1b131e0a6db22b353457b41257ce630bb5b0d344a73"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 56 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00057"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "d8357da70379962154beae909abed50e46f74bb128c503facb1c64e22713f125"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 57 column 3",
@@ -27422,17 +27443,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 3 column 11",
       "cases": [
         "fods:array__fods__munit__00017"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "d90a2f9c5e0010af681f86ce6027e1157ec0db3dd947335a0a2e01555d2742ba"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 81 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00082"
       ]
     },
     {
@@ -27549,17 +27559,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 215 column 13",
       "cases": [
         "fods:array__dubious__fods__linest__00216"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "dbc883f9b4d6c96b58e695d7677218929bd5f46f67f8d8232f0006eaef7b2afa"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 79 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00080"
       ]
     },
     {
@@ -27772,17 +27771,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "ddd49491a4a4299288605bd200442fe4fdde833f1c9a812afa2ed98503570f1a"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 76 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00077"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "ddee7e03afbc4990b4e8cbeedd715d017dbc5affab030a0f5322fc44c46856a1"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 5 column 9",
@@ -27895,6 +27883,17 @@
         "fods:statistical__fods__normsdist__00040",
         "fods:statistical__fods__standardize__00040",
         "fods:text__fods__unicode__00040"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "e05fb8fc9cf433b86a0d4101f5d539733c9fb0b5bee02fa8ea603482b043473b"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 41 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00040"
       ]
     },
     {
@@ -28139,6 +28138,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "e705a3f593fc844fb7a5fcbe3887c84e861e8596f466946c2b860f9568fe97c5"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 77 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00078"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "e721cbd7f67a85659ea5ca3ffe2d69ba8a980235e1e8caed8210b299d434d208"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 19 column 1",
@@ -28154,17 +28164,6 @@
         "fods:spreadsheet__fods__vstack__00033",
         "fods:spreadsheet__fods__wrapcols__00043",
         "fods:spreadsheet__fods__wraprows__00053"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "e737d1bfbbd5224c406682c43678f79aa570cb41e79a4ec8ec440be21b24736c"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 55 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00056"
       ]
     },
     {
@@ -28240,6 +28239,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "e82032ec037cc95127aa8a3e7cd362d337d8432649319484b3ad7f7a72dfbdcd"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 79 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00080"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "e96ec400bf4e33c78731839e02159f89e6c97f177ed18c1fcf0c098f7c63a994"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 44 column 0",
@@ -28299,6 +28309,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "e9991335fe11b9fecdc56733d4244129d3ed37f1178c506c912053e392f57a22"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 34 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00033"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "ea5464ada02e20bd14910ada2ba7503f84eab37d19ea432addf99abc55cd771c"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 116 column 0",
@@ -28343,17 +28364,6 @@
         "fods:spreadsheet__fods__hstack__00075",
         "fods:spreadsheet__fods__sequence__00043",
         "fods:spreadsheet__fods__wraprows__00075"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "ebe926a3078ddbf038c72d92146950c1de5bcb8271dd2d6075d3e2eaf021bae7"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 26 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00017"
       ]
     },
     {
@@ -28417,28 +28427,6 @@
         "fods:spreadsheet__fods__take__00053",
         "fods:spreadsheet__fods__wrapcols__00050",
         "fods:spreadsheet__fods__wraprows__00062"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "ed482d1d1ef707ce6be17d7e756140563966b9779e559d8ed95c60a4ff8ef005"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 1 column 0",
-      "cases": [
-        "fods:lambda__fods__reduce__00000"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "edb682691304dc140588110bb5ca92cf2b89208696fcecfce39ca954fc3a2da5"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 5 column 0",
-      "cases": [
-        "fods:lambda__fods__scan__00004"
       ]
     },
     {
@@ -28663,6 +28651,17 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "f2b9536746dc540ebe75c214ee01bf29a6780ec9d1074b321422e1176654a88b"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 57 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00058"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "f2e3f1b338506e0492c347181bf3645f29bb9a1df12433eb72b19cba385f7990"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 16 column 1",
@@ -28675,17 +28674,6 @@
         "fods:spreadsheet__fods__textsplit__00026",
         "fods:spreadsheet__fods__vstack__00027",
         "fods:spreadsheet__fods__wraprows__00045"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "f2f7af4b4306e5d7e49a7ee4df2bf03b1cf8a6344b1a8c736ddbb114c895448e"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 6 column 0",
-      "cases": [
-        "fods:lambda__fods__byrow__00005"
       ]
     },
     {
@@ -28745,17 +28733,6 @@
         "fods:spreadsheet__fods__choosecols__00211",
         "fods:statistical__fods__forecast_ets_add__00142",
         "fods:statistical__fods__forecast_ets_mult__00142"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "f412f2d8e309ba35d83054707605f1f03e9c54a55a644a2cc50ce0cbccf9ea22"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 31 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00026"
       ]
     },
     {
@@ -28859,6 +28836,19 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
+        "fingerprint": "f43a7251de9d108f347004bd4a08b7651ec2414be14efc4ef10f5b383e8ef865"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 12 column 0",
+      "cases": [
+        "fods:lambda__fods__bycol__00013",
+        "fods:lambda__fods__byrow__00011",
+        "fods:lambda__fods__lambda__00011"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
         "fingerprint": "f47fe306fc0c873c8ea51dfd251d54780beaacdc6d538917a2bc6cf427f50493"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 79 column 3",
@@ -28891,17 +28881,6 @@
         "fods:spreadsheet__fods__sequence__00042",
         "fods:spreadsheet__fods__sortby__00059",
         "fods:spreadsheet__fods__wraprows__00074"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "f4b67e81f0a13ab7d8893fe990e54526050ddefd239de16f74523adf1bdd3ba3"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 12 column 0",
-      "cases": [
-        "fods:lambda__fods__bycol__00013"
       ]
     },
     {
@@ -29053,33 +29032,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "f80d53b8820c6b888dfeaf35da04381d75133b9cb98f87a33d019fb7114964e1"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 66 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00067"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "f80e68471c949b50c4ff75e24dbeb79743282228a0e065092dfcc444d8c8815a"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 24 column 9",
       "cases": [
         "fods:array__fods__mmult__00020"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "f886272bab4f4e4c4a8477ba9b36794d3568798d36a9280860892f8ff325fc6c"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 87 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00088"
       ]
     },
     {
@@ -29093,28 +29050,6 @@
         "fods:array__dubious__fods__linest__00006",
         "fods:array__dubious__fods__minverse__00022",
         "fods:array__fods__logest__00006"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "f8b9aa394eca29e738273762ad308d008c35e24b0ffd1d3cc7144ea34dc7ef8e"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 65 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00066"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
-        "fingerprint": "f8e6c78d6267754896bdc6198fd5b4a403147c1fa90d68ca930024fccc3a60cd"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 25 column 0",
-      "cases": [
-        "fods:lambda__fods__lambda__00024"
       ]
     },
     {
@@ -29147,6 +29082,17 @@
         "fods:statistical__fods__normsdist__00036",
         "fods:statistical__fods__standardize__00036",
         "fods:text__fods__unicode__00036"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "f9532e0635e70e35ed8f2ce5ae9596c88bf3c6e6930bff8b3879c1c4785f7274"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 37 column 0",
+      "cases": [
+        "fods:lambda__fods__lambda__00036"
       ]
     },
     {
@@ -29210,17 +29156,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "fa92a501b584c3d4ddcfc9f8709b0cc637b88006e1dd044706f295ac26204e0c"
-      },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 60 column 0",
-      "cases": [
-        "fods:spreadsheet__fods__let__00061"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_array_context",
         "fingerprint": "fab8a9b8fffe7400d937d0ecaa39ea2950dad29a34f4681cebea2e3cdb3f5f88"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 90 column 0",
@@ -29230,6 +29165,17 @@
         "fods:spreadsheet__fods__expand__00259",
         "fods:statistical__fods__forecast_ets_add__00089",
         "fods:statistical__fods__forecast_ets_mult__00089"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "blocked",
+        "category": "unsupported_array_context",
+        "fingerprint": "fab8a9b8fffe7400d937d0ecaa39ea2950dad29a34f4681cebea2e3cdb3f5f88"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 90 column 0",
+      "cases": [
+        "fods:spreadsheet__fods__let__00091"
       ]
     },
     {
@@ -29464,11 +29410,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_array_context",
-        "fingerprint": "fe30bfa135b800b67ff372fb9dcc21f25371e6a0fa1dacb76e11f386e5c580a7"
+        "fingerprint": "fe1a70e267ebafd75700a3d143577808e1b4b727d1c00657e800fdde01a661bc"
       },
-      "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: selected unsupported Calc CSE cell at sheet 1 row 5 column 0",
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: actual: selected unsupported Calc CSE cell at sheet 1 row 59 column 0",
       "cases": [
-        "fods:lambda__fods__makearray__00007"
+        "fods:spreadsheet__fods__let__00060"
       ]
     },
     {
@@ -35436,20 +35382,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "0e1d9adee196ae0b7977d09b382ff66d12951755021f80eaa60f8acd7f38b77b"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 60, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00012",
-        "fods:lambda__fods__lambda__00013",
-        "fods:lambda__fods__lambda__00037",
-        "fods:lambda__fods__lambda__00038"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
         "fingerprint": "0f00c631e2b9fc1ea9ebe4d14799b10084d22b9b1c429695e7e24c02bd4fe9ba"
       },
       "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 12, reason: UnknownErrorLiteral }",
@@ -35480,18 +35412,6 @@
       "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 7, reason: ExpectedCharacter { expected: ',' } }",
       "cases": [
         "fods:spreadsheet__fods__let__00096"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "1b00b6ff41147f277aa29ce4133b9f39cf03d0d4b36ef46a6cfb70dfb67d836f"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 36, reason: ExpectedCharacter { expected: ',' } }",
-      "cases": [
-        "fods:lambda__fods__lambda__00039",
-        "fods:spreadsheet__fods__let__00089"
       ]
     },
     {
@@ -35611,40 +35531,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "33f9430685707c80cf58dd14887566f7fc3465234860e33c558fc0a5ce6e8107"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 24, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00002",
-        "fods:lambda__fods__lambda__00003"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "344b1ed9f11ebe60dd2589c79556d508cbcc00930a4e3d0e43edaa4919014d23"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 52, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00007"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "34a7a6ea9932ebf146f55be025837b35f9ada430f00d280ca62224ef993cb052"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 14, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00050"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
         "fingerprint": "3803dae1981be2d78fc6634ea0b178b2fde3bed1618da65cf7d097f1a7983ccf"
       },
       "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 17, reason: ExpectedCharacter { expected: ',' } }",
@@ -35668,19 +35554,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "3abd7dcd06697061f71c7b6af5e95f93a514e717a2e6cb6c3c2a5215e56cb440"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 43, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__isomitted__00000",
-        "fods:lambda__fods__isomitted__00001",
-        "fods:lambda__fods__isomitted__00002"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
         "fingerprint": "425c69c9dcc90c69af98a5b2afe28b44a5155b92cfffb7a46c9bace3a4f1c974"
       },
       "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 10, reason: ExpectedExpression }",
@@ -35698,29 +35571,6 @@
       "cases": [
         "fods:information__fods__isref__00005",
         "fods:spreadsheet__fods__sheet__00002"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "469b6275364640b1e476f392619657998e076146a7e49db4adc14615864c1340"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 44, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__isomitted__00007",
-        "fods:lambda__fods__isomitted__00008"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "4b59d772db1555fede46b6f620ccae05206b425443e9350162b1331adca935ba"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 9, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00000"
       ]
     },
     {
@@ -35788,17 +35638,6 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: Correct: executed unsupported source syntax: sheet 1 row 46 column 8",
       "cases": [
         "fods:spreadsheet__fods__sequence__00072"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "6faa0153210a936a91ae04049796bddb17d2960ec340c780f3371e9958751d35"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 68, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__isomitted__00006"
       ]
     },
     {
@@ -35886,22 +35725,22 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "854d10c233c2240da92415db33c20f45c50bf75624e32369d36bb16e69008555"
+        "fingerprint": "80c35bf3d1f2431af96eb628063b3bf3e8825ea0b33d8edb6c65bdeef8e49c08"
       },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 50, reason: TrailingInput }",
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: Correct: executed unsupported source syntax: sheet 1 row 1 column 6",
       "cases": [
-        "fods:lambda__fods__lambda__00031"
+        "fods:lambda__fods__bycol__00000"
       ]
     },
     {
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "8ca3bd2809c79cfb0ed27420bd9d4e91e3be46f9c5c4d549afa7fe7be8f9c1b6"
+        "fingerprint": "8b0900b200e9a43977e8f297b03015b16063d6e499bddd806ebca57fb2dce75d"
       },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 39, reason: ExpectedCharacter { expected: ',' } }",
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: source formula preparation failed: ParseError { position: 42, reason: CellOutsideGrid }",
       "cases": [
-        "fods:lambda__fods__lambda__00015"
+        "fods:lambda__fods__lambda__00028"
       ]
     },
     {
@@ -35919,29 +35758,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "9506dbebd98efa631dd805b60933813a2069b5507d8b042a8737f104f74efa04"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 28, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00004",
-        "fods:lambda__fods__lambda__00014"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "9714cac9ae926ff8207b4df77c97c6725af42741154e78c9c8a1aeea79dbe478"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 78, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00034"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
         "fingerprint": "97bcbd74dcac3b6bad60c2d299b7851a61f83f23de9e60763aacb0be74b2b517"
       },
       "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 15, reason: IncompatibleRangeEndpoints }",
@@ -35953,34 +35769,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "98ed9c8ba785b8a13d04eae8d93cabc3fc51a89feeba2df4a0a141c88aeea754"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 36, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00010",
-        "fods:lambda__fods__lambda__00041"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
         "fingerprint": "9a7425d910772597ffa070c0c1ea4e5890202358630d391ea5f6c9a2b6a745c0"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: Correct: executed unsupported source syntax: sheet 1 row 22 column 1",
       "cases": [
         "fods:statistical__fods__chisq_test__00021"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "9c4c7f8b00b456e78ca8f55172e883d8c24a54d7882fe388f800e68659c5270b"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 47, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00042"
       ]
     },
     {
@@ -36009,36 +35802,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "9e12c7b9993ca5fc87228b5b8ebca06e64c0c0b8da70671f9a28b13e67e86218"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 42, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00005",
-        "fods:lambda__fods__lambda__00035",
-        "fods:lambda__fods__lambda__00036"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
         "fingerprint": "9ef0da1e6a52db76b66bfa7f371693df5ddaca880b54a1dd7c95db119283c76b"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: executed unsupported source syntax: sheet 1 row 4 column 33",
       "cases": [
         "fods:spreadsheet__fods__vlookup__00029"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "a6602e74335c948d780539d1365524539369a7618e7fd19c663e9f93023bc646"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 51, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00008",
-        "fods:lambda__fods__lambda__00017"
       ]
     },
     {
@@ -36071,17 +35839,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "a73044098c4b6c874e8723ba80487c7781a846c7273171f5c58940d7490ab24d"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 34, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00006"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
         "fingerprint": "a9f95c046b5edd285ea7f258ba7c6279902b9edac6cde81883f842591c1158a2"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: executed unsupported source syntax: sheet 1 row 2 column 33",
@@ -36093,33 +35850,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "aaf160375e60bf100781c28ce4f96812a78928677e66ce2f704ccc4889fa8e5d"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 30, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00009"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
         "fingerprint": "af45019b56c0eb7a5ea47217e7993ab32c99b931dec0fae93b9c0fe1b463158c"
       },
       "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 46, reason: NonconstantArray }",
       "cases": [
         "fods:spreadsheet__fods__let__00100"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "b4780dc09b5117f1dc8b25abd2faaa69a4ccbbfe890224ce187980124e0f599f"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 27, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00030"
       ]
     },
     {
@@ -36160,17 +35895,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "c2c3c8de80e9818f27b564e5c177391ed1d7935406a14f6919b82c3d610b2ed0"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 53, reason: ExpectedCharacter { expected: ',' } }",
-      "cases": [
-        "fods:lambda__fods__lambda__00016"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
         "fingerprint": "c3af798d5d64952b1a6ac14a2f32d4b13c608b6c65002d2b9441970e8d7da774"
       },
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: actual: executed unsupported source syntax: sheet 1 row 1 column 0",
@@ -36182,46 +35906,11 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "c3d44c53e783e79b30054f0f7c7c1b8bf4e6d4a00bc0bf3032812c6ebd2d18b1"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 31, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00033"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "c4d8fec3c18728f9fc7a978e15456c8efd28c0ec7b23bdb8953f967e41a3be54"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 41, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00027",
-        "fods:lambda__fods__lambda__00028",
-        "fods:lambda__fods__lambda__00029"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
         "fingerprint": "c5070f9694df39cfeb4c6e586300f294cfd381e13145e00c7fbdf14c434719ad"
       },
       "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 10, reason: ExpectedCharacter { expected: ',' } }",
       "cases": [
         "fods:lambda__fods__lambda__00047"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "cbc4eb609658144522d517a3fbf885b71823aefcb75f7b6a0e7c5b521be2026d"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 18, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00001"
       ]
     },
     {
@@ -36250,19 +35939,6 @@
       "observation": {
         "outcome": "blocked",
         "category": "unsupported_formula_syntax",
-        "fingerprint": "db8f93c464c190a727cdb62a485ef0952bf1d4d0464b51bb272de154109b2c91"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 32, reason: ExpectedCharacter { expected: ',' } }",
-      "cases": [
-        "fods:lambda__fods__lambda__00020",
-        "fods:lambda__fods__lambda__00021",
-        "fods:lambda__fods__lambda__00022"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
         "fingerprint": "e70918d941b8e49c17b57a3d419b92cb694abe0de938a71b2374b02a8edab48f"
       },
       "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 12, reason: ExpectedCharacter { expected: ',' } }",
@@ -36279,43 +35955,6 @@
       "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 11, reason: ExpectedCharacter { expected: ',' } }",
       "cases": [
         "fods:statistical__fods__devsq__00002"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "fa0a4b36f9740555f698d59ce9becae918678c8668bfc59fbd7060f2f40849d9"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 44, reason: ExpectedCharacter { expected: ',' } }",
-      "cases": [
-        "fods:lambda__fods__lambda__00040",
-        "fods:spreadsheet__fods__let__00090"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "fa5eaecf693a00bb10b98abe5c3610f048a625add5aa399b4afac965ec288ac1"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 29, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__lambda__00011",
-        "fods:lambda__fods__lambda__00019",
-        "fods:lambda__fods__lambda__00026"
-      ]
-    },
-    {
-      "observation": {
-        "outcome": "blocked",
-        "category": "unsupported_formula_syntax",
-        "fingerprint": "fb84618646dff199c50544deb12057422fe95c3b130a7296fbc1b71b5327fddb"
-      },
-      "reason": "Refresh after dependency updates: source formula preparation failed: ParseError { position: 70, reason: TrailingInput }",
-      "cases": [
-        "fods:lambda__fods__isomitted__00003",
-        "fods:lambda__fods__isomitted__00004"
       ]
     },
     {
@@ -41161,6 +40800,17 @@
       "reason": "Refresh FODS and JSON observations at 03779888; retain unsupported contexts and fixture mismatches as known gaps: Expected: Number(0.0900169199999999)\nActual: Error(Value)\nCorrect predicate: Error(Value)",
       "cases": [
         "fods:statistical__fods__betadist__00092"
+      ]
+    },
+    {
+      "observation": {
+        "outcome": "mismatch",
+        "category": "unexpected_error",
+        "fingerprint": "07a8f026cc2832778b58eb29e21d77e13b42c624be8d6514b2638a888d42433b"
+      },
+      "reason": "Review LET and LAMBDA family observations. Remaining differences are Calc array/syntax limits and unsupported optional LAMBDA declarations.: Expected: Number(12.0)\nActual: Error(Value)\nCorrect predicate: Error(Value)",
+      "cases": [
+        "fods:lambda__fods__isomitted__00008"
       ]
     },
     {

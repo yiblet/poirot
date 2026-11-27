@@ -43,6 +43,7 @@ impl<'call, 'workbook> ArrayCallbacks<'call, 'workbook> {
             MatrixFunction::Byrow => executor.by_axis(Axis::Rows),
             MatrixFunction::Bycol => executor.by_axis(Axis::Columns),
             MatrixFunction::Makearray => executor.make_array(),
+            MatrixFunction::Reduce => executor.reduce(),
             MatrixFunction::Scan => executor.scan(),
             _ => return Err(crate::eval::limits::EvaluationError::StalePlan),
         };
@@ -131,6 +132,19 @@ impl<'call, 'workbook> ArrayCallbacks<'call, 'workbook> {
             ];
             Self::callback_scalar(host, &callback, arguments.into_iter())
         })
+    }
+
+    /// Accumulate in row-major order and return the final value channel.
+    fn reduce(&mut self) -> FunctionResult<Value> {
+        let (callback, input, mut state) = self.accumulation()?;
+        let host = &mut self.host;
+        host.charge_work((input.rows as u64).saturating_mul(input.columns as u64))?;
+        for row in 0..input.rows {
+            for column in 0..input.columns {
+                state = Some(Self::step(host, &callback, state, row, column)?);
+            }
+        }
+        state.ok_or_else(|| CellError::Calc.into())
     }
 
     /// Publish one intermediate per source position while retaining the raw state.
