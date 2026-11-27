@@ -2,29 +2,34 @@
 //! The unit-test tree oracle remains to check value, read, observation and budget parity.
 
 use super::arguments_ref::ArgumentsRef;
+use super::lambda_executor::LambdaExecutor;
 use super::local_frame::LocalFrame;
 use super::operators::Operators;
 use super::reference_atoms::ReferenceAtoms;
 use super::reference_ref::ReferenceRef;
 use crate::eval::compile::bytecode::{
-    CallTarget, Compiled, Label, Opcode, OperandCursor, ReferenceKind,
+    CallTarget, Compiled, Instruction, Label, Opcode, OperandCursor, ReferenceKind,
 };
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::registry::{FunctionId, LogicalFunction};
-use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, WorkKind};
-use crate::eval::observe::{ConsumedBuiltinInvocation, Operation, OperationKind, observed_value};
-use crate::eval::ports::DependencyRead;
-use crate::eval::session::{
-    NameResolver, ObservationRecorder, ReadRecorder, ResultProjection, Session,
+use crate::eval::limits::{
+    CapabilityId, EvalResult, EvaluationError, EvaluationReasonError, ResourceFailureKind, WorkKind,
 };
+use crate::eval::observe::{ConsumedBuiltinInvocation, Operation, OperationKind, observed_value};
+use crate::eval::session::{NameResolver, ObservationRecorder, ResultProjection, Session};
 use crate::eval::values::{
     ArrayView, VALUE_ERROR, Value, convert_legacy_missing_blank, err, numeric_outcome,
 };
 use crate::eval::{adapters, functions, host};
 use crate::model::CellAddress;
-use crate::model::CellError::{Name, Ref};
+use crate::model::CellError::Ref;
 use crate::model::CellValue::{Boolean, Error, Text};
 use poirot_parsing::formula::{BinaryOp, UnaryOp};
+
+// Keep deferred bytecode recursion within the measured 2 MiB debug-thread
+// envelope. This counts live execute blocks separately from expression depth
+// and admits the 82 blocks needed by the recursive LAMBDA regression.
+const MAX_LAMBDA_EXECUTION_DEPTH: usize = 82;
 
 /// Runs compiled bytecode for one formula block on the session's shared stacks.
 pub(in crate::eval) struct Vm<'s, 'a> {
@@ -71,6 +76,32 @@ impl<'s, 'a> Vm<'s, 'a> {
         start: usize,
         caller_frame: Option<LocalFrame>,
     ) -> EvalResult<Value> {
+        let machine = &mut self.session.state.runtime.vm;
+        let previous = machine.execution_depth;
+        if machine.callable_depth != 0 && previous >= MAX_LAMBDA_EXECUTION_DEPTH {
+            return Err(EvaluationError::Resource {
+                kind: ResourceFailureKind::BackendGuard,
+                capability: CapabilityId::FunctionAdapter,
+                target: Some(EvaluationTarget { sheet, address: at }),
+                reason: EvaluationReasonError::LambdaDeferredBytecodeDepth,
+            });
+        }
+        let current = previous.checked_add(1).ok_or(EvaluationError::StalePlan)?;
+        machine.execution_depth = current;
+        let result = self.execute_block(sheet, at, program, start, caller_frame);
+        self.session.state.runtime.vm.execution_depth = previous;
+        result
+    }
+
+    /// Run an admitted bytecode block and unwind its operand and observation state.
+    fn execute_block(
+        &mut self,
+        sheet: usize,
+        at: CellAddress,
+        program: &Compiled,
+        start: usize,
+        caller_frame: Option<LocalFrame>,
+    ) -> EvalResult<Value> {
         let local_base = self.session.state.runtime.vm.locals.len();
         let frame = caller_frame.unwrap_or_else(|| LocalFrame::new(local_base));
         let base = self.session.state.runtime.vm.values.len();
@@ -94,16 +125,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                             .charge(WorkKind::Expression, 1)?;
                         self.session.state.runtime.budget.enter_depth()?;
                         if observed {
-                            let handler = program
-                                .template
-                                .code
-                                .get(ip + 1)
-                                .filter(|next| next.opcode.is_call())
-                                .and_then(|next| self.handler(program, next.a as usize));
-                            match ObservationRecorder::new(self.session).observation_begin(
-                                EvaluationTarget { sheet, address: at },
-                                OperationKind::Expression { handler },
-                            ) {
+                            match self.begin_observation(sheet, at, program, ip) {
                                 Ok(frame) => frames.push(frame),
                                 Err(error) => {
                                     self.session.state.runtime.budget.leave_depth();
@@ -116,18 +138,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                     Opcode::Leave => {
                         entered = entered.checked_sub(1).ok_or(EvaluationError::StalePlan)?;
                         let notification = if let Some((operation, previous)) = frames.pop() {
-                            let value = self
-                                .session
-                                .state
-                                .runtime
-                                .vm
-                                .values
-                                .pop()
-                                .ok_or(EvaluationError::StalePlan)?;
-                            let notification = ObservationRecorder::new(self.session)
-                                .observation_end(operation, previous, Ok(observed_value(&value)));
-                            self.session.state.runtime.vm.values.push(value);
-                            notification
+                            self.complete_observation(operation, previous)
                         } else {
                             Ok(())
                         };
@@ -203,43 +214,9 @@ impl<'s, 'a> Vm<'s, 'a> {
                         self.session.state.runtime.vm.values.push(value);
                     }
                     Opcode::BindLocal => {
-                        let slot = frame.index(instruction.a)?;
-                        let runtime = &mut *self.session.state.runtime;
-                        let vm = &mut runtime.vm;
-                        if instruction.a >= program.template.local_slots
-                            || slot != vm.locals.len()
-                            || vm.values.len() <= base
-                        {
-                            return Err(EvaluationError::StalePlan);
-                        }
-                        let budget = &mut runtime.budget;
-                        budget.check_allocation(
-                            slot.checked_add(1).ok_or(EvaluationError::StalePlan)?,
-                        )?;
-                        budget.allocation(1)?;
-                        vm.locals.try_reserve(1).map_err(|source| EvaluationError::reservation(
-                            CapabilityId::FunctionAdapter,
-                            Some(EvaluationTarget { sheet, address: at }),
-                            crate::eval::limits::EvaluationReasonError::AllocatingAFunctionResultOrScratchBuffer,
-                            source,
-                        ))?;
-                        let value = vm.values.pop().ok_or(EvaluationError::StalePlan)?;
-                        // SAFETY: A successful reservation admitted one slot in this local stack.
-                        vm.locals.push(value);
+                        self.bind_local(sheet, at, program, instruction, frame, base)?
                     }
-                    Opcode::ReadLocal => {
-                        if instruction.a >= program.template.local_slots {
-                            return Err(EvaluationError::StalePlan);
-                        }
-                        let runtime = &mut *self.session.state.runtime;
-                        let vm = &mut runtime.vm;
-                        let local = vm
-                            .locals
-                            .get(frame.index(instruction.a)?)
-                            .ok_or(EvaluationError::StalePlan)?;
-                        let value = crate::eval::values::copy_value(&mut runtime.budget, local)?;
-                        vm.values.push(value);
-                    }
+                    Opcode::ReadLocal => self.read_local(program, instruction, frame)?,
                     Opcode::ClearLocals => {
                         let first = frame.index(instruction.a)?;
                         let locals = &mut self.session.state.runtime.vm.locals;
@@ -249,49 +226,9 @@ impl<'s, 'a> Vm<'s, 'a> {
                         locals.truncate(first);
                     }
                     Opcode::QualifiedName => {
-                        let mut bytes = OperandCursor(
-                            program
-                                .template
-                                .operands
-                                .get(
-                                    instruction.a as usize
-                                        ..instruction
-                                            .a
-                                            .checked_add(instruction.b)
-                                            .ok_or(EvaluationError::StalePlan)?
-                                            as usize,
-                                )
-                                .ok_or(EvaluationError::StalePlan)?,
-                        );
-                        let name_sheet = bytes.string()?;
-                        let name =
-                            std::str::from_utf8(bytes.0).map_err(|_| EvaluationError::StalePlan)?;
-                        let value = match NameResolver::new(self.session)
-                            .sheet_named(sheet, Some(name_sheet))?
-                        {
-                            Some(scope) => NameResolver::new(self.session)
-                                .defined_name(sheet, scope, at, name)?,
-                            None => err(Ref),
-                        };
-                        self.session.state.runtime.vm.values.push(value);
+                        self.qualified_name(sheet, at, program, instruction)?
                     }
-                    Opcode::Unary => {
-                        let value = self
-                            .session
-                            .state
-                            .runtime
-                            .vm
-                            .values
-                            .pop()
-                            .ok_or(EvaluationError::StalePlan)?;
-                        let value = Operators::new(self.session).unary_value(
-                            sheet,
-                            at,
-                            decode_unary(instruction.a)?,
-                            value,
-                        )?;
-                        self.session.state.runtime.vm.values.push(value);
-                    }
+                    Opcode::Unary => self.unary(sheet, at, instruction)?,
                     Opcode::Binary
                     | Opcode::Add
                     | Opcode::Subtract
@@ -304,87 +241,35 @@ impl<'s, 'a> Vm<'s, 'a> {
                     | Opcode::Less
                     | Opcode::LessEqual
                     | Opcode::Greater
-                    | Opcode::GreaterEqual => {
-                        let right = self
-                            .session
-                            .state
-                            .runtime
-                            .vm
-                            .values
-                            .pop()
-                            .ok_or(EvaluationError::StalePlan)?;
-                        let left = self
-                            .session
-                            .state
-                            .runtime
-                            .vm
-                            .values
-                            .pop()
-                            .ok_or(EvaluationError::StalePlan)?;
-                        let value = Operators::new(self.session).binary_values(
-                            sheet,
-                            at,
-                            instruction
-                                .opcode
-                                .binary_operation()
-                                .map_or_else(|| decode_binary(instruction.a), Ok)?,
-                            left,
-                            right,
-                        )?;
-                        self.session.state.runtime.vm.values.push(value);
-                    }
+                    | Opcode::GreaterEqual => self.binary(sheet, at, instruction)?,
                     Opcode::ArrayAllocate => self
                         .session
                         .state
                         .runtime
                         .budget
                         .allocation(instruction.a as usize)?,
-                    Opcode::Scalarize => {
-                        let value = self
-                            .session
-                            .state
-                            .runtime
-                            .vm
-                            .values
-                            .pop()
-                            .ok_or(EvaluationError::StalePlan)?;
-                        let value = ResultProjection::new(self.session)
-                            .select_legacy_scalar(at, value)?
-                            .into();
+                    Opcode::Scalarize => self.scalarize(at)?,
+                    Opcode::Array => self.make_array(instruction)?,
+                    Opcode::Lambda => {
+                        let value = LambdaExecutor::new(
+                            self.session,
+                            EvaluationTarget { sheet, address: at },
+                        )
+                        .construct(
+                            program,
+                            ip.checked_add(1).ok_or(EvaluationError::StalePlan)?,
+                            instruction,
+                            frame,
+                        )?;
                         self.session.state.runtime.vm.values.push(value);
+                        ip = program
+                            .template
+                            .resolve_label(Label(instruction.c))
+                            .ok_or(EvaluationError::StalePlan)?
+                            .index();
+                        continue;
                     }
-                    Opcode::Array => {
-                        let count = (instruction.a as usize)
-                            .checked_mul(instruction.b as usize)
-                            .ok_or(EvaluationError::StalePlan)?;
-                        let offset = self
-                            .session
-                            .state
-                            .runtime
-                            .vm
-                            .values
-                            .len()
-                            .checked_sub(count)
-                            .ok_or(EvaluationError::StalePlan)?;
-                        // SAFETY: offset was obtained by checked subtraction from self.runtime.vm.values.len(); the vector has not changed since that check.
-                        let mut elements = self.session.state.runtime.vm.values.drain(offset..);
-                        let mut rows = Vec::new();
-                        for _ in 0..instruction.a {
-                            let mut row = Vec::new();
-                            for _ in 0..instruction.b {
-                                let Some(Value::Scalar(value)) = elements.next() else {
-                                    return Err(EvaluationError::StalePlan);
-                                };
-                                row.push(value);
-                            }
-                            rows.push(row);
-                        }
-                        drop(elements);
-                        self.session.state.runtime.vm.values.push(Value::Array(
-                            ArrayView::anchored(rows, Some(CellAddress { row: 0, col: 0 })),
-                        ));
-                    }
-                    Opcode::Invoke | Opcode::Conditional => {
+                    Opcode::Invoke | Opcode::Conditional | Opcode::InvokeValue => {
                         if instruction.opcode == Opcode::Conditional
                             && self.handler(program, instruction.a as usize)
                                 != Some(FunctionId::Logical(LogicalFunction::If))
@@ -397,7 +282,20 @@ impl<'s, 'a> Vm<'s, 'a> {
                             frame: Some(frame),
                             count: instruction.b as usize,
                         };
-                        let value = self.call(sheet, at, program, instruction.a as usize, args)?;
+                        let value = if instruction.opcode == Opcode::InvokeValue {
+                            let vm = &mut self.session.state.runtime.vm;
+                            if vm.values.len() <= base {
+                                return Err(EvaluationError::StalePlan);
+                            }
+                            let callee = vm.values.pop().ok_or(EvaluationError::StalePlan)?;
+                            LambdaExecutor::new(
+                                self.session,
+                                EvaluationTarget { sheet, address: at },
+                            )
+                            .invoke(callee, args)?
+                        } else {
+                            self.call(sheet, at, program, instruction.a as usize, args)?
+                        };
                         self.session.state.runtime.vm.values.push(value);
                         ip = program
                             .template
@@ -440,6 +338,250 @@ impl<'s, 'a> Vm<'s, 'a> {
         self.session.state.runtime.vm.values.truncate(base);
         self.session.state.runtime.vm.locals.truncate(local_base);
         result
+    }
+
+    /// Copy the selected lexical value within the existing allocation budget.
+    fn read_local(
+        &mut self,
+        program: &Compiled,
+        instruction: Instruction,
+        frame: LocalFrame,
+    ) -> EvalResult<()> {
+        if instruction.a >= program.template.local_slots {
+            return Err(EvaluationError::StalePlan);
+        }
+        let runtime = &mut *self.session.state.runtime;
+        let vm = &mut runtime.vm;
+        let local = vm
+            .locals
+            .get(frame.index(instruction.a)?)
+            .ok_or(EvaluationError::StalePlan)?;
+        let value = crate::eval::values::copy_value(&mut runtime.budget, local)?;
+        vm.values.push(value);
+        Ok(())
+    }
+
+    /// Apply legacy scalar projection to the top stack value.
+    fn scalarize(&mut self, at: CellAddress) -> EvalResult<()> {
+        let value = self
+            .session
+            .state
+            .runtime
+            .vm
+            .values
+            .pop()
+            .ok_or(EvaluationError::StalePlan)?;
+        let value = ResultProjection::new(self.session)
+            .select_legacy_scalar(at, value)?
+            .into();
+        self.session.state.runtime.vm.values.push(value);
+        Ok(())
+    }
+
+    /// Record an expression start outside the bytecode dispatch frame.
+    fn begin_observation(
+        &mut self,
+        sheet: usize,
+        at: CellAddress,
+        program: &Compiled,
+        ip: usize,
+    ) -> EvalResult<ObservationFrame> {
+        let handler = ip
+            .checked_add(1)
+            .and_then(|next| program.template.code.get(next))
+            .filter(|next| next.opcode.is_call())
+            .and_then(|next| self.handler(program, next.a as usize));
+        ObservationRecorder::new(self.session).observation_begin(
+            EvaluationTarget { sheet, address: at },
+            OperationKind::Expression { handler },
+        )
+    }
+
+    /// Report an observed expression result and retain its value for the caller.
+    fn complete_observation(
+        &mut self,
+        operation: Operation,
+        previous: Option<(Operation, u64)>,
+    ) -> EvalResult<()> {
+        let value = self
+            .session
+            .state
+            .runtime
+            .vm
+            .values
+            .pop()
+            .ok_or(EvaluationError::StalePlan)?;
+        let notification = ObservationRecorder::new(self.session).observation_end(
+            operation,
+            previous,
+            Ok(observed_value(&value)),
+        );
+        self.session.state.runtime.vm.values.push(value);
+        notification
+    }
+
+    /// Admit one lexical binding and transfer its initializer to the local stack.
+    fn bind_local(
+        &mut self,
+        sheet: usize,
+        at: CellAddress,
+        program: &Compiled,
+        instruction: Instruction,
+        frame: LocalFrame,
+        base: usize,
+    ) -> EvalResult<()> {
+        let slot = frame.index(instruction.a)?;
+        let runtime = &mut *self.session.state.runtime;
+        let vm = &mut runtime.vm;
+        if instruction.a >= program.template.local_slots
+            || slot != vm.locals.len()
+            || vm.values.len() <= base
+        {
+            return Err(EvaluationError::StalePlan);
+        }
+        let budget = &mut runtime.budget;
+        budget.check_allocation(slot.checked_add(1).ok_or(EvaluationError::StalePlan)?)?;
+        budget.allocation(1)?;
+        vm.locals.try_reserve(1).map_err(|source| {
+            EvaluationError::reservation(
+                CapabilityId::FunctionAdapter,
+                Some(EvaluationTarget { sheet, address: at }),
+                EvaluationReasonError::AllocatingAFunctionResultOrScratchBuffer,
+                source,
+            )
+        })?;
+        let value = vm.values.pop().ok_or(EvaluationError::StalePlan)?;
+        // SAFETY: A successful reservation admitted one slot in this local stack.
+        vm.locals.push(value);
+        Ok(())
+    }
+
+    /// Resolve a qualified name in its declared scope.
+    fn qualified_name(
+        &mut self,
+        sheet: usize,
+        at: CellAddress,
+        program: &Compiled,
+        instruction: Instruction,
+    ) -> EvalResult<()> {
+        let mut bytes = OperandCursor(
+            program
+                .template
+                .operands
+                .get(
+                    instruction.a as usize
+                        ..instruction
+                            .a
+                            .checked_add(instruction.b)
+                            .ok_or(EvaluationError::StalePlan)? as usize,
+                )
+                .ok_or(EvaluationError::StalePlan)?,
+        );
+        let name_sheet = bytes.string()?;
+        let name = std::str::from_utf8(bytes.0).map_err(|_| EvaluationError::StalePlan)?;
+        let value = match NameResolver::new(self.session).sheet_named(sheet, Some(name_sheet))? {
+            Some(scope) => NameResolver::new(self.session).defined_name(sheet, scope, at, name)?,
+            None => err(Ref),
+        };
+        self.session.state.runtime.vm.values.push(value);
+        Ok(())
+    }
+
+    /// Replace the operand on the stack with its unary result.
+    fn unary(&mut self, sheet: usize, at: CellAddress, instruction: Instruction) -> EvalResult<()> {
+        let value = self
+            .session
+            .state
+            .runtime
+            .vm
+            .values
+            .pop()
+            .ok_or(EvaluationError::StalePlan)?;
+        let value = Operators::new(self.session).unary_value(
+            sheet,
+            at,
+            decode_unary(instruction.a)?,
+            value,
+        )?;
+        self.session.state.runtime.vm.values.push(value);
+        Ok(())
+    }
+
+    /// Replace the two operands on the stack with their binary result.
+    fn binary(
+        &mut self,
+        sheet: usize,
+        at: CellAddress,
+        instruction: Instruction,
+    ) -> EvalResult<()> {
+        let right = self
+            .session
+            .state
+            .runtime
+            .vm
+            .values
+            .pop()
+            .ok_or(EvaluationError::StalePlan)?;
+        let left = self
+            .session
+            .state
+            .runtime
+            .vm
+            .values
+            .pop()
+            .ok_or(EvaluationError::StalePlan)?;
+        let value = Operators::new(self.session).binary_values(
+            sheet,
+            at,
+            instruction
+                .opcode
+                .binary_operation()
+                .map_or_else(|| decode_binary(instruction.a), Ok)?,
+            left,
+            right,
+        )?;
+        self.session.state.runtime.vm.values.push(value);
+        Ok(())
+    }
+
+    /// Collect the admitted scalar literals outside the recursive dispatch frame.
+    fn make_array(&mut self, instruction: Instruction) -> EvalResult<()> {
+        let count = (instruction.a as usize)
+            .checked_mul(instruction.b as usize)
+            .ok_or(EvaluationError::StalePlan)?;
+        let offset = self
+            .session
+            .state
+            .runtime
+            .vm
+            .values
+            .len()
+            .checked_sub(count)
+            .ok_or(EvaluationError::StalePlan)?;
+        // SAFETY: offset was obtained by checked subtraction from self.runtime.vm.values.len(); the vector has not changed since that check.
+        let mut elements = self.session.state.runtime.vm.values.drain(offset..);
+        let mut rows = Vec::new();
+        for _ in 0..instruction.a {
+            let mut row = Vec::new();
+            for _ in 0..instruction.b {
+                let Some(Value::Scalar(value)) = elements.next() else {
+                    return Err(EvaluationError::StalePlan);
+                };
+                row.push(value);
+            }
+            rows.push(row);
+        }
+        drop(elements);
+        self.session
+            .state
+            .runtime
+            .vm
+            .values
+            .push(Value::Array(ArrayView::anchored(
+                rows,
+                Some(CellAddress { row: 0, col: 0 }),
+            )));
+        Ok(())
     }
 
     /// Builtin selected by a compiled call slot.
@@ -489,11 +631,8 @@ impl<'s, 'a> Vm<'s, 'a> {
             CallTarget::Extension(binding) => {
                 host::execute_extension(self.session, sheet, at, binding, args)
             }
-            _ => {
-                ReadRecorder::new(self.session)
-                    .read_lazy(|| DependencyRead::OpaqueProvider(parsed_spelling.to_owned()));
-                Ok(err(Name))
-            }
+            _ => LambdaExecutor::new(self.session, EvaluationTarget { sheet, address: at })
+                .invoke_named(parsed_spelling, args),
         }
     }
 

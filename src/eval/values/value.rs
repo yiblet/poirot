@@ -1,4 +1,5 @@
 use super::array_view::ArrayView;
+use super::callable_body::CallableBody;
 use super::operand_origin::OperandOrigin;
 use super::reference_areas::ReferenceAreas;
 use super::signed_reference::SignedArea;
@@ -19,6 +20,8 @@ pub(in crate::eval) enum Value {
     /// One true ThreeDEval/RefEval, distinct from a RefListEval union.
     SheetSpan(ReferenceAreas),
     Array(ArrayView),
+    /// Runtime-only closure that can be invoked by the VM.
+    Callable(std::sync::Arc<dyn CallableBody>),
 }
 
 pub(in crate::eval) fn err(e: CellError) -> Value {

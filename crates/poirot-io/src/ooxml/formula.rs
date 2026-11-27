@@ -250,6 +250,7 @@ fn rewrite(expression: &mut Expr) -> Result<bool, IoError> {
             Expr::Unary { .. } => 1,
             Expr::Binary { .. } => 2,
             Expr::Function { args, .. } => args.len(),
+            Expr::Invoke { args, .. } => args.len().saturating_add(1),
             Expr::Array(rows) => rows
                 .iter()
                 .try_fold(0usize, |count, row| count.checked_add(row.len()))
@@ -269,6 +270,11 @@ fn rewrite(expression: &mut Expr) -> Result<bool, IoError> {
             Expr::Binary { left, right, .. } => {
                 // SAFETY: try_reserve(children) just reserved this binary node's two children.
                 pending.extend([left.as_mut(), right.as_mut()]);
+            }
+            Expr::Invoke { callee, args } => {
+                // SAFETY: The reservation admitted the unchanged argument count and callee.
+                pending.push(callee.as_mut());
+                pending.extend(args.iter_mut());
             }
             Expr::Function { args, .. } => {
                 // SAFETY: children was args.len(); no arguments or stack entries have

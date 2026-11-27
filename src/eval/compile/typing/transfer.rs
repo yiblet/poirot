@@ -6,7 +6,7 @@ use crate::eval::{
     functions::registry::DependencyPolicy,
 };
 use crate::model::{FormulaType, ScalarKinds, ShapeBounds};
-use poirot_parsing::formula::{BinaryOp, Expr, LetForm, UnaryOp};
+use poirot_parsing::formula::{BinaryOp, Expr, LambdaForm, LetForm, UnaryOp};
 
 /// Apply the existing modal rules to operands already completed by the shared driver.
 pub(super) fn transfer(
@@ -14,6 +14,7 @@ pub(super) fn transfer(
     depth: usize,
     operands: &[ExpressionProperties],
     target: Option<&CallTarget>,
+    dynamic_call: bool,
 ) -> Result<ExpressionProperties, CompileError> {
     let mut children = operands.iter().copied();
     let mut effects = FormulaEffects::default();
@@ -22,6 +23,13 @@ pub(super) fn transfer(
     let result = if depth >= crate::eval::compile::bytecode::DEPTH {
         // The bytecode compiler replaces this subtree with a deferred #NUM! atom.
         error
+    } else if dynamic_call || matches!(expr, Expr::Invoke { .. }) {
+        for operand in children.by_ref() {
+            effects = effects.join(operand.effects);
+        }
+        shape = ShapeBounds::UNKNOWN;
+        effects = callable_effects(effects);
+        FormulaType::TOP
     } else {
         match expr {
             Expr::Number(_) => FormulaType::scalar(ScalarKinds::NUMBER),
@@ -138,6 +146,12 @@ pub(super) fn transfer(
                 }
                 FormulaType::array(elements.join(ScalarKinds::ERROR)).join(error)
             }
+            Expr::Function { name, .. } if LambdaForm::matches(name) => {
+                // Deferred body effects do not execute when creating a callable.
+                let _ = children.next();
+                error
+            }
+            Expr::Invoke { .. } => return Err(CompileError::InvalidReference),
             Expr::Function { name, .. } if LetForm::matches(name) => {
                 let mut result = error;
                 for value in children.by_ref() {
@@ -248,7 +262,9 @@ pub(super) fn transfer(
                             shape = descriptor.result.shape(&shapes, &constants);
                             descriptor.result.apply(&types).join(error)
                         } else {
-                            error
+                            shape = ShapeBounds::UNKNOWN;
+                            effects = callable_effects(effects);
+                            FormulaType::TOP
                         }
                     }
                 }
@@ -313,4 +329,16 @@ pub(super) fn reference_shape(expr: &Expr) -> ShapeBounds {
         },
         _ => ShapeBounds::UNKNOWN,
     }
+}
+
+/// Account for a callable body selected dynamically from a lexical or workbook name.
+fn callable_effects(mut effects: FormulaEffects) -> FormulaEffects {
+    effects.external = ExternalBehavior::Opaque;
+    effects.possible_reads = effects
+        .possible_reads
+        .union(DependencyPolicy::REFERENCE_READS)
+        .union(DependencyPolicy::TIME_READS)
+        .union(DependencyPolicy::SEED)
+        .union(DependencyPolicy::CURRENCY);
+    effects
 }

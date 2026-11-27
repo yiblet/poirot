@@ -4,6 +4,12 @@ pub enum PlanSnapshotError {
     /// Local operand is outside the live lexical scope.
     #[error("invalid lexical scope in snapshot program")]
     SnapshotLocalScope,
+    /// The closure descriptor does not identify a valid body, arity, or capture list.
+    #[error("invalid lambda descriptor in snapshot program")]
+    SnapshotLambdaDescriptor,
+    /// Allocation failed while checking lexically nested closure bodies.
+    #[error("could not reserve lambda validation state")]
+    LambdaScopeReservation(#[source] std::collections::TryReserveError),
     /// Allocation failed while checking which call owns each contextual reducer.
     #[error("could not reserve contextual reducer validation state")]
     AggregationReservation(#[source] std::collections::TryReserveError),

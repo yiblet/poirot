@@ -36,7 +36,10 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
             // SAFETY: Short-circuit evaluation checks the vector length is exactly one before reading element zero.
             Value::Refs(areas) => areas.len() == 1 && areas[0].kind == AreaKind::Area,
             Value::SheetSpan(areas) => areas.first().is_some_and(|a| a.kind == AreaKind::Area),
-            Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => false,
+            Value::Callable(_)
+            | Value::Missing
+            | Value::Scalar(_)
+            | Value::SelectedScalar(_, _) => false,
         })
     }
 
@@ -123,6 +126,7 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
                 (convert_legacy_missing_blank(), OperandOrigin::Direct, true)
             }
             Value::Missing => return Err(Ref.into()),
+            Value::Callable(_) => return Err(VALUE_ERROR.into()),
             Value::SelectedScalar(value, origin) if row == 0 && column == 0 => (
                 copy_cell(&mut runtime.budget, value)?,
                 *origin,
@@ -267,7 +271,10 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
             .ok_or(VALUE_ERROR)?
             .value
         {
-            Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => 1,
+            Value::Callable(_)
+            | Value::Missing
+            | Value::Scalar(_)
+            | Value::SelectedScalar(_, _) => 1,
             Value::Array(rows) => rows
                 .iter()
                 .try_fold(0u64, |count, row| count.checked_add(row.len() as u64))
@@ -318,9 +325,10 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
             .ok_or(VALUE_ERROR)?
             .value
         {
-            Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => {
-                self.read_cell(index, 0, offset)
-            }
+            Value::Callable(_)
+            | Value::Missing
+            | Value::Scalar(_)
+            | Value::SelectedScalar(_, _) => self.read_cell(index, 0, offset),
             Value::Array(rows) => {
                 let columns = rows.first().map_or(0, Vec::len);
                 if columns == 0 {
@@ -375,7 +383,10 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
     pub(in crate::eval) fn shape(&mut self, index: usize) -> FunctionResult<(usize, usize)> {
         self.host.prepare(index)?;
         match &self.host.operand(index).ok_or(VALUE_ERROR)?.value {
-            Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => Ok((1, 1)),
+            Value::Callable(_)
+            | Value::Missing
+            | Value::Scalar(_)
+            | Value::SelectedScalar(_, _) => Ok((1, 1)),
             Value::Array(rows) => {
                 let columns = rows.first().ok_or(VALUE_ERROR)?.len();
                 if columns == 0 || rows.iter().any(|row| row.len() != columns) {

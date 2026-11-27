@@ -561,7 +561,7 @@ fn executed_dependent_parser_failures_cannot_satisfy_error_checks() {
     ] {
         let xml = source("Sheet1", formula, expected).replace(
             "</t:table>",
-            "<t:table-row><t:table-cell t:formula=\"of:=LAMBDA(x;x)(1)\"/></t:table-row></t:table>",
+            "<t:table-row><t:table-cell t:formula=\"of:=1+\"/></t:table-row></t:table>",
         );
         let parsed = extract_bytes(xml.as_bytes(), "sc/qa/unit/data/functions/b.fods").unwrap();
         manifest
@@ -613,7 +613,7 @@ fn selected_name_parser_failures_and_shared_source_cycles_are_visible() {
         let xml = source("Sheet1", formula, 3.)
             .replace("of:=[.A2]=[.B2]", &format!("of:={correct}"))
             .replace("</o:document>",
-                "<t:named-expressions><t:named-expression t:name=\"BrokenName\" t:expression=\"of:=LAMBDA(x;x)(1)\" t:base-cell-address=\"$Sheet1.$A$1\"/></t:named-expressions></o:document>");
+                "<t:named-expressions><t:named-expression t:name=\"BrokenName\" t:expression=\"of:=1+\" t:base-cell-address=\"$Sheet1.$A$1\"/></t:named-expressions></o:document>");
         let parsed = extract_bytes(xml.as_bytes(), "sc/qa/unit/data/functions/b.fods").unwrap();
         manifest
             .fixtures

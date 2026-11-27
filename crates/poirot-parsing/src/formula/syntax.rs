@@ -148,6 +148,29 @@ fn column_name(column: u32) -> Result<String, ParseError> {
     }
     Ok(name.into_iter().rev().collect())
 }
+/// Print call arguments with the grouping that preserves unions and omissions.
+fn write_arguments(
+    args: &[Expr],
+    out: &mut String,
+    depth: usize,
+    nodes: &mut usize,
+) -> Result<(), ParseError> {
+    out.push('(');
+    for (index, arg) in args.iter().enumerate() {
+        if index != 0 {
+            out.push(',');
+        }
+        grouped(
+            arg,
+            GroupingContext::FunctionArgument,
+            out,
+            depth + 1,
+            nodes,
+        )?;
+    }
+    out.push(')');
+    Ok(())
+}
 fn write_expr(
     expr: &Expr,
     out: &mut String,
@@ -294,22 +317,21 @@ fn write_expr(
                 nodes,
             )?;
         }
+        Expr::Invoke { callee, args } => {
+            let parentheses =
+                !matches!(callee.as_ref(), Expr::Function { .. } | Expr::Invoke { .. });
+            if parentheses {
+                out.push('(');
+            }
+            write_expr(callee, out, depth + 1, nodes)?;
+            if parentheses {
+                out.push(')');
+            }
+            write_arguments(args, out, depth, nodes)?;
+        }
         Expr::Function { name, args } => {
             out.push_str(name);
-            out.push('(');
-            for (i, arg) in args.iter().enumerate() {
-                if i > 0 {
-                    out.push(',');
-                }
-                grouped(
-                    arg,
-                    GroupingContext::FunctionArgument,
-                    out,
-                    depth + 1,
-                    nodes,
-                )?;
-            }
-            out.push(')');
+            write_arguments(args, out, depth, nodes)?;
         }
         Expr::Array(rows) => {
             out.push('{');

@@ -8,6 +8,8 @@ pub enum ObservedValue<'a> {
     Scalar(&'a CellValue),
     /// Omitted-argument evidence.
     Missing,
+    /// A callable expression result with no exposed body or captured values.
+    Callable,
     /// Shape summary without copying array elements.
     Array {
         /// Number of materialized rows.

@@ -3,6 +3,8 @@
 use super::bytecode_vm::Vm;
 use super::executable_ref::ExecutableRef;
 #[cfg(test)]
+use super::lambda_executor::LambdaExecutor;
+#[cfg(test)]
 use super::operators::Operators;
 #[cfg(test)]
 use super::reference_atoms::ReferenceAtoms;
@@ -20,12 +22,10 @@ use crate::eval::limits::WorkKind;
 #[cfg(test)]
 use crate::eval::observe::ConsumedBuiltinInvocation;
 #[cfg(test)]
-use crate::eval::ports::DependencyRead;
-#[cfg(test)]
 use crate::eval::session::ObservationRecorder;
 use crate::eval::session::{ExpressionDemand, Session};
 #[cfg(test)]
-use crate::eval::session::{NameResolver, ReadRecorder, ResultProjection};
+use crate::eval::session::{NameResolver, ResultProjection};
 use crate::eval::values::Value;
 #[cfg(test)]
 use crate::eval::values::numeric_outcome;
@@ -35,7 +35,7 @@ use crate::eval::values::{ArrayView, VALUE_ERROR, convert_legacy_missing_blank, 
 use crate::eval::{adapters, compile, functions, host, observe};
 use crate::model::CellAddress;
 #[cfg(test)]
-use crate::model::CellError::{Name, Ref};
+use crate::model::CellError::Ref;
 #[cfg(test)]
 use crate::model::CellValue::{Boolean, Error, Text};
 
@@ -270,11 +270,14 @@ impl<'s, 'a> ExpressionRunner<'s, 'a> {
                 binding,
                 (&arguments.expressions).into(),
             ),
-            Expression::UnresolvedFunction(arguments) => {
-                ReadRecorder::new(self.session)
-                    .read_lazy(|| DependencyRead::OpaqueProvider(arguments.source_name.clone()));
-                Ok(err(Name))
-            }
+            Expression::UnresolvedFunction(arguments) => LambdaExecutor::new(
+                self.session,
+                EvaluationTarget {
+                    sheet: s,
+                    address: at,
+                },
+            )
+            .invoke_named(&arguments.source_name, (&arguments.expressions).into()),
         }
     }
 }

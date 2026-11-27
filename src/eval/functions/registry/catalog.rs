@@ -64,6 +64,7 @@ registry! {
 "SHEETS" => Reference(ReferenceFunction::Sheets), 0, 1, FamilyControlled, REFERENCE_READS, Scalar;
 "FORMULATEXT" => Reference(ReferenceFunction::FormulaText), 1, 1, FamilyControlled, REFERENCE_READS, Scalar;
 "ISFORMULA" => Information(InformationFunction::IsFormula), 1, 1, FamilyControlled, REFERENCE_READS, Any;
+"ISOMITTED" => Information(InformationFunction::IsOmitted), 1, 1, FamilyControlled, ARGUMENTS, Scalar;
 "ENCODEURL" => Text(TextFunction::EncodeUrl), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
 "RAND" => Math(MathFunction::Rand), 0, 0, FamilyControlled, RANDOM_READS, Number;
 "RANDBETWEEN" => Math(MathFunction::Randbetween), 2, 2, FamilyControlled, RANDOM_NUMERIC, ElementwiseNumber;

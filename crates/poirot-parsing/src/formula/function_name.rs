@@ -529,6 +529,7 @@ common_functions! {
     FormulaText = 493 => "FORMULATEXT";
     IsFormula = 494 => "ISFORMULA";
     EncodeUrl = 495 => "ENCODEURL";
+    IsOmitted = 496 => "ISOMITTED";
 
 
 

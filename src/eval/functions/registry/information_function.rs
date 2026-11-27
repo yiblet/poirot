@@ -27,4 +27,6 @@ pub enum InformationFunction {
     T,
     /// NA handler.
     Na,
+    /// Inspect omission without projecting values to worksheet scalars.
+    IsOmitted,
 }

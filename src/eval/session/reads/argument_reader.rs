@@ -54,6 +54,7 @@ impl<'s, 'a> ArgumentReader<'s, 'a> {
         value: Value,
     ) -> EvalResult<Result<Vec<Vec<CellValue>>, CellError>> {
         match value {
+            Value::Callable(_) => Ok(Err(CellError::Value)),
             Value::Array(rows) => Ok(Ok(rows.values)),
             Value::Missing => {
                 self.session.state.runtime.budget.allocation(1)?;

@@ -72,6 +72,13 @@ pub enum Expr {
         /// Arguments in source order, including omitted slots.
         args: Vec<Expr>,
     },
+    /// Call a formula expression that produces a callable value.
+    Invoke {
+        /// Expression evaluated to select the callable.
+        callee: Box<Expr>,
+        /// Positional arguments, including explicitly omitted slots.
+        args: Vec<Expr>,
+    },
     /// Row-major array constant; the parser checks rectangularity.
     Array(Vec<Vec<Expr>>),
 }

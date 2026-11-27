@@ -160,7 +160,7 @@ fn extension_result_capabilities_and_external_characteristics_compose() {
         registry
             .register(
                 ExtensionNamespace::UserDefined,
-                "MAKEARRAY",
+                "TESTARRAY",
                 "types/v1",
                 ExtensionContract {
                     arity: functions::registry::Arity {
@@ -185,7 +185,7 @@ fn extension_result_capabilities_and_external_characteristics_compose() {
             .unwrap();
         let mut compiler = FormulaCompiler::new();
         let policy = PreparationPolicy::with_extensions(Default::default(), &registry);
-        for (source, spills) in [("MAKEARRAY()", true), ("SUM(MAKEARRAY())", false)] {
+        for (source, spills) in [("TESTARRAY()", true), ("SUM(TESTARRAY())", false)] {
             let p = compiler.compile_formula_with_extensions(source, &policy, &registry);
             let PreparedFormula::Ready(formula) = p.as_ref() else {
                 panic!()

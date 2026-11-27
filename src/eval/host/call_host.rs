@@ -138,6 +138,27 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             return Ok(());
         }
         let expression = self.arguments.get(index).ok_or(VALUE_ERROR)?;
+        self.reserve_argument_slot(index)?;
+        let missing = expression.is_missing();
+        let array_missing = expression.array_missing(&mut self.session.state.runtime.budget)?;
+        let value = ExpressionRunner::new(self.session).expr_with_demand(
+            self.sheet,
+            self.address,
+            expression,
+            self.argument_demand.at(index),
+        )?;
+        self.publish_argument(
+            index,
+            HostOperand {
+                missing: missing || matches!(value, Value::Missing),
+                value,
+                array_missing,
+            },
+        )
+    }
+
+    /// Allocate operand slots before entering the deferred expression.
+    fn reserve_argument_slot(&mut self, index: usize) -> FunctionResult<()> {
         let count = index.checked_add(1).ok_or(EvaluationError::StalePlan)?;
         if count > self.argument_slots {
             let end = self
@@ -159,15 +180,11 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             stack.resize_with(end, || None);
             self.argument_slots = count;
         }
-        let missing = expression.is_missing();
-        let array_missing = expression.array_missing(&mut self.session.state.runtime.budget)?;
-        let value = ExpressionRunner::new(self.session).expr_with_demand(
-            self.sheet,
-            self.address,
-            expression,
-            self.argument_demand.at(index),
-        )?;
-        let missing = missing || matches!(value, Value::Missing);
+        Ok(())
+    }
+
+    /// Admit and publish an evaluated argument to its reserved slot.
+    fn publish_argument(&mut self, index: usize, operand: HostOperand) -> FunctionResult<()> {
         self.session
             .state
             .runtime
@@ -189,11 +206,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
             .vm
             .operands
             .get_mut(slot)
-            .ok_or(EvaluationError::StalePlan)? = Some(HostOperand {
-            value,
-            missing,
-            array_missing,
-        });
+            .ok_or(EvaluationError::StalePlan)? = Some(operand);
         self.prepared_arguments += 1;
         Ok(())
     }
@@ -373,6 +386,7 @@ impl<'call, 'workbook> CallHost<'call, 'workbook> {
         }
         let (value, origin) = match &operand.value {
             Value::Missing => (Value::Missing, OperandOrigin::Direct),
+            Value::Callable(_) => return Err(VALUE_ERROR.into()),
             Value::Scalar(value) => (
                 copy_cell(&mut runtime.budget, value)?.into(),
                 OperandOrigin::Direct,

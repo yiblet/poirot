@@ -39,7 +39,21 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<(), PlanSn
     };
     let mut local_depth = 0u32;
     let mut deepest_scope = 0u32;
+    // Each deferred body starts with captures and parameters, then restores its parent depth.
+    let mut lambda_scopes = Vec::new();
     for (ip, i) in t.code.iter().enumerate() {
+        if let Some(&(end, parent_depth, seed)) = lambda_scopes.last()
+            && ip == end
+        {
+            if local_depth != seed {
+                return Err(PlanSnapshotError::SnapshotLocalScope);
+            }
+            local_depth = parent_depth;
+            lambda_scopes.pop();
+        }
+        let scope_end = lambda_scopes
+            .last()
+            .map_or(t.code.len(), |&(end, _, _)| end);
         if i.flags != 0 || i.reserved != 0 {
             return Err(PlanSnapshotError::SnapshotInstructionFlags);
         }
@@ -76,18 +90,63 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<(), PlanSn
                     return Err(PlanSnapshotError::SnapshotLocalScope);
                 }
                 if i.opcode == Opcode::ClearLocals {
+                    if lambda_scopes.last().is_some_and(|&(_, _, seed)| i.a < seed) {
+                        return Err(PlanSnapshotError::SnapshotLocalScope);
+                    }
                     local_depth = i.a;
                 }
             }
             Opcode::Reference if i.a >= t.reference_slots => {
                 return Err(PlanSnapshotError::SnapshotReferenceSlot);
             }
-            Opcode::Invoke | Opcode::Conditional => {
-                if i.a as usize >= calls {
+            Opcode::Lambda => {
+                let end = target(i.c)?;
+                if end <= ip.saturating_add(2)
+                    || end >= scope_end
+                    || i.b > 253
+                    || t.code
+                        .get(ip + 1)
+                        .is_none_or(|op| op.opcode != Opcode::Enter)
+                    || t.code
+                        .get(end - 1)
+                        .is_none_or(|op| op.opcode != Opcode::Leave)
+                {
+                    return Err(PlanSnapshotError::SnapshotLambdaDescriptor);
+                }
+                let mut reader = SnapshotReader::new(
+                    t.operands
+                        .get(i.a as usize..)
+                        .ok_or(PlanSnapshotError::SnapshotOperandBounds)?,
+                );
+                let captures = reader.word()?;
+                let seed = captures
+                    .checked_add(i.b)
+                    .filter(|seed| *seed <= t.local_slots && captures <= local_depth)
+                    .ok_or(PlanSnapshotError::SnapshotLambdaDescriptor)?;
+                for _ in 0..captures {
+                    if reader.word()? >= local_depth {
+                        return Err(PlanSnapshotError::SnapshotLambdaDescriptor);
+                    }
+                }
+                if reader.word()? > i.b {
+                    return Err(PlanSnapshotError::SnapshotLambdaDescriptor);
+                }
+                lambda_scopes
+                    .try_reserve(1)
+                    .map_err(PlanSnapshotError::LambdaScopeReservation)?;
+                // SAFETY: The reservation admits this frame.
+                lambda_scopes.push((end, local_depth, seed));
+                local_depth = seed;
+                deepest_scope = deepest_scope.max(seed);
+            }
+            Opcode::Invoke | Opcode::Conditional | Opcode::InvokeValue => {
+                if (i.opcode.is_call() && i.a as usize >= calls)
+                    || (i.opcode == Opcode::InvokeValue && i.a != 0)
+                {
                     return Err(PlanSnapshotError::SnapshotCallIndexArity);
                 }
                 let continuation = target(i.c)?;
-                if continuation <= ip {
+                if continuation <= ip || continuation >= scope_end {
                     return Err(PlanSnapshotError::SnapshotBackwardsInvocation);
                 }
                 let jump = t
@@ -119,7 +178,7 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<(), PlanSn
             }
             Opcode::Argument | Opcode::Jump => {
                 let continuation = target(i.c)?;
-                if continuation <= ip {
+                if continuation <= ip || continuation >= scope_end {
                     return Err(PlanSnapshotError::SnapshotBackwardsJump);
                 }
             }
@@ -128,7 +187,7 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<(), PlanSn
             _ => {}
         }
     }
-    if local_depth != 0 || deepest_scope != t.local_slots {
+    if !lambda_scopes.is_empty() || local_depth != 0 || deepest_scope != t.local_slots {
         return Err(PlanSnapshotError::SnapshotLocalScope);
     }
     Ok(())

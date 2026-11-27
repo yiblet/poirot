@@ -211,7 +211,8 @@ fn range_operand(expr: &Expr) -> bool {
         | Expr::Name(_)
         | Expr::QualifiedName { .. }
         | Expr::SheetSpan(_)
-        | Expr::Table(_) => true,
+        | Expr::Table(_)
+        | Expr::Invoke { .. } => true,
         Expr::Error(error) => error == "#REF!",
         Expr::Unary {
             op: UnaryOp::SpillRange,

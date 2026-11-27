@@ -13760,19 +13760,17 @@
       "id": "function.LAMBDA",
       "kind": "function",
       "name": "LAMBDA",
-      "family": "ModernGap",
+      "family": "FormulaSyntax",
       "scope_status": "in_scope",
-      "implementation_status": "unsupported",
+      "implementation_status": "partial",
       "source_urls": [
-        "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-        "https://support.microsoft.com/en-us/excel/excel-functions-alphabetical"
+        "https://support.microsoft.com/en-us/excel/functions/lambda-function"
       ],
       "obligations": [
         {
           "id": "function.LAMBDA.valid",
-          "behavior": "Establish documented valid LAMBDA semantics; missing registry handler is an explicit gap, not a successful Excel error oracle.",
-          "applicability": "requires_research",
-          "reason": "Absent from registry; individual contract and runner capability need research."
+          "behavior": "Construct lexical closures and invoke inline or named functions.",
+          "applicability": "applicable"
         }
       ]
     },
@@ -14284,6 +14282,24 @@
           "Native Excel boundary behavior is unverified. Calc differs for zero bases, logical and text coefficients, and error mapping. See [the SERIESSUM contract](../../poirot-functions-math/docs/seriessum.md)."
         ]
       }
+    },
+    {
+      "id": "function.ISOMITTED",
+      "kind": "function",
+      "name": "ISOMITTED",
+      "family": "Information",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/isomitted-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.ISOMITTED.valid",
+          "behavior": "Distinguish a missing LAMBDA argument from a supplied blank.",
+          "applicability": "applicable"
+        }
+      ]
     }
   ],
   "registered_functions": [
@@ -14540,6 +14556,7 @@
     "ISNUMBER",
     "ISO.CEILING",
     "ISODD",
+    "ISOMITTED",
     "ISOWEEKNUM",
     "ISPMT",
     "ISREF",

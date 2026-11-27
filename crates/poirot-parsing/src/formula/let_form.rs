@@ -25,7 +25,10 @@ impl<'a> LetForm<'a> {
             || !remainder.is_empty()
             || matches!(result, Expr::Missing)
             || pairs.iter().any(|[name, _]| match name {
-                Expr::Name(name) => !valid_name(Self::local_name(name)),
+                Expr::Name(name) => {
+                    let name = Self::local_name(name);
+                    matches!(name, "R" | "r" | "C" | "c") || !valid_name(name)
+                }
                 _ => true,
             })
         {
@@ -44,15 +47,15 @@ impl<'a> LetForm<'a> {
 
     /// Remove the stored local-parameter prefix from a lexical identifier.
     pub fn local_name(text: &str) -> &str {
-        text.strip_prefix("_xlpm.").unwrap_or(text)
+        match text.split_once('.') {
+            Some((prefix, local)) if prefix.eq_ignore_ascii_case("_xlpm") => local,
+            _ => text,
+        }
     }
 }
 
 /// Check a local name without admitting A1 and R1C1 reference spellings.
-fn valid_name(name: &str) -> bool {
-    if name.eq_ignore_ascii_case("R") || name.eq_ignore_ascii_case("C") {
-        return false;
-    }
+pub(super) fn valid_name(name: &str) -> bool {
     let mut chars = name.chars();
     chars
         .next()

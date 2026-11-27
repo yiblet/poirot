@@ -134,6 +134,9 @@ impl Port<'_, '_> {
                 }
             }
             Value::Missing => helper::Value::Scalar(helper::Scalar::Missing),
+            Value::Callable(_) => {
+                helper::Value::Scalar(self.scalar(Error(crate::model::CellError::Value))?)
+            }
             Value::Scalar(v) => helper::Value::Scalar(self.scalar(v)?),
             Value::SelectedScalar(v, origin) => helper::Value::SelectedScalar(
                 self.scalar(v)?,

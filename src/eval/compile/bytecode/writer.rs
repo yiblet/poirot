@@ -88,6 +88,9 @@ impl<'ast> Sink<'ast> for Writer<'_> {
         if self.error.is_some() {
             return;
         }
+        if matches!(op, High::EndLambda) {
+            return;
+        }
         if let High::Label(label) = op {
             let destination = self.output.template.code.len() as u32;
             let Some(pending) = self.pending_labels.get_mut(label) else {
@@ -115,12 +118,36 @@ impl<'ast> Sink<'ast> for Writer<'_> {
                 let (a, b) = self.text("#NUM!");
                 Instruction::new(Opcode::Error, a, b)
             }
-            High::InvalidLet => {
+            High::InvalidBinding => {
                 let (a, b) = self.text("#VALUE!");
                 Instruction::new(Opcode::Error, a, b)
             }
+            High::Lambda {
+                arity,
+                minimum_arity,
+                captures,
+                end,
+            } => {
+                let offset = self.output.template.operands.len() as u32;
+                self.output.template.operands.word(captures.len() as u32);
+                for slot in captures {
+                    self.output.template.operands.word(slot as u32);
+                }
+                self.output.template.operands.word(minimum_arity as u32);
+                target = Some(end);
+                Instruction::new(Opcode::Lambda, offset, arity as u32)
+            }
+            High::InvokeValue(arity, end) => {
+                if let Some(role) = self.aggregation_roles.get_mut(end / 2) {
+                    *role = None;
+                }
+                target = Some(end);
+                Instruction::new(Opcode::InvokeValue, 0, arity as u32)
+            }
             High::BindLocal(slot) => Instruction::new(Opcode::BindLocal, slot as u32, 0),
-            High::ReadLocal(slot) => Instruction::new(Opcode::ReadLocal, slot as u32, 0),
+            High::ReadLocal(slot) | High::ReadCallee(slot) => {
+                Instruction::new(Opcode::ReadLocal, slot as u32, 0)
+            }
             High::ClearLocals(first) => Instruction::new(Opcode::ClearLocals, first as u32, 0),
             High::Unary(op) => Instruction::new(Opcode::Unary, unary(op), 0),
             High::Binary(op) => Instruction::new(Opcode::for_binary(op), binary(op), 0),
@@ -136,27 +163,7 @@ impl<'ast> Sink<'ast> for Writer<'_> {
                 let a = self.output.template.operands.len() as u32;
                 self.output.template.operands.string(name);
                 let index = self.output.calls.len() as u32;
-                let lookup = match self.registry.map(|r| r.external_name_lookup(name)) {
-                    Some(crate::eval::functions::external_namespace::ExternalNameLookup::Stored(stored)) => {
-                        Some(stored)
-                    }
-                    Some(crate::eval::functions::external_namespace::ExternalNameLookup::UnsupportedName) => {
-                        None
-                    }
-                    _ => Some(name),
-                };
-                let call_target = match lookup {
-                    Some(lookup) => match crate::eval::functions::registry::resolve_function(
-                        &poirot_parsing::formula::FunctionName::from(lookup),
-                    ) {
-                        Some(d) => CallTarget::Builtin(d.handler),
-                        None => self
-                            .registry
-                            .and_then(|r| r.resolve(lookup))
-                            .map_or(CallTarget::Unresolved, CallTarget::Extension),
-                    },
-                    None => CallTarget::Unresolved,
-                };
+                let (lookup, call_target) = CallTarget::resolve(name, self.registry);
                 if let Some(role) = self.aggregation_roles.get_mut(label / 2) {
                     *role = if matches!(call_target, CallTarget::Extension(_)) {
                         None
@@ -220,8 +227,8 @@ impl<'ast> Sink<'ast> for Writer<'_> {
                 target = Some(label);
                 Instruction::new(Opcode::Jump, 0, 0)
             }
-            // SAFETY: The High::Label branch above returns before this match.
-            High::Label(_) => unreachable!(),
+            // SAFETY: Both metadata-only events return before this match.
+            High::Label(_) | High::EndLambda => unreachable!(),
         };
         if let Some(label) = target {
             let Some(pending) = self.pending_labels.get_mut(label) else {

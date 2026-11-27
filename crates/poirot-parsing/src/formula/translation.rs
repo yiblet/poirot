@@ -183,6 +183,12 @@ fn translate(
                 }
             }
         }
+        Expr::Invoke { callee, args } => {
+            translate(callee, rows, columns, policy)?;
+            for arg in args {
+                translate(arg, rows, columns, policy)?;
+            }
+        }
         Expr::Function { args, .. } => {
             for arg in args {
                 translate(arg, rows, columns, policy)?;
@@ -214,6 +220,10 @@ mod tests {
             ),
             ("A1:B5 B2:C6,D1", "D3:E7 E4:F8,G3"),
             ("A:C+$1:3", "D:F+$1:5"),
+            (
+                "(LAMBDA(x,x+'Data'!A1))(B1)(C1)",
+                "LAMBDA(x,x+'Data'!D3)(E3)(F3)",
+            ),
         ] {
             let p = plan(source, 2, 3).unwrap();
             assert_eq!(

@@ -13,6 +13,7 @@ pub(in crate::eval) struct InferenceMachine<'a> {
     pub(super) frames: poirot_functions::scalar::ParamVec<InferenceFrame<'a>>,
     pub(super) operands: poirot_functions::scalar::ParamVec<ExpressionProperties>,
     locals: poirot_functions::scalar::ParamVec<ExpressionProperties>,
+    enclosing_locals: Vec<poirot_functions::scalar::ParamVec<ExpressionProperties>>,
 }
 
 impl<'a> InferenceMachine<'a> {
@@ -27,6 +28,7 @@ impl<'a> InferenceMachine<'a> {
             frames: poirot_functions::scalar::ParamVec::new(),
             operands: poirot_functions::scalar::ParamVec::new(),
             locals: poirot_functions::scalar::ParamVec::new(),
+            enclosing_locals: Vec::new(),
         })
     }
 
@@ -61,6 +63,7 @@ impl<'a> InferenceMachine<'a> {
             slot,
             base: self.operands.len(),
             binding: None,
+            dynamic_call: false,
             local: None,
         });
         Ok(())
@@ -85,6 +88,62 @@ impl<'a> InferenceMachine<'a> {
             .ok_or(CompileError::InvalidReference)?;
         entry.contract = ExpressionContract::function(name, target);
         frame.binding = Some(binding);
+        Ok(())
+    }
+
+    /// Mark a named expression whose selected target is a lexical callable value.
+    pub(in crate::eval) fn dynamic_call(&mut self) -> Result<(), CompileError> {
+        self.frames
+            .last_mut()
+            .ok_or(CompileError::InvalidReference)?
+            .dynamic_call = true;
+        Ok(())
+    }
+
+    /// Prepare one callable body with captured types and unknown positional arguments.
+    pub(in crate::eval) fn enter_lambda(
+        &mut self,
+        arity: usize,
+        captures: &[usize],
+    ) -> Result<(), CompileError> {
+        let frame_width = arity
+            .checked_add(captures.len())
+            .ok_or(CompileError::ResourceLimit)?;
+        let mut body = poirot_functions::scalar::ParamVec::new();
+        body.try_reserve(frame_width)
+            .map_err(|_| CompileError::ResourceLimit)?;
+        for capture in captures {
+            let value = self
+                .locals
+                .get(*capture)
+                .copied()
+                .ok_or(CompileError::InvalidReference)?;
+            // SAFETY: The reservation admits every capture and positional parameter.
+            body.push(value);
+        }
+        body.resize(
+            frame_width,
+            ExpressionProperties {
+                result: crate::model::FormulaType::TOP,
+                shape: crate::model::ShapeBounds::UNKNOWN,
+                effects: Default::default(),
+            },
+        );
+        self.enclosing_locals
+            .try_reserve(1)
+            .map_err(|_| CompileError::ResourceLimit)?;
+        // SAFETY: The successful reservation admits this suspended scope.
+        self.enclosing_locals
+            .push(std::mem::replace(&mut self.locals, body));
+        Ok(())
+    }
+
+    /// Resume the enclosing lexical types after lowering the deferred body.
+    pub(in crate::eval) fn leave_lambda(&mut self) -> Result<(), CompileError> {
+        self.locals = self
+            .enclosing_locals
+            .pop()
+            .ok_or(CompileError::InvalidReference)?;
         Ok(())
     }
 
@@ -155,7 +214,13 @@ impl<'a> InferenceMachine<'a> {
             }
             local
         } else {
-            transfer(frame.expression, frame.depth, operands, target)?
+            transfer(
+                frame.expression,
+                frame.depth,
+                operands,
+                target,
+                frame.dynamic_call,
+            )?
         };
         self.expressions
             .get_mut(frame.slot)
@@ -174,7 +239,11 @@ impl<'a> InferenceMachine<'a> {
 
     /// Publish only a complete root with no suspended expressions.
     pub(in crate::eval) fn finish(self) -> Result<FormulaTyping, CompileError> {
-        if !self.frames.is_empty() || self.operands.len() != 1 || !self.locals.is_empty() {
+        if !self.frames.is_empty()
+            || self.operands.len() != 1
+            || !self.locals.is_empty()
+            || !self.enclosing_locals.is_empty()
+        {
             return Err(CompileError::InvalidReference);
         }
         Ok(FormulaTyping {

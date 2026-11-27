@@ -77,10 +77,16 @@ pub enum Opcode {
     ReadLocal,
     /// Drop local slots at and above slot `a`.
     ClearLocals,
+    /// Construct a closure. `a` points to the capture count, capture slots and
+    /// minimum arity. `b` is full arity,
+    /// and `c` labels the end of the body beginning at the next instruction.
+    Lambda,
+    /// Invoke an expression result. `b` is arity and `c` labels the continuation.
+    InvokeValue,
 }
 
 impl Opcode {
-    /// Whether the instruction owns deferred argument blocks and a continuation label.
+    /// Whether the instruction uses a named call binding and deferred arguments.
     pub(in crate::eval) fn is_call(self) -> bool {
         matches!(self, Self::Invoke | Self::Conditional)
     }

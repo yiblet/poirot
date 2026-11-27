@@ -5,6 +5,7 @@ use crate::eval::values::Value;
 pub(in crate::eval) fn observed_value(value: &Value) -> ObservedValue<'_> {
     match value {
         Value::Scalar(value) | Value::SelectedScalar(value, _) => ObservedValue::Scalar(value),
+        Value::Callable(_) => ObservedValue::Callable,
         Value::Missing => ObservedValue::Missing,
         Value::Array(array) => ObservedValue::Array {
             rows: array.values.len(),

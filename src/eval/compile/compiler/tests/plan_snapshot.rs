@@ -498,3 +498,55 @@ fn snapshot_rejects_uninitialized_let_local_reads() {
         Err(PlanSnapshotError::SnapshotLocalScope)
     ));
 }
+
+#[test]
+fn snapshot_rejects_invalid_lambda_capture() {
+    use super::super::plan_snapshot_error::PlanSnapshotError;
+    use crate::eval::compile::bytecode::Opcode;
+
+    let mut book = Workbook::new();
+    book.add_sheet("S")
+        .unwrap()
+        .set_formula("A1", "LET(base,1,LAMBDA(x,base+x))(2)")
+        .unwrap();
+    let plan = FormulaCompiler::new().compile_workbook(&book, &PreparationPolicy::default());
+    let mut dto = PlanSnapshot::capture(&plan).unwrap().into_owned();
+    let template = dto.programs[0].template.to_mut();
+    let lambda = template
+        .code
+        .iter()
+        .find(|i| i.opcode == Opcode::Lambda)
+        .unwrap();
+    let capture = lambda.a as usize + 4;
+    template.operands[capture..capture + 4].copy_from_slice(&1u32.to_le_bytes());
+    assert!(matches!(
+        dto.restore(),
+        Err(PlanSnapshotError::SnapshotLambdaDescriptor)
+    ));
+}
+
+#[test]
+fn snapshot_rejects_lambda_minimum_arity_above_full_arity() {
+    use super::super::plan_snapshot_error::PlanSnapshotError;
+    use crate::eval::compile::bytecode::Opcode;
+
+    let mut book = Workbook::new();
+    book.add_sheet("S")
+        .unwrap()
+        .set_formula("A1", "LAMBDA([item],ISOMITTED(item))()")
+        .unwrap();
+    let plan = FormulaCompiler::new().compile_workbook(&book, &PreparationPolicy::default());
+    let mut dto = PlanSnapshot::capture(&plan).unwrap().into_owned();
+    let template = dto.programs[0].template.to_mut();
+    let lambda = template
+        .code
+        .iter()
+        .find(|i| i.opcode == Opcode::Lambda)
+        .unwrap();
+    let minimum_arity = lambda.a as usize + 4;
+    template.operands[minimum_arity..minimum_arity + 4].copy_from_slice(&2u32.to_le_bytes());
+    assert!(matches!(
+        dto.restore(),
+        Err(PlanSnapshotError::SnapshotLambdaDescriptor)
+    ));
+}

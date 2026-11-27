@@ -9,6 +9,7 @@ mod classification_error;
 /// Allocation-light token classification used for safe compiler-template rebinding.
 pub mod classified;
 mod function_name;
+mod lambda_form;
 mod let_form;
 mod metadata;
 mod parse_error;
@@ -27,6 +28,7 @@ mod translation;
 pub use ast::{BinaryOp, CellReference, Expr, SheetSpanReference, UnaryOp};
 // Interned builtin symbols and owned extension spellings used during binding.
 pub use function_name::{CommonFunction, FunctionName};
+pub use lambda_form::LambdaForm;
 pub use let_form::LetForm;
 // Parsed source with explicit limits and spans for diagnostics and rewriting.
 pub use metadata::{FormulaParsePolicy, FormulaSpan, FunctionInvocation, ParsedFormula};

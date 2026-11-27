@@ -1,13 +1,33 @@
+use super::call_target::CallTarget;
 use super::compile_error::CompileError;
+use crate::eval::functions::extensions::ExtensionRegistry;
 use poirot_parsing::formula::{Expr, LetForm};
 
 /// Active lexical declarations mapped to deterministic slots within one bytecode body.
-#[derive(Default)]
-pub(super) struct LexicalScope<'ast> {
+pub(super) struct LexicalScope<'ast, 'registry> {
     names: poirot_functions::scalar::ParamVec<&'ast str>,
+    pub(super) registry: Option<&'registry ExtensionRegistry>,
 }
 
-impl<'ast> LexicalScope<'ast> {
+impl<'ast, 'registry> LexicalScope<'ast, 'registry> {
+    /// Start an independent scope in the same registered function namespace.
+    pub(super) fn new(registry: Option<&'registry ExtensionRegistry>) -> Self {
+        Self {
+            names: Default::default(),
+            registry,
+        }
+    }
+
+    /// Select a lexical binding when no registered handler owns this spelling.
+    pub(super) fn callable_slot(&self, name: &str) -> Option<usize> {
+        let slot = self.slot(name)?;
+        let (lookup, target) = CallTarget::resolve(name, self.registry);
+        (target == CallTarget::Unresolved
+            && crate::eval::functions::registry::resolve_handler(&lookup.unwrap_or(name).into())
+                .is_none())
+        .then_some(slot)
+    }
+
     /// First slot available to a nested scope.
     pub(super) fn next_slot(&self) -> usize {
         self.names.len()
@@ -28,6 +48,11 @@ impl<'ast> LexicalScope<'ast> {
         self.names.truncate(base);
     }
 
+    /// Borrow a declaration at a checked slot.
+    pub(super) fn name(&self, slot: usize) -> Option<&'ast str> {
+        self.names.get(slot).copied()
+    }
+
     /// Resolve the nearest declaration of the reference spelling.
     pub(super) fn slot(&self, text: &str) -> Option<usize> {
         let name = LetForm::local_name(text);
@@ -46,7 +71,14 @@ impl<'ast> LexicalScope<'ast> {
         };
         match expression {
             Expr::Name(name) => self.slot(name).is_some(),
-            Expr::Function { args, .. } => args.iter().any(|arg| self.uses_local(arg, remaining)),
+            Expr::Function { name, args } => {
+                self.callable_slot(name).is_some()
+                    || args.iter().any(|arg| self.uses_local(arg, remaining))
+            }
+            Expr::Invoke { callee, args } => {
+                self.uses_local(callee, remaining)
+                    || args.iter().any(|arg| self.uses_local(arg, remaining))
+            }
             _ => false,
         }
     }

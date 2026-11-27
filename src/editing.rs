@@ -172,6 +172,13 @@ fn rewrite(
             let a = rewrite(left, old, new)?;
             rewrite(right, old, new)? || a
         }
+        Expr::Invoke { callee, args } => {
+            let mut changed = rewrite(callee, old, new)?;
+            for arg in args {
+                changed |= rewrite(arg, old, new)?;
+            }
+            changed
+        }
         Expr::Function { args, .. } => {
             let mut changed = false;
             for expr in args {

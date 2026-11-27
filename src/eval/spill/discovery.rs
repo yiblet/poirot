@@ -119,9 +119,13 @@ impl Discovery<'_, '_> {
             {
                 self.budget.charge(WorkKind::SparseScan, 1)?;
                 if let Some(source) = cell.formula.as_deref()
-                    && let Some(shape) = self
-                        .source_preparation
-                        .spill_shape(self.plan, sheet, at, source)
+                    && let Some(shape) = self.source_preparation.spill_shape(
+                        self.plan,
+                        self.workbook,
+                        sheet,
+                        at,
+                        source,
+                    )
                 {
                     self.budget
                         .check_allocation(added.len().saturating_add(1))?;

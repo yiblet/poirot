@@ -19,6 +19,7 @@ pub(in crate::eval) fn copy_cell(
 pub(in crate::eval) fn copy_value(budget: &mut BudgetMeter, value: &Value) -> EvalResult<Value> {
     Ok(match value {
         Value::Missing => Value::Missing,
+        Value::Callable(callable) => Value::Callable(std::sync::Arc::clone(callable)),
         Value::Scalar(value) => Value::Scalar(copy_cell(budget, value)?),
         Value::SelectedScalar(value, origin) => {
             Value::SelectedScalar(copy_cell(budget, value)?, *origin)
