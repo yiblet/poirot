@@ -264,8 +264,9 @@ mod tests {
         let a = m(3, 3, &[0., 2., 1., 1., 1., 0., 2., 0., 1.]);
         close(determinant(&a, B).unwrap(), -4.);
         let identity = multiply(&a, &inverse(&a, B).unwrap(), B).unwrap();
-        for i in 0..9 {
-            close(identity.values[i], if i % 4 == 0 { 1. } else { 0. });
+        assert_eq!(identity.values.len(), 9);
+        for (i, &value) in identity.values.iter().enumerate() {
+            close(value, if i % 4 == 0 { 1. } else { 0. });
         }
         let singular = m(2, 2, &[1., 2., 2., 4.]);
         assert_eq!(determinant(&singular, B), Ok(0.));

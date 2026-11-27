@@ -1,7 +1,7 @@
 //! Original proofs of Microsoft's full and resizing spill-reference contract:
 //! https://support.microsoft.com/en-us/excel/spilled-range-operator
 //! Error/no-footprint and one-cell identity cases below are explicit Poirot policies.
-//! Stored ANCHORARRAY spelling follows the pinned rust_xlsxwriter 0.101.0 author docs:
+//! Stored ANCHORARRAY spelling follows the rust_xlsxwriter 0.101.0 author docs:
 //! https://docs.rs/rust_xlsxwriter/0.101.0/rust_xlsxwriter/struct.Formula.html
 //! No external implementation, tests or fixture data were copied or adapted.
 use poirot::eval::EvaluationContext;
