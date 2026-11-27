@@ -33,7 +33,7 @@ use std::sync::Arc;
 /// Source snapshot wire revision, checked by the public artifact envelope before decoding.
 /// Bump whenever the serialized source layout changes; provide an explicit migration or
 /// reject older revisions. Prepared engine compatibility is versioned separately.
-pub const SCHEMA_VERSION: u16 = 9;
+pub const SCHEMA_VERSION: u16 = 12;
 
 /// Borrowed-or-owned Serde transport for source state, separate from runtime workbook types.
 /// See the [module example](crate::model::snapshot) for capturing an owned copy before editing the source.

@@ -179,9 +179,12 @@ fn table_rows(
     }
 }
 
-/// Return the exclusive-of-header-and-totals span when it contains a data row.
+/// Return the data span, excluding header, totals, and insert placeholder rows.
 fn data_rows(table: &WorksheetTable) -> Option<(u32, u32)> {
     let first = table.first.row.checked_add(u32::from(table.header_row))?;
-    let last = table.last.row.checked_sub(u32::from(table.totals_row))?;
+    let last = table
+        .last
+        .row
+        .checked_sub(u32::from(table.totals_row) + u32::from(table.insert_row))?;
     (first <= last).then_some((first, last))
 }

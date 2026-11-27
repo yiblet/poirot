@@ -144,6 +144,7 @@ fn decode_table(
                             last: last.parse::<CellAddress>()?,
                             header_row: row_flag(&element, "headerRowCount", true, path)?,
                             totals_row: row_flag(&element, "totalsRowCount", false, path)?,
+                            insert_row: flag(&element, "insertRow", path)?.unwrap_or(false),
                             columns: Vec::new(),
                         });
                         omitted |= unmodeled_attributes(
@@ -155,6 +156,7 @@ fn decode_table(
                                 "ref",
                                 "headerRowCount",
                                 "totalsRowCount",
+                                "insertRow",
                             ],
                         )?;
                     }
@@ -253,4 +255,14 @@ fn row_flag(
 /// Describe malformed table records and relationship references.
 fn invalid(name: &str) -> ModelError {
     ModelError::InvalidWorksheetTable { name: name.into() }
+}
+
+/// Decode the defined bool spellings while retaining absence of the attribute.
+fn flag(element: &BytesStart<'_>, key: &str, path: &str) -> Result<Option<bool>, IoError> {
+    match attr(element, key)?.as_deref() {
+        Some("1" | "true") => Ok(Some(true)),
+        Some("0" | "false") => Ok(Some(false)),
+        None => Ok(None),
+        Some(_) => Err(invalid(path).into()),
+    }
 }

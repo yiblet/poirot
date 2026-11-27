@@ -99,6 +99,9 @@ fn encode(table: &WorksheetTable) -> Result<Vec<u8>, IoError> {
     ] {
         root.push_attribute(attribute);
     }
+    if table.insert_row {
+        root.push_attribute(("insertRow", "1"));
+    }
     write_event(&mut writer, Event::Start(root))?;
     let mut columns = BytesStart::new("tableColumns");
     let count = table.columns.len().to_string();

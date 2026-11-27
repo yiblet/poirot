@@ -17,6 +17,8 @@ pub struct WorksheetTable {
     pub header_row: bool,
     /// Whether the last row contains totals.
     pub totals_row: bool,
+    /// Whether the table includes an entry placeholder before the optional totals row.
+    pub insert_row: bool,
     /// Columns in worksheet order.
     pub columns: Vec<TableColumn>,
 }
@@ -49,7 +51,10 @@ impl WorksheetTable {
             || self.name.as_deref().is_some_and(str::is_empty)
             || self.display_name.is_empty()
             || (width as usize) != self.columns.len()
-            || height < u32::from(self.header_row) + u32::from(self.totals_row)
+            || height
+                < u32::from(self.header_row)
+                    + u32::from(self.totals_row)
+                    + u32::from(self.insert_row)
             || sheet_tables.into_iter().any(|other| {
                 self.first.row <= other.last.row
                     && other.first.row <= self.last.row

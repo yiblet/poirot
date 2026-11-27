@@ -113,6 +113,62 @@ fn dynamic_spills_cannot_cross_table_boundaries() {
 }
 
 #[test]
+fn table_insert_row_is_excluded_from_data_after_round_trips() {
+    use poirot::model::{CellError, CellValue};
+
+    // The Open XML table definition reserves a distinct row for insertRow.
+    // A populated worksheet cell in that slot must not become table data.
+    let bytes =
+        rewrite_table(|xml| xml.replace(r#"ref="A1:B4""#, r#"ref="A1:B3" insertRow="true""#));
+    let mut book = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    book.sheet_mut(0).unwrap().remove("B3").unwrap();
+    let xlsx = write_xlsx_to_buffer(&book).unwrap();
+    let snapshot = book.save_snapshot().to_buffer().unwrap();
+    let restored = Workbook::restore_snapshot()
+        .from_bytes(&snapshot)
+        .unwrap()
+        .into_evaluation(Default::default())
+        .unwrap()
+        .evaluation
+        .into_workbook();
+
+    for mut workbook in [
+        book,
+        read_workbook_bytes::<Workbook>(&xlsx).unwrap(),
+        restored,
+    ] {
+        let table = &workbook.sheet(0).unwrap().tables()[0];
+        assert!(table.insert_row && table.totals_row);
+        workbook.recalculate().unwrap();
+        for (address, expected) in [
+            ("A2", CellValue::Number(3.)),
+            ("D1", CellValue::Error(CellError::Ref)),
+            ("D2", CellValue::Number(7.)),
+        ] {
+            assert_eq!(
+                workbook
+                    .stored_cell("Data", address)
+                    .unwrap()
+                    .unwrap()
+                    .value,
+                expected
+            );
+        }
+    }
+}
+
+#[test]
+fn table_insert_row_must_fit_alongside_headers_and_totals() {
+    let bytes = rewrite_table(|xml| xml.replace(r#"ref="A1:B4""#, r#"ref="A1:B2" insertRow="1""#));
+    assert!(matches!(
+        read_workbook_bytes::<Workbook>(&bytes),
+        Err(IoError::Model(
+            poirot_io::ModelError::InvalidWorksheetTable { .. }
+        ))
+    ));
+}
+
+#[test]
 fn invalid_column_metadata_is_refused() {
     let bytes =
         rewrite_table(|xml| xml.replace(r#"id="2" name="Twice""#, r#"id="1" name="Twice""#));
