@@ -7,12 +7,14 @@ on:
       - '**/*.rs'
       - '**/Cargo.toml'
       - '**/Cargo.lock'
+      - '.github/workflows/rust-tests.yml'
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - '**/*.rs'
       - '**/Cargo.toml'
       - '**/Cargo.lock'
+      - '.github/workflows/rust-tests.yml'
   workflow_dispatch:
     inputs:
       all-builds:
@@ -54,6 +56,12 @@ jobs:
         run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
       - name: Check formatting
         run: cargo fmt --all -- --check
+      - name: Set up Kache
+        uses: kunobi-ninja/kache-action@061011817fd04b0e460f79d6bb3c115b1fc8f029 # v1
+        with:
+          version: '2.4.0'
+          cache-key-prefix: kache-lint
+          pr-comment: 'false'
       - name: Lint all targets and features
         run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
       - name: Build API documentation
@@ -122,5 +130,11 @@ jobs:
           persist-credentials: false
       - name: Install Rust
         run: rustup toolchain install ${{ matrix.toolchain }} --profile minimal
+      - name: Set up Kache
+        uses: kunobi-ninja/kache-action@061011817fd04b0e460f79d6bb3c115b1fc8f029 # v1
+        with:
+          version: '2.4.0'
+          cache-key-prefix: kache-test-${{ matrix.toolchain }}-${{ matrix.flags || 'default' }}
+          pr-comment: 'false'
       - name: Test workspace
         run: cargo test --workspace ${{ matrix.flags }} --locked
