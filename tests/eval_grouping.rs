@@ -528,3 +528,105 @@ fn generated_headers_obey_utf16_limits_and_intermediate_text_budgets() {
         EvaluationOutcome::Aborted { .. }
     ));
 }
+
+#[test]
+fn groupby_invokes_unary_lambdas_in_source_order_for_groups_and_totals() {
+    let mut book = Workbook::new();
+    book.add_sheet("S").unwrap();
+    book.define_name(
+        "Digits",
+        "LAMBDA(items,REDUCE(0,items,LAMBDA(a,b,a*10+b)))",
+        None,
+    )
+    .unwrap();
+    for (source, expected) in [
+        (
+            "INDEX(GROUPBY({2;1;1},{2;3;1},Digits,0,1),1,2)",
+            CellValue::Number(31.),
+        ),
+        (
+            "INDEX(GROUPBY({2;1;1},{2;3;1},Digits,0,1),3,2)",
+            CellValue::Number(231.),
+        ),
+        (
+            "INDEX(LET(f,LAMBDA(x,SUM(x)*2),GROUPBY({1;1},{2;3},f,0,0)),1,2)",
+            CellValue::Number(10.),
+        ),
+        (
+            "INDEX(GROUPBY({1;1},{2;3},LAMBDA(x,x),0,0),1,2)",
+            CellValue::Error(CellError::Calc),
+        ),
+        (
+            "GROUPBY({1;1},{2;3},LAMBDA(x,y,x),0,0)",
+            CellValue::Error(CellError::Value),
+        ),
+        (
+            "GROUPBY({1;1},{2;3},UnknownReducer,0,0)",
+            CellValue::Error(CellError::Name),
+        ),
+    ] {
+        assert_eq!(result(&book, source), expected, "{source}");
+    }
+}
+
+#[test]
+fn groupby_callback_reads_invalidate_only_when_consumed() {
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    sheet.set_value("F1", 2.).unwrap();
+    sheet.set_value("F2", 5.).unwrap();
+    sheet
+        .set_formula(
+            "A1",
+            "GROUPBY({1;1;2},{2;3;8},LAMBDA(x,IF(ROWS(x)=3,1/$F$2,SUM(x)*$F$1)),0,0)",
+        )
+        .unwrap();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    let context = EvaluationContext::default();
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(target("B1"))
+            .unwrap(),
+        CellValue::Number(10.)
+    );
+    overlay.set_value(target("F2"), 0.).unwrap();
+    {
+        let mut evaluation = overlay.evaluation(&context).unwrap();
+        assert_eq!(
+            evaluation.cell(target("B1")).unwrap(),
+            CellValue::Number(10.)
+        );
+        assert_eq!(evaluation.usage().formula_executions, 0);
+    }
+    overlay.set_value(target("F1"), 3.).unwrap();
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(target("B1"))
+            .unwrap(),
+        CellValue::Number(15.)
+    );
+}
+
+#[test]
+fn groupby_sorts_custom_aggregates_with_stable_ties() {
+    let hierarchical = "GROUPBY({1,1;1,2;2,1;2,2},{1;2;8;4},LAMBDA(x,SUM(x)),0,0,-3)";
+    assert_eq!(
+        formula(&format!("INDEX({hierarchical},1,1)")),
+        CellValue::Number(2.)
+    );
+    assert_eq!(
+        formula(&format!("INDEX({hierarchical},1,3)")),
+        CellValue::Number(8.)
+    );
+    let source = "GROUPBY({1;2;3},{2;3;3},LAMBDA(x,SUM(x)),0,0,-2)";
+    for (row, key) in [(1, 2.), (2, 3.), (3, 1.)] {
+        assert_eq!(
+            formula(&format!("INDEX({source},{row},1)")),
+            CellValue::Number(key)
+        );
+    }
+}

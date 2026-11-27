@@ -1,14 +1,16 @@
 //! Lazy contextual aggregation projection and scoped alias resolution.
 use super::call_host::CallHost;
+use super::group_reducer::GroupReducer;
 use crate::eval::compile::bytecode::aggregation::{Candidate, Plan};
 use crate::eval::limits::EvaluationError;
 use crate::eval::ports::DependencyRead;
-use crate::eval::session::{NameResolver, ReadRecorder};
-use crate::eval::values::{FunctionResult, identifier_failure};
+use crate::eval::session::{FormulaExecution, NameResolver, ReadRecorder};
+use crate::eval::values::{FunctionResult, Value, identifier_failure};
+use crate::eval::vm::LambdaExecutor;
 use crate::model::CellError;
 use poirot_functions::statistics::BuiltinAggregator;
 
-/// Prepared built-in aggregation handlers for grouping kernels.
+/// Prepared built-in handlers or one unary callback for grouping kernels.
 /// The scalar or one-axis vector shape preserves the aggregation argument's layout
 /// without converting handler identities into worksheet values.
 pub(in crate::eval) struct Aggregators {
@@ -16,24 +18,57 @@ pub(in crate::eval) struct Aggregators {
     pub(in crate::eval) rows: usize,
     /// Horizontal aggregation count.
     pub(in crate::eval) columns: usize,
-    /// Row-major built-in identities.
-    pub(in crate::eval) members: Vec<BuiltinAggregator>,
+    /// Row-major reducer identities.
+    pub(in crate::eval) members: Vec<GroupReducer>,
 }
 
 impl Aggregators {
-    /// Project a deferred aggregation role without evaluating it as worksheet data.
+    /// Resolve built-in notation or evaluate a single callable operand.
     pub(in crate::eval) fn resolve(
         host: &mut CallHost<'_, '_>,
         index: usize,
+        allow_relative: bool,
     ) -> FunctionResult<Self> {
         let plan = host
             .arguments
             .get(index)
             .ok_or(CellError::Value)?
             .aggregation()
-            .map_err(|_| host.budget_exceeded())?
-            .ok_or(CellError::Value)?;
-        Self::resolve_plan(host, &plan, 0)
+            .map_err(|_| host.budget_exceeded())?;
+        if let Some(plan) = plan {
+            return Self::resolve_plan(host, &plan, 0, allow_relative);
+        }
+        host.prepare(index)?;
+        let value = host.operand(index).ok_or(CellError::Value)?.value();
+        Self::single_callback(host, value, allow_relative)
+    }
+
+    /// Retain only the checked callable payload in the reducer vector.
+    fn single_callback(
+        host: &CallHost<'_, '_>,
+        value: &Value,
+        allow_relative: bool,
+    ) -> FunctionResult<Self> {
+        let arity = LambdaExecutor::callback_arity(value, CellError::Value)?;
+        let Value::Callable(callback) = value else {
+            return Err(EvaluationError::StalePlan.into());
+        };
+        let reducer = match arity {
+            1 => GroupReducer::Callback(callback.clone()),
+            2 if allow_relative => GroupReducer::RelativeCallback(callback.clone()),
+            _ => return Err(CellError::Value.into()),
+        };
+        let mut members = Vec::new();
+        members
+            .try_reserve_exact(1)
+            .map_err(|source| host.reservation_failure(source))?;
+        // SAFETY: One element was reserved in the empty vector above.
+        members.push(reducer);
+        Ok(Self {
+            rows: 1,
+            columns: 1,
+            members,
+        })
     }
 
     /// Resolve one lowered aggregation plan, following named aliases to a bounded depth.
@@ -41,6 +76,7 @@ impl Aggregators {
         host: &mut CallHost<'_, '_>,
         plan: &Plan,
         depth: usize,
+        allow_relative: bool,
     ) -> FunctionResult<Self> {
         if depth >= crate::eval::compile::bytecode::DEPTH || !plan.valid() {
             return Err(CellError::Value.into());
@@ -51,7 +87,16 @@ impl Aggregators {
         let mut columns = plan.columns;
         for candidate in &plan.members {
             host.charge_work(1)?;
-            let projected = Self::resolve_candidate(host, candidate, depth.saturating_add(1))?;
+            let projected =
+                Self::resolve_candidate(host, candidate, depth.saturating_add(1), allow_relative)?;
+            if plan.members.len() != 1
+                && projected
+                    .members
+                    .iter()
+                    .any(|member| !matches!(member, GroupReducer::Builtin(_)))
+            {
+                return Err(CellError::Value.into());
+            }
             if plan.members.len() == 1 {
                 rows = projected.rows;
                 columns = projected.columns;
@@ -94,6 +139,7 @@ impl Aggregators {
         host: &mut CallHost<'_, '_>,
         candidate: &Candidate,
         depth: usize,
+        allow_relative: bool,
     ) -> FunctionResult<Aggregators> {
         let scope = NameResolver::new(host.session)
             .sheet_named(host.sheet, candidate.sheet.as_deref())?
@@ -159,9 +205,17 @@ impl Aggregators {
                     &syntax,
                     host.session.sources.extensions,
                 )
-                .map_err(|_| host.budget_exceeded())?
-                .ok_or(CellError::Value)?;
-                Self::resolve_plan(host, &plan, depth)
+                .map_err(|_| host.budget_exceeded())?;
+                if let Some(plan) = plan {
+                    return Self::resolve_plan(host, &plan, depth, allow_relative);
+                }
+                let prepared = host.session.sources.prepare_source(formula);
+                let value = FormulaExecution::new(host.session).prepared_expression(
+                    host.sheet,
+                    host.address,
+                    &prepared,
+                )?;
+                Self::single_callback(host, &value, allow_relative)
             })();
             host.session.state.runtime.stack.names.remove(&key);
             return result;
@@ -175,7 +229,7 @@ impl Aggregators {
             .try_reserve_exact(1)
             .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
         // SAFETY: One slot was reserved locally and the vector is still empty.
-        members.push(operation);
+        members.push(GroupReducer::Builtin(operation));
         Ok(Self {
             rows: 1,
             columns: 1,

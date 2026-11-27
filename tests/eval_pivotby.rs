@@ -159,6 +159,22 @@ fn multilevel_both_axes_subtotals_and_relative_sets() {
     ] {
         let call = format!("INDEX(PIVOTBY({arguments},PERCENTOF,0,0,,0,,,{relative}),3,3)");
         assert_eq!(formula(&call), expected.into(), "{call}");
+        let callback = format!(
+            "INDEX(PIVOTBY({arguments},LAMBDA(subset,totalset,SUM(subset)/SUM(totalset)),0,0,,0,,,{relative}),3,3)"
+        );
+        assert_eq!(formula(&callback), expected.into(), "{callback}");
+    }
+    for (call, error) in [
+        (
+            "INDEX(PIVOTBY({1;2},{10;10},{2;3},LAMBDA(x,y,y),0,0,,0),2,2)",
+            CellError::Calc,
+        ),
+        (
+            "INDEX(PIVOTBY(1,10,0,LAMBDA(x,y,SUM(x)/SUM(y)),0,0,,0),2,2)",
+            CellError::Div0,
+        ),
+    ] {
+        assert_eq!(formula(call), CellValue::Error(error));
     }
     let reverse = format!("PIVOTBY({arguments},SUM,0,-2,{{1,-2}},-2,{{1,-2}})");
     assert_eq!(formula(&format!("INDEX({reverse},3,3)")), 41.0.into());
@@ -191,11 +207,10 @@ fn invalid_shapes_controls_and_arity_remain_spreadsheet_errors() {
 }
 
 #[test]
-fn valid_unimplemented_callable_and_layout_modes_are_operational() {
+fn valid_unimplemented_layout_modes_are_operational() {
     let mut book = Workbook::new();
     book.add_sheet("S").unwrap();
     for source in [
-        "PIVOTBY(1,2,3,LAMBDA(x,SUM(x)),0)",
         "PIVOTBY(1,2,{3,4},SUM,0)",
         "PIVOTBY(1,2,3,HSTACK(SUM,AVERAGE),0)",
         "PIVOTBY(1,2,3,SUM,2)",
@@ -335,11 +350,7 @@ fn pivot_layout_and_reducer_rejections_are_typed() {
     use poirot::eval::EvaluationReasonError;
     let mut book = Workbook::new();
     book.add_sheet("S").unwrap();
-    for (formula, category) in [
-        ("PIVOTBY(1,2,3,SUM,2)", 0),
-        ("PIVOTBY(1,2,{3,4},SUM,0)", 1),
-        ("PIVOTBY(1,2,3,1,0)", 2),
-    ] {
+    for (formula, category) in [("PIVOTBY(1,2,3,SUM,2)", 0), ("PIVOTBY(1,2,{3,4},SUM,0)", 1)] {
         let outcome = run_formula_with_configuration(
             &book,
             0,
@@ -359,7 +370,192 @@ fn pivot_layout_and_reducer_rejections_are_typed() {
             (category, reason),
             (0, EvaluationReasonError::PivotFieldHeaderPublication)
                 | (1, EvaluationReasonError::PivotMultipleValuesOrReducers)
-                | (2, EvaluationReasonError::PivotCallableReducer)
         ));
+    }
+}
+
+#[test]
+fn pivotby_invokes_unary_lambdas_on_nonempty_intersections_and_totals() {
+    for (source, expected) in [
+        (
+            "INDEX(PIVOTBY({1;1;2},{10;10;20},{2;3;4},LAMBDA(x,SUM(x)*2),0,1,,1),2,2)",
+            CellValue::Number(10.),
+        ),
+        (
+            "INDEX(PIVOTBY({1;1;2},{10;10;20},{2;3;4},LAMBDA(x,SUM(x)*2),0,1,,1),2,3)",
+            CellValue::Text("".into()),
+        ),
+        (
+            "INDEX(PIVOTBY({1;1;2},{10;10;20},{2;3;4},LAMBDA(x,SUM(x)*2),0,1,,1),4,4)",
+            CellValue::Number(18.),
+        ),
+        (
+            "INDEX(PIVOTBY({1;1},{10;10},{2;3},LAMBDA(x,x),0,0,,0),2,2)",
+            CellValue::Error(CellError::Calc),
+        ),
+        (
+            "PIVOTBY(1,2,3,LAMBDA(x,y,z,x),0)",
+            CellValue::Error(CellError::Value),
+        ),
+        (
+            "PIVOTBY(1,2,3,UnknownReducer,0)",
+            CellValue::Error(CellError::Name),
+        ),
+    ] {
+        assert_eq!(formula(source), expected, "{source}");
+    }
+}
+
+#[test]
+fn pivotby_custom_callbacks_are_budgeted_on_included_groups() {
+    let mut book = Workbook::new();
+    book.add_sheet("S").unwrap();
+    let outcome = run_formula_with_configuration(
+        &book,
+        0,
+        target("Z100").address,
+        "PIVOTBY(1,2,3,LAMBDA(x,SUM(SEQUENCE(1000))),0,0,,0)",
+        &RunConfiguration::default(),
+        EvaluationBudgets {
+            materialized_values: 20,
+            ..Default::default()
+        },
+    );
+    assert!(matches!(
+        outcome,
+        EvaluationOutcome::Aborted {
+            failure: EvaluationError::Budget(_),
+            ..
+        }
+    ));
+}
+
+#[test]
+fn pivotby_checks_output_capacity_before_running_custom_sort_reducers() {
+    use poirot::eval::functions::{extensions::*, registry::Arity};
+
+    let mut book = Workbook::new();
+    book.add_sheet("S").unwrap();
+    let mut registry = ExtensionRegistry::new();
+    registry
+        .register(
+            ExtensionNamespace::UserDefined,
+            "COUNT_CALL",
+            "pivot-budget-test",
+            ExtensionContract {
+                arity: Arity {
+                    minimum: 0,
+                    maximum: 0,
+                },
+                evaluation: ExtensionEvaluationStrategy::Eager,
+                capabilities: ExtensionCapabilities {
+                    references: false,
+                    arrays: false,
+                    context: false,
+                },
+                cacheability: ExtensionCacheability::Volatile,
+            },
+            |_: &mut dyn ExtensionHost| Ok(ExtensionOutput::Scalar(1.0.into())),
+        )
+        .unwrap();
+    // Twelve groups per axis plus one label row and column produce 169 cells.
+    // A limit of 100 admits each input and grouping axis independently.
+    let source = "PIVOTBY(SEQUENCE(12),SEQUENCE(12),SEQUENCE(12),LAMBDA(x,COUNT_CALL()),0,0,-2,0)";
+    let run = |budgets| {
+        run_formula_with_extensions(
+            &book,
+            0,
+            target("Z100").address,
+            source,
+            ExtensionExecution {
+                registry: &registry,
+                context: Default::default(),
+                budgets,
+            },
+        )
+    };
+    let failed = run(EvaluationBudgets {
+        materialized_values: 100,
+        ..Default::default()
+    });
+    assert!(matches!(
+        failed.outcome,
+        EvaluationOutcome::Aborted {
+            failure: EvaluationError::Budget(_),
+            ..
+        }
+    ));
+    assert!(failed.trace.invocations.is_empty());
+    let completed = run(Default::default());
+    assert!(matches!(
+        completed.outcome,
+        EvaluationOutcome::Complete { .. }
+    ));
+    assert!(!completed.trace.invocations.is_empty());
+}
+
+#[test]
+fn pivotby_callback_edits_respect_output_visibility() {
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    sheet.set_value("F1", 2.).unwrap();
+    sheet.set_value("F2", 5.).unwrap();
+    sheet
+        .set_formula(
+            "A1",
+            "PIVOTBY({1;1;2},{10;20;20},{2;3;4},LAMBDA(x,IF(ROWS(x)>1,1/$F$2,SUM(x)*$F$1)),0,0,,0)",
+        )
+        .unwrap();
+    let context = EvaluationContext::default();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(target("B2"))
+            .unwrap(),
+        CellValue::Number(4.)
+    );
+    overlay.set_value(target("F2"), 0.).unwrap();
+    {
+        let mut run = overlay.evaluation(&context).unwrap();
+        assert_eq!(run.cell(target("B2")).unwrap(), CellValue::Number(4.));
+        assert_eq!(run.usage().formula_executions, 0);
+    }
+    overlay.set_value(target("F1"), 3.).unwrap();
+    assert_eq!(
+        overlay
+            .evaluation(&context)
+            .unwrap()
+            .cell(target("B2"))
+            .unwrap(),
+        CellValue::Number(6.)
+    );
+}
+
+#[test]
+fn pivotby_sorts_custom_aggregates_and_updates_after_source_edits() {
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    for (address, value) in [("G1", 1.), ("G2", 2.), ("G3", 8.), ("G4", 4.)] {
+        sheet.set_value(address, value).unwrap();
+    }
+    sheet.set_value("F1", 0.).unwrap();
+    sheet
+        .set_formula(
+            "A1",
+            "PIVOTBY({1;1;2;2},{10;20;10;20},G1:G4,LAMBDA(x,IF(AND(ROWS(x)=2,SUM(x)=3),SUM(x)+$F$1,SUM(x))),0,0,-2,0,2)",
+        )
+        .unwrap();
+    let context = EvaluationContext::default();
+    let mut overlay = Overlay::with_workbook(&book).build().unwrap();
+    for (value, row, first_column) in [(0., 2., 20.), (10., 1., 20.)] {
+        overlay.set_value(target("F1"), value).unwrap();
+        let mut run = overlay.evaluation(&context).unwrap();
+        assert_eq!(run.cell(target("A2")).unwrap(), CellValue::Number(row));
+        assert_eq!(
+            run.cell(target("B1")).unwrap(),
+            CellValue::Number(first_column)
+        );
     }
 }

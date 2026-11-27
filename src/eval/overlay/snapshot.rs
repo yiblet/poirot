@@ -22,9 +22,9 @@ use std::sync::Arc;
 /// including changes that leave Serde field layouts intact. This is separate from
 /// durable workbook-source versioning owned by the public file envelope.
 pub const COMPATIBILITY_REVISION: u64 = match poirot_functions::text::regex::Program::BACKEND {
-    poirot_functions::text::RegexBackend::Pcre2 => 104,
+    poirot_functions::text::RegexBackend::Pcre2 => 105,
     // Source workbooks remain portable; retained results must not cross regex engines.
-    poirot_functions::text::RegexBackend::Rust => 104 | (1 << 63),
+    poirot_functions::text::RegexBackend::Rust => 105 | (1 << 63),
 };
 
 /// Serde view of a baseline workbook and its sparse overlay state.

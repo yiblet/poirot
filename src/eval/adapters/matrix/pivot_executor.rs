@@ -1,17 +1,20 @@
 //! PIVOTBY connects workbook reads to independent grouping and reduction kernels.
-//! Supports one value column and one built-in reducer, with field_headers 0/1 or
+//! Supports one value column and one reducer, with field_headers 0/1 or
 //! single-level automatic detection. Field-header output, multiple values,
-//! reducer vectors and callable values report UnsupportedCapability.
+//! reducer vectors report UnsupportedCapability.
 //! Reducer names come from the shared BuiltinAggregator::from_name mapping;
 //! unrecognized names retain the shared resolver's #NAME? outcome.
 //! Contract: <https://support.microsoft.com/en-us/excel/functions/pivotby-function>
 use super::grouping::{
-    aggregate_value, append, generated_text, normalized, option, ratio, reserve,
+    aggregate_group, append, callback_column, callback_scalar, generated_text, normalized, option,
+    ratio, reserve,
 };
 use super::pivot_axis::PivotAxis;
 use super::selection::compare;
 use crate::eval::adapters::elementwise::{WholeCollection, controls::IntegerControl, matrices};
-use crate::eval::host::{Aggregators, CallHost, OperandKind, OperandReader, ScalarOperand};
+use crate::eval::host::{
+    Aggregators, CallHost, GroupReducer, OperandKind, OperandReader, ScalarOperand,
+};
 use crate::eval::limits::{CapabilityId, EvalResult};
 use crate::eval::session::Session;
 use crate::eval::values::{FunctionError, FunctionResult, Value, err};
@@ -101,14 +104,13 @@ impl<'h, 'call, 'workbook> PivotExecutor<'h, 'call, 'workbook> {
         .map_err(|error| matrices::failure(self.host, error))
     }
 
-    /// Apply field or aggregate sorting within the hierarchy and position its totals.
-    fn layout(
+    /// Read the requested sort fields and total depth for one pivot axis.
+    fn layout_controls(
         &mut self,
         axis: &PivotAxis,
         total_index: usize,
         sort_index: usize,
-        totals: &[CellValue],
-    ) -> FunctionResult<Vec<usize>> {
+    ) -> FunctionResult<(i64, Vec<i64>)> {
         let fields = axis.keys.cols();
         let depth = option(self.host, total_index)?.unwrap_or(fields as i64);
         if depth.unsigned_abs() > fields as u64 {
@@ -141,6 +143,17 @@ impl<'h, 'call, 'workbook> PivotExecutor<'h, 'call, 'workbook> {
                 append(&mut sorts, field as i64)?;
             }
         }
+        Ok((depth, sorts))
+    }
+
+    /// Apply field or aggregate sorting within the hierarchy and position its totals.
+    fn layout(
+        &mut self,
+        axis: &PivotAxis,
+        (depth, sorts): (i64, Vec<i64>),
+        totals: Option<&[CellValue]>,
+    ) -> FunctionResult<Vec<usize>> {
+        let fields = axis.keys.cols();
         let comparison = |left: usize, right: usize| {
             for &sort in &sorts {
                 // SAFETY: Every selector is nonzero by the local validation or positive default loop above.
@@ -161,7 +174,7 @@ impl<'h, 'call, 'workbook> PivotExecutor<'h, 'call, 'workbook> {
                                 .zip(axis.keys.get(b, index).ok())
                         })
                 } else {
-                    totals.get(left).zip(totals.get(right))
+                    totals.and_then(|totals| totals.get(left).zip(totals.get(right)))
                 };
                 if let Some((a, b)) = pair {
                     let order = compare(a, b);
@@ -199,8 +212,18 @@ impl<'h, 'call, 'workbook> PivotExecutor<'h, 'call, 'workbook> {
         &mut self,
         values: &Matrix<ScalarOperand>,
         members: &[usize],
-        operation: BuiltinAggregator,
+        operation: &GroupReducer,
     ) -> FunctionResult<CellValue> {
+        let operands = self.operands(values, members)?;
+        aggregate_group(self.host, operation, &operands)
+    }
+
+    /// Collect the already admitted source cells for an ordered intersection.
+    fn operands<'v>(
+        &mut self,
+        values: &'v Matrix<ScalarOperand>,
+        members: &[usize],
+    ) -> FunctionResult<Vec<&'v ScalarOperand>> {
         let mut operands = reserve(self.host, members.len())?;
         for &row in members {
             append(
@@ -210,7 +233,7 @@ impl<'h, 'call, 'workbook> PivotExecutor<'h, 'call, 'workbook> {
                     .map_err(|error| matrices::failure(self.host, error))?,
             )?;
         }
-        aggregate_value(self.host, operation, &operands)
+        Ok(operands)
     }
 
     /// Find records shared by both groups after checking work and result-size budgets.
@@ -271,7 +294,7 @@ impl<'h, 'call, 'workbook> PivotExecutor<'h, 'call, 'workbook> {
         axes: (&PivotAxis, &PivotAxis),
         values: &Matrix<ScalarOperand>,
         position: (usize, usize),
-        operation: BuiltinAggregator,
+        operation: &GroupReducer,
         relative: PivotRelativeTo,
     ) -> FunctionResult<CellValue> {
         let (rows, columns) = axes;
@@ -284,10 +307,44 @@ impl<'h, 'call, 'workbook> PivotExecutor<'h, 'call, 'workbook> {
             // An absent intersection does not invoke the reducer, including PERCENTOF.
             return generated_text(self.host, &[]);
         }
-        let value = self.reduce(values, &members, operation)?;
-        if operation != BuiltinAggregator::PercentOf {
-            return Ok(value);
+        match operation {
+            GroupReducer::RelativeCallback(callback) => {
+                let denominator = self.relative_members(axes, position, relative)?;
+                let subset = self.operands(values, &members)?;
+                let total = self.operands(values, &denominator)?;
+                let subset = callback_column(self.host, &subset)?;
+                let total = callback_column(self.host, &total)?;
+                callback_scalar(
+                    self.host,
+                    &Value::Callable(callback.clone()),
+                    [subset, total].into_iter(),
+                )
+            }
+            GroupReducer::Builtin(BuiltinAggregator::PercentOf) => {
+                let value = self.reduce(values, &members, operation)?;
+                let denominator = self.relative_members(axes, position, relative)?;
+                Ok(ratio(
+                    value,
+                    self.reduce(
+                        values,
+                        &denominator,
+                        &GroupReducer::Builtin(BuiltinAggregator::Sum),
+                    )?,
+                ))
+            }
+            _ => self.reduce(values, &members, operation),
         }
+    }
+
+    /// Select the denominator membership used by PERCENTOF and relative callbacks.
+    fn relative_members(
+        &mut self,
+        axes: (&PivotAxis, &PivotAxis),
+        position: (usize, usize),
+        relative: PivotRelativeTo,
+    ) -> FunctionResult<Vec<usize>> {
+        let (rows, columns) = axes;
+        let (row, column) = position;
         let (r, c) = match relative {
             PivotRelativeTo::Column => (0, column),
             PivotRelativeTo::Row => (row, 0),
@@ -305,14 +362,35 @@ impl<'h, 'call, 'workbook> PivotExecutor<'h, 'call, 'workbook> {
                 column,
             ),
         };
-        let denominator = self.intersection(
+        self.intersection(
             rows.members.get(r).ok_or(CellError::Value)?,
             columns.members.get(c).ok_or(CellError::Value)?,
-        )?;
-        Ok(ratio(
-            value,
-            self.reduce(values, &denominator, BuiltinAggregator::Sum)?,
-        ))
+        )
+    }
+
+    /// Calculate publication dimensions from the visible groups and axis labels.
+    fn output_shape(
+        &mut self,
+        rows: &PivotAxis,
+        columns: &PivotAxis,
+        row_count: usize,
+        column_count: usize,
+    ) -> FunctionResult<(usize, usize, usize)> {
+        let output_rows = row_count
+            .checked_add(columns.keys.cols())
+            .ok_or_else(|| self.host.size_overflow())?;
+        let output_columns = column_count
+            .checked_add(rows.keys.cols())
+            .ok_or_else(|| self.host.size_overflow())?;
+        if output_rows > crate::model::MAX_ROWS as usize
+            || output_columns > crate::model::MAX_COLUMNS as usize
+        {
+            return Err(CellError::Num.into());
+        }
+        let count = output_rows
+            .checked_mul(output_columns)
+            .ok_or_else(|| self.host.size_overflow())?;
+        Ok((output_rows, output_columns, count))
     }
 
     /// Build the cross-tab values and labels, then check the final spill dimensions.
@@ -328,14 +406,14 @@ impl<'h, 'call, 'workbook> PivotExecutor<'h, 'call, 'workbook> {
         {
             return Err(CellError::Value.into());
         }
-        let aggregators = Aggregators::resolve(self.host, 3)?;
+        let aggregators = Aggregators::resolve(self.host, 3, true)?;
         if aggregators.members.len() != 1 || value_shape.columns != 1 {
             return Err(self.host.unsupported(
                 CapabilityId::FunctionAdapter,
                 crate::eval::limits::EvaluationReasonError::PivotMultipleValuesOrReducers,
             ));
         }
-        let operation = *aggregators.members.first().ok_or(CellError::Value)?;
+        let operation = aggregators.members.first().ok_or(CellError::Value)?;
         let relative = match option(self.host, 10)?.unwrap_or(0) {
             0 => PivotRelativeTo::Column,
             1 => PivotRelativeTo::Row,
@@ -358,38 +436,82 @@ impl<'h, 'call, 'workbook> PivotExecutor<'h, 'call, 'workbook> {
         let values = matrices::collect(self.host, 2, included.iter().copied(), 1, |_, operand| {
             Ok(operand)
         })?;
-        let mut row_totals = reserve(self.host, rows.groups.len())?;
-        for row in 0..rows.groups.len() {
-            append(
-                &mut row_totals,
-                self.cell((&rows, &columns), &values, (row, 0), operation, relative)?,
-            )?;
-        }
-        let mut col_totals = reserve(self.host, columns.groups.len())?;
-        for column in 0..columns.groups.len() {
-            append(
-                &mut col_totals,
-                self.cell((&rows, &columns), &values, (0, column), operation, relative)?,
-            )?;
-        }
-        let row_layout = self.layout(&rows, 5, 6, &row_totals)?;
-        let col_layout = self.layout(&columns, 7, 8, &col_totals)?;
-        let output_rows = row_layout
-            .len()
-            .checked_add(columns.keys.cols())
-            .ok_or_else(|| self.host.size_overflow())?;
-        let output_cols = col_layout
-            .len()
-            .checked_add(rows.keys.cols())
-            .ok_or_else(|| self.host.size_overflow())?;
-        if output_rows > crate::model::MAX_ROWS as usize
-            || output_cols > crate::model::MAX_COLUMNS as usize
-        {
-            return Err(CellError::Num.into());
-        }
-        let count = output_rows
-            .checked_mul(output_cols)
-            .ok_or_else(|| self.host.size_overflow())?;
+        let (row_layout, col_layout, row_sort_values, col_sort_values) =
+            if !matches!(operation, GroupReducer::Builtin(_)) {
+                let row_controls = self.layout_controls(&rows, 5, 6)?;
+                let col_controls = self.layout_controls(&columns, 7, 8)?;
+                // Sorting affects group order only, so admit the output before any reducer runs.
+                let visible = |axis: &PivotAxis, depth| {
+                    axis.groups
+                        .iter()
+                        .filter(|group| group.visible(axis.keys.cols(), depth))
+                        .count()
+                };
+                let (_, _, count) = self.output_shape(
+                    &rows,
+                    &columns,
+                    visible(&rows, row_controls.0),
+                    visible(&columns, col_controls.0),
+                )?;
+                self.host.check_values_capacity(count)?;
+                let mut sort_values = |axis: &PivotAxis,
+                                       sorts: &[i64],
+                                       position: fn(usize) -> (usize, usize)|
+                 -> FunctionResult<Option<Vec<CellValue>>> {
+                    if !sorts
+                        .iter()
+                        .any(|sort| sort.unsigned_abs() > axis.keys.cols() as u64)
+                    {
+                        return Ok(None);
+                    }
+                    let mut totals = reserve(self.host, axis.groups.len())?;
+                    // The grand total is never a sibling sort key.
+                    append(&mut totals, CellValue::Blank)?;
+                    for index in 1..axis.groups.len() {
+                        append(
+                            &mut totals,
+                            self.cell(
+                                (&rows, &columns),
+                                &values,
+                                position(index),
+                                operation,
+                                relative,
+                            )?,
+                        )?;
+                    }
+                    Ok(Some(totals))
+                };
+                let row_sort_values = sort_values(&rows, &row_controls.1, |row| (row, 0))?;
+                let col_sort_values = sort_values(&columns, &col_controls.1, |column| (0, column))?;
+                (
+                    self.layout(&rows, row_controls, row_sort_values.as_deref())?,
+                    self.layout(&columns, col_controls, col_sort_values.as_deref())?,
+                    row_sort_values,
+                    col_sort_values,
+                )
+            } else {
+                let mut row_totals = reserve(self.host, rows.groups.len())?;
+                for row in 0..rows.groups.len() {
+                    append(
+                        &mut row_totals,
+                        self.cell((&rows, &columns), &values, (row, 0), operation, relative)?,
+                    )?;
+                }
+                let mut col_totals = reserve(self.host, columns.groups.len())?;
+                for column in 0..columns.groups.len() {
+                    append(
+                        &mut col_totals,
+                        self.cell((&rows, &columns), &values, (0, column), operation, relative)?,
+                    )?;
+                }
+                let row_controls = self.layout_controls(&rows, 5, 6)?;
+                let row_layout = self.layout(&rows, row_controls, Some(&row_totals))?;
+                let col_controls = self.layout_controls(&columns, 7, 8)?;
+                let col_layout = self.layout(&columns, col_controls, Some(&col_totals))?;
+                (row_layout, col_layout, None, None)
+            };
+        let (output_rows, output_cols, count) =
+            self.output_shape(&rows, &columns, row_layout.len(), col_layout.len())?;
         let mut output = reserve(self.host, count)?;
         for field in 0..columns.keys.cols() {
             for _ in 0..rows.keys.cols() {
@@ -404,13 +526,26 @@ impl<'h, 'call, 'workbook> PivotExecutor<'h, 'call, 'workbook> {
                 append(&mut output, self.label(&rows, row, field)?)?;
             }
             for &column in &col_layout {
-                let value = self.cell(
-                    (&rows, &columns),
-                    &values,
-                    (row, column),
-                    operation,
-                    relative,
-                )?;
+                let cached = match (row, column) {
+                    (row, 0) if row != 0 => {
+                        row_sort_values.as_ref().and_then(|values| values.get(row))
+                    }
+                    (0, column) if column != 0 => col_sort_values
+                        .as_ref()
+                        .and_then(|values| values.get(column)),
+                    _ => None,
+                };
+                let value = if let Some(cached) = cached {
+                    self.host.copy_cell_value(cached)?
+                } else {
+                    self.cell(
+                        (&rows, &columns),
+                        &values,
+                        (row, column),
+                        operation,
+                        relative,
+                    )?
+                };
                 append(&mut output, value)?;
             }
         }
@@ -435,18 +570,6 @@ pub(super) fn execute(
         return Ok(err(CellError::Value));
     }
     let mut host = CallHost::new_array_slots(session, sheet, address, args, &[0, 1, 2, 6, 8, 9]);
-    if args
-        .get(3)
-        .ok_or_else(|| host.budget_exceeded())?
-        .aggregation()
-        .map_err(|_| host.budget_exceeded())?
-        .is_none()
-    {
-        return Err(host.capability_failure(
-            CapabilityId::FunctionAdapter,
-            crate::eval::limits::EvaluationReasonError::PivotCallableReducer,
-        ));
-    }
     match PivotExecutor::new(&mut host).execute(address) {
         Ok(value) => Ok(value),
         Err(FunctionError::Spreadsheet(error)) => Ok(err(error)),

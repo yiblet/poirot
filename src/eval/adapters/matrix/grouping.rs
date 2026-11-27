@@ -10,14 +10,15 @@ use crate::eval::adapters::elementwise::{
 };
 use crate::eval::functions::registry::MatrixFunction;
 use crate::eval::host::{
-    Aggregators, ArgumentCoercion, CallHost, OperandKind, OperandReader, ScalarOperand,
+    Aggregators, ArgumentCoercion, CallHost, GroupReducer, OperandKind, OperandReader,
+    ScalarOperand,
 };
 use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::session::Session;
 use crate::eval::values::{
     FunctionError, FunctionResult, OperandOrigin, Value, err, numeric_outcome,
 };
-use crate::eval::vm::ArgumentsRef;
+use crate::eval::vm::{ArgumentsRef, Shape};
 use crate::model::CellValue::{Blank, Boolean, Error, Number};
 use crate::model::{CellAddress, CellError, CellValue};
 use poirot_functions::matrix::{Axis, Budget, FieldRelationship, Matrix};
@@ -234,6 +235,57 @@ pub(super) fn aggregate_value(
     }
 }
 
+/// Invoke a unary grouping callback on a column of source-order values.
+pub(super) fn aggregate_group(
+    host: &mut CallHost<'_, '_>,
+    reducer: &GroupReducer,
+    members: &[&ScalarOperand],
+) -> FunctionResult<CellValue> {
+    let callback = match reducer {
+        GroupReducer::Builtin(operation) => return aggregate_value(host, *operation, members),
+        GroupReducer::Callback(callback) => Value::Callable(std::sync::Arc::clone(callback)),
+        GroupReducer::RelativeCallback(_) => return Err(EvaluationError::StalePlan.into()),
+    };
+    let array = callback_column(host, members)?;
+    callback_scalar(host, &callback, std::iter::once(array))
+}
+
+/// Materialize one callback column in source order using the ordinary array budget.
+pub(super) fn callback_column(
+    host: &mut CallHost<'_, '_>,
+    members: &[&ScalarOperand],
+) -> FunctionResult<Value> {
+    matrices::generate(
+        host,
+        members.len(),
+        1,
+        host.target().address,
+        |host, row, _| {
+            host.copy_cell_value(&members.get(row).ok_or(EvaluationError::StalePlan)?.value)
+        },
+    )
+}
+
+/// Execute a grouping callable and project its single worksheet result.
+pub(super) fn callback_scalar(
+    host: &mut CallHost<'_, '_>,
+    callback: &Value,
+    operands: impl ExactSizeIterator<Item = Value>,
+) -> FunctionResult<CellValue> {
+    let value = host.invoke_callback(callback, operands)?;
+    if !matches!(
+        Shape::inspect(&value),
+        Some(Shape {
+            rows: 1,
+            columns: 1
+        })
+    ) || matches!(value, Value::Missing)
+    {
+        return Ok(Error(CellError::Calc));
+    }
+    host.select_legacy_scalar(value).map_err(Into::into)
+}
+
 fn percentof(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
     let mut sums = reserve(host, 2)?;
     for index in 0..2 {
@@ -312,7 +364,7 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
     }
     let fields = key_shape.columns;
     let value_columns = value_shape.columns;
-    let aggregators = Aggregators::resolve(host, 2)?;
+    let aggregators = Aggregators::resolve(host, 2, false)?;
     let headers = headers(host, fields, key_shape.rows)?;
     let relationship = match option(host, 7)?.unwrap_or(0) {
         0 => FieldRelationship::Hierarchy,
@@ -386,9 +438,41 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
         .len()
         .checked_mul(reductions)
         .ok_or_else(|| host.size_overflow())?;
+    let callable = aggregators
+        .members
+        .iter()
+        .any(|reducer| matches!(reducer, GroupReducer::Callback(_)));
+    let sorts = callable
+        .then(|| group_sorts(host, fields, sortable_columns))
+        .transpose()?;
+    let needs_sort_results = sorts.as_ref().is_some_and(|sorts| {
+        relationship == FieldRelationship::Hierarchy
+            && sorts.iter().any(|sort| sort.unsigned_abs() > fields as u64)
+    });
+    if callable {
+        let rows = groups
+            .iter()
+            .filter(|group| group.visible(fields, total_depth))
+            .count()
+            .checked_add(usize::from(headers.show))
+            .ok_or_else(|| host.size_overflow())?;
+        if rows > crate::model::MAX_ROWS as usize
+            || sortable_columns > crate::model::MAX_COLUMNS as usize
+        {
+            return Err(CellError::Num.into());
+        }
+        host.check_values_capacity(
+            rows.checked_mul(sortable_columns)
+                .ok_or_else(|| host.size_overflow())?,
+        )?;
+    }
     let mut results = reserve(host, scratch)?;
     let mut denominators = reserve(host, value_columns)?;
-    if aggregators.members.contains(&A::PercentOf) {
+    if aggregators
+        .members
+        .iter()
+        .any(|reducer| matches!(reducer, GroupReducer::Builtin(A::PercentOf)))
+    {
         for column in 0..value_columns {
             let mut members = reserve(host, included.len())?;
             for row in 0..included.len() {
@@ -401,6 +485,13 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
         }
     }
     for group in &groups {
+        let used_for_sorting = needs_sort_results && group.depth != 0;
+        if callable && !(group.visible(fields, total_depth) || used_for_sorting) {
+            for _ in 0..reductions {
+                append(&mut results, Blank)?;
+            }
+            continue;
+        }
         let mut ordinals = reserve(host, group.members.len())?;
         ordinals
             .try_reserve(group.members.len())
@@ -425,11 +516,11 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
                     values.get(row, column).map_err(|e| failure(host, e))?,
                 )?;
             }
-            for &operation in &aggregators.members {
-                let value = aggregate_value(host, operation, &members)?;
+            for operation in &aggregators.members {
+                let value = aggregate_group(host, operation, &members)?;
                 append(
                     &mut results,
-                    if operation == A::PercentOf {
+                    if matches!(operation, GroupReducer::Builtin(A::PercentOf)) {
                         ratio(
                             value,
                             denominators.get(column).cloned().ok_or(CellError::Value)?,
@@ -442,30 +533,10 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
         }
     }
     let results = Matrix::new(groups.len(), reductions, results).map_err(|e| failure(host, e))?;
-    let mut sorts = reserve(host, fields)?;
-    if host.len() > 5 && host.kind(5)? != OperandKind::Missing {
-        let shape = OperandReader::new(host).describe(5)?;
-        if shape.sheets != 1 || (shape.rows != 1 && shape.columns != 1) {
-            return Err(CellError::Value.into());
-        }
-        let selectors =
-            WholeCollection::at(5).integers(host, IntegerControl::Exact, |n, count| {
-                if n == 0
-                    || n.unsigned_abs() > sortable_columns as u64
-                    || count > 1 && n.unsigned_abs() > fields as u64
-                {
-                    return Err(CellError::Value.into());
-                }
-                Ok(())
-            })?;
-        for selector in selectors.into_values() {
-            append(&mut sorts, selector)?;
-        }
-    } else {
-        for field in 1..=fields {
-            append(&mut sorts, field as i64)?;
-        }
-    }
+    let sorts = match sorts {
+        Some(sorts) => sorts,
+        None => group_sorts(host, fields, sortable_columns)?,
+    };
     let representative = |group: usize| {
         groups
             .get(group)
@@ -547,6 +618,39 @@ fn groupby(host: &mut CallHost<'_, '_>, address: CellAddress) -> FunctionResult<
     .publish(host)
 }
 
+/// Admit group sorting through the existing field and value-column selectors.
+fn group_sorts(
+    host: &mut CallHost<'_, '_>,
+    fields: usize,
+    sortable_columns: usize,
+) -> FunctionResult<Vec<i64>> {
+    let mut sorts = reserve(host, fields)?;
+    if host.len() > 5 && host.kind(5)? != OperandKind::Missing {
+        let shape = OperandReader::new(host).describe(5)?;
+        if shape.sheets != 1 || (shape.rows != 1 && shape.columns != 1) {
+            return Err(CellError::Value.into());
+        }
+        let selectors =
+            WholeCollection::at(5).integers(host, IntegerControl::Exact, |n, count| {
+                if n == 0
+                    || n.unsigned_abs() > sortable_columns as u64
+                    || count > 1 && n.unsigned_abs() > fields as u64
+                {
+                    return Err(CellError::Value.into());
+                }
+                Ok(())
+            })?;
+        for selector in selectors.into_values() {
+            append(&mut sorts, selector)?;
+        }
+    } else {
+        for field in 1..=fields {
+            append(&mut sorts, field as i64)?;
+        }
+    }
+    Ok(sorts)
+}
+
 /// Combines grouping keys, hierarchy, reductions, and layout for final worksheet publication.
 /// It borrows the intermediate results so publication can validate dimensions and add headers without rebuilding the groups.
 struct Output<'a> {
@@ -624,7 +728,7 @@ impl Output<'_> {
                 )?;
             }
             for column in 0..value_columns {
-                for &operation in aggregators.members.iter().take(if vertical {
+                for operation in aggregators.members.iter().take(if vertical {
                     1
                 } else {
                     aggregators.members.len()

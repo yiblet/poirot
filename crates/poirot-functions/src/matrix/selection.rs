@@ -347,6 +347,14 @@ pub struct Group {
     /// Member span in the supplied partition's permutation.
     pub members: std::ops::Range<usize>,
 }
+impl Group {
+    /// Whether this group is a detail row or an explicit total at the chosen depth.
+    pub fn visible(&self, fields: usize, total_depth: i64) -> bool {
+        self.depth == fields
+            || (total_depth != 0 && (self.depth as u64) < total_depth.unsigned_abs())
+    }
+}
+
 /// Construct a preorder hierarchy in O(records * fields), retaining source membership.
 pub fn hierarchy<T>(
     keys: &Matrix<T>,
@@ -516,8 +524,7 @@ pub fn group_layout(
         let group = groups
             .get(index)
             .ok_or(MatrixError::Formula(CellError::Value))?;
-        let visible = group.depth == fields
-            || (total_depth != 0 && group.depth < total_depth.unsigned_abs() as usize);
+        let visible = group.visible(fields, total_depth);
         if exiting {
             if visible {
                 append(&mut output, index)?;

@@ -3,7 +3,7 @@ use super::external_behavior::ExternalBehavior;
 use super::formula_effects::FormulaEffects;
 use crate::eval::{
     compile::bytecode::{CallTarget, CompileError},
-    functions::registry::{DependencyPolicy, FunctionId},
+    functions::registry::{DependencyPolicy, FunctionId, MatrixFunction},
 };
 use crate::model::{FormulaType, ScalarKinds, ShapeBounds};
 use poirot_parsing::formula::{BinaryOp, Expr, LambdaForm, LetForm, UnaryOp};
@@ -203,8 +203,14 @@ pub(super) fn transfer(
                         {
                             effects.external = effects.external.max(ExternalBehavior::Volatile);
                         }
+                        // Grouping can resolve a worksheet callback even when the reducer is
+                        // spelled as a built-in name, because a defined name may shadow it.
                         if let FunctionId::Matrix(kind) = id
-                            && kind.uses_array_callback_adapter()
+                            && (kind.uses_array_callback_adapter()
+                                || matches!(
+                                    kind,
+                                    MatrixFunction::Groupby | MatrixFunction::Pivotby
+                                ))
                         {
                             effects = callable_effects(effects);
                         }

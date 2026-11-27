@@ -45,6 +45,7 @@ mod error_handler;
 mod extension_invocation;
 /// Effective authored formulas and modeled worksheet counts.
 mod formula_metadata;
+mod group_reducer;
 /// Evaluated argument retained before scalar, array or reference access.
 mod host_operand;
 /// Classic lookup candidate selection and result reads.
@@ -91,6 +92,7 @@ pub(in crate::eval) use dynamic_references::DynamicReferences;
 pub(in crate::eval) use error_handler::ErrorHandler;
 pub(in crate::eval) use extension_invocation::execute_extension;
 pub(in crate::eval) use formula_metadata::FormulaMetadata;
+pub(in crate::eval) use group_reducer::GroupReducer;
 pub(in crate::eval) use host_operand::HostOperand;
 pub(in crate::eval) use lookup_service::LookupService;
 pub(in crate::eval) use missing_policy::MissingPolicy;
