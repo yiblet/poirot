@@ -460,7 +460,8 @@ fn read_filter_values(
         blank: flag(root, "blank", path)?,
         values: Vec::new(),
     };
-    let mut lost = unmodeled_attributes(root, &["blank"])?;
+    // Calendar selection only affects date groups, which the child scan rejects.
+    let mut lost = unmodeled_attributes(root, &["blank", "calendarType"])?;
     loop {
         match reader.read_event().map_err(xml)? {
             Event::Start(element) if is_main(reader, &element, "filter") => {

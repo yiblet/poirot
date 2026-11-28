@@ -893,7 +893,7 @@ fn table_definitions_survive_xlsx_and_source_snapshots() {
     let bytes = rewrite_table(|xml| {
         xml.replace(
             "<tableColumns",
-            r#"<autoFilter ref="A1:B3"><filterColumn colId="0" hiddenButton="1" showButton="false"><filters blank="true"><filter val=" A&amp;&quot; "/><filter val=""/></filters></filterColumn></autoFilter><tableColumns"#,
+            r#"<autoFilter ref="A1:B3"><filterColumn colId="0" hiddenButton="1" showButton="false"><filters blank="true" calendarType="gregorian"><filter val=" A&amp;&quot; "/><filter val=""/></filters></filterColumn></autoFilter><tableColumns"#,
         )
         .replace(
             r#"<tableColumn id="2" name="Twice"/>"#,
