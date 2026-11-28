@@ -19,14 +19,14 @@ use std::sync::Arc;
 const MAX_CALLABLE_DEPTH: usize = 16;
 
 /// Creates closures and executes their bodies through ordinary VM frames.
-pub(super) struct LambdaExecutor<'s, 'a> {
+pub(in crate::eval) struct LambdaExecutor<'s, 'a> {
     session: &'s mut Session<'a>,
     target: EvaluationTarget,
 }
 
 impl<'s, 'a> LambdaExecutor<'s, 'a> {
     /// Borrow the session and bind resource attribution to the concrete formula cell.
-    pub(super) fn new(session: &'s mut Session<'a>, target: EvaluationTarget) -> Self {
+    pub(in crate::eval) fn new(session: &'s mut Session<'a>, target: EvaluationTarget) -> Self {
         Self { session, target }
     }
 
@@ -128,6 +128,38 @@ impl<'s, 'a> LambdaExecutor<'s, 'a> {
                     argument,
                 )
             }
+        })
+    }
+
+    /// Validate a callback and arity before traversing any output members.
+    pub(in crate::eval) fn validate_callback(
+        callee: &Value,
+        arity: usize,
+        invalid: CellError,
+    ) -> FunctionResult<()> {
+        if arity == Self::callback_arity(callee, invalid)? {
+            Ok(())
+        } else {
+            Err(CellError::Value.into())
+        }
+    }
+
+    /// Return the declared number of positions a host callback supplies.
+    pub(in crate::eval) fn callback_arity(
+        callee: &Value,
+        invalid: CellError,
+    ) -> FunctionResult<usize> {
+        Ok(Self::closure(callee, invalid)?.arity)
+    }
+
+    /// Invoke a checked callback with already evaluated positional values.
+    pub(in crate::eval) fn invoke_values(
+        &mut self,
+        callee: &Value,
+        mut arguments: impl ExactSizeIterator<Item = Value>,
+    ) -> EvalResult<Value> {
+        self.invoke_with(callee, arguments.len(), |_, _| {
+            arguments.next().ok_or(EvaluationError::StalePlan)
         })
     }
 

@@ -251,6 +251,11 @@ pub(in crate::eval) fn execute(
     ) {
         return super::selection::execute(function, session, sheet, address, args);
     }
+    if function.uses_array_callback_adapter() {
+        return super::array_callbacks::ArrayCallbacks::execute(
+            function, session, sheet, address, args,
+        );
+    }
     if function == MatrixFunction::Sequence {
         return super::dispatch::sequence(session, sheet, address, args);
     }

@@ -432,3 +432,39 @@ fn translating_a_current_row_reference_keeps_its_row_selector() {
         "[[#This Row],[Sales Amount]]+A3"
     );
 }
+
+#[test]
+fn xlsx_map_over_two_table_columns_recomputes_after_edits() {
+    use poirot::calculation::EvaluationContext;
+    use poirot::eval::{ArrayResultPolicy, EvaluationPolicy};
+    use poirot::model::CellValue;
+
+    // Adapt the Microsoft MAP table-column example to the source fixture's
+    // two numeric columns. Each callback adds the corresponding two values.
+    // https://support.microsoft.com/en-us/excel/functions/map-function
+    let mut book = read_workbook_bytes::<Workbook>(FIXTURE).unwrap();
+    book.add_sheet("Summary")
+        .unwrap()
+        .set_formula("A1", "MAP(Sales[Amount],Sales[Twice],LAMBDA(a,b,a+b))")
+        .unwrap();
+    let bytes = write_xlsx_to_buffer(&book).unwrap();
+    let imported = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    let mut scenario = imported
+        .overlay()
+        .policy(EvaluationPolicy {
+            arrays: ArrayResultPolicy::DynamicSpill,
+            ..Default::default()
+        })
+        .build()
+        .unwrap();
+    let context = EvaluationContext::default();
+    let source = scenario.target("Data!A3").unwrap();
+    let first = scenario.target("Summary!A1").unwrap();
+    let second = scenario.target("Summary!A2").unwrap();
+    for (value, expected) in [(7., 21.), (10., 30.)] {
+        scenario.set_value(source, value).unwrap();
+        let mut eval = scenario.evaluation(&context).unwrap();
+        assert_eq!(eval.cell(first).unwrap(), CellValue::Number(9.));
+        assert_eq!(eval.cell(second).unwrap(), CellValue::Number(expected));
+    }
+}
