@@ -10,16 +10,24 @@ pub(super) struct TemplateLexemes {
 }
 
 impl TemplateLexemes {
+    /// Bound optional key and coordinate scratch independently of the source parser.
+    pub(super) const MAX_SOURCE_BYTES: usize = 16 * 1024;
+
     /// Build the entire key before attempting reuse, retaining each fixed token byte and kind.
     pub(super) fn scan(&mut self, source: &str, policy: &PreparationPolicy) -> Option<()> {
         self.key.clear();
         self.cells.clear();
         self.point_range = false;
+        if source.len() > Self::MAX_SOURCE_BYTES {
+            return None;
+        }
         for token in Tokens::new(source) {
             let token = token.ok()?;
             let tag = match token.kind {
                 TokenKind::Cell(cell) => {
-                    if cell.row >= policy.parse.max_rows || cell.column >= policy.parse.max_columns
+                    if self.cells.len() >= policy.parse.max_expressions
+                        || cell.row >= policy.parse.max_rows
+                        || cell.column >= policy.parse.max_columns
                     {
                         return None;
                     }

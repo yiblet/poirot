@@ -2,6 +2,44 @@ use super::super::cache_snapshot;
 use super::super::formula_compiler::FormulaCompiler;
 use super::super::preparation_policy::PreparationPolicy;
 use super::super::prepared_formula::PreparedFormula;
+use super::super::template_lexemes::TemplateLexemes;
+
+#[test]
+fn oversized_template_sources_fall_back_without_growing_scratch() {
+    let policy = PreparationPolicy::default();
+    let mut compiler = FormulaCompiler::new();
+    compiler.compile_formula("A1+1", &policy);
+    let capacity = |compiler: &FormulaCompiler| {
+        (
+            compiler.template_lexemes.key.capacity(),
+            compiler.template_lexemes.cells.capacity(),
+        )
+    };
+    let initial = capacity(&compiler);
+    let invalid = format!("{}A1", "A1+".repeat(TemplateLexemes::MAX_SOURCE_BYTES));
+    assert!(matches!(
+        compiler.compile_formula(&invalid, &policy).as_ref(),
+        PreparedFormula::ParseFailure { .. }
+    ));
+    let valid = format!("{}A1", " ".repeat(TemplateLexemes::MAX_SOURCE_BYTES));
+    assert!(matches!(
+        compiler.compile_formula(&valid, &policy).as_ref(),
+        PreparedFormula::Ready(_)
+    ));
+    assert_eq!(capacity(&compiler), initial);
+    assert_eq!(compiler.templates[0].classified.len(), 1);
+    compiler.compile_formula("B2+1", &policy);
+    assert_eq!(compiler.template_hits(), 1);
+}
+
+#[test]
+fn template_point_scan_stops_at_the_policy_limit() {
+    let mut lexemes = TemplateLexemes::default();
+    let mut policy = PreparationPolicy::default();
+    policy.parse.max_expressions = 2;
+    assert!(lexemes.scan("A1+B1+C1", &policy).is_none());
+    assert_eq!(lexemes.cells.len(), 2);
+}
 
 #[test]
 fn rejected_range_shapes_do_not_accumulate_template_candidates_after_restore() {
