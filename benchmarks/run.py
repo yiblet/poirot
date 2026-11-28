@@ -57,17 +57,23 @@ def validate_report(report, suite, selection):
         raise ValueError(f"{selection}: missing {len(expected - actual)} samples")
 
 
-def summarize(reports):
-    """Summarize each phase/edit separately; retain raw measurements in engine JSON."""
+def summarize(reports, *, include_workflow=False):
+    """Summarize phases, edit ordinals, and optionally complete sampled rounds."""
     rows = []
     for selection, report in reports.items():
         groups = defaultdict(list)
+        round_totals = defaultdict(int)
         for timing in report["timings"]:
             groups[(timing["case"], timing["phase"], timing["edit"])].append(timing["elapsed_ns"])
+            if include_workflow:
+                round_totals[timing["case"], timing["sample"]] += timing["elapsed_ns"]
+        for (case, _sample), total in round_totals.items():
+            groups[case, "complete_workflow", None].append(total)
         for (case, phase, edit), values in sorted(groups.items()):
             values.sort()
             rows.append(dict(engine=selection, case=case, phase=phase, edit=edit,
                              samples=len(values), median_ns=statistics.median(values),
+                             p75_ns=values[math.ceil(len(values) * .75) - 1],
                              p95_ns=values[math.ceil(len(values) * .95) - 1],
                              min_ns=min(values), max_ns=max(values)))
     return rows
@@ -77,12 +83,13 @@ def markdown(rows):
     """Produce a compact comparison table without an aggregate winner or speedup claim."""
     lines = ["# Calculation speed results", "",
              "All measurements passed the workload output checks. Times are milliseconds.", "",
-             "| Workload | Phase | Edit | Engine | Samples | Median ms | p95 ms |",
-             "| --- | --- | --- | --- | ---: | ---: | ---: |"]
+             "| Workload | Phase | Edit | Engine | Samples | Median ms | p75 ms | p95 ms |",
+             "| --- | --- | --- | --- | ---: | ---: | ---: | ---: |"]
     for row in sorted(rows, key=lambda r: (r["case"], r["phase"], -1 if r["edit"] is None else r["edit"], r["engine"])):
         step = "—" if row["edit"] is None else row["edit"] + 1
         lines.append(f'| {row["case"]} | {row["phase"]} | {step} | {row["engine"]} | '
-                     f'{row["samples"]} | {row["median_ns"] / 1e6:.4f} | {row["p95_ns"] / 1e6:.4f} |')
+                     f'{row["samples"]} | {row["median_ns"] / 1e6:.4f} | '
+                     f'{row["p75_ns"] / 1e6:.4f} | {row["p95_ns"] / 1e6:.4f} |')
     lines += ["", "See metadata.json for hardware, image IDs, source revision, and resource limits.",
               "These synthetic workloads do not establish general Excel compatibility or overall engine rankings.", ""]
     return "\n".join(lines)

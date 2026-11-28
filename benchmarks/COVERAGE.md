@@ -1,7 +1,7 @@
 # Representative speed coverage
 
-`coverage.py` generates 57 deterministic cases: the unchanged seven original
-workloads, all eleven existing range neighbors, and 39 additional cases.
+`coverage.py` generates 90 deterministic cases. It includes the seven original
+workloads, eleven range neighbors, and 72 additional cases.
 `expanded.py` runs them in the same per-engine Docker isolation and retains
 capability failures and incorrect results alongside successful measurements.
 This is a speed suite with correctness checks, not a complete compatibility test.
@@ -19,6 +19,10 @@ Choose an available CPU. `--cases NAME ...` selects an explicit subset; the full
 suite remains the default. `--no-build` reuses recorded image IDs and may therefore
 use older adapter source. Schema2 reports and exact required phases reject old
 schema1 adapters. To measure the current checkout, build its images first.
+
+The `complete_workflow` summary row combines the measured phases for one
+sample, including each edit, before computing percentiles across samples.
+Use individual phase rows to see where a workflow spends its time.
 
 For a compiler-matched Rust comparison, build both Rust executables with one
 compiler, freeze `poirot-speed`, `ironcalc-speed` and `rustc-version.txt` in a small
@@ -46,6 +50,12 @@ Poirot build against a Rust executable built with an older Docker compiler.
 | Arrays | 2 | Pairwise range products; small matrix multiplication and reduction. |
 | Spills | 6 | Fixed/input-sized extents, many producers with one/all outputs, unknown width, overlapping possible bounds with disjoint actual footprints. |
 | Source changes | 2 | Cross-sheet dependencies and formula-source replacement. |
+| Business | 3 | Order totals, cash balances and bank reconciliation. |
+| Operations | 3 | Inventory reordering, capacity quotas and receivables aging. |
+| Planning | 9 | Charges, rolling decisions and weighted reports. |
+| Decisions | 6 | Thresholds, quantization and escalation rules. |
+| Reconciliation | 6 | Cross-checks, deviations and totals across records. |
+| Trajectories | 6 | Running balances, recurrence and historical peaks. |
 
 Each size changes meaningful graph/range/output dimensions; it is not a Cartesian
 product of every function and layout. The original seven and all eleven neighbors

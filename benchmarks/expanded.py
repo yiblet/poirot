@@ -278,7 +278,7 @@ def main(argv=None):
                 print(size, selection, collections.Counter(r["status"] for r in records if r["size"] == size and r["engine"] == selection), flush=True)
         rows = []
         for size, selection, report in reports:
-            rows.extend(dict(size=size, **row) for row in summarize({selection: report}))
+            rows.extend(dict(size=size, **row) for row in summarize({selection: report}, include_workflow=True))
         (output / "summary.json").write_text(json.dumps(rows, indent=2))
         comparisons = comparison_rows(rows)
         scaling = scaling_rows(rows)
@@ -289,7 +289,8 @@ def main(argv=None):
                  f"{sum(r['status'] == 'validated' for r in records)} validated engine/case outcomes; "
                  f"{sum(r['status'] == 'unsupported' for r in records)} unsupported; {len(failures)} mismatches.",
                  "Mismatches make this command fail and contribute no successful timings. "
-                 "All timing ratios are exploratory; no significance or parity claim is made.", ""]
+                 "All timing ratios are exploratory; no significance or parity claim is made.",
+                 "Complete workflow percentiles use the total measured time within each sampled round.", ""]
         for failure in failures:
             lines.append(f"- Size {failure['size']}, {failure['engine']}, {failure['case']}: see {failure['evidence']}.stderr.log")
         lines.append("")

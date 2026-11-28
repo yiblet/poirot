@@ -3,7 +3,11 @@ import argparse
 import datetime
 import json
 
+from analysis_workloads import decisions, reconciliations, trajectories
+from business_workloads import bank_reconciliation, cash_plan, order_register
 from diagnostics import generate_diagnostics
+from operations_workloads import capacity_quotas, inventory_replenishment, receivables_aging
+from planning_workloads import charges, rolling_decisions, weighted_reports
 from workloads import address, case, cell, edit
 
 
@@ -264,6 +268,10 @@ def generate_coverage(size=64, samples=3, warmup=1):
     add("formula_source_edit", "source", "Change source formula structure while retaining other branches.", cells, [2 * (i + 1) for i in range(n)],
         [edit(0, 3, "=A1*3", [3] + [2 * (i + 1) for i in range(1, n)]),
          edit(0, 3, "=A1+5", [6] + [2 * (i + 1) for i in range(1, n)])])
+    suite["cases"].extend((order_register(n), cash_plan(n), bank_reconciliation(n)))
+    suite["cases"].extend((inventory_replenishment(n), capacity_quotas(n), receivables_aging(n)))
+    for family in (charges, rolling_decisions, weighted_reports, decisions, reconciliations, trajectories):
+        suite["cases"].extend(family(n))
     return suite
 
 

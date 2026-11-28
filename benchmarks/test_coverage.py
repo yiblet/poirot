@@ -60,6 +60,62 @@ class CoverageContracts(unittest.TestCase):
         self.assertIn("SEQUENCE(IF($G$1=0,1,2),2)", competitor["cells"][1]["input"])
         self.assertEqual(competitor["outputs"][0], dict(row=2, col=2))
 
+    def test_business_workbooks_track_local_and_shared_edits(self):
+        orders = self.cases["order_register"]
+        # The first territory starts with 2 * 19 + 3 * 25. Posting adds 12.
+        self.assertEqual(orders["expected"], [113, 160, 0, 0, 273])
+        self.assertEqual(orders["edits"][0]["expected"], [125, 160, 0, 0, 285])
+        self.assertEqual(orders["edits"][1]["expected"], [130, 160, 0, 0, 290])
+        cash = self.cases["cash_plan"]
+        self.assertEqual(cash["expected"][0], 10_000 + 75 - 2_500)
+        self.assertEqual(cash["expected"][-1], 10_000 + 7 * (75 + 78 + 81 + 84) - 12 * 2_500)
+        self.assertEqual(cash["edits"][0]["expected"][-1], cash["expected"][-1] - 84)
+        self.assertEqual(cash["edits"][1]["expected"][-1], cash["expected"][-1] - 84 - 12 * 100)
+        bank = self.cases["bank_reconciliation"]
+        # A missing 60 and an overpayment of 3 initially need review.
+        self.assertEqual(bank["expected"], [57, 63, 2])
+        self.assertEqual(bank["edits"][0]["expected"], [-3, 3, 1])
+        self.assertEqual(bank["edits"][1]["expected"], [0, 0, 0])
+
+    def test_operations_workbooks_track_constraints_and_payments(self):
+        inventory = self.cases["inventory_replenishment"]
+        self.assertEqual(inventory["expected"], [66, 109, 91, 66, 100])
+        self.assertEqual(inventory["edits"][0]["expected"], [57, 109, 91, 100, 68])
+        self.assertEqual(inventory["edits"][1]["expected"], [89, 109, 91, 100, 100])
+        capacity = self.cases["capacity_quotas"]
+        self.assertEqual(capacity["expected"], [203, 11, 6])
+        self.assertEqual(capacity["edits"][1]["expected"], [197, 40, 38])
+        aging = self.cases["receivables_aging"]
+        self.assertEqual(aging["expected"], [125] + [0] * 8)
+        self.assertEqual(aging["edits"][0]["expected"], [0, 0, 125] + [0] * 6)
+        self.assertEqual(aging["edits"][1]["expected"], [0] * 9)
+
+    def test_planning_workbooks_preserve_shared_inputs_and_window_boundaries(self):
+        overtime = self.cases["overtime_pay"]
+        self.assertEqual(overtime["expected"], [1170, 60, 180, 342, 588])
+        peak = self.cases["peak_load_reserve"]
+        self.assertEqual(peak["expected"], [12, 23, 34, 45])
+        self.assertEqual(peak["edits"][0]["expected"], [12, 23, 58, 58])
+        energy = self.cases["energy_cost"]
+        self.assertEqual(energy["expected"], [1 * 4 + 4 * 5 + 7 * 6 + 10 * 7 + 2])
+        self.assertEqual(energy["edits"][1]["expected"], [10 * 4 + 4 * 5 + 7 * 6 + 10 * 7 + 4])
+
+    def test_decisions_reconcile_and_restart_after_edits(self):
+        coverage = self.cases["shift_coverage"]
+        self.assertEqual(coverage["expected"], [0, 0, 0, 1])
+        self.assertEqual(coverage["edits"][0]["expected"], [0, 0, 0, 1])
+        spread = self.cases["stocktake_spread"]
+        self.assertEqual(spread["expected"], [29, 29])
+        self.assertEqual(spread["edits"][0]["expected"], [34, 34])
+        self.assertEqual(spread["edits"][1]["expected"], [36, 36])
+        storage = self.cases["storage_balance"]
+        self.assertEqual(storage["expected"], [0, 2, 11, 27])
+        self.assertEqual(storage["edits"][0]["expected"], [0, 2, 30, 46])
+        self.assertEqual(storage["edits"][1]["expected"], [0, 0, 22, 32])
+        longer = {case["name"]: case for case in generate_coverage(14)["cases"]}
+        # Period 13 starts from zero even when period 12 has a positive balance.
+        self.assertEqual(longer["storage_balance"]["expected"][12], 21)
+
     def test_schema1_rejects_new_features_and_invalid_edits(self):
         for changes in [dict(unchanged_read=True), dict(schema_version=7)]:
             suite = generate(4, 1, 0)

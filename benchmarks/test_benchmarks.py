@@ -96,6 +96,24 @@ class BenchmarkContracts(unittest.TestCase):
         self.assertTrue(all(row["median_ns"] == 100 and row["samples"] == 2 for row in rows))
         self.assertIn("0.0001", markdown(rows))
 
+    def test_summary_reports_nearest_rank_p75(self):
+        timings = [dict(case="orders", phase="edit_calculate_read", edit=0, elapsed_ns=value)
+                   for value in [500, 100, 400, 200, 300]]
+        row, = summarize({"poirot-overlay": {"timings": timings}})
+        self.assertEqual((row["median_ns"], row["p75_ns"], row["p95_ns"]), (300, 400, 500))
+
+    def test_complete_workflow_totals_each_round_before_taking_percentiles(self):
+        timings = []
+        for sample, edits in enumerate(((5, 100), (100, 5))):
+            phases = [("build_calculate_read", None, 10), ("unchanged_read", None, 5)]
+            phases.extend(("edit_calculate_read", edit, elapsed) for edit, elapsed in enumerate(edits))
+            timings.extend(dict(case="orders", phase=phase, edit=edit, sample=sample, elapsed_ns=elapsed)
+                           for phase, edit, elapsed in phases)
+        rows = summarize({"poirot-overlay": {"timings": timings}}, include_workflow=True)
+        workflow, = (row for row in rows if row["phase"] == "complete_workflow")
+        self.assertEqual((workflow["samples"], workflow["median_ns"], workflow["p75_ns"]), (2, 120, 120))
+        self.assertEqual([row["p75_ns"] for row in rows if row["phase"] == "edit_calculate_read"], [100, 100])
+
 
 if __name__ == "__main__":
     unittest.main()

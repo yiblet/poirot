@@ -1,5 +1,50 @@
 # Calculation speed benchmarks
 
+## Published Excel workbooks
+
+The native XLSX comparison loads the original files through each engine's
+importer and requests every authored formula result. Its JSON lines record
+import and first-calculation times separately. Compare their sum for total
+latency because IronCalc parses formulas during import and Poirot can defer
+preparation until calculation.
+
+For repeated comparisons, pass `--blocks 4 --samples 11 --warmup 3`.
+The runner alternates engine order, records the block for each sample, and includes
+the benchmark executable's SHA-256 in each workbook result.
+Each adapter writes validated timings separately from importer diagnostics.
+Calculate p75 within each block before comparing paired results.
+
+```sh
+cargo build --release --locked --manifest-path benchmarks/rust/Cargo.toml -p workbook-speed --target-dir target
+python3 benchmarks/workbooks.py benchmarks/workbook-sources/models.json /tmp/poirot-workbooks target/release/workbook-speed --fetch
+```
+
+The [workbook manifest](workbook-sources/models.json) credits each author and
+pins the source revision, license notice, and SHA-256. For workbooks without
+comparable saved formula results, pass `--oracle-directory` with independently
+recalculated copies named after the manifest IDs. Use `--oracle-engine` to
+record the engine and version that created those copies. Both timed engines
+receive the untouched originals. The report includes oracle provenance,
+formula counts, counts of numeric, logical, and plain text checks, and any
+import or calculation failures.
+
+With the originals downloaded, LibreOffice Calc can create the separate
+oracle copies. Generate them in UTC just before benchmarking workbooks that
+use `TODAY()` so the expected values and both engines use the same date.
+Pass the version reported by `soffice --version` to record the Calc build.
+
+```sh
+mkdir -p /tmp/poirot-workbook-oracles
+TZ=UTC soffice --headless -env:UserInstallation=file:///tmp/poirot-oracle-profile \
+  --convert-to 'xlsx:Calc Office Open XML' --outdir /tmp/poirot-workbook-oracles \
+  /tmp/poirot-workbooks/*.xlsx
+TZ=UTC python3 benchmarks/workbooks.py benchmarks/workbook-sources/models.json \
+  /tmp/poirot-workbooks target/release/workbook-speed \
+  --oracle-directory /tmp/poirot-workbook-oracles --oracle-engine "$(soffice --version)"
+```
+
+## Generated workbooks
+
 Compare Poirot with other spreadsheet engines on identical, generated models.
 Each engine has its own Dockerfile and runtime. This suite measures calculation
 workflows; it does not read or write Excel files.
@@ -105,11 +150,16 @@ reads, source changes, spatial demands and additional function families; some
 spatial controls deliberately request only part of a larger model. File I/O,
 memory benchmarks and parallel throughput remain separate workflows.
 
+For unchanged reads, Poirot requests outputs again through its evaluation
+API. The overlay mode includes starting a new cycle and publishing results.
+IronCalc reads the values from its already evaluated model. These timings
+describe the adapter workflows and include their different read overhead.
+
 ## Broader coverage
 
 The original seven-workload command and schema1 protocol remain unchanged.
 [Expanded coverage](COVERAGE.md) adds all eleven existing range neighbors and
-39 cost-focused cases under schema2, with explicit capability outcomes and
+72 cost-focused cases under schema2, with explicit capability outcomes and
 mismatch diagnostics. It includes separate stateless workbook-cell, batch and
 HyperFormula array-arithmetic routes; none replaces the original per-cell gate.
 

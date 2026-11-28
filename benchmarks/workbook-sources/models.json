@@ -1,0 +1,222 @@
+[
+  {
+    "id": "stock-portfolio-tracker",
+    "author": "PlanoraNest (https://planoranest.com/)",
+    "source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/01_Investment_Finance/01_Stock_Portfolio_Tracker.xlsx",
+    "download": "https://raw.githubusercontent.com/planoranest/excel-template/dd41097bb511ae0e00433eac503766352e78c739/01_Investment_Finance/01_Stock_Portfolio_Tracker.xlsx",
+    "revision": "dd41097bb511ae0e00433eac503766352e78c739",
+    "license": "MIT",
+    "license_source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/LICENSE",
+    "notice": "planoranest.MIT.txt",
+    "sha256": "d94887d2f096626becabe2b3383856f80fad8ee899407d2eb07eab3bcebf5b7c"
+  },
+  {
+    "id": "monthly-budget-planner",
+    "author": "PlanoraNest (https://planoranest.com/)",
+    "source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/01_Investment_Finance/02_Monthly_Budget_Planner.xlsx",
+    "download": "https://raw.githubusercontent.com/planoranest/excel-template/dd41097bb511ae0e00433eac503766352e78c739/01_Investment_Finance/02_Monthly_Budget_Planner.xlsx",
+    "revision": "dd41097bb511ae0e00433eac503766352e78c739",
+    "license": "MIT",
+    "license_source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/LICENSE",
+    "notice": "planoranest.MIT.txt",
+    "sha256": "c9536f11581289e50334eebf472ebe8a376f4ca4474299c7712feb2893eb8269"
+  },
+  {
+    "id": "retirement-calculator",
+    "author": "PlanoraNest (https://planoranest.com/)",
+    "source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/01_Investment_Finance/03_Retirement_Calculator.xlsx",
+    "download": "https://raw.githubusercontent.com/planoranest/excel-template/dd41097bb511ae0e00433eac503766352e78c739/01_Investment_Finance/03_Retirement_Calculator.xlsx",
+    "revision": "dd41097bb511ae0e00433eac503766352e78c739",
+    "license": "MIT",
+    "license_source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/LICENSE",
+    "notice": "planoranest.MIT.txt",
+    "sha256": "900f42df8d83e907cfd3315d2fbe51259bfbc2c40c24fb2f2e8f20f8a9f25db5"
+  },
+  {
+    "id": "debt-repayment-plan",
+    "author": "PlanoraNest (https://planoranest.com/)",
+    "source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/01_Investment_Finance/04_Debt_Repayment_Plan.xlsx",
+    "download": "https://raw.githubusercontent.com/planoranest/excel-template/dd41097bb511ae0e00433eac503766352e78c739/01_Investment_Finance/04_Debt_Repayment_Plan.xlsx",
+    "revision": "dd41097bb511ae0e00433eac503766352e78c739",
+    "license": "MIT",
+    "license_source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/LICENSE",
+    "notice": "planoranest.MIT.txt",
+    "sha256": "bdb150637a9f8d22de4165268cb23abbb37bd36d36234ee3ccb2b20b96de3ba6"
+  },
+  {
+    "id": "embodied-carbon",
+    "author": "John Orr, Orlando Gibbons, Will Arnold",
+    "source": "https://www.repository.cam.ac.uk/items/a7a09651-c124-4a25-819d-695dfa36267f",
+    "download": "https://www.repository.cam.ac.uk/bitstreams/47066695-347f-43bd-80ff-aefd04b63eb1/download",
+    "revision": "10.17863/CAM.53699",
+    "license": "CC-BY-4.0",
+    "license_source": "https://www.repository.cam.ac.uk/items/a7a09651-c124-4a25-819d-695dfa36267f",
+    "sha256": "f29af1bb67089de59943303360e0b6c6472bae6aaef0e022baa72b4b65252859",
+    "notice": "CC-BY-4.0.txt"
+  },
+  {
+    "id": "real-estate-analyzer",
+    "author": "PlanoraNest (https://planoranest.com/)",
+    "source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/01_Investment_Finance/07_Real_Estate_Analyzer.xlsx",
+    "download": "https://raw.githubusercontent.com/planoranest/excel-template/dd41097bb511ae0e00433eac503766352e78c739/01_Investment_Finance/07_Real_Estate_Analyzer.xlsx",
+    "revision": "dd41097bb511ae0e00433eac503766352e78c739",
+    "license": "MIT",
+    "license_source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/LICENSE",
+    "notice": "planoranest.MIT.txt",
+    "sha256": "cd03f71f6ff9362ca085c145de3cf3a6d323f3d8100aacd5e55753e836db0357"
+  },
+  {
+    "id": "cash-flow-forecast",
+    "author": "PlanoraNest (https://planoranest.com/)",
+    "source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/03_Business_Management/04_Cash_Flow_Forecast.xlsx",
+    "download": "https://raw.githubusercontent.com/planoranest/excel-template/dd41097bb511ae0e00433eac503766352e78c739/03_Business_Management/04_Cash_Flow_Forecast.xlsx",
+    "revision": "dd41097bb511ae0e00433eac503766352e78c739",
+    "license": "MIT",
+    "license_source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/LICENSE",
+    "notice": "planoranest.MIT.txt",
+    "sha256": "8edef3ba4604513ca55b92913bee3ee6d5ae855043063cc8b9d48ca96399b1b1"
+  },
+  {
+    "id": "invoice-tracker",
+    "author": "PlanoraNest (https://planoranest.com/)",
+    "source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/03_Business_Management/12_Invoice_Tracker.xlsx",
+    "download": "https://raw.githubusercontent.com/planoranest/excel-template/dd41097bb511ae0e00433eac503766352e78c739/03_Business_Management/12_Invoice_Tracker.xlsx",
+    "revision": "dd41097bb511ae0e00433eac503766352e78c739",
+    "license": "MIT",
+    "license_source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/LICENSE",
+    "notice": "planoranest.MIT.txt",
+    "sha256": "d33f1eec5041293a004a212fb889dff8403dc7cf9754e739d198ee34897f3fdf"
+  },
+  {
+    "id": "industrial-exergy-allocation",
+    "author": "Shunbing Su, Bing J. Zhang",
+    "source": "https://data.mendeley.com/datasets/njxvr5cyrh/1",
+    "download": "https://data.mendeley.com/public-files/datasets/njxvr5cyrh/files/c3ca0667-62a1-491a-867b-c02e0c3c5d8e/file_downloaded",
+    "revision": "10.17632/njxvr5cyrh.1",
+    "license": "CC-BY-4.0",
+    "license_source": "https://data.mendeley.com/datasets/njxvr5cyrh/1",
+    "sha256": "4a24058a5ef838b3d126792835aa5a0c1444cf44286a4093f463fb485c69d33a",
+    "notice": "CC-BY-4.0.txt"
+  },
+  {
+    "id": "building-field-survey",
+    "author": "Yolanda Torres",
+    "source": "https://data.mendeley.com/datasets/rgmtgdnkjb/1",
+    "download": "https://data.mendeley.com/public-files/datasets/rgmtgdnkjb/files/dd4836bf-79f5-4680-9068-855f596dfe42/file_downloaded",
+    "revision": "10.17632/rgmtgdnkjb.1",
+    "license": "CC-BY-4.0",
+    "license_source": "https://data.mendeley.com/datasets/rgmtgdnkjb/1",
+    "sha256": "1ca97710df48dd57080b236b6d3f624cf554dbcc6ca25c6c6349276c442ce404",
+    "notice": "CC-BY-4.0.txt"
+  },
+  {
+    "id": "levelised-solar-cost",
+    "author": "Gokcen Alev Ciftcioglu, Figen Kadirgan, Neset Kadirgan",
+    "source": "https://data.mendeley.com/datasets/jttwksyng7/1",
+    "download": "https://data.mendeley.com/public-files/datasets/jttwksyng7/files/d0ce83af-2bb5-4fda-a013-0b21422f0af1/file_downloaded",
+    "revision": "10.17632/jttwksyng7.1",
+    "license": "CC-BY-4.0",
+    "license_source": "https://data.mendeley.com/datasets/jttwksyng7/1",
+    "sha256": "406d85fa4b3d84354cb6cbe794c8bf3ee9024780c0575d33e49129497928a31b",
+    "notice": "CC-BY-4.0.txt"
+  },
+  {
+    "id": "it-asset-inventory",
+    "author": "PlanoraNest (https://planoranest.com/)",
+    "source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/11_IT_Technology/01_IT_Asset_Inventory.xlsx",
+    "download": "https://raw.githubusercontent.com/planoranest/excel-template/dd41097bb511ae0e00433eac503766352e78c739/11_IT_Technology/01_IT_Asset_Inventory.xlsx",
+    "revision": "dd41097bb511ae0e00433eac503766352e78c739",
+    "license": "MIT",
+    "license_source": "https://github.com/planoranest/excel-template/blob/dd41097bb511ae0e00433eac503766352e78c739/LICENSE",
+    "notice": "planoranest.MIT.txt",
+    "sha256": "b813b41fe8f1d8d3e072cf650c660bcd6b2844825683b5e4b584da20a31e5c50"
+  },
+  {
+    "id": "myloantracker-v010009-free",
+    "author": "Data Research Labs",
+    "source": "https://github.com/DataResearchLabs/my_loan_tracker/blob/d5098621a8e4423c013a31d029d3123a673682a6/download/MyLoanTracker_v010009_FREE.xlsx",
+    "download": "https://raw.githubusercontent.com/DataResearchLabs/my_loan_tracker/d5098621a8e4423c013a31d029d3123a673682a6/download/MyLoanTracker_v010009_FREE.xlsx",
+    "revision": "d5098621a8e4423c013a31d029d3123a673682a6",
+    "license": "MIT",
+    "license_source": "https://github.com/DataResearchLabs/my_loan_tracker/blob/d5098621a8e4423c013a31d029d3123a673682a6/LICENSE",
+    "notice": "dataresearchlabs.MIT.txt",
+    "sha256": "e3926546d6b3790c339e124380b7563b3ee553383bcbcb50d1873ac6aa9cb840"
+  },
+  {
+    "id": "financial-models",
+    "author": "M Catherman",
+    "source": "https://github.com/catherman/Financial-Model-Analysis/blob/b9a06e8433a730b9644aa532bc232e2103a003f1/Financial_Models.xlsx",
+    "download": "https://raw.githubusercontent.com/catherman/Financial-Model-Analysis/b9a06e8433a730b9644aa532bc232e2103a003f1/Financial_Models.xlsx",
+    "revision": "b9a06e8433a730b9644aa532bc232e2103a003f1",
+    "license": "MIT",
+    "license_source": "https://github.com/catherman/Financial-Model-Analysis/blob/b9a06e8433a730b9644aa532bc232e2103a003f1/LICENSE",
+    "notice": "catherman.MIT.txt",
+    "sha256": "98e26f56b258444d2ac06830f769174dc93f443268c570392a68cd66ba06eb34"
+  },
+  {
+    "id": "test-v2",
+    "author": "WANG DONG JIE",
+    "source": "https://github.com/yjkj999999/ms-financial-model/blob/271cd6b5f01afdc5564ddd3938c31a5e521f625a/output/test_v2.xlsx",
+    "download": "https://raw.githubusercontent.com/yjkj999999/ms-financial-model/271cd6b5f01afdc5564ddd3938c31a5e521f625a/output/test_v2.xlsx",
+    "revision": "271cd6b5f01afdc5564ddd3938c31a5e521f625a",
+    "license": "MIT",
+    "license_source": "https://github.com/yjkj999999/ms-financial-model/blob/271cd6b5f01afdc5564ddd3938c31a5e521f625a/LICENSE",
+    "notice": "yjkj999999.MIT.txt",
+    "sha256": "28a38f7ba9814415b252f841156b72a8565ee93c9922417b426439212822aec8"
+  },
+  {
+    "id": "protection-risk-model-generic",
+    "author": "Lewis Fogden",
+    "source": "https://github.com/lewisfogden/heavylight/blob/35a7fdcea6ff05ea688140b04d7f207c6dd2c729/examples/std_model/protection_risk_model_generic.xlsx",
+    "download": "https://raw.githubusercontent.com/lewisfogden/heavylight/35a7fdcea6ff05ea688140b04d7f207c6dd2c729/examples/std_model/protection_risk_model_generic.xlsx",
+    "revision": "35a7fdcea6ff05ea688140b04d7f207c6dd2c729",
+    "license": "MIT",
+    "license_source": "https://github.com/lewisfogden/heavylight/blob/35a7fdcea6ff05ea688140b04d7f207c6dd2c729/LICENSE",
+    "notice": "lewisfogden.MIT.txt",
+    "sha256": "da9e145cc4c157079b45c3d561a5f87d01f932da2392ad09e685e54c6768c5f2"
+  },
+  {
+    "id": "bookkeeping-lite-us",
+    "author": "Kanto Labs",
+    "source": "https://github.com/kanto-labs/free-spreadsheet-templates/blob/455589733f6b20af0d147147c069191ef3e6a855/bookkeeping-lite-us/BookkeepingLite_US_FREE_Excel.xlsx",
+    "download": "https://raw.githubusercontent.com/kanto-labs/free-spreadsheet-templates/455589733f6b20af0d147147c069191ef3e6a855/bookkeeping-lite-us/BookkeepingLite_US_FREE_Excel.xlsx",
+    "revision": "455589733f6b20af0d147147c069191ef3e6a855",
+    "license": "CC-BY-4.0",
+    "license_source": "https://github.com/kanto-labs/free-spreadsheet-templates/blob/455589733f6b20af0d147147c069191ef3e6a855/LICENSE",
+    "notice": "CC-BY-4.0.txt",
+    "sha256": "31a93a6e82a124a0ccf25396d2b16f20d8fa73db4cddd5e16a485858d1bf18dd"
+  },
+  {
+    "id": "contractor-estimate-lite",
+    "author": "Kanto Labs",
+    "source": "https://github.com/kanto-labs/free-spreadsheet-templates/blob/455589733f6b20af0d147147c069191ef3e6a855/contractor-estimate-lite/ContractorEstimateLite_FREE_Excel.xlsx",
+    "download": "https://raw.githubusercontent.com/kanto-labs/free-spreadsheet-templates/455589733f6b20af0d147147c069191ef3e6a855/contractor-estimate-lite/ContractorEstimateLite_FREE_Excel.xlsx",
+    "revision": "455589733f6b20af0d147147c069191ef3e6a855",
+    "license": "CC-BY-4.0",
+    "license_source": "https://github.com/kanto-labs/free-spreadsheet-templates/blob/455589733f6b20af0d147147c069191ef3e6a855/LICENSE",
+    "notice": "CC-BY-4.0.txt",
+    "sha256": "d5f918a71ac75d2d51e1cbcd7ec5bf347fd97dfd7812497f79b0a995b52a7aec"
+  },
+  {
+    "id": "giving-tracker-lite",
+    "author": "Kanto Labs",
+    "source": "https://github.com/kanto-labs/free-spreadsheet-templates/blob/455589733f6b20af0d147147c069191ef3e6a855/giving-tracker-lite/GivingTrackerLite_FREE_Excel.xlsx",
+    "download": "https://raw.githubusercontent.com/kanto-labs/free-spreadsheet-templates/455589733f6b20af0d147147c069191ef3e6a855/giving-tracker-lite/GivingTrackerLite_FREE_Excel.xlsx",
+    "revision": "455589733f6b20af0d147147c069191ef3e6a855",
+    "license": "CC-BY-4.0",
+    "license_source": "https://github.com/kanto-labs/free-spreadsheet-templates/blob/455589733f6b20af0d147147c069191ef3e6a855/LICENSE",
+    "notice": "CC-BY-4.0.txt",
+    "sha256": "169b9ee92438dd5616103038fcc84fc23b244e08d6865c742b091f07388f95bc"
+  },
+  {
+    "id": "swiss-dcf-example",
+    "author": "Noel Walpert, noelwalpert.com",
+    "source": "https://github.com/noelwalpert/swiss-financial-models/blob/ed2ca60c299abb2563bc25d57027d498767ee401/dcf/swiss-dcf-example-v1.0.1.xlsx",
+    "download": "https://raw.githubusercontent.com/noelwalpert/swiss-financial-models/ed2ca60c299abb2563bc25d57027d498767ee401/dcf/swiss-dcf-example-v1.0.1.xlsx",
+    "revision": "ed2ca60c299abb2563bc25d57027d498767ee401",
+    "license": "CC-BY-4.0",
+    "license_source": "https://github.com/noelwalpert/swiss-financial-models/blob/ed2ca60c299abb2563bc25d57027d498767ee401/LICENSE",
+    "notice": "CC-BY-4.0.txt",
+    "sha256": "dea31668f3cf0dc7edf3b5d3fe3a6d95e9f9b82904347c7288b5af69db1e5271"
+  }
+]
