@@ -1,9 +1,9 @@
 use crate::lookup::operands::{
     Arguments, charge, coerce_lookup_boolean, coerce_lookup_text, scalar,
 };
+use crate::lookup::syntax::{admit_dynamic_reference, parse_qualifiers, split_qualifier};
 use crate::lookup::{
     Context, LookupError, LookupUnsupportedError, LookupValueError, Value, Work, Workbook,
-    parse_dynamic_reference,
 };
 fn indirect_failure(failure: LookupError) -> LookupError {
     match failure {
@@ -142,15 +142,18 @@ pub(super) fn indirect(
         2 => coerce_lookup_boolean(scalar(&args.get(1, c, w)?, c, w)?)?,
         _ => return Err(LookupValueError::Value.into()),
     };
-    let query = parse_dynamic_reference(&text, a1, w)?;
-    charge(w, Work::QueryReturn, 1)?;
-    // Structured reference syntax is resolved by the workbook parser, with its table metadata.
-    if a1 && query.first.contains('[') && query.first.ends_with(']') {
-        w.structured_reference(text.rsplit_once('!').map_or(text.as_str(), |(_, r)| r), c)
-            .map_err(indirect_failure)
-    } else {
-        w.dynamic_reference(&query, c).map_err(indirect_failure)
+    admit_dynamic_reference(&text, w)?;
+    let (prefix, reference) = split_qualifier(&text);
+    // Leave bracketed selectors intact, including column range separators and caption punctuation.
+    if a1 && prefix.is_none() && reference.contains('[') {
+        charge(w, Work::QueryReturn, 1)?;
+        return w
+            .structured_reference(reference, c)
+            .map_err(indirect_failure);
     }
+    let query = parse_qualifiers(prefix, reference, a1)?;
+    charge(w, Work::QueryReturn, 1)?;
+    w.dynamic_reference(&query, c).map_err(indirect_failure)
 }
 
 /// Select admitted INDEX coordinates without changing the source representation.

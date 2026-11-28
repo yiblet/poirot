@@ -301,7 +301,7 @@ fn formula_copy_preserves_table_column_spelling_and_translates_cell_addresses() 
     use poirot_parsing::formula::{FormulaLocation, TranslationPlan, TranslationPolicy};
 
     let translated = TranslationPlan::new(
-        "SUM(Sales[[#Headers],[A1]])+A1+ROWS(Sales['#Count])",
+        "SUM(Sales[[#Headers],[#Data],[A1]])+A1+ROWS(Sales['#Count])",
         FormulaLocation { row: 0, column: 0 },
         FormulaLocation { row: 1, column: 1 },
         TranslationPolicy::default(),
@@ -309,7 +309,7 @@ fn formula_copy_preserves_table_column_spelling_and_translates_cell_addresses() 
     .unwrap();
     assert_eq!(
         translated.replacement().trim_start_matches('='),
-        "SUM(Sales[[#Headers],[A1]])+B2+ROWS(Sales['#Count])"
+        "SUM(Sales[[#Headers],[#Data],[A1]])+B2+ROWS(Sales['#Count])"
     );
 }
 
@@ -466,5 +466,291 @@ fn xlsx_map_over_two_table_columns_recomputes_after_edits() {
         let mut eval = scenario.evaluation(&context).unwrap();
         assert_eq!(eval.cell(first).unwrap(), CellValue::Number(9.));
         assert_eq!(eval.cell(second).unwrap(), CellValue::Number(expected));
+    }
+}
+
+#[test]
+fn indirect_resolves_intact_table_selectors_in_the_callers_context() {
+    use poirot::eval::{EvaluationBudgets, EvaluationError, EvaluationOutcome, run_formula};
+    use poirot::model::{CellError, CellValue};
+
+    let bytes =
+        rewrite_table(|xml| xml.replace(r#"name="Twice""#, r#"name="Notes!Net: O&apos;Brien""#));
+    let mut book = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    book.add_sheet("Summary").unwrap();
+    // Microsoft documents A1-mode INDIRECT reference text and bracketed table
+    // selectors. The fixture contains Amount 3 and 7 and the doubled column.
+    // https://support.microsoft.com/en-us/excel/functions/indirect-function
+    // https://support.microsoft.com/en-us/excel/using-structured-references-with-excel-tables
+    for (sheet, address, formula, expected) in [
+        (1, "A1", r#"SUM(INDIRECT("Sales[Amount]"))"#, 10.0.into()),
+        (
+            1,
+            "A1",
+            r#"SUM(INDIRECT("Sales[[Notes!Net: O''Brien]]"))"#,
+            20.0.into(),
+        ),
+        (
+            1,
+            "A1",
+            r#"COLUMNS(INDIRECT("Sales[[Amount]:[Notes!Net: O''Brien]]"))"#,
+            2.0.into(),
+        ),
+        (0, "B3", r#"INDIRECT("[@Amount]")"#, 7.0.into()),
+        (0, "D2", r#"INDIRECT("R[0]C[-3]",FALSE)"#, 3.0.into()),
+        (
+            1,
+            "A1",
+            r#"INDIRECT("Sales[Amount]",FALSE)"#,
+            CellValue::Error(CellError::Ref),
+        ),
+        (
+            1,
+            "A1",
+            r#"INDIRECT("Sales[Missing]")"#,
+            CellValue::Error(CellError::Ref),
+        ),
+        (
+            1,
+            "A1",
+            r#"INDIRECT("UnknownTable[Amount]")"#,
+            CellValue::Error(CellError::Ref),
+        ),
+        (
+            1,
+            "A1",
+            r#"INDIRECT("Sales[Amount]+A1")"#,
+            CellValue::Error(CellError::Ref),
+        ),
+        (
+            1,
+            "A1",
+            r#"INDIRECT("Sales[Amount")"#,
+            CellValue::Error(CellError::Ref),
+        ),
+    ] {
+        let result = run_formula(
+            &book,
+            sheet,
+            address.parse().unwrap(),
+            formula,
+            Default::default(),
+            Default::default(),
+        );
+        let EvaluationOutcome::Complete { value, .. } = result else {
+            panic!("{formula}: {result:?}");
+        };
+        assert_eq!(value, expected, "{formula}");
+    }
+
+    let external = run_formula(
+        &book,
+        1,
+        "A1".parse().unwrap(),
+        r#"IFERROR(INDIRECT("[outside.xlsx]Data!Sales[[Notes!Net: O''Brien]]"),99)"#,
+        Default::default(),
+        Default::default(),
+    );
+    assert!(matches!(
+        external,
+        EvaluationOutcome::Aborted {
+            failure: EvaluationError::UnsupportedCapability { .. },
+            ..
+        }
+    ));
+    let restricted = run_formula(
+        &book,
+        1,
+        "A1".parse().unwrap(),
+        r#"IFERROR(INDIRECT("Sales[Amount]"),99)"#,
+        Default::default(),
+        EvaluationBudgets {
+            text_bytes: 30,
+            ..Default::default()
+        },
+    );
+    assert!(matches!(
+        restricted,
+        EvaluationOutcome::Aborted {
+            failure: EvaluationError::Budget(_),
+            ..
+        }
+    ));
+}
+
+#[test]
+fn indirect_tracks_the_consumed_table_column_and_memoizes_within_each_cycle() {
+    use poirot::calculation::EvaluationContext;
+    use poirot::model::CellValue;
+
+    let mut book = read_workbook_bytes::<Workbook>(FIXTURE).unwrap();
+    // Make the two columns independent so no transitive read masks reuse.
+    let data = book.sheet_mut(0).unwrap();
+    data.set_value("B2", 6.0).unwrap();
+    data.set_value("B3", 14.0).unwrap();
+    let sheet = book.add_sheet("Summary").unwrap();
+    sheet.set_value("A1", "Sales[Amount]").unwrap();
+    sheet.set_formula("B1", "SUM(INDIRECT(A1))").unwrap();
+    sheet.set_value("C1", 0.0).unwrap();
+    let mut scenario = book.overlay().build().unwrap();
+    let text = scenario.target("Summary!A1").unwrap();
+    let output = scenario.target("Summary!B1").unwrap();
+    let unrelated = scenario.target("Summary!C1").unwrap();
+    let amount = scenario.target("Data!A2").unwrap();
+    let twice = scenario.target("Data!B2").unwrap();
+    let context = EvaluationContext::default();
+    for (edit, cached_before_cycle, expected) in [
+        (None, None, 10.0),
+        (Some((unrelated, 1.0.into())), Some(10.0), 10.0),
+        (Some((amount, 5.0.into())), None, 12.0),
+        (
+            Some((text, CellValue::Text("Sales[Twice]".into()))),
+            None,
+            20.0,
+        ),
+        (Some((amount, 9.0.into())), Some(20.0), 20.0),
+        (Some((twice, 11.0.into())), None, 25.0),
+    ] {
+        if let Some((target, value)) = edit {
+            scenario.set_value(target, value).unwrap();
+        }
+        assert_eq!(
+            scenario.cached_value(output).as_deref(),
+            cached_before_cycle.map(CellValue::Number).as_ref()
+        );
+        // A new cycle recalculates volatile INDIRECT. A second read inside that
+        // cycle uses its memoized result without parsing the selector again.
+        let mut cycle = scenario.evaluation_with_profiling(&context, true).unwrap();
+        for _ in 0..2 {
+            assert_eq!(cycle.cell(output).unwrap(), CellValue::Number(expected));
+        }
+        let usage = cycle.finish().execution.unwrap();
+        assert_eq!(usage.formula_executions, 1);
+        assert_eq!(usage.dynamic_parse_attempts, 1);
+    }
+}
+
+#[test]
+fn combined_table_sections_roundtrip_and_track_included_rows() {
+    use poirot::calculation::EvaluationContext;
+    use poirot::model::CellValue;
+    use poirot::snapshots::PreparedPolicy;
+
+    let mut book = read_workbook_bytes::<Workbook>(FIXTURE).unwrap();
+    let sheet = book.add_sheet("Summary").unwrap();
+    let formulas = [
+        (
+            "A1",
+            "ROWS(Sales[[#Headers],[#Data]])",
+            CellValue::Number(3.),
+        ),
+        (
+            "A2",
+            "INDEX(Sales[[#Headers],[#Data],[Amount]],1)",
+            CellValue::Text("Amount".into()),
+        ),
+        (
+            "A3",
+            "SUM(Sales[[#Headers],[#Data],[Amount]])",
+            CellValue::Number(10.),
+        ),
+        (
+            "A4",
+            "SUM(Sales[[#Data],[#Totals],[Amount]])",
+            CellValue::Number(20.),
+        ),
+        (
+            "A5",
+            "COLUMNS(Sales[[#Data],[#Totals],[Amount]:[Twice]])",
+            CellValue::Number(2.),
+        ),
+    ];
+    for (address, formula, _) in &formulas {
+        sheet.set_formula(*address, *formula).unwrap();
+    }
+    let bytes = write_xlsx_to_buffer(&book).unwrap();
+    let reopened = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    let mut scenario = reopened.overlay().build().unwrap();
+    let context = EvaluationContext::default();
+    for (address, formula, expected) in formulas {
+        assert_eq!(
+            reopened
+                .sheet(1)
+                .unwrap()
+                .get(address)
+                .unwrap()
+                .unwrap()
+                .formula
+                .as_deref(),
+            Some(formula)
+        );
+        let target = scenario.target(&format!("Summary!{address}")).unwrap();
+        assert_eq!(
+            scenario.evaluation(&context).unwrap().cell(target).unwrap(),
+            expected
+        );
+    }
+    let data = scenario.target("Data!A2").unwrap();
+    let totals = scenario.target("Data!A4").unwrap();
+    let headers_and_data = scenario.target("Summary!A3").unwrap();
+    let data_and_totals = scenario.target("Summary!A4").unwrap();
+    let snapshot = scenario.save_snapshot().to_buffer().unwrap();
+    let mut restored = Workbook::restore_snapshot()
+        .prepared_policy(PreparedPolicy::RequireCompatible)
+        .from_bytes(&snapshot)
+        .unwrap()
+        .into_overlay()
+        .unwrap();
+    restored.set_value(totals, 20.).unwrap();
+    {
+        let mut run = restored.evaluation(&context).unwrap();
+        assert_eq!(run.cell(headers_and_data).unwrap(), CellValue::Number(10.));
+        assert_eq!(run.cell(data_and_totals).unwrap(), CellValue::Number(30.));
+    }
+    restored.set_value(data, 5.).unwrap();
+    let mut run = restored.evaluation(&context).unwrap();
+    assert_eq!(run.cell(headers_and_data).unwrap(), CellValue::Number(12.));
+    assert_eq!(run.cell(data_and_totals).unwrap(), CellValue::Number(32.));
+}
+
+#[test]
+fn combined_table_sections_require_each_selected_section() {
+    use poirot::eval::{EvaluationOutcome, run_formula};
+    use poirot::model::{CellError, CellValue};
+
+    for (from, to, selector) in [
+        (
+            "headerRowCount=\"1\"",
+            "headerRowCount=\"0\"",
+            "[#Headers],[#Data]",
+        ),
+        (
+            "totalsRowCount=\"1\"",
+            "totalsRowCount=\"0\"",
+            "[#Data],[#Totals]",
+        ),
+        ("A1:B4", "A1:B2", "[#Headers],[#Data]"),
+        ("A1:B4", "A1:B2", "[#Data],[#Totals]"),
+    ] {
+        let bytes = rewrite_table(|xml| xml.replace(from, to));
+        let book = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+        let formula = format!("ROWS(Sales[{selector}])");
+        assert!(
+            matches!(
+                run_formula(
+                    &book,
+                    0,
+                    "E1".parse().unwrap(),
+                    &formula,
+                    Default::default(),
+                    Default::default()
+                ),
+                EvaluationOutcome::Complete {
+                    value: CellValue::Error(CellError::Ref),
+                    ..
+                }
+            ),
+            "{from} -> {to}, {formula}"
+        );
     }
 }

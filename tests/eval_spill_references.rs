@@ -128,6 +128,38 @@ fn ordinary_area_roots_materialize_but_cell_roots_remain_scalar() {
         ],
     );
 }
+
+#[test]
+fn computed_indirect_table_selector_resizes_its_spill() {
+    use poirot_io::read_workbook_bytes;
+
+    let mut book =
+        read_workbook_bytes::<Workbook>(include_bytes!("assets/structured-references.xlsx"))
+            .unwrap();
+    let sheet = book.add_sheet("Summary").unwrap();
+    sheet.set_value("A1", "[Amount]").unwrap();
+    sheet.set_formula("B1", r#"INDIRECT("Sales"&A1)"#).unwrap();
+    sheet.set_formula("C1", "ROWS(B1#)").unwrap();
+
+    let mut overlay = book.overlay().build().unwrap();
+    let selector = overlay.target("Summary!A1").unwrap();
+    let last_child = overlay.target("Summary!B3").unwrap();
+    let rows = overlay.target("Summary!C1").unwrap();
+    let context = EvaluationContext::default();
+    // The fixture's Amount column contains 3 and 7. Including the text header
+    // moves 7 down one row and changes the geometry seen by the spill reader.
+    for (text, child, height) in [
+        ("[Amount]", CellValue::Blank, 2.0),
+        ("[[#Headers],[#Data],[Amount]]", 7.0.into(), 3.0),
+        ("[Amount]", CellValue::Blank, 2.0),
+    ] {
+        overlay.set_value(selector, text).unwrap();
+        let mut cycle = overlay.evaluation(&context).unwrap();
+        assert_eq!(cycle.cell(last_child).unwrap(), child);
+        assert_eq!(cycle.cell(rows).unwrap(), height.into());
+    }
+}
+
 #[test]
 fn invalid_anchor_shapes_absent_cells_children_and_errors_follow_declared_policy() {
     let book = book(&[

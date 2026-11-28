@@ -53,7 +53,10 @@ pub(super) fn transfer(
                 use poirot_parsing::formula::{TableColumns, TableSection};
                 let rows = match reference.section {
                     TableSection::CurrentRow | TableSection::Headers | TableSection::Totals => 1,
-                    TableSection::Data | TableSection::All => crate::model::MAX_ROWS,
+                    TableSection::Data
+                    | TableSection::All
+                    | TableSection::HeadersAndData
+                    | TableSection::DataAndTotals => crate::model::MAX_ROWS,
                 };
                 let columns = if matches!(reference.columns, TableColumns::One(_)) {
                     1
