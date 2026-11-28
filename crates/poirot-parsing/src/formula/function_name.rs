@@ -534,6 +534,7 @@ common_functions! {
     Byrow = 498 => "BYROW";
     Bycol = 499 => "BYCOL";
     Makearray = 500 => "MAKEARRAY";
+    Scan = 501 => "SCAN";
 
 
 

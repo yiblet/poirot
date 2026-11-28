@@ -14356,6 +14356,24 @@
       ]
     },
     {
+      "id": "function.SCAN",
+      "kind": "function",
+      "name": "SCAN",
+      "family": "Matrix",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/scan-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.SCAN.valid",
+          "behavior": "Return one intermediate accumulator per input position.",
+          "applicability": "applicable"
+        }
+      ]
+    },
+    {
       "id": "function.ISOMITTED",
       "kind": "function",
       "name": "ISOMITTED",
@@ -14765,6 +14783,7 @@
     "ROWS",
     "RRI",
     "RSQ",
+    "SCAN",
     "SEARCH",
     "SEARCHB",
     "SEC",

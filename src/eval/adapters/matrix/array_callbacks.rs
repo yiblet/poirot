@@ -43,6 +43,7 @@ impl<'call, 'workbook> ArrayCallbacks<'call, 'workbook> {
             MatrixFunction::Byrow => executor.by_axis(Axis::Rows),
             MatrixFunction::Bycol => executor.by_axis(Axis::Columns),
             MatrixFunction::Makearray => executor.make_array(),
+            MatrixFunction::Scan => executor.scan(),
             _ => return Err(crate::eval::limits::EvaluationError::StalePlan),
         };
         match result {
@@ -130,6 +131,53 @@ impl<'call, 'workbook> ArrayCallbacks<'call, 'workbook> {
             ];
             Self::callback_scalar(host, &callback, arguments.into_iter())
         })
+    }
+
+    /// Publish one intermediate per source position while retaining the raw state.
+    fn scan(&mut self) -> FunctionResult<Value> {
+        let (callback, input, mut state) = self.accumulation()?;
+        matrices::generate(
+            &mut self.host,
+            input.rows,
+            input.columns,
+            self.address,
+            |host, row, column| {
+                let next = Self::step(host, &callback, state.take(), row, column)?;
+                Self::require_single_result(&next)?;
+                let published = host.copy_value(&next)?;
+                state = Some(next);
+                host.select_legacy_scalar(published).map_err(Into::into)
+            },
+        )
+    }
+
+    /// Resolve the callback, input extent and an optional initial accumulator.
+    fn accumulation(&mut self) -> FunctionResult<(Value, OperandDescription, Option<Value>)> {
+        let callback = self.host.callback(2, 2, CellError::Value)?;
+        let input = Self::rectangle(&mut self.host, 1)?;
+        let initial = self.host.argument(0)?.into_value();
+        let state = (!matches!(initial, Value::Missing)).then_some(initial);
+        Ok((callback, input, state))
+    }
+
+    /// Advance one position, using the first member unchanged when the seed is omitted.
+    fn step(
+        host: &mut CallHost<'_, '_>,
+        callback: &Value,
+        state: Option<Value>,
+        row: usize,
+        column: usize,
+    ) -> FunctionResult<Value> {
+        let value = OperandReader::new(host)
+            .read_cell(1, row, column)?
+            .value
+            .into();
+        if let Some(state) = state {
+            return host
+                .invoke_callback(callback, [state, value].into_iter())
+                .map_err(Into::into);
+        }
+        Ok(value)
     }
 
     /// Inspect a single bounded input rectangle without reading its members.
