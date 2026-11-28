@@ -130,7 +130,7 @@ impl<'a> Session<'a> {
     fn format(&mut self, cell: &str, number_format: &Option<String>) -> Result<(), JsonError> {
         let target = self.target(cell)?;
         let style = CellStyle {
-            number_format: number_format.clone(),
+            number_format: number_format.as_deref().map(std::sync::Arc::<str>::from),
             ..Default::default()
         };
         match self {
