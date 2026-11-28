@@ -18,6 +18,8 @@ pub struct Template {
     pub operands: Vec<u8>,
     /// Number of per-formula reference slots required by this template.
     pub reference_slots: u32,
+    /// Maximum number of simultaneous local slots in this body.
+    pub local_slots: u32,
 }
 
 impl Template {

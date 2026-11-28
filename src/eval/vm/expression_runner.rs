@@ -74,11 +74,15 @@ impl<'s, 'a> ExpressionRunner<'s, 'a> {
         match expression.into() {
             #[cfg(test)]
             ExecutableRef::Tree(expression) => self.tree_expr(sheet, at, expression),
-            ExecutableRef::Bytecode { program, start } => {
+            ExecutableRef::Bytecode {
+                program,
+                start,
+                frame,
+            } => {
                 if start == 0 {
                     Vm::new(self.session).run(sheet, at, program)
                 } else {
-                    Vm::new(self.session).execute(sheet, at, program, start)
+                    Vm::new(self.session).execute(sheet, at, program, start, frame)
                 }
             }
         }

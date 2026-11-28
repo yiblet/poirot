@@ -1,5 +1,6 @@
 //! Borrowed bytecode execution handles. The tree backend exists only as a test oracle.
 
+use super::local_frame::LocalFrame;
 #[cfg(test)]
 use crate::eval::compile::bound::Expression;
 use crate::eval::compile::bytecode::{Compiled, Opcode};
@@ -18,6 +19,8 @@ pub(in crate::eval) enum ExecutableRef<'a> {
         program: &'a Compiled,
         /// Entry instruction index.
         start: usize,
+        /// Caller frame for same-program deferred arguments.
+        frame: Option<LocalFrame>,
     },
 }
 
@@ -42,7 +45,7 @@ impl<'a> ExecutableRef<'a> {
                 crate::eval::compile::bytecode::aggregation::lower_tree(expression)
                     .map(|plan| plan.map(std::borrow::Cow::Owned))
             }
-            Self::Bytecode { program, start } => Ok(program
+            Self::Bytecode { program, start, .. } => Ok(program
                 .template
                 .aggregations
                 .binary_search_by_key(&start, |e| e.start)
@@ -69,7 +72,7 @@ impl<'a> ExecutableRef<'a> {
                 | Expression::SheetSpan(_) => ArgumentOrigin::Reference,
                 _ => ArgumentOrigin::Computed,
             },
-            Self::Bytecode { program, start } => match start
+            Self::Bytecode { program, start, .. } => match start
                 .checked_add(1)
                 .and_then(|next| program.template.code.get(next))
                 .map(|instruction| instruction.opcode)
@@ -96,7 +99,7 @@ impl<'a> ExecutableRef<'a> {
             Self::Tree(Expression::Array(rows)) => {
                 Some((rows.len(), rows.first().map_or(0, Vec::len)))
             }
-            Self::Bytecode { program, start } => {
+            Self::Bytecode { program, start, .. } => {
                 let allocation = program.template.code.get(start.checked_add(1)?)?;
                 (allocation.opcode == Opcode::ArrayAllocate)
                     .then_some((allocation.b as usize, allocation.c as usize))
@@ -118,7 +121,7 @@ impl<'a> ExecutableRef<'a> {
                     visitor(index, matches!(expression, Expression::Missing))?;
                 }
             }
-            Self::Bytecode { program, start } if self.array_shape().is_some() => {
+            Self::Bytecode { program, start, .. } if self.array_shape().is_some() => {
                 let mut depth = 0;
                 let mut index = 0;
                 for (offset, instruction) in program

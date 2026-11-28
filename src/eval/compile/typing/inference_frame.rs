@@ -1,3 +1,4 @@
+use super::expression_properties::ExpressionProperties;
 use poirot_parsing::formula::Expr;
 
 /// One suspended expression in the shared depth-first preparation traversal.
@@ -7,4 +8,5 @@ pub(super) struct InferenceFrame<'a> {
     pub(super) slot: usize,
     pub(super) base: usize,
     pub(super) binding: Option<usize>,
+    pub(super) local: Option<ExpressionProperties>,
 }

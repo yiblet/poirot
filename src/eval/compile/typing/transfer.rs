@@ -6,7 +6,7 @@ use crate::eval::{
     functions::registry::DependencyPolicy,
 };
 use crate::model::{FormulaType, ScalarKinds, ShapeBounds};
-use poirot_parsing::formula::{BinaryOp, Expr, UnaryOp};
+use poirot_parsing::formula::{BinaryOp, Expr, LetForm, UnaryOp};
 
 /// Apply the existing modal rules to operands already completed by the shared driver.
 pub(super) fn transfer(
@@ -137,6 +137,15 @@ pub(super) fn transfer(
                     elements = elements.join(p.result.elements());
                 }
                 FormulaType::array(elements.join(ScalarKinds::ERROR)).join(error)
+            }
+            Expr::Function { name, .. } if LetForm::matches(name) => {
+                let mut result = error;
+                for value in children.by_ref() {
+                    effects = effects.join(value.effects);
+                    shape = value.shape;
+                    result = value.result;
+                }
+                result
             }
             Expr::Function { name, args } => {
                 let target = target.ok_or(CompileError::InvalidReference)?;

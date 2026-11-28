@@ -4,6 +4,7 @@ use super::compile_error::CompileError;
 use super::compiled::Compiled;
 use super::executable::Executable;
 use super::high::High;
+use super::lexical_scope::LexicalScope;
 use super::preparation::Preparation;
 use super::reference_bindings::ReferenceBindings;
 use super::reference_kind::ReferenceKind;
@@ -11,7 +12,7 @@ use super::sink::Sink;
 use super::sizes::Sizes;
 use super::template::Template;
 use super::writer::Writer;
-use poirot_parsing::formula::{BinaryOp, Expr, UnaryOp};
+use poirot_parsing::formula::{BinaryOp, Expr, LetForm, UnaryOp};
 use std::sync::Arc;
 
 pub(super) const LIMIT: usize = 100_000;
@@ -62,12 +63,13 @@ pub(super) fn compile_inner(
     let mut sizes = Sizes::default();
     let mut nodes = 0;
     validate(expression, 0, &mut nodes, strict)?;
-    stream(expression, 0, &mut sizes);
+    stream(expression, 0, &mut LexicalScope::default(), &mut sizes)?;
     if [
         sizes.code,
         sizes.labels,
         sizes.text,
         sizes.refs,
+        sizes.local_slots,
         sizes.reference_bytes,
     ]
     .iter()
@@ -85,6 +87,7 @@ pub(super) fn compile_inner(
                     code: Vec::with_capacity(sizes.code),
                     operands: Vec::with_capacity(sizes.text),
                     reference_slots: 0,
+                    local_slots: sizes.local_slots as u32,
                 },
                 calls: Vec::with_capacity(sizes.calls),
                 extension_identity: registry.map(|r| r.identity()),
@@ -104,7 +107,12 @@ pub(super) fn compile_inner(
         inference: crate::eval::compile::typing::InferenceMachine::new(sizes.expressions)?,
         error: None,
     };
-    stream(expression, 0, &mut preparation);
+    stream(
+        expression,
+        0,
+        &mut LexicalScope::default(),
+        &mut preparation,
+    )?;
     let Preparation {
         mut writer,
         inference,
@@ -188,21 +196,27 @@ pub(super) fn validate(
     Ok(())
 }
 
-pub(super) fn stream<'ast>(e: &'ast Expr, depth: usize, sink: &mut impl Sink<'ast>) {
+/// Lower one expression with its active lexical environment.
+fn stream<'ast>(
+    e: &'ast Expr,
+    depth: usize,
+    scope: &mut LexicalScope<'ast>,
+    sink: &mut impl Sink<'ast>,
+) -> Result<(), CompileError> {
     sink.emit(High::Enter(depth, e));
     if depth >= DEPTH {
         sink.emit(High::Truncated);
         sink.emit(High::Leave);
-        return;
+        return Ok(());
     }
     match e {
         Expr::Unary { op, operand } => {
-            stream(operand, depth + 1, sink);
+            stream(operand, depth + 1, scope, sink)?;
             sink.emit(High::Unary(*op));
         }
         Expr::Binary { op, left, right } => {
-            stream(left, depth + 1, sink);
-            stream(right, depth + 1, sink);
+            stream(left, depth + 1, scope, sink)?;
+            stream(right, depth + 1, scope, sink)?;
             sink.emit(High::Binary(*op));
         }
         Expr::Array(rows) => {
@@ -211,10 +225,29 @@ pub(super) fn stream<'ast>(e: &'ast Expr, depth: usize, sink: &mut impl Sink<'as
                 rows.first().map_or(0, Vec::len),
             ));
             for a in rows.iter().flatten() {
-                stream(a, depth + 1, sink);
+                stream(a, depth + 1, scope, sink)?;
                 sink.emit(High::Scalarize);
             }
             sink.emit(High::Array(rows.len(), rows.first().map_or(0, Vec::len)));
+        }
+        Expr::Name(name) => match scope.slot(name) {
+            Some(slot) => sink.emit(High::ReadLocal(slot)),
+            None => sink.emit(High::Atom(e)),
+        },
+        Expr::Function { name, args } if LetForm::matches(name) => {
+            if let Some(form) = LetForm::parse(args) {
+                let base = scope.next_slot();
+                for (name, initializer) in form.bindings() {
+                    stream(initializer, depth + 1, scope, sink)?;
+                    sink.emit(High::BindLocal(scope.next_slot()));
+                    scope.bind(name)?;
+                }
+                stream(form.result, depth + 1, scope, sink)?;
+                sink.emit(High::ClearLocals(base));
+                scope.finish_scope(base);
+            } else {
+                sink.emit(High::InvalidLet);
+            }
         }
         Expr::Function { name, args } => {
             let done = depth * 2;
@@ -222,8 +255,14 @@ pub(super) fn stream<'ast>(e: &'ast Expr, depth: usize, sink: &mut impl Sink<'as
             sink.emit(High::Invoke(name, args.len(), done));
             sink.emit(High::Goto(done));
             for (i, a) in args.iter().enumerate() {
-                sink.emit(High::Argument(i, next, depth, a));
-                stream(a, depth + 1, sink);
+                sink.emit(High::Argument(
+                    i,
+                    next,
+                    depth,
+                    a,
+                    scope.uses_local(a, DEPTH.saturating_sub(depth)),
+                ));
+                stream(a, depth + 1, scope, sink)?;
                 sink.emit(High::YieldArgument);
                 sink.emit(High::Label(next));
             }
@@ -232,6 +271,7 @@ pub(super) fn stream<'ast>(e: &'ast Expr, depth: usize, sink: &mut impl Sink<'as
         _ => sink.emit(High::Atom(e)),
     }
     sink.emit(High::Leave);
+    Ok(())
 }
 
 pub(super) fn reference(e: &Expr, out: &mut impl Bytes) -> Option<ReferenceKind> {

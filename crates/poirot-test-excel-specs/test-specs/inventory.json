@@ -13742,19 +13742,17 @@
       "id": "function.LET",
       "kind": "function",
       "name": "LET",
-      "family": "ModernGap",
+      "family": "FormulaSyntax",
       "scope_status": "in_scope",
-      "implementation_status": "unsupported",
+      "implementation_status": "partial",
       "source_urls": [
-        "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-        "https://support.microsoft.com/en-us/excel/excel-functions-alphabetical"
+        "https://support.microsoft.com/en-us/excel/functions/let-function"
       ],
       "obligations": [
         {
           "id": "function.LET.valid",
-          "behavior": "Establish documented valid LET semantics; missing registry handler is an explicit gap, not a successful Excel error oracle.",
-          "applicability": "requires_research",
-          "reason": "Absent from registry; individual contract and runner capability need research."
+          "behavior": "Evaluate each binding once in source order and resolve lexical shadowing.",
+          "applicability": "applicable"
         }
       ]
     },

@@ -2,6 +2,7 @@
 
 use super::arguments_iter::ArgumentsIter;
 use super::executable_ref::ExecutableRef;
+use super::local_frame::LocalFrame;
 #[cfg(test)]
 use crate::eval::compile::bound::Expression;
 use crate::eval::compile::bytecode::Compiled;
@@ -22,6 +23,8 @@ pub(in crate::eval) enum ArgumentsRef<'a> {
         program: &'a Compiled,
         /// First argument descriptor index.
         first: usize,
+        /// Lexical frame shared by the owning call and its deferred arguments.
+        frame: Option<LocalFrame>,
         /// Number of syntactic argument positions.
         count: usize,
     },
@@ -69,15 +72,18 @@ impl<'a> ArgumentsRef<'a> {
     pub(in crate::eval) fn get(self, ordinal: usize) -> Option<ExecutableRef<'a>> {
         match self {
             Self::Empty => None,
-            Self::Programs(v) => v
-                .get(ordinal)
-                .map(|program| ExecutableRef::Bytecode { program, start: 0 }),
+            Self::Programs(v) => v.get(ordinal).map(|program| ExecutableRef::Bytecode {
+                program,
+                start: 0,
+                frame: None,
+            }),
             #[cfg(test)]
             Self::Tree(v) => v.get(ordinal).map(ExecutableRef::Tree),
             Self::Bytecode {
                 program,
                 first,
                 count,
+                frame,
             } => {
                 if ordinal >= count {
                     return None;
@@ -94,6 +100,7 @@ impl<'a> ArgumentsRef<'a> {
                 Some(ExecutableRef::Bytecode {
                     program,
                     start: descriptor.checked_add(1)?,
+                    frame,
                 })
             }
         }

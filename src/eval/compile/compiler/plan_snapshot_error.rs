@@ -1,6 +1,9 @@
 /// Structural rejection of persisted compiled programs.
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum PlanSnapshotError {
+    /// Local operand is outside the live lexical scope.
+    #[error("invalid lexical scope in snapshot program")]
+    SnapshotLocalScope,
     /// Allocation failed while checking which call owns each contextual reducer.
     #[error("could not reserve contextual reducer validation state")]
     AggregationReservation(#[source] std::collections::TryReserveError),

@@ -2,6 +2,7 @@
 //! The unit-test tree oracle remains to check value, read, observation and budget parity.
 
 use super::arguments_ref::ArgumentsRef;
+use super::local_frame::LocalFrame;
 use super::operators::Operators;
 use super::reference_atoms::ReferenceAtoms;
 use super::reference_ref::ReferenceRef;
@@ -58,7 +59,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                 reason: crate::eval::limits::EvaluationReasonError::ExtensionRegistryIdentityChangedRebindTheFormulaPlan,
             });
         }
-        self.execute(sheet, at, program, 0)
+        self.execute(sheet, at, program, 0, None)
     }
 
     /// Execute a bytecode block with shared budgets and lazy family adapters.
@@ -68,7 +69,10 @@ impl<'s, 'a> Vm<'s, 'a> {
         at: CellAddress,
         program: &Compiled,
         start: usize,
+        caller_frame: Option<LocalFrame>,
     ) -> EvalResult<Value> {
+        let local_base = self.session.state.runtime.vm.locals.len();
+        let frame = caller_frame.unwrap_or_else(|| LocalFrame::new(local_base));
         let base = self.session.state.runtime.vm.values.len();
         let observed = self.session.ports.execution_observer.is_some();
         let mut frames: Vec<ObservationFrame> = Vec::new();
@@ -197,6 +201,52 @@ impl<'s, 'a> Vm<'s, 'a> {
                             program.text(instruction.a, instruction.b)?,
                         )?;
                         self.session.state.runtime.vm.values.push(value);
+                    }
+                    Opcode::BindLocal => {
+                        let slot = frame.index(instruction.a)?;
+                        let runtime = &mut *self.session.state.runtime;
+                        let vm = &mut runtime.vm;
+                        if instruction.a >= program.template.local_slots
+                            || slot != vm.locals.len()
+                            || vm.values.len() <= base
+                        {
+                            return Err(EvaluationError::StalePlan);
+                        }
+                        let budget = &mut runtime.budget;
+                        budget.check_allocation(
+                            slot.checked_add(1).ok_or(EvaluationError::StalePlan)?,
+                        )?;
+                        budget.allocation(1)?;
+                        vm.locals.try_reserve(1).map_err(|source| EvaluationError::reservation(
+                            CapabilityId::FunctionAdapter,
+                            Some(EvaluationTarget { sheet, address: at }),
+                            crate::eval::limits::EvaluationReasonError::AllocatingAFunctionResultOrScratchBuffer,
+                            source,
+                        ))?;
+                        let value = vm.values.pop().ok_or(EvaluationError::StalePlan)?;
+                        // SAFETY: A successful reservation admitted one slot in this local stack.
+                        vm.locals.push(value);
+                    }
+                    Opcode::ReadLocal => {
+                        if instruction.a >= program.template.local_slots {
+                            return Err(EvaluationError::StalePlan);
+                        }
+                        let runtime = &mut *self.session.state.runtime;
+                        let vm = &mut runtime.vm;
+                        let local = vm
+                            .locals
+                            .get(frame.index(instruction.a)?)
+                            .ok_or(EvaluationError::StalePlan)?;
+                        let value = crate::eval::values::copy_value(&mut runtime.budget, local)?;
+                        vm.values.push(value);
+                    }
+                    Opcode::ClearLocals => {
+                        let first = frame.index(instruction.a)?;
+                        let locals = &mut self.session.state.runtime.vm.locals;
+                        if first < local_base || first >= locals.len() {
+                            return Err(EvaluationError::StalePlan);
+                        }
+                        locals.truncate(first);
                     }
                     Opcode::QualifiedName => {
                         let mut bytes = OperandCursor(
@@ -344,6 +394,7 @@ impl<'s, 'a> Vm<'s, 'a> {
                         let args = ArgumentsRef::Bytecode {
                             program,
                             first: ip + 2,
+                            frame: Some(frame),
                             count: instruction.b as usize,
                         };
                         let value = self.call(sheet, at, program, instruction.a as usize, args)?;
@@ -387,6 +438,7 @@ impl<'s, 'a> Vm<'s, 'a> {
         // Nested cell and deferred-argument calls share this stack. Only the
         // current frame's temporaries are discarded; caller values remain in place.
         self.session.state.runtime.vm.values.truncate(base);
+        self.session.state.runtime.vm.locals.truncate(local_base);
         result
     }
 

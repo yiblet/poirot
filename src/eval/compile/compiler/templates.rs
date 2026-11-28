@@ -93,6 +93,7 @@ pub(super) fn executable_hash(program: &crate::eval::compile::bytecode::Executab
     program.template.operands.hash(&mut hash);
     program.template.aggregations.hash(&mut hash);
     program.template.reference_slots.hash(&mut hash);
+    program.template.local_slots.hash(&mut hash);
     for instruction in &program.template.code {
         (
             instruction.opcode as u8,

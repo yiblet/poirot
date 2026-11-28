@@ -12,6 +12,7 @@ pub(in crate::eval) struct InferenceMachine<'a> {
     pub(super) expressions: Vec<TypedExpression>,
     pub(super) frames: poirot_functions::scalar::ParamVec<InferenceFrame<'a>>,
     pub(super) operands: poirot_functions::scalar::ParamVec<ExpressionProperties>,
+    locals: poirot_functions::scalar::ParamVec<ExpressionProperties>,
 }
 
 impl<'a> InferenceMachine<'a> {
@@ -25,6 +26,7 @@ impl<'a> InferenceMachine<'a> {
             expressions,
             frames: poirot_functions::scalar::ParamVec::new(),
             operands: poirot_functions::scalar::ParamVec::new(),
+            locals: poirot_functions::scalar::ParamVec::new(),
         })
     }
 
@@ -59,6 +61,7 @@ impl<'a> InferenceMachine<'a> {
             slot,
             base: self.operands.len(),
             binding: None,
+            local: None,
         });
         Ok(())
     }
@@ -85,6 +88,51 @@ impl<'a> InferenceMachine<'a> {
         Ok(())
     }
 
+    /// Associate a local slot with the most recently completed initializer's type.
+    pub(in crate::eval) fn bind_local(&mut self, slot: usize) -> Result<(), CompileError> {
+        if slot != self.locals.len() {
+            return Err(CompileError::InvalidReference);
+        }
+        let value = self
+            .operands
+            .last()
+            .copied()
+            .ok_or(CompileError::InvalidReference)?;
+        self.locals
+            .try_reserve(1)
+            .map_err(|_| CompileError::ResourceLimit)?;
+        // SAFETY: The reservation admits exactly one property entry.
+        self.locals.push(ExpressionProperties {
+            effects: Default::default(),
+            ..value
+        });
+        Ok(())
+    }
+
+    /// Annotate a local read with the type already established by its initializer.
+    pub(in crate::eval) fn read_local(&mut self, slot: usize) -> Result<(), CompileError> {
+        let local = self
+            .locals
+            .get(slot)
+            .copied()
+            .ok_or(CompileError::InvalidReference)?;
+        let frame = self
+            .frames
+            .last_mut()
+            .ok_or(CompileError::InvalidReference)?;
+        frame.local = Some(local);
+        Ok(())
+    }
+
+    /// Leave a lexical scope while retaining the result's inferred properties.
+    pub(in crate::eval) fn clear_locals(&mut self, first: usize) -> Result<(), CompileError> {
+        if first >= self.locals.len() {
+            return Err(CompileError::InvalidReference);
+        }
+        self.locals.truncate(first);
+        Ok(())
+    }
+
     /// Infer the completed expression from its immediate operands and resume its parent.
     pub(in crate::eval) fn leave(&mut self, bindings: &[Call]) -> Result<(), CompileError> {
         let frame = self.frames.last().ok_or(CompileError::InvalidReference)?;
@@ -101,7 +149,14 @@ impl<'a> InferenceMachine<'a> {
                     .ok_or(CompileError::InvalidReference)
             })
             .transpose()?;
-        let properties = transfer(frame.expression, frame.depth, operands, target)?;
+        let properties = if let Some(local) = frame.local {
+            if !operands.is_empty() {
+                return Err(CompileError::InvalidReference);
+            }
+            local
+        } else {
+            transfer(frame.expression, frame.depth, operands, target)?
+        };
         self.expressions
             .get_mut(frame.slot)
             .ok_or(CompileError::InvalidReference)?
@@ -119,7 +174,7 @@ impl<'a> InferenceMachine<'a> {
 
     /// Publish only a complete root with no suspended expressions.
     pub(in crate::eval) fn finish(self) -> Result<FormulaTyping, CompileError> {
-        if !self.frames.is_empty() || self.operands.len() != 1 {
+        if !self.frames.is_empty() || self.operands.len() != 1 || !self.locals.is_empty() {
             return Err(CompileError::InvalidReference);
         }
         Ok(FormulaTyping {

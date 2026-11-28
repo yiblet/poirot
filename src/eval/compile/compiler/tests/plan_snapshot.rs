@@ -472,3 +472,29 @@ fn snapshot_rejects_unsupported_preparation_and_policy() {
     plan.policy.registry.builtin_contract_version += 1;
     assert!(PlanSnapshot::capture(&plan).is_err());
 }
+
+#[test]
+fn snapshot_rejects_uninitialized_let_local_reads() {
+    use super::super::plan_snapshot_error::PlanSnapshotError;
+    use crate::eval::compile::bytecode::Opcode;
+
+    let mut book = Workbook::new();
+    book.add_sheet("S")
+        .unwrap()
+        .set_formula("A1", "LET(x,1,y,IF(TRUE,x,0),x+y+Rate)")
+        .unwrap();
+    let plan = FormulaCompiler::new().compile_workbook(&book, &PreparationPolicy::default());
+    let mut dto = PlanSnapshot::capture(&plan).unwrap().into_owned();
+    assert_eq!(dto.sources[0].names.as_ref(), ["Rate"]);
+    let template = dto.programs[0].template.to_mut();
+    let read = template
+        .code
+        .iter_mut()
+        .find(|instruction| instruction.opcode == Opcode::ReadLocal)
+        .unwrap();
+    read.a = 1;
+    assert!(matches!(
+        dto.restore(),
+        Err(PlanSnapshotError::SnapshotLocalScope)
+    ));
+}

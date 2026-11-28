@@ -37,6 +37,8 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<(), PlanSn
             .map(InstructionIndex::index)
             .ok_or(PlanSnapshotError::SnapshotJumpLabel)
     };
+    let mut local_depth = 0u32;
+    let mut deepest_scope = 0u32;
     for (ip, i) in t.code.iter().enumerate() {
         if i.flags != 0 || i.reserved != 0 {
             return Err(PlanSnapshotError::SnapshotInstructionFlags);
@@ -58,6 +60,23 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<(), PlanSn
                 } else {
                     std::str::from_utf8(bytes)
                         .map_err(|_| PlanSnapshotError::SnapshotUTF8Operand)?;
+                }
+            }
+            Opcode::BindLocal => {
+                if i.a != local_depth || i.a >= t.local_slots || i.b != 0 || i.c != 0 {
+                    return Err(PlanSnapshotError::SnapshotLocalScope);
+                }
+                local_depth = local_depth
+                    .checked_add(1)
+                    .ok_or(PlanSnapshotError::SnapshotLocalScope)?;
+                deepest_scope = deepest_scope.max(local_depth);
+            }
+            Opcode::ReadLocal | Opcode::ClearLocals => {
+                if i.a >= local_depth || i.b != 0 || i.c != 0 {
+                    return Err(PlanSnapshotError::SnapshotLocalScope);
+                }
+                if i.opcode == Opcode::ClearLocals {
+                    local_depth = i.a;
                 }
             }
             Opcode::Reference if i.a >= t.reference_slots => {
@@ -108,6 +127,9 @@ pub(super) fn validate_template(t: &Template, calls: usize) -> Result<(), PlanSn
             Opcode::Binary if i.a > 14 => return Err(PlanSnapshotError::SnapshotBinary),
             _ => {}
         }
+    }
+    if local_depth != 0 || deepest_scope != t.local_slots {
+        return Err(PlanSnapshotError::SnapshotLocalScope);
     }
     Ok(())
 }

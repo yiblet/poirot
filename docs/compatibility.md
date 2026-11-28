@@ -25,7 +25,7 @@ check your model, then [validate it with representative inputs](#checking-your-w
 
 ## Supported functions
 
-Poirot implements **494 of 521 function names (94.8%)** in Microsoft's
+Poirot implements **495 of 521 function names (95.0%)** in Microsoft's
 [alphabetical function index](https://support.microsoft.com/en-us/excel/excel-functions-alphabetical),
 as counted on 2026-10-26. This counts names across Excel versions, including
 aliases; it does not measure workbook compatibility.
@@ -42,20 +42,19 @@ aliases; it does not measure workbook compatibility.
 | Lookup and reference | 37 / 40 | 92.5% |
 | Information | 19 / 22 | 86.4% |
 | Text | 47 / 50 | 94.0% |
-| Logical | 11 / 19 | 57.9% |
+| Logical | 12 / 19 | 63.2% |
 | Add-in and Automation | 1 / 3 | 33.3% |
 | Cube | 0 / 7 | 0% |
 | Web | 2 / 3 | 66.7% |
-| **Total** | **494 / 521** | **94.8%** |
+| **Total** | **495 / 521** | **95.0%** |
 
 ### Remaining function gaps
 
 The missing functions fall into two groups:
 
-- **Bindings and functional programming:** `LET`, `LAMBDA`, `BYCOL`, `BYROW`,
-  `MAKEARRAY`, `MAP`, `REDUCE`, `SCAN` and `ISOMITTED`. These let formulas name
-  values, define functions or work with functions as arguments; Poirot does not
-  yet support those capabilities.
+- **Formula-defined functions and helpers:** `LAMBDA`, `BYCOL`, `BYROW`,
+  `MAKEARRAY`, `MAP`, `REDUCE`, `SCAN` and `ISOMITTED`. These let formulas
+  define functions and call them from other functions.
 - **Workbook data, application integrations and services:** `INFO`, `PHONETIC`,
   `GETPIVOTDATA`, `WEBSERVICE`, `STOCKHISTORY`, `TRANSLATE`, `DETECTLANGUAGE`,
   `IMAGE`, `CALL`, `REGISTER.ID`, `RTD`, `CUBEKPIMEMBER`, `CUBEMEMBER`,
@@ -102,6 +101,7 @@ authored source remains portable.
 | Feature | Supported behavior and limits | Tests or API |
 | --- | --- | --- |
 | Cell and range references | Supports single cells, ranges, sheet-qualified references, whole rows, whole columns and defined names. | [Reference tests](https://github.com/yiblet/poirot/blob/master/tests/eval_reference_ranges.rs), [name tests](https://github.com/yiblet/poirot/blob/master/tests/eval_qualified_names.rs) |
+| Local bindings | `LET` evaluates up to 126 bindings once in source order and retains reference and array values for the final expression. An unused binding's worksheet error stays local to that binding, as observed in Excel 2024. | [Local binding tests](../tests/eval_let.rs), [Excel 2024 observations](https://www.helpaso.net/course/e_function/logical/let/) |
 | Structured table references | Supports table data by name, qualified columns and adjacent column ranges, and one section selector such as `#Headers`, `#Data`, `#Totals` or `#All`. `Table[]` selects the same rows as `Table[#Data]`. Insert placeholders are excluded from data. Supports `@` and `#This Row` for the formula’s row, and unqualified selectors inside the enclosing table. Structured references built with `INDIRECT` are unsupported. | [Table integration tests](../tests/io_worksheet_tables.rs) |
 | Three-dimensional references | Supports aggregates such as `SUM(Sheet1:Sheet3!A1)`, `AVERAGE` and `COUNT`. Reversed sheet endpoints stop evaluation. If only the first endpoint is missing, the reference selects the first worksheet; a missing last endpoint stops evaluation. | [Sheet-span tests](https://github.com/yiblet/poirot/blob/master/tests/eval_sheet_spans.rs) |
 | Dynamic arrays | Implements `FILTER`, `SORT`, `SORTBY`, `UNIQUE`, `SEQUENCE`, `RANDARRAY`, `HSTACK`, `VSTACK`, `TAKE`, `DROP`, `CHOOSECOLS`, `CHOOSEROWS`, `EXPAND`, `TOCOL`, `TOROW`, `WRAPCOLS`, `WRAPROWS` and `TEXTSPLIT`. | [Array tests](https://github.com/yiblet/poirot/blob/master/tests/eval_internal_array_context.rs) |
