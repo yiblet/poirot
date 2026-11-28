@@ -16,8 +16,6 @@ pub(in crate::eval) struct Reads {
     pub fresh_results: CellSet,
     /// Cells whose results may be retained after successful execution.
     pub completed: CellSet,
-    /// Successful root cache reads, staged in caller order.
-    pub cached_outputs: Vec<Key>,
     /// Results whose old consumed trace was validated without executing their formula.
     pub validated: CellSet,
 }
@@ -66,7 +64,6 @@ impl Reads {
     /// Remove speculative consumers while preserving previously settled evidence.
     pub(in crate::eval) fn discard_consumers(&mut self, speculative: &CellSet) {
         self.flush();
-        self.cached_outputs.retain(|key| !speculative.contains(key));
         for key in speculative {
             self.traces.remove(key);
             self.completed.remove(key);

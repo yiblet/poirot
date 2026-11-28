@@ -20,8 +20,6 @@ pub struct OverlayEvaluation<'a> {
     pub(super) session: crate::eval::session::Session<'a>,
     pub(super) cache: &'a RefCell<Cache>,
     pub(super) completed: crate::eval::coordinates::CellSet,
-    /// Ordered retained cache reads awaiting a later merge or result export.
-    cached_outputs: Vec<Key>,
     spill_resets: std::collections::BTreeSet<Key>,
     failure: Option<EvaluationError>,
     pub(super) retention: crate::eval::limits::MemoRetentionLimits,
@@ -67,7 +65,6 @@ impl<'a> OverlayEvaluation<'a> {
             session,
             cache: &overlay.cache,
             completed: Default::default(),
-            cached_outputs: Vec::new(),
             spill_resets: Default::default(),
             failure: None,
             retention: context.retention,
@@ -117,14 +114,8 @@ impl<'a> OverlayEvaluation<'a> {
             .cache
             .try_borrow()
             .map_err(|_| EvaluationError::StalePlan)?;
-        let mut completed = self
-            .completed
-            .iter()
-            .chain(&self.cached_outputs)
-            .copied()
-            .collect::<Vec<_>>();
+        let mut completed = self.completed.iter().copied().collect::<Vec<_>>();
         completed.sort_unstable();
-        completed.dedup();
         Ok(self
             .spill_resets
             .iter()
@@ -206,7 +197,6 @@ impl<'a> OverlayEvaluation<'a> {
         reads.flush();
         let mut fresh_results = std::mem::take(&mut reads.fresh_results);
         let mut completed = std::mem::take(&mut reads.completed);
-        let mut cached_outputs = std::mem::take(&mut reads.cached_outputs);
         let mut resets = Vec::new();
         for &key in publication.pending_cells() {
             let role = publication.role(key);
@@ -277,7 +267,6 @@ impl<'a> OverlayEvaluation<'a> {
             }
             completed.insert(key);
         }
-        let first_publication = self.completed.is_empty() && self.cached_outputs.is_empty();
         self.cache
             .try_borrow_mut()
             .map_err(|_| EvaluationError::StalePlan)?
@@ -287,21 +276,17 @@ impl<'a> OverlayEvaluation<'a> {
                 self.session.state.runtime.stack.consumer,
                 resets.iter().copied(),
             )?;
-        if first_publication {
-            // The first committed batch already owns the required membership and order.
+        if self.completed.is_empty() {
+            // The first committed batch already owns the unique completion set.
             std::mem::swap(&mut self.completed, &mut completed);
-            std::mem::swap(&mut self.cached_outputs, &mut cached_outputs);
         } else {
             self.completed.extend(completed.drain());
-            self.completed.extend(self.cached_outputs.drain(..));
-            self.completed.extend(cached_outputs.drain(..));
         }
         self.spill_resets.extend(resets);
         // Retain only empty publication buffers after a successful atomic commit.
         // An error still discards the local batch and poisons this evaluation.
         reads.fresh_results = fresh_results;
         reads.completed = completed;
-        reads.cached_outputs = cached_outputs;
         self.session
             .state
             .runtime

@@ -223,6 +223,24 @@ fn retained_output_batches_preserve_order_and_publish_only_on_success() {
 }
 
 #[test]
+fn repeated_cached_outputs_track_only_distinct_completions() {
+    let w = book(&["2+3"]);
+    let mut overlay = Overlay::with_workbook(&w).build().unwrap();
+    let context = context();
+    let target = target(0);
+    overlay.evaluation(&context).unwrap().cell(target).unwrap();
+
+    let mut run = overlay.evaluation(&context).unwrap();
+    let targets = vec![target; 20_000];
+    let values = run.outputs(&targets).unwrap();
+    assert_eq!(values.len(), targets.len());
+    assert!(values.iter().all(|value| value.target == target));
+    assert_eq!(run.usage().external_cache_hits, targets.len() as u64);
+    assert_eq!(run.completed.len(), 1);
+    assert_eq!(run.result_changes().unwrap().len(), 1);
+}
+
+#[test]
 fn selected_branch_replacement_discards_obsolete_dependencies() {
     let mut w = book(&["IF(D1,B1,C1)", "2+3", "7+8"]);
     w.sheet_mut(0)

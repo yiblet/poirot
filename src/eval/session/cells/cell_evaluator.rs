@@ -1,7 +1,8 @@
 //! Recursive cell reads: source resolution, memo and cache reuse, execution and completion.
 
-use super::bookkeeping::record_memo_hit;
-use super::bookkeeping::{cell_allocation_failure, copy_cached_value, record_external_hit};
+use super::bookkeeping::{
+    copy_cached_value, record_external_hit, record_memo_hit, record_overlay_completion,
+};
 use super::cell_attempt::CellAttempt;
 use super::completion_context::CompletionContext;
 use super::resolved_source::ResolvedSource;
@@ -232,12 +233,7 @@ impl<'s, 'a> CellEvaluator<'s, 'a> {
                 })?;
             record_external_hit(runtime);
             let value = copy_cached_value(&mut runtime.budget, target, &entry.value)?;
-            reads
-                .cached_outputs
-                .try_reserve(1)
-                .map_err(|source| cell_allocation_failure(target, source))?;
-            // SAFETY: The successful reservation guarantees one output coordinate slot.
-            reads.cached_outputs.push((target.sheet, target.address));
+            record_overlay_completion(reads, target, CellProvenance::ExternalCache)?;
             Ok(CellEvaluation::from_source(target, value, source.cell))
         })())
     }
