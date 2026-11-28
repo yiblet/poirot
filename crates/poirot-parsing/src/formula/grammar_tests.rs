@@ -71,6 +71,27 @@ fn atp_prefix_spelling_survives_legacy_function_normalization() {
 }
 
 #[test]
+fn malformed_leading_brackets_keep_the_expression_error() {
+    for (source, position) in [
+        ("ROW(['file:///example/Source.ods'#$Data.B3:.D8])", 4),
+        ("COLUMN(['file:///example/Source.ods'#$Data.B3])", 7),
+    ] {
+        let error = parse_formula(source).unwrap_err();
+        assert_eq!(error.position, position, "{source}");
+        assert_eq!(
+            error.reason,
+            ParseReasonError::ExpectedExpression,
+            "{source}"
+        );
+    }
+    assert!(matches!(parse("[@Amount]"), Expr::Table(_)));
+    assert_eq!(
+        parse_formula("Sales[@Amount").unwrap_err().reason,
+        ParseReasonError::InvalidTableReference,
+    );
+}
+
+#[test]
 fn empty_table_selector_is_short_for_data() {
     for (source, canonical) in [("Sales[]", "Sales[#Data]"), ("[]", "[#Data]")] {
         let expression = parse(source);

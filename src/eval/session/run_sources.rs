@@ -107,6 +107,6 @@ impl<'a> RunSources<'a> {
         source: &str,
     ) -> Option<ShapeBounds> {
         self.source_preparation()
-            .spill_shape(self.plan, sheet, at, source)
+            .spill_shape(self.plan, self.workbook, sheet, at, source)
     }
 }

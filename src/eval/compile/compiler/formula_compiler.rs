@@ -38,12 +38,38 @@ pub struct FormulaCompiler {
 }
 
 impl FormulaCompiler {
-    /// Classify possible geometry without binding scalar source variants.
+    /// Classify possible geometry without a workbook namespace.
+    #[cfg(test)]
     pub(in crate::eval) fn spill_shape(
         &mut self,
         source: &str,
         policy: &PreparationPolicy,
         registry: Option<&crate::eval::functions::extensions::ExtensionRegistry>,
+    ) -> Option<crate::model::ShapeBounds> {
+        self.inspect_spill_shape(source, policy, registry, PreparedFormula::spill_shape)
+    }
+
+    /// Classify possible geometry using the immutable namespace of a worksheet source.
+    pub(in crate::eval) fn scoped_spill_shape(
+        &mut self,
+        source: &str,
+        policy: &PreparationPolicy,
+        registry: Option<&crate::eval::functions::extensions::ExtensionRegistry>,
+        workbook: &crate::model::Workbook,
+        sheet: usize,
+    ) -> Option<crate::model::ShapeBounds> {
+        self.inspect_spill_shape(source, policy, registry, |prepared| {
+            prepared.scoped_spill_shape(workbook, sheet)
+        })
+    }
+
+    /// Reuse source proofs before consulting the prepared formula's geometry.
+    fn inspect_spill_shape(
+        &mut self,
+        source: &str,
+        policy: &PreparationPolicy,
+        registry: Option<&crate::eval::functions::extensions::ExtensionRegistry>,
+        inspect: impl FnOnce(&PreparedFormula) -> Option<crate::model::ShapeBounds>,
     ) -> Option<crate::model::ShapeBounds> {
         let namespace_matches = policy.registry.extensions.as_deref()
             == registry
@@ -60,7 +86,7 @@ impl FormulaCompiler {
             if let Some(pool) = pool_index.and_then(|index| self.templates.get_mut(index)) {
                 pool.scalar_probation = None;
             }
-            return prepared.spill_shape();
+            return inspect(prepared);
         }
         if namespace_matches
             && let Some(pool) = pool_index.and_then(|index| self.templates.get_mut(index))
@@ -102,7 +128,7 @@ impl FormulaCompiler {
         // Ordinary compilation does not modify the classification scratch buffers;
         // the key and bounded point spans still belong to this exact source below.
         let prepared = self.compile_formula_with_registry(source, policy, registry);
-        let shape = prepared.spill_shape();
+        let shape = inspect(&prepared);
         if classified
             && matches!(prepared.as_ref(), PreparedFormula::Ready(formula)
                 if formula.properties().is_some_and(|p| !p.result.may_spill()))

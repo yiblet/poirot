@@ -21,6 +21,9 @@ mod budgeted_value;
 /// One calculated output returned by bulk evaluation.
 mod cell_evaluation;
 
+/// Opaque executable identity for an internal callable value.
+mod callable_body;
+
 /// Scalar coercion, comparison, and text projection.
 pub(in crate::eval) mod core_projection;
 
@@ -55,6 +58,7 @@ pub(in crate::eval) use area::Area;
 pub(in crate::eval) use area_kind::AreaKind;
 pub(in crate::eval) use array_view::ArrayView;
 pub(in crate::eval) use budgeted_value::{copy_cell, copy_value};
+pub(in crate::eval) use callable_body::CallableBody;
 pub use cell_evaluation::CellEvaluation;
 pub(in crate::eval) use function_error::{FunctionError, function_value, identifier_failure};
 pub(in crate::eval) use function_result::FunctionResult;

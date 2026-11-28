@@ -93,6 +93,7 @@ fn workbook() -> Workbook {
 fn snapshot(value: Value) -> String {
     match value {
         Value::Scalar(v) | Value::SelectedScalar(v, _) => format!("scalar {v:?}"),
+        Value::Callable(_) => "callable".into(),
         Value::Missing => "missing".into(),
         Value::Array(v) => format!("array {:?} {:?}", v.anchor, v.values),
         Value::Refs(v) | Value::SheetSpan(v) => format!(
@@ -917,6 +918,90 @@ fn let_binding_failure_restores_the_local_stack_in_the_same_session() {
     assert!(matches!(
         Vm::new(&mut session).run(0, AT, &successful),
         Ok(Value::Scalar(crate::model::CellValue::Number(2.)))
+    ));
+    assert!(session.state.runtime.vm.is_idle());
+}
+
+#[test]
+fn inline_lambda_keeps_omitted_arguments_and_unwinds_refused_calls() {
+    let book = workbook();
+    let compile = |formula| {
+        let syntax = poirot_parsing::formula::parse_formula(formula).unwrap();
+        compile::bytecode::compile(&syntax).unwrap()
+    };
+    let mut session = Session::with_context(&book, EvaluationInputs::default());
+    for formula in [
+        "LET(base,1,LAMBDA(x,base)(SEQUENCE(1024)))",
+        "LET(base,1,LAMBDA(x,IF(TRUE,SEQUENCE(1024),base))(2))",
+    ] {
+        session.state.runtime.budget = BudgetMeter::new(EvaluationBudgets {
+            run_work: 96,
+            ..EvaluationBudgets::default()
+        })
+        .unwrap();
+        assert!(matches!(
+            Vm::new(&mut session).run(0, AT, &compile(formula)),
+            Err(EvaluationError::Budget(_))
+        ));
+        assert!(session.state.runtime.vm.is_idle());
+    }
+    session.state.runtime.budget = BudgetMeter::new(EvaluationBudgets::default()).unwrap();
+    assert!(matches!(
+        Vm::new(&mut session).run(0, AT, &compile("LAMBDA(x,y,x)(,2)")),
+        Ok(Value::Missing)
+    ));
+    assert!(session.state.runtime.vm.is_idle());
+}
+
+#[test]
+fn recursive_named_lambda_restores_depth_on_budget_resource_and_worksheet_errors() {
+    let mut book = workbook();
+    book.define_name("Forever", "LAMBDA(n,Forever(n))", None)
+        .unwrap();
+    book.define_name(
+        "Heavy",
+        "LAMBDA(n,IF(n<=1,1,SUM(SUM(SUM(SUM(LET(k,n-1,IF(k>=0,Heavy(k),0))))),1)))",
+        None,
+    )
+    .unwrap();
+    let compile = |formula| {
+        let syntax = poirot_parsing::formula::parse_formula(formula).unwrap();
+        compile::bytecode::compile(&syntax).unwrap()
+    };
+    let recursive = compile("Forever(1)");
+    let heavy = compile("Heavy(16)");
+    let identity = compile("LAMBDA(x,x)(7)");
+    let mut session = Session::with_context(&book, EvaluationInputs::default());
+    session.state.runtime.budget = BudgetMeter::new(EvaluationBudgets {
+        depth: 8,
+        ..EvaluationBudgets::default()
+    })
+    .unwrap();
+    assert!(matches!(
+        Vm::new(&mut session).run(0, AT, &recursive),
+        Err(EvaluationError::Budget(error)) if error.kind == crate::eval::limits::BudgetKind::Depth
+    ));
+    assert!(session.state.runtime.vm.is_idle());
+    session.state.runtime.budget = BudgetMeter::new(EvaluationBudgets::default()).unwrap();
+    assert!(matches!(
+        Vm::new(&mut session).run(0, AT, &recursive),
+        Ok(Value::Scalar(crate::model::CellValue::Error(
+            crate::model::CellError::Num
+        )))
+    ));
+    assert!(session.state.runtime.vm.is_idle());
+    assert!(matches!(
+        Vm::new(&mut session).run(0, AT, &heavy),
+        Err(EvaluationError::Resource {
+            kind: crate::eval::limits::ResourceFailureKind::BackendGuard,
+            reason: crate::eval::limits::EvaluationReasonError::LambdaDeferredBytecodeDepth,
+            ..
+        })
+    ));
+    assert!(session.state.runtime.vm.is_idle());
+    assert!(matches!(
+        Vm::new(&mut session).run(0, AT, &identity),
+        Ok(Value::Scalar(crate::model::CellValue::Number(7.)))
     ));
     assert!(session.state.runtime.vm.is_idle());
 }

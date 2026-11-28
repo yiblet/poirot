@@ -46,6 +46,7 @@ mod instruction;
 mod instruction_index;
 /// Index into a compiled body's label table, distinct from an instruction offset.
 mod label;
+mod lambda_scope;
 mod lexical_scope;
 /// Validation and lowering of bound expressions into bytecode.
 mod lowering;

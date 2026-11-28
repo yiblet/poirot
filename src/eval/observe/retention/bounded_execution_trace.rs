@@ -109,6 +109,7 @@ impl ExecutionObserver for BoundedExecutionTrace {
                     .map(|value| match value {
                         ObservedValue::Scalar(value) => RetainedValue::Scalar(value.clone()),
                         ObservedValue::Missing => RetainedValue::Missing,
+                        ObservedValue::Callable => RetainedValue::Callable,
                         ObservedValue::Array { rows, values } => {
                             RetainedValue::Array { rows, values }
                         }

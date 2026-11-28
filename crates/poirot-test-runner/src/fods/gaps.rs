@@ -1,7 +1,7 @@
 //! Evidence-based categories for failed checks; these never change the oracle.
 use crate::fods::xml::model::{FormulaCase, InputValue};
 use poirot::model::CellValue;
-use poirot_parsing::formula::Expr;
+use poirot_parsing::formula::{Expr, FunctionName, LambdaForm, LetForm};
 use serde::{Deserialize, Serialize};
 
 /// Stable failure taxonomy separating evaluator gaps from source/harness limitations.
@@ -94,14 +94,27 @@ impl GapKind {
     }
 }
 
+/// Check built-in calls and formula forms recognized directly by the compiler.
+fn known_function(name: &FunctionName) -> bool {
+    LetForm::matches(name)
+        || LambdaForm::matches(name)
+        || poirot::eval::functions::registry::resolve_function(name).is_some()
+}
+
 /// Find syntactically present unregistered functions; unselected branches may appear here.
 pub fn missing_functions(expression: &Expr) -> Vec<String> {
     fn visit(expression: &Expr, missing: &mut std::collections::BTreeSet<String>) {
         match expression {
             Expr::Function { name, args } => {
-                if poirot::eval::functions::registry::resolve_function(name).is_none() {
+                if !known_function(name) {
                     missing.insert(name.to_string());
                 }
+                for argument in args {
+                    visit(argument, missing);
+                }
+            }
+            Expr::Invoke { callee, args } => {
+                visit(callee, missing);
                 for argument in args {
                     visit(argument, missing);
                 }
@@ -128,9 +141,7 @@ pub fn missing_functions(expression: &Expr) -> Vec<String> {
 /// Missing calls in unexecuted branches are not evidence of this failure.
 pub fn missing_root_function(expression: &Expr) -> Vec<String> {
     match expression {
-        Expr::Function { name, .. }
-            if poirot::eval::functions::registry::resolve_function(name).is_none() =>
-        {
+        Expr::Function { name, .. } if !known_function(name) => {
             vec![name.to_string()]
         }
         _ => Vec::new(),
@@ -184,7 +195,23 @@ pub fn mismatch(actual: &CellValue, expected: Option<&CellValue>) -> GapKind {
 
 #[cfg(test)]
 mod category_tests {
-    use super::GapKind;
+    use super::{GapKind, missing_functions, missing_root_function};
+    use poirot_parsing::formula::parse_formula;
+
+    #[test]
+    fn missing_functions_follow_inline_calls_and_recognize_formula_forms() {
+        let expression =
+            parse_formula("LET(x,1,LAMBDA(y,UnknownBody(y)+x))(UnknownArgument(2))").unwrap();
+        assert!(missing_root_function(&expression).is_empty());
+        assert_eq!(
+            missing_functions(&expression),
+            ["UNKNOWNARGUMENT", "UNKNOWNBODY"]
+        );
+        let let_form = parse_formula("LET(x,1,x)").unwrap();
+        let lambda = parse_formula("LAMBDA(x,x)").unwrap();
+        assert!(missing_root_function(&let_form).is_empty());
+        assert!(missing_root_function(&lambda).is_empty());
+    }
 
     #[test]
     fn unified_categories_outside_native_taxonomy_are_valid_absence() {

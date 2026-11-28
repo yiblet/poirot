@@ -33,6 +33,8 @@ fn is_array_operand(value: &Value) -> bool {
         Value::Refs(areas) | Value::SheetSpan(areas) => areas.len() != 1 || areas[0].size() != 1,
         // SAFETY: Short-circuit evaluation reaches element zero only when areas.len() == 1.
         Value::SignedRefs(areas) => areas.len() != 1 || areas[0].size() != 1,
-        Value::Scalar(_) | Value::SelectedScalar(_, _) | Value::Missing => false,
+        Value::Scalar(_) | Value::SelectedScalar(_, _) | Value::Missing | Value::Callable(_) => {
+            false
+        }
     }
 }

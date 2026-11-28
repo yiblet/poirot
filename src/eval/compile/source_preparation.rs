@@ -3,7 +3,7 @@
 use super::compiler::{CompiledWorkbook, FormulaCompiler, PreparationPolicy};
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::functions::extensions;
-use crate::model::CellAddress;
+use crate::model::{CellAddress, Workbook};
 
 /// Compiles authored formulas and obtains their possible spill bounds without executing them.
 /// Discovery borrows this service to classify potential array producers, reusing the
@@ -48,6 +48,7 @@ impl SourcePreparation<'_> {
     pub(in crate::eval) fn spill_shape(
         &self,
         plan: Option<&CompiledWorkbook>,
+        workbook: &Workbook,
         sheet: usize,
         at: CellAddress,
         source: &str,
@@ -56,8 +57,10 @@ impl SourcePreparation<'_> {
             .and_then(|plan| plan.formula(EvaluationTarget { sheet, address: at }))
             .filter(|prepared| prepared.source() == source)
         {
-            return prepared.spill_shape();
+            return prepared.scoped_spill_shape(workbook, sheet);
         }
-        self.with_compiler(|compiler, policy| compiler.spill_shape(source, policy, self.extensions))
+        self.with_compiler(|compiler, policy| {
+            compiler.scoped_spill_shape(source, policy, self.extensions, workbook, sheet)
+        })
     }
 }

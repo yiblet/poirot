@@ -59,7 +59,10 @@ impl TraversalPolicy {
                         }
                     }
                 }
-                Value::Missing | Value::Scalar(_) | Value::SelectedScalar(_, _) => {}
+                Value::Callable(_)
+                | Value::Missing
+                | Value::Scalar(_)
+                | Value::SelectedScalar(_, _) => {}
             }
         }
         let origin = match operand.value {
@@ -67,7 +70,7 @@ impl TraversalPolicy {
                 OperandOrigin::ReferencedCell
             }
             Value::Array(_) => OperandOrigin::ArrayElement,
-            Value::Missing | Value::Scalar(_) => OperandOrigin::Direct,
+            Value::Callable(_) | Value::Missing | Value::Scalar(_) => OperandOrigin::Direct,
             Value::SelectedScalar(_, origin) => origin,
         };
         let values = ArgumentReader::new(host.session)

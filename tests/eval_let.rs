@@ -92,6 +92,27 @@ fn let_initializers_are_eager_even_when_the_result_never_reads_them() {
 }
 
 #[test]
+fn let_preparation_marks_lexical_callable_reference_selection() {
+    use poirot::eval::compile::compiler::{FormulaCompiler, PreparationPolicy, PreparedFormula};
+
+    let mut compiler = FormulaCompiler::new();
+    let policy = PreparationPolicy::default();
+    for (source, dynamic) in [
+        ("LET(reducer,NamedCallable,reducer(A1))", true),
+        ("LET(value,A1,value+1)", false),
+    ] {
+        let prepared = compiler.compile_formula(source, &policy);
+        let PreparedFormula::Ready(compiled) = prepared.as_ref() else {
+            panic!("failed to prepare {source}");
+        };
+        assert_eq!(
+            compiled.potential_dependencies().dynamic_references,
+            dynamic
+        );
+    }
+}
+
+#[test]
 fn let_prepared_slots_survive_snapshots_and_track_cell_and_workbook_name_reads() {
     use poirot::calculation::EvaluationContext;
     use poirot::snapshots::PreparedPolicy;

@@ -68,6 +68,11 @@ pub fn parse_formula_with_policy(
                     pending.extend(args);
                     false
                 }
+                Expr::Invoke { callee, args } => {
+                    pending.push(callee);
+                    pending.extend(args);
+                    false
+                }
                 Expr::Array(rows) => {
                     pending.extend(rows.iter().flatten());
                     false
@@ -218,6 +223,7 @@ impl Parser<'_> {
         range_rhs: bool,
     ) -> Result<Expr, ParseError> {
         self.space();
+        let grouped_callee = self.peek() == Some('(');
         let mut left = if self.take('+') {
             Expr::Unary {
                 op: UnaryOp::Plus,
@@ -237,11 +243,22 @@ impl Parser<'_> {
         } else {
             self.atom(range_rhs)?
         };
+        let mut postfix = grouped_callee || matches!(left, Expr::Function { .. });
         loop {
+            if postfix && min <= 11 && self.peek() == Some('(') {
+                self.bump();
+                self.admit_expression()?;
+                left = Expr::Invoke {
+                    callee: Box::new(left),
+                    args: self.arguments()?,
+                };
+                continue;
+            }
             let operator_start = self.pos;
             let whitespace = self.space();
             if self.peek() == Some('#') && min <= 10 {
                 self.bump();
+                postfix = false;
                 left = Expr::Unary {
                     op: UnaryOp::SpillRange,
                     operand: Box::new(left),
@@ -250,6 +267,7 @@ impl Parser<'_> {
             }
             if self.peek() == Some('%') && min <= 8 {
                 self.bump();
+                postfix = false;
                 left = Expr::Unary {
                     op: UnaryOp::Percent,
                     operand: Box::new(left),
@@ -308,6 +326,7 @@ impl Parser<'_> {
                     reason,
                 })?;
             }
+            postfix = false;
             left = Expr::Binary {
                 op,
                 left: Box::new(left),
@@ -375,8 +394,12 @@ impl Parser<'_> {
         if self.take('{') {
             return self.array();
         }
-        if self.peek() == Some('[') {
-            return self.table_reference(None);
+        if self.peek() == Some('[')
+            && let Some((rest, reference)) =
+                super::table_reference::TableReference::parse(None, self.tail()?)
+        {
+            self.pos = self.input.len() - rest.len();
+            return Ok(Expr::Table(reference));
         }
         if self.take('#') {
             let start = self.pos - 1;
@@ -436,6 +459,28 @@ impl Parser<'_> {
         }
         self.reference(None)
     }
+    fn arguments(&mut self) -> Result<Vec<Expr>, ParseError> {
+        let mut args = Vec::new();
+        self.space();
+        if !self.take(')') {
+            loop {
+                self.space();
+                if matches!(self.peek(), Some(',') | Some(')')) {
+                    self.admit_expression()?;
+                    args.push(Expr::Missing);
+                } else {
+                    args.push(self.expression(1, false)?);
+                }
+                self.space();
+                if self.take(')') {
+                    break;
+                }
+                self.expect(',')?;
+            }
+        }
+        Ok(args)
+    }
+
     fn table_reference(&mut self, table: Option<String>) -> Result<Expr, ParseError> {
         let (rest, reference) = super::table_reference::TableReference::parse(table, self.tail()?)
             .ok_or(ParseError {
@@ -484,24 +529,7 @@ impl Parser<'_> {
             if sheet.is_some() || text.contains('$') {
                 return self.fail(ParseReasonError::InvalidFunctionName);
             }
-            let mut args = Vec::new();
-            self.space();
-            if !self.take(')') {
-                loop {
-                    self.space();
-                    if matches!(self.peek(), Some(',') | Some(')')) {
-                        self.admit_expression()?;
-                        args.push(Expr::Missing);
-                    } else {
-                        args.push(self.expression(1, false)?);
-                    }
-                    self.space();
-                    if self.take(')') {
-                        break;
-                    }
-                    self.expect(',')?;
-                }
-            }
+            let args = self.arguments()?;
             // No successful function branch rolls back its position. Failed outer
             // expressions discard these entries at their metadata checkpoint.
             self.function_invocations.push(FunctionInvocation {

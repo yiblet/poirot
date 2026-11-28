@@ -52,6 +52,33 @@ impl PreparedFormula {
         }
     }
 
+    /// Exclude a root unresolved call only when the scoped workbook cannot supply it.
+    pub(in crate::eval) fn scoped_spill_shape(
+        &self,
+        workbook: &crate::model::Workbook,
+        sheet: usize,
+    ) -> Option<crate::model::ShapeBounds> {
+        use crate::eval::compile::bytecode::{CallTarget, Opcode};
+        use crate::eval::functions::registry;
+
+        let shape = self.spill_shape()?;
+        if let Self::Ready(formula) = self {
+            let program = formula.bytecode();
+            if let Some(instruction) = program.template.code.get(1)
+                && instruction.opcode == Opcode::Invoke
+                && let Some(call) = program.calls.get(instruction.a as usize)
+                && call.target == CallTarget::Unresolved
+                && let Ok(spelling) = program.resolved_spelling(instruction.a as usize)
+                && registry::resolve_handler(&spelling.into()).is_none()
+                && let Ok(name) = program.source_spelling(instruction.a as usize)
+                && matches!(workbook.try_defined_name(name, sheet), Ok(None))
+            {
+                return None;
+            }
+        }
+        Some(shape)
+    }
+
     /// Return the exact source text for either a program or a deferred failure.
     pub fn source(&self) -> &str {
         match self {

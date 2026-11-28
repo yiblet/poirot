@@ -8,5 +8,6 @@ pub(super) struct InferenceFrame<'a> {
     pub(super) slot: usize,
     pub(super) base: usize,
     pub(super) binding: Option<usize>,
+    pub(super) dynamic_call: bool,
     pub(super) local: Option<ExpressionProperties>,
 }

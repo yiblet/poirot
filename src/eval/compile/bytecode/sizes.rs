@@ -22,11 +22,20 @@ impl<'ast> Sink<'ast> for Sizes {
             self.labels += 1;
             return;
         }
+        if matches!(op, High::EndLambda) {
+            return;
+        }
         self.code += 1;
         match op {
             High::Enter(_, _) => self.expressions += 1,
             High::Truncated => self.text += 5,
-            High::InvalidLet => self.text += "#VALUE!".len(),
+            High::InvalidBinding => self.text += "#VALUE!".len(),
+            High::Lambda {
+                arity, captures, ..
+            } => {
+                self.text += 8 + 4 * captures.len();
+                self.local_slots = self.local_slots.max(arity.saturating_add(captures.len()));
+            }
             High::BindLocal(slot) => {
                 self.local_slots = self.local_slots.max(slot.saturating_add(1))
             }

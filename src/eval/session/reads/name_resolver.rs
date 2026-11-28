@@ -108,7 +108,7 @@ impl<'s, 'a> NameResolver<'s, 'a> {
     }
 
     /// Return absence separately from a selected name's worksheet error.
-    fn lookup_defined_name(
+    pub(in crate::eval) fn lookup_defined_name(
         &mut self,
         caller: usize,
         scope: usize,

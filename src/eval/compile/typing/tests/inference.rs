@@ -7,13 +7,14 @@ use crate::eval::functions::registry::DependencyPolicy;
 use crate::eval::session::Session;
 use crate::eval::values::Value;
 use crate::eval::vm::Vm;
-use crate::model::{FormulaType, ScalarKinds, ShapeBounds};
+use crate::model::{CellError, CellValue, FormulaType, ScalarKinds, ShapeBounds};
 use poirot_parsing::formula::{Expr, UnaryOp};
 
 /// Check the expression-channel concretization without conflating root materialization.
 fn admits(ty: FormulaType, value: &Value) -> bool {
     match value {
         Value::Scalar(v) | Value::SelectedScalar(v, _) => ty.admits_scalar(v),
+        Value::Callable(_) => ty.admits_scalar(&CellValue::Error(CellError::Calc)),
         Value::Missing => ty.missing,
         Value::Array(rows) => {
             !ty.array.is_empty()

@@ -75,7 +75,11 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
                     },
                 )?;
             }
-            Value::Scalar(value) => {
+            Value::Scalar(_) | Value::Callable(_) => {
+                let value = match value {
+                    Value::Scalar(value) => value,
+                    _ => CellValue::Error(crate::model::CellError::Value),
+                };
                 reserve!(1);
                 consume(
                     &mut state,

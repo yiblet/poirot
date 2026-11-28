@@ -10,6 +10,9 @@ use crate::eval::values::Value;
 pub(in crate::eval) struct Machine {
     pub(in crate::eval) values: Vec<Value>,
     pub(in crate::eval) locals: Vec<Value>,
+    pub(super) callable_depth: usize,
+    /// Bytecode executions currently retained on the native call stack.
+    pub(super) execution_depth: usize,
     pub(in crate::eval) operands: Vec<Option<host::HostOperand>>,
 }
 
@@ -17,6 +20,10 @@ impl Machine {
     /// Whether no expression or deferred argument values remain active.
     #[cfg(test)]
     pub(in crate::eval) fn is_idle(&self) -> bool {
-        self.values.is_empty() && self.operands.is_empty() && self.locals.is_empty()
+        self.values.is_empty()
+            && self.operands.is_empty()
+            && self.locals.is_empty()
+            && self.callable_depth == 0
+            && self.execution_depth == 0
     }
 }

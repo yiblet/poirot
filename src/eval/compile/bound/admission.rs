@@ -18,6 +18,13 @@ pub(super) fn validate_size(syntax: &Syntax) -> Result<(), BindingError> {
                 pending.push((left, depth + 1));
                 pending.push((right, depth + 1));
             }
+            Syntax::Invoke { callee, args } => {
+                if args.len().saturating_add(1) > 100_000 - nodes {
+                    return Err(BindingError::ResourceLimit);
+                }
+                pending.push((callee, depth + 1));
+                pending.extend(args.iter().map(|a| (a, depth + 1)));
+            }
             Syntax::Function { args, .. } => {
                 if args.len() > 100_000 - nodes {
                     return Err(BindingError::ResourceLimit);

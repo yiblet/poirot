@@ -93,6 +93,9 @@ impl<'s, 'a> ResultProjection<'s, 'a> {
                     crate::eval::limits::EvaluationReasonError::SelectedOmittedArgumentPublication,
             });
         }
+        if matches!(value, Value::Callable(_)) {
+            return Ok(Error(crate::model::CellError::Calc));
+        }
         self.select_legacy_scalar(address, value)
     }
 
@@ -107,6 +110,7 @@ impl<'s, 'a> ResultProjection<'s, 'a> {
         match value {
             // TODO(coercion-non-argument): [MEDIUM] Generic scalar projection drops omission identity rather than leaving the consumer to choose a default.
             Value::Missing => Ok(convert_legacy_missing_blank()),
+            Value::Callable(_) => Ok(Error(VALUE_ERROR)),
             Value::Scalar(value) | Value::SelectedScalar(value, _) => Ok(value),
             Value::Array(rows) => Ok(rows
                 .into_iter()

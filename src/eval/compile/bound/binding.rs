@@ -22,6 +22,8 @@ pub(super) fn bind_at(
         Syntax::Bool(b) => Expression::Bool(*b),
         Syntax::Error(e) => Expression::Error(e.clone()),
         Syntax::Missing => Expression::Missing,
+        // Inline invocation only executes through the shared bytecode machine.
+        Syntax::Invoke { .. } => Expression::Error("#VALUE!".into()),
         Syntax::Cell(c) => Expression::Cell(c.clone()),
         Syntax::Table(reference) => Expression::Table(reference.clone()),
         Syntax::SheetSpan(span) => Expression::SheetSpan(span.clone()),

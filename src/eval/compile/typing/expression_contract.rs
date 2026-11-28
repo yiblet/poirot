@@ -52,7 +52,10 @@ impl ExpressionContract {
             } => Self::Reference,
             Expr::Binary { .. } | Expr::Unary { .. } => Self::Broadcast,
             Expr::Array(_) => Self::Array,
-            Expr::Function { name, .. } if poirot_parsing::formula::LetForm::matches(name) => {
+            Expr::Function { name, .. }
+                if poirot_parsing::formula::LetForm::matches(name)
+                    || poirot_parsing::formula::LambdaForm::matches(name) =>
+            {
                 Self::Atom
             }
             Expr::Function { .. } => Self::Function {

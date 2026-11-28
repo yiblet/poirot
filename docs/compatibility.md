@@ -25,7 +25,7 @@ check your model, then [validate it with representative inputs](#checking-your-w
 
 ## Supported functions
 
-Poirot implements **495 of 521 function names (95.0%)** in Microsoft's
+Poirot implements **497 of 521 function names (95.4%)** in Microsoft's
 [alphabetical function index](https://support.microsoft.com/en-us/excel/excel-functions-alphabetical),
 as counted on 2026-10-26. This counts names across Excel versions, including
 aliases; it does not measure workbook compatibility.
@@ -40,20 +40,20 @@ aliases; it does not measure workbook compatibility.
 | Statistical | 111 / 111 | 100% |
 | Math and trigonometry | 80 / 80 | 100% |
 | Lookup and reference | 37 / 40 | 92.5% |
-| Information | 19 / 22 | 86.4% |
+| Information | 20 / 22 | 90.9% |
 | Text | 47 / 50 | 94.0% |
-| Logical | 12 / 19 | 63.2% |
+| Logical | 13 / 19 | 68.4% |
 | Add-in and Automation | 1 / 3 | 33.3% |
 | Cube | 0 / 7 | 0% |
 | Web | 2 / 3 | 66.7% |
-| **Total** | **495 / 521** | **95.0%** |
+| **Total** | **497 / 521** | **95.4%** |
 
 ### Remaining function gaps
 
 The missing functions fall into two groups:
 
-- **Formula-defined functions and helpers:** `LAMBDA`, `BYCOL`, `BYROW`,
-  `MAKEARRAY`, `MAP`, `REDUCE`, `SCAN` and `ISOMITTED`. These let formulas
+- **Formula-defined functions and helpers:** `BYCOL`, `BYROW`,
+  `MAKEARRAY`, `MAP`, `REDUCE`, `SCAN`. These let formulas
   define functions and call them from other functions.
 - **Workbook data, application integrations and services:** `INFO`, `PHONETIC`,
   `GETPIVOTDATA`, `WEBSERVICE`, `STOCKHISTORY`, `TRANSLATE`, `DETECTLANGUAGE`,
@@ -102,6 +102,7 @@ authored source remains portable.
 | --- | --- | --- |
 | Cell and range references | Supports single cells, ranges, sheet-qualified references, whole rows, whole columns and defined names. | [Reference tests](https://github.com/yiblet/poirot/blob/master/tests/eval_reference_ranges.rs), [name tests](https://github.com/yiblet/poirot/blob/master/tests/eval_qualified_names.rs) |
 | Local bindings | `LET` evaluates up to 126 bindings once in source order and retains reference and array values for the final expression. An unused binding's worksheet error stays local to that binding, as observed in Excel 2024. | [Local binding tests](../tests/eval_let.rs), [Excel 2024 observations](https://www.helpaso.net/course/e_function/logical/let/) |
+| Formula-defined functions | `LAMBDA` creates a callable with lexical captures. Append an argument list to invoke it, or call it through a LET binding or a sheet-scoped or workbook defined name. Registered functions take precedence. Wrap a parameter name in brackets to declare it optional. The caller can leave trailing optional parameters out or leave individual argument slots empty. Poirot reads stored XLSX declarations prefixed with `_xlop.`. Excel import of formulas authored with bracketed parameters and then exported by Poirot is unverified. An uninvoked callable produces `#CALC!` at cell output. A call that would exceed 16 active LAMBDA bodies returns `#NUM!`. Deeply nested deferred arguments can reach an evaluator resource limit earlier. | [Inline function tests](../tests/eval_lambda.rs) |
 | Structured table references | Supports table data by name, qualified columns and adjacent column ranges, and one section selector such as `#Headers`, `#Data`, `#Totals` or `#All`. `Table[]` selects the same rows as `Table[#Data]`. Insert placeholders are excluded from data. Supports `@` and `#This Row` for the formula’s row, and unqualified selectors inside the enclosing table. Structured references built with `INDIRECT` are unsupported. | [Table integration tests](../tests/io_worksheet_tables.rs) |
 | Three-dimensional references | Supports aggregates such as `SUM(Sheet1:Sheet3!A1)`, `AVERAGE` and `COUNT`. Reversed sheet endpoints stop evaluation. If only the first endpoint is missing, the reference selects the first worksheet; a missing last endpoint stops evaluation. | [Sheet-span tests](https://github.com/yiblet/poirot/blob/master/tests/eval_sheet_spans.rs) |
 | Dynamic arrays | Implements `FILTER`, `SORT`, `SORTBY`, `UNIQUE`, `SEQUENCE`, `RANDARRAY`, `HSTACK`, `VSTACK`, `TAKE`, `DROP`, `CHOOSECOLS`, `CHOOSEROWS`, `EXPAND`, `TOCOL`, `TOROW`, `WRAPCOLS`, `WRAPROWS` and `TEXTSPLIT`. | [Array tests](https://github.com/yiblet/poirot/blob/master/tests/eval_internal_array_context.rs) |

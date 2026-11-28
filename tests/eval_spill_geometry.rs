@@ -85,7 +85,8 @@ fn static_and_partial_bounds_follow_result_contracts() {
         ("INDIRECT(A1)", S::UNKNOWN),
         ("INDEX(A1:C4,0,1)", S::UNKNOWN),
         ("unbound_name", S::UNKNOWN),
-        ("UNKNOWN()", S::SCALAR),
+        // A workbook defined name can resolve this call to an array-returning LAMBDA.
+        ("UNKNOWN()", S::UNKNOWN),
     ] {
         assert_eq!(properties(source).shape, expected, "{source}");
     }

@@ -43,7 +43,9 @@ impl HostOperand {
         } else {
             match self.value {
                 Value::Missing => OperandKind::Missing,
-                Value::Scalar(_) | Value::SelectedScalar(_, _) => OperandKind::Scalar,
+                Value::Callable(_) | Value::Scalar(_) | Value::SelectedScalar(_, _) => {
+                    OperandKind::Scalar
+                }
                 Value::Array(_) => OperandKind::Array,
                 Value::Refs(_) | Value::SheetSpan(_) | Value::SignedRefs(_) => {
                     OperandKind::Reference

@@ -172,6 +172,9 @@ pub enum EvaluationReasonError {
     /// Evaluation reached the engine's 128-frame nesting ceiling.
     #[error("evaluation reached the engine's 128-frame nesting ceiling")]
     EvaluationReachedTheEngineS128FrameNestingCeiling,
+    /// Too many deferred bytecode frames are active within a LAMBDA call.
+    #[error("LAMBDA evaluation reached the deferred bytecode frame limit")]
+    LambdaDeferredBytecodeDepth,
     /// Execution evidence retention capacity exhausted.
     #[error("execution evidence retention capacity exhausted")]
     ExecutionEvidenceRetentionCapacityExhausted,
@@ -512,6 +515,7 @@ impl EvaluationReasonError {
             | Self::DynamicExecutionEncounteredACircularUnpublishedFootprintRead
             | Self::DynamicSpillOwnershipIsIncompatibleWithAnExternalScalarCellCache
             | Self::EvaluationReachedTheEngineS128FrameNestingCeiling
+            | Self::LambdaDeferredBytecodeDepth
             | Self::ExecutionEvidenceRetentionCapacityExhausted
             | Self::ExecutionOperationIdentityExhausted
             | Self::ExtensionRegistryIdentityChangedRebindTheFormulaPlan

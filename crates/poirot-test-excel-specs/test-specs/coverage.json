@@ -4,18 +4,18 @@
     "evaluation_steps": 2060,
     "assertion_count": 2061,
     "source_count": 262,
-    "feature_count": 296,
-    "potential_obligation_count": 1658,
+    "feature_count": 297,
+    "potential_obligation_count": 1659,
     "obligation_status_counts": {
       "specified_with_evidence": 563,
       "not_applicable": 8,
-      "missing": 1087
+      "missing": 1088
     },
     "evidence_counts": {
       "documented_derivation": 2012,
       "documented_example": 49
     },
-    "registered_function_count": 496,
+    "registered_function_count": 497,
     "registered_functions_with_specifications": 260,
     "registered_functions_without_specifications": [
       "ACCRINT",
@@ -158,6 +158,7 @@
       "INTRATE",
       "ISFORMULA",
       "ISO.CEILING",
+      "ISOMITTED",
       "ISOWEEKNUM",
       "ISPMT",
       "JIS",
@@ -256,10 +257,10 @@
       "ZTEST"
     ],
     "implementation_status_counts": {
-      "registered": 262,
+      "registered": 263,
       "unknown": 17,
-      "partial": 9,
-      "unsupported": 8
+      "partial": 10,
+      "unsupported": 7
     },
     "multi_step_cases": 44,
     "named_cases": 17,
@@ -27254,8 +27255,8 @@
     {
       "id": "function.LAMBDA.valid",
       "feature": "function.LAMBDA",
-      "behavior": "Establish documented valid LAMBDA semantics; missing registry handler is an explicit gap, not a successful Excel error oracle.",
-      "applicability": "requires_research",
+      "behavior": "Construct lexical closures and invoke inline or named functions.",
+      "applicability": "applicable",
       "specification_status": "missing",
       "assertions": []
     },
@@ -28124,6 +28125,14 @@
       "applicability": "requires_research",
       "specification_status": "missing",
       "assertions": []
+    },
+    {
+      "id": "function.ISOMITTED.valid",
+      "feature": "function.ISOMITTED",
+      "behavior": "Distinguish a missing LAMBDA argument from a supplied blank.",
+      "applicability": "applicable",
+      "specification_status": "missing",
+      "assertions": []
     }
   ],
   "unresolved_expectations": [],
@@ -28653,14 +28662,6 @@
       "source_urls": [
         "https://support.microsoft.com/en-gb/excel/using-structured-references-with-excel-tables?nochrome=true",
         "https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/3d025add-118d-4413-9856-ab65712ec1b0"
-      ]
-    },
-    {
-      "id": "function.LAMBDA",
-      "name": "LAMBDA",
-      "source_urls": [
-        "https://support.microsoft.com/en-us/excel/excel-functions-by-category",
-        "https://support.microsoft.com/en-us/excel/excel-functions-alphabetical"
       ]
     },
     {

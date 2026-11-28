@@ -3,7 +3,7 @@ use crate::eval::adapters::elementwise::{
     Broadcast, Kernel, MemberContext, SourceIdentity, execute as execute_kernel,
 };
 use crate::eval::functions::registry::{FunctionId, InformationFunction};
-use crate::eval::host::{CallHost, FormulaMetadata};
+use crate::eval::host::{CallHost, FormulaMetadata, OperandKind};
 use crate::eval::limits::{EvalResult, EvaluationError};
 use crate::eval::session::Session;
 use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
@@ -49,7 +49,7 @@ impl Kernel for Information {
             IsNonText => Boolean(!present || value.text_ref().is_none()),
             N => poirot_functions::coercion::compatibility::coerce_information_n(value),
             T => poirot_functions::coercion::compatibility::coerce_information_t(value),
-            Type | Na | InformationFunction::IsFormula => {
+            Type | Na | InformationFunction::IsFormula | InformationFunction::IsOmitted => {
                 return Err(EvaluationError::StalePlan.into());
             }
         })
@@ -157,6 +157,9 @@ pub(in crate::eval) fn execute(
                 },
             )
         })
+    } else if function == InformationFunction::IsOmitted {
+        host.kind(0)
+            .map(|kind| Boolean(kind == OperandKind::Missing).into())
     } else if function == InformationFunction::Na {
         execute_kernel(&mut host, at, NotAvailable)
     } else if function == InformationFunction::Type {

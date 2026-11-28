@@ -4,6 +4,7 @@ use super::compile_error::CompileError;
 use super::compiled::Compiled;
 use super::executable::Executable;
 use super::high::High;
+use super::lambda_scope::LambdaScope;
 use super::lexical_scope::LexicalScope;
 use super::preparation::Preparation;
 use super::reference_bindings::ReferenceBindings;
@@ -12,7 +13,7 @@ use super::sink::Sink;
 use super::sizes::Sizes;
 use super::template::Template;
 use super::writer::Writer;
-use poirot_parsing::formula::{BinaryOp, Expr, LetForm, UnaryOp};
+use poirot_parsing::formula::{BinaryOp, Expr, LambdaForm, LetForm, UnaryOp};
 use std::sync::Arc;
 
 pub(super) const LIMIT: usize = 100_000;
@@ -63,7 +64,7 @@ pub(super) fn compile_inner(
     let mut sizes = Sizes::default();
     let mut nodes = 0;
     validate(expression, 0, &mut nodes, strict)?;
-    stream(expression, 0, &mut LexicalScope::default(), &mut sizes)?;
+    stream(expression, 0, &mut LexicalScope::new(registry), &mut sizes)?;
     if [
         sizes.code,
         sizes.labels,
@@ -110,7 +111,7 @@ pub(super) fn compile_inner(
     stream(
         expression,
         0,
-        &mut LexicalScope::default(),
+        &mut LexicalScope::new(registry),
         &mut preparation,
     )?;
     let Preparation {
@@ -161,6 +162,12 @@ pub(super) fn validate(
             validate(left, depth + 1, nodes, strict)?;
             validate(right, depth + 1, nodes, strict)?;
         }
+        Expr::Invoke { callee, args } => {
+            validate(callee, depth + 1, nodes, strict)?;
+            for arg in args {
+                validate(arg, depth + 1, nodes, strict)?;
+            }
+        }
         Expr::Function { args, .. } => {
             for a in args {
                 validate(a, depth + 1, nodes, strict)?;
@@ -200,7 +207,7 @@ pub(super) fn validate(
 fn stream<'ast>(
     e: &'ast Expr,
     depth: usize,
-    scope: &mut LexicalScope<'ast>,
+    scope: &mut LexicalScope<'ast, '_>,
     sink: &mut impl Sink<'ast>,
 ) -> Result<(), CompileError> {
     sink.emit(High::Enter(depth, e));
@@ -246,31 +253,69 @@ fn stream<'ast>(
                 sink.emit(High::ClearLocals(base));
                 scope.finish_scope(base);
             } else {
-                sink.emit(High::InvalidLet);
+                sink.emit(High::InvalidBinding);
             }
         }
-        Expr::Function { name, args } => {
-            let done = depth * 2;
-            let next = done + 1;
-            sink.emit(High::Invoke(name, args.len(), done));
-            sink.emit(High::Goto(done));
-            for (i, a) in args.iter().enumerate() {
-                sink.emit(High::Argument(
-                    i,
-                    next,
-                    depth,
-                    a,
-                    scope.uses_local(a, DEPTH.saturating_sub(depth)),
-                ));
-                stream(a, depth + 1, scope, sink)?;
-                sink.emit(High::YieldArgument);
-                sink.emit(High::Label(next));
+        Expr::Function { name, args } if LambdaForm::matches(name) => {
+            if let Some(form) = LambdaForm::parse(args) {
+                let mut nested = LambdaScope::new(&form, scope, DEPTH.saturating_sub(depth))?;
+                let end = depth * 2;
+                sink.emit(High::Lambda {
+                    arity: form.arity(),
+                    minimum_arity: form.minimum_arity(),
+                    captures: nested.captures,
+                    end,
+                });
+                stream(form.body, depth + 1, &mut nested.body, sink)?;
+                sink.emit(High::EndLambda);
+                sink.emit(High::Label(end));
+            } else {
+                sink.emit(High::InvalidBinding);
             }
-            sink.emit(High::Label(done));
+        }
+        Expr::Invoke { callee, args } => {
+            stream(callee, depth + 1, scope, sink)?;
+            sink.emit(High::InvokeValue(args.len(), depth * 2));
+            arguments(args, depth, scope, sink)?;
+        }
+        Expr::Function { name, args } => {
+            if let Some(slot) = scope.callable_slot(name) {
+                sink.emit(High::ReadCallee(slot));
+                sink.emit(High::InvokeValue(args.len(), depth * 2));
+            } else {
+                sink.emit(High::Invoke(name, args.len(), depth * 2));
+            }
+            arguments(args, depth, scope, sink)?;
         }
         _ => sink.emit(High::Atom(e)),
     }
     sink.emit(High::Leave);
+    Ok(())
+}
+
+/// Stream deferred argument blocks and their owning call's continuation.
+fn arguments<'ast>(
+    args: &'ast [Expr],
+    depth: usize,
+    scope: &mut LexicalScope<'ast, '_>,
+    sink: &mut impl Sink<'ast>,
+) -> Result<(), CompileError> {
+    let end = depth * 2;
+    let next = end + 1;
+    sink.emit(High::Goto(end));
+    for (index, arg) in args.iter().enumerate() {
+        sink.emit(High::Argument(
+            index,
+            next,
+            depth,
+            arg,
+            scope.uses_local(arg, DEPTH.saturating_sub(depth)),
+        ));
+        stream(arg, depth + 1, scope, sink)?;
+        sink.emit(High::YieldArgument);
+        sink.emit(High::Label(next));
+    }
+    sink.emit(High::Label(end));
     Ok(())
 }
 

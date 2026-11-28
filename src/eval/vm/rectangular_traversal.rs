@@ -80,6 +80,7 @@ impl<'s, 'a> RectangularTraversal<'s, 'a> {
         }
         let value = match value {
             // TODO(coercion-non-argument): [MEDIUM] Selecting a missing array operand as blank discards omission identity before its eventual consumer.
+            Value::Callable(_) => return Ok(Error(crate::model::CellError::Value)),
             Value::Missing => return Ok(convert_legacy_missing_blank()),
             Value::Scalar(value) | Value::SelectedScalar(value, _) => value,
             Value::Array(array) => array

@@ -7,6 +7,8 @@ pub enum RetainedValue {
     Scalar(CellValue),
     /// Omitted-argument evidence.
     Missing,
+    /// A callable expression result with no exposed body or captured values.
+    Callable,
     /// Array shape without retained elements.
     Array {
         /// Number of rows.

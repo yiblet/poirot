@@ -24,7 +24,8 @@ pub(super) fn potential(
     expression: &poirot_parsing::formula::Expr,
     executable: &crate::eval::compile::bytecode::Compiled,
 ) -> Option<PotentialDependencies> {
-    use poirot_parsing::formula::{Expr, LetForm};
+    use crate::eval::compile::bytecode::Opcode;
+    use poirot_parsing::formula::{Expr, LambdaForm, LetForm};
     let mut result = PotentialDependencies::default();
     let mut pending = vec![expression];
     while let Some(expression) = pending.pop() {
@@ -69,6 +70,16 @@ pub(super) fn potential(
                     pending.push(form.result);
                 }
             }
+            Expr::Function { name, args } if LambdaForm::matches(name) => {
+                if let Some(form) = LambdaForm::parse(args) {
+                    pending.push(form.body);
+                }
+            }
+            Expr::Invoke { callee, args } => {
+                result.dynamic_references = true;
+                pending.push(callee);
+                pending.extend(args);
+            }
             Expr::Function { name, args } => {
                 match registry::resolve_function(name) {
                     None => {}
@@ -93,15 +104,17 @@ pub(super) fn potential(
         }
     }
     if executable.template.local_slots != 0 {
-        // The emitted Name instructions already exclude lexical slots and declarations.
+        // The emitted instructions distinguish lexical calls and workbook name reads.
         for instruction in executable.template.code.iter().rev() {
-            if instruction.opcode == crate::eval::compile::bytecode::Opcode::Name {
-                result.names.push(
+            match instruction.opcode {
+                Opcode::Name => result.names.push(
                     executable
                         .text(instruction.a, instruction.b)
                         .ok()?
                         .to_owned(),
-                );
+                ),
+                Opcode::InvokeValue => result.dynamic_references = true,
+                _ => {}
             }
         }
     }
@@ -112,9 +125,10 @@ pub(super) fn potential(
                 result.extensions.push(binding.clone())
             }
             crate::eval::compile::bytecode::CallTarget::Unresolved => {
-                result
-                    .opaque_functions
-                    .push(executable.source_spelling(index).ok()?.to_owned());
+                let name = executable.source_spelling(index).ok()?;
+                result.opaque_functions.push(name.to_owned());
+                result.names.push(name.to_owned());
+                result.dynamic_references = true;
             }
             _ => {}
         }
