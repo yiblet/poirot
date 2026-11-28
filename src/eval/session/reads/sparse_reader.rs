@@ -1,7 +1,6 @@
 //! Sparse range membership: discovery guards, occupied-coordinate collection and members.
 
 use super::read_recorder::ReadRecorder;
-use super::sparse_batch::SparseBatch;
 use super::sparse_member::SparseMember;
 use crate::eval::config::ArrayResultPolicy;
 use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError, WorkKind};
@@ -83,40 +82,28 @@ impl<'s, 'a> SparseReader<'s, 'a> {
     }
 
     /// Preserve authored cells from the membership prepass for internal value consumers.
-    pub(in crate::eval) fn sparse_members(&mut self, area: Area) -> EvalResult<SparseBatch<'a>> {
+    pub(in crate::eval) fn sparse_members(
+        &mut self,
+        area: Area,
+    ) -> EvalResult<Vec<SparseMember<'a>>> {
         self.prepare_sparse_area(area)?;
-        let mut batch = std::mem::take(&mut self.session.reuse.sparse_members);
-        let runtime = &*self.session.state.runtime;
-        let can_reuse = !runtime.budget.tracks_work()
-            && runtime.budget.limits.materialized_values == usize::MAX
-            && runtime.preparation.admitted_cells().len() == 0
-            && self.session.ports.cell_reader.is_none();
-        let workbook = self.session.sources.workbook;
-        let inputs = self.session.sources.inputs;
-        if let Some(tail) = batch.missing_tail(area, workbook, inputs, can_reuse) {
-            batch.members = self.collect_sparse(
-                tail,
-                0,
-                batch.members,
-                |address, cell| SparseMember { address, cell },
-                |member| member.address,
-            )?;
-        }
-        batch.source = (can_reuse && batch.members.len() >= 16).then_some((area, workbook, inputs));
-        Ok(batch)
+        let members = std::mem::take(&mut self.session.reuse.sparse_members);
+        self.collect_sparse(
+            area,
+            0,
+            members,
+            |address, cell| SparseMember { address, cell },
+            |member| member.address,
+        )
     }
 
     /// Retain bounded member storage after the caller has consumed this traversal.
-    pub(super) fn recycle_sparse_members(&mut self, mut batch: SparseBatch<'a>) {
+    pub(super) fn recycle_sparse_members(&mut self, mut members: Vec<SparseMember<'a>>) {
         const MAX_RECYCLED_MEMBERS: usize = 4096;
         let spare = &mut self.session.reuse.sparse_members;
-        if batch.members.capacity() <= MAX_RECYCLED_MEMBERS
-            && batch.members.capacity() > spare.members.capacity()
-        {
-            if batch.source.is_none() {
-                batch.members.clear();
-            }
-            *spare = batch;
+        if members.capacity() <= MAX_RECYCLED_MEMBERS && members.capacity() > spare.capacity() {
+            members.clear();
+            *spare = members;
         }
     }
 

@@ -1,4 +1,4 @@
-use super::reads::SparseBatch;
+use super::reads::SparseMember;
 use crate::eval::reuse::{Cache, Reads};
 use crate::eval::spill::CandidateIndex;
 use std::cell::RefCell;
@@ -13,5 +13,5 @@ pub(in crate::eval) struct ReuseHandles<'a> {
     /// Reads recorded for the overlay's dependency tracking.
     pub(in crate::eval) overlay_reads: Option<Reads>,
     /// Reusable sparse member storage scoped to this session and its authored inputs.
-    pub(in crate::eval::session) sparse_members: SparseBatch<'a>,
+    pub(in crate::eval::session) sparse_members: Vec<SparseMember<'a>>,
 }

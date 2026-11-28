@@ -161,8 +161,7 @@ fn generated_spill_members_keep_ordinary_source_resolution() {
     let mut direct = session(&book, EvaluationBudgets::default());
     let members = SparseReader::new(&mut direct)
         .sparse_members(area(0, 2, 0, 0))
-        .unwrap()
-        .into_members();
+        .unwrap();
     assert_eq!(members.len(), 3);
     assert!(members[0].cell.is_some());
     assert!(members[1..].iter().all(|member| member.cell.is_none()));
@@ -410,7 +409,7 @@ fn whole_column_blank_coercion_and_error_order_are_preserved() {
 }
 
 #[test]
-fn unmetered_authored_prefixes_extend_and_shrink_under_the_same_inputs() {
+fn recycled_storage_rescans_overlapping_ranges_and_changed_inputs() {
     let mut workbook = book();
     let sheet = workbook.sheet_mut(0).unwrap();
     for row in 0..32u32 {
@@ -441,10 +440,8 @@ fn unmetered_authored_prefixes_extend_and_shrink_under_the_same_inputs() {
             })
             .collect::<Vec<_>>();
         assert_eq!(values, expected);
-        assert_eq!(
-            run.reuse.sparse_members.members().len(),
-            (last as usize + 1) * 2
-        );
+        assert!(run.reuse.sparse_members.is_empty());
+        assert!(run.reuse.sparse_members.capacity() >= expected.len());
     }
     for (first, last) in [(2, 23), (4, 20), (7, 27), (30, 31), (0, 19)] {
         let area = area(first, last, 0, 1);
@@ -472,7 +469,7 @@ fn unmetered_authored_prefixes_extend_and_shrink_under_the_same_inputs() {
 }
 
 #[test]
-fn cached_authored_prefix_yields_to_spill_discovery_and_finite_capacity() {
+fn recycled_storage_preserves_spill_discovery_and_limits() {
     let mut workbook = book();
     let sheet = workbook.sheet_mut(0).unwrap();
     for row in 0..17u32 {
@@ -499,7 +496,8 @@ fn cached_authored_prefix_yields_to_spill_discovery_and_finite_capacity() {
         .items(Value::Refs(vec![narrow].into()))
         .unwrap();
     assert_eq!(original.len(), 34);
-    assert_eq!(run.reuse.sparse_members.members().len(), 34);
+    assert!(run.reuse.sparse_members.is_empty());
+    assert!(run.reuse.sparse_members.capacity() >= 34);
 
     let mut expected = original.clone();
     expected.extend([
@@ -511,13 +509,13 @@ fn cached_authored_prefix_yields_to_spill_discovery_and_finite_capacity() {
         .items(Value::Refs(vec![area(0, 26, 0, 1)].into()))
         .unwrap();
     assert_eq!(widened, expected);
-    assert!(run.reuse.sparse_members.members().is_empty());
+    assert!(run.reuse.sparse_members.is_empty());
 
     let mut limited = begin();
     let _ = ItemFolder::new(&mut limited)
         .items(Value::Refs(vec![narrow].into()))
         .unwrap();
-    assert_eq!(limited.reuse.sparse_members.members().len(), 34);
+    assert!(limited.reuse.sparse_members.capacity() >= 34);
     limited.state.runtime.budget = BudgetMeter::configured(
         EvaluationBudgets {
             materialized_values: 2,
@@ -548,15 +546,14 @@ fn cached_authored_prefix_yields_to_spill_discovery_and_finite_capacity() {
     ItemFolder::new(&mut with_cache)
         .items(Value::Refs(vec![narrow].into()))
         .unwrap();
-    assert_eq!(with_cache.reuse.sparse_members.members().len(), 34);
+    assert!(with_cache.reuse.sparse_members.capacity() >= 34);
     let mut without_cache = begin();
     ItemFolder::new(&mut without_cache)
         .items(Value::Refs(vec![narrow].into()))
         .unwrap();
     // Both runs have identical prior spill discovery and memo state. Remove
-    // only the membership proof, then compare the newly metered reads.
-    without_cache.reuse.sparse_members.source = None;
-    without_cache.reuse.sparse_members.members.clear();
+    // only the spare allocation, then compare the newly metered reads.
+    without_cache.reuse.sparse_members = Vec::new();
     let uncached = collect_profiled(&mut without_cache);
     let cached = collect_profiled(&mut with_cache);
     assert_eq!(cached, uncached);
@@ -581,8 +578,8 @@ fn recycled_member_storage_carries_no_range_state() {
             .items(Value::Refs(vec![range].into()))
             .unwrap();
         assert_eq!(seen, vec![(Number(expected), true)]);
-        assert!(run.reuse.sparse_members.members().is_empty());
-        assert!(run.reuse.sparse_members.members.capacity() >= 1);
+        assert!(run.reuse.sparse_members.is_empty());
+        assert!(run.reuse.sparse_members.capacity() >= 1);
     }
 }
 

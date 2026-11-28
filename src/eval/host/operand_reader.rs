@@ -97,9 +97,7 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
         let Some(area) = operand.area else {
             return Ok(Some(StoredPositions::default()));
         };
-        let members = SparseReader::new(self.host.session)
-            .sparse_members(area)?
-            .into_members();
+        let members = SparseReader::new(self.host.session).sparse_members(area)?;
         self.host.check_values_capacity(members.len())?;
         let positions =
             StoredPositions::new(members, area, operand.row, operand.column).ok_or(Ref)?;
