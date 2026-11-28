@@ -11,8 +11,8 @@ use crate::{CellAddress, CellValue, ModelError, VisualStyle};
 /// See [`VisualStyle`] for applying shared font presentation and a number format to a cell.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default, serde::Serialize, serde::Deserialize)]
 pub struct CellStyle {
-    /// Optional Excel format spelling; affects display rather than stored value.
-    pub number_format: Option<String>,
+    /// Shared Excel format spelling, used to display the stored value.
+    pub number_format: Option<std::sync::Arc<str>>,
     /// Optional shared visual presentation.
     pub visual: Option<std::sync::Arc<VisualStyle>>,
 }
@@ -20,8 +20,8 @@ impl CellStyle {
     /// Count logical format and font-name bytes, including shared visual payloads per cell.
     pub fn text_bytes(&self) -> Option<usize> {
         self.number_format
-            .as_ref()
-            .map_or(0, String::len)
+            .as_deref()
+            .map_or(0, str::len)
             .checked_add(self.visual.as_ref().map_or(0, |style| style.text_bytes()))
     }
 }

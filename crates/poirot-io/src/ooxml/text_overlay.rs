@@ -1,12 +1,14 @@
 //! Authoritative text overlay from the checked original package, never the
 //! backend's scalar-only string view. Rich-text runs concatenate in order.
 use super::{
+    cell_attributes::CellAttributes,
+    row_attributes::RowAttributes,
     text::decode,
     xml::{attr, events, text, xml},
 };
 use crate::IoError;
 use crate::data::SheetSink;
-use crate::{Cell, CellAddress, CellValue, ExcelText};
+use crate::{Cell, CellValue, ExcelText};
 use quick_xml::{Reader, events::Event};
 
 fn rich(reader: &mut Reader<&[u8]>, end: &str) -> Result<ExcelText, IoError> {
@@ -20,6 +22,7 @@ fn rich(reader: &mut Reader<&[u8]>, end: &str) -> Result<ExcelText, IoError> {
                 units.extend_from_slice(decode(&text(reader, e.name())?).units());
             }
             Event::End(e) if e.local_name().as_ref() == end => break,
+            Event::Empty(e) if e.local_name().as_ref() == end => break,
             Event::Eof => return Err(IoError::Xml(crate::XmlCodecError::TruncatedText)),
             _ => {}
         }
@@ -55,13 +58,19 @@ pub(crate) fn apply_sheet_text(
 ) -> Result<bool, IoError> {
     let mut needs_spills = false;
     let mut range_styles = false;
-    let mut reader = events(bytes);
+    let mut reader = Reader::from_reader(bytes);
     let mut next_row = 0;
     let mut row = 0;
     let mut next_col = 0;
     loop {
-        match reader.read_event().map_err(xml)? {
-            Event::Start(e) if e.local_name().as_ref() == "tabColor" => {
+        let (e, empty) = match reader.read_event().map_err(xml)? {
+            Event::Start(e) => (e, false),
+            Event::Empty(e) => (e, true),
+            Event::Eof => break,
+            _ => continue,
+        };
+        match e.local_name().as_ref() {
+            "tabColor" => {
                 if let Some(rgb) = attr(&e, "rgb")?
                     .filter(|v| v.len() == 8)
                     .and_then(|v| u32::from_str_radix(&v, 16).ok())
@@ -72,21 +81,32 @@ pub(crate) fn apply_sheet_text(
                     sheet.set_presentation(presentation);
                 }
             }
-            Event::Start(e) if e.local_name().as_ref() == "col" => {
+            "col" => {
                 range_styles |= attr(&e, "style")?.is_some();
             }
-            Event::Start(e) if e.local_name().as_ref() == "row" => {
-                range_styles |= attr(&e, "s")?.is_some();
-                row = match attr(&e, "r")? {
-                    Some(r) => r
-                        .parse::<u32>()
-                        .map_err(xml)?
-                        .checked_sub(1)
-                        .ok_or(IoError::Read(crate::WorkbookReadError::ZeroRowIndex))?,
-                    None => next_row,
-                };
+            "row" => {
+                let metadata = RowAttributes::scan(&e, next_row);
+                if let Some(attributes) = &metadata {
+                    range_styles |= attributes.styled;
+                    row = attributes.number;
+                } else {
+                    // Keep the original order of attribute errors and fallible sink calls.
+                    range_styles |= attr(&e, "s")?.is_some();
+                    row = match attr(&e, "r")? {
+                        Some(r) => r
+                            .parse::<u32>()
+                            .map_err(xml)?
+                            .checked_sub(1)
+                            .ok_or(IoError::Read(crate::WorkbookReadError::ZeroRowIndex))?,
+                        None => next_row,
+                    };
+                }
                 sheet.create_row(row)?;
-                if matches!(attr(&e, "hidden")?.as_deref(), Some("1" | "true")) {
+                let hidden = match metadata {
+                    Some(attributes) => attributes.hidden,
+                    None => matches!(attr(&e, "hidden")?.as_deref(), Some("1" | "true")),
+                };
+                if hidden {
                     sheet.set_row_visibility(
                         row,
                         crate::RowVisibility {
@@ -98,17 +118,13 @@ pub(crate) fn apply_sheet_text(
                 next_row = row + 1;
                 next_col = 0;
             }
-            Event::Start(e) if e.local_name().as_ref() == "c" => {
-                let address = match attr(&e, "r")? {
-                    Some(r) => r.parse::<CellAddress>()?,
-                    None => CellAddress::new(row, next_col)?,
-                };
+            "c" => {
+                let CellAttributes {
+                    address,
+                    style,
+                    kind,
+                } = CellAttributes::read(&e, row, next_col)?;
                 next_col = address.col + 1;
-                let style = attr(&e, "s")?
-                    .map(|s| s.parse::<usize>().map_err(xml))
-                    .transpose()?
-                    .unwrap_or(0);
-                let kind = attr(&e, "t")?;
                 if kind.as_deref() == Some("d") {
                     return Err(IoError::Unsupported(crate::WorkbookFeatureError::IsoDate));
                 }
@@ -117,47 +133,76 @@ pub(crate) fn apply_sheet_text(
                 let mut has_value = false;
                 let mut formula = None;
                 let mut shared_formula = false;
-                loop {
-                    match reader.read_event().map_err(xml)? {
-                        Event::Start(e) if e.local_name().as_ref() == "f" => {
-                            let kind = attr(&e, "t")?;
-                            shared_formula = kind.as_deref() == Some("shared");
-                            needs_spills |= kind.as_deref() == Some("array");
-                            let source = text(&mut reader, e.name())?;
-                            if !shared_formula {
-                                formula = Cell::with_formula(source, CellValue::Blank)?.formula;
+                if !empty {
+                    loop {
+                        let (e, empty) = match reader.read_event().map_err(xml)? {
+                            Event::Start(e) => (e, false),
+                            Event::Empty(e) => (e, true),
+                            Event::End(e) if e.local_name().as_ref() == "c" => break,
+                            Event::Eof => {
+                                return Err(IoError::Xml(crate::XmlCodecError::TruncatedCell));
                             }
-                        }
-                        Event::Start(e) if e.local_name().as_ref() == "is" => {
-                            has_value = true;
-                            value = Some(rich(&mut reader, "is")?)
-                        }
-                        Event::Start(e) if e.local_name().as_ref() == "v" => {
-                            let raw = text(&mut reader, e.name())?;
-                            has_value = true;
-                            needs_spills |= kind.as_deref() == Some("e")
-                                && matches!(raw.as_str(), "#SPILL!" | "#CALC!");
-                            if !is_text {
-                                continue;
+                            _ => continue,
+                        };
+                        match e.local_name().as_ref() {
+                            "f" => {
+                                let kind = attr(&e, "t")?;
+                                shared_formula = kind.as_deref() == Some("shared");
+                                needs_spills |= kind.as_deref() == Some("array");
+                                let source = if empty {
+                                    String::new()
+                                } else {
+                                    text(&mut reader, e.name())?
+                                };
+                                if !shared_formula {
+                                    formula = Cell::with_formula(source, CellValue::Blank)?.formula;
+                                }
                             }
-                            value = Some(if kind.as_deref() == Some("s") {
-                                let index = raw.parse::<usize>().map_err(xml)?;
-                                shared.get(index).cloned().ok_or({
-                                    IoError::Read(
-                                        crate::WorkbookReadError::SharedStringIndexOutOfRange,
-                                    )
-                                })?
-                            } else {
-                                decode(&raw)
-                            });
+                            "is" => {
+                                has_value = true;
+                                value = Some(if empty {
+                                    ExcelText::default()
+                                } else {
+                                    rich(&mut reader, "is")?
+                                });
+                            }
+                            "v" => {
+                                let raw = if empty {
+                                    String::new()
+                                } else {
+                                    text(&mut reader, e.name())?
+                                };
+                                has_value = true;
+                                needs_spills |= kind.as_deref() == Some("e")
+                                    && matches!(raw.as_str(), "#SPILL!" | "#CALC!");
+                                if !is_text {
+                                    continue;
+                                }
+                                value = Some(if kind.as_deref() == Some("s") {
+                                    let index = raw.parse::<usize>().map_err(xml)?;
+                                    shared.get(index).cloned().ok_or({
+                                        IoError::Read(
+                                            crate::WorkbookReadError::SharedStringIndexOutOfRange,
+                                        )
+                                    })?
+                                } else {
+                                    decode(&raw)
+                                });
+                            }
+                            "c" if empty => break,
+                            _ => {}
                         }
-                        Event::End(e) if e.local_name().as_ref() == "c" => break,
-                        Event::Eof => {
-                            return Err(IoError::Xml(crate::XmlCodecError::TruncatedCell));
-                        }
-                        _ => {}
                     }
                 }
+                let cell_style = || {
+                    if styles.is_empty() && style == 0 {
+                        Ok(crate::CellStyle::default())
+                    } else {
+                        styles.get(style).cloned().ok_or(IoError::Read(
+                            crate::WorkbookReadError::CellStyleIndexOutOfRange,
+                        ))
+                    }
+                };
                 if let Some(cell) = sheet.get_mut(address) {
                     if !shared_formula {
                         cell.formula = formula;
@@ -167,7 +212,10 @@ pub(crate) fn apply_sheet_text(
                     } else if !has_value {
                         cell.value = CellValue::Blank;
                     }
-                } else if let Some(value) = value {
+                    cell.style = cell_style()?;
+                    continue;
+                }
+                if let Some(value) = value {
                     sheet.set(address, Cell::new(CellValue::TextUtf16(value)))?;
                 } else if !has_value {
                     let mut cell = Cell::new(CellValue::Blank);
@@ -179,16 +227,9 @@ pub(crate) fn apply_sheet_text(
                     ));
                 }
                 if let Some(cell) = sheet.get_mut(address) {
-                    cell.style = if styles.is_empty() && style == 0 {
-                        crate::CellStyle::default()
-                    } else {
-                        styles.get(style).cloned().ok_or({
-                            IoError::Read(crate::WorkbookReadError::CellStyleIndexOutOfRange)
-                        })?
-                    };
+                    cell.style = cell_style()?;
                 }
             }
-            Event::Eof => break,
             _ => {}
         }
     }
@@ -204,6 +245,7 @@ pub(crate) fn apply_sheet_text(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::CellAddress;
     use crate::data::{SheetSource, WorkbookSink};
     use crate::test_support::Workbook;
     use crate::{
@@ -286,5 +328,88 @@ mod tests {
         assert_eq!(missing_cache.value, CellValue::Blank);
         assert_eq!(missing_cache.formula.as_deref(), Some("1"));
         assert_eq!(package, original);
+    }
+
+    #[test]
+    fn self_closing_worksheet_elements_match_explicit_empty_elements() {
+        use crate::test_support::Worksheet;
+
+        let compact = concat!(
+            r#"<worksheet><sheetPr><tabColor rgb="FF123456"/></sheetPr>"#,
+            r#"<cols><col style="0"/></cols><sheetData><row r="1" hidden="1"/>"#,
+            r#"<row><c s="1"/><c><v/></c><c t="str"><v/></c>"#,
+            r#"<c t="inlineStr"><is/></c><c t="inlineStr"><is><t/><rPh/></is></c>"#,
+            r#"<c><f t="shared"/><v/></c></row></sheetData></worksheet>"#,
+        );
+        let expanded = compact
+            .replace(r#"56"/>"#, r#"56"></tabColor>"#)
+            .replace(r#"style="0"/>"#, r#"style="0"></col>"#)
+            .replace(r#"hidden="1"/>"#, r#"hidden="1"></row>"#)
+            .replace(r#"s="1"/>"#, r#"s="1"></c>"#)
+            .replace("<v/>", "<v></v>")
+            .replace("<is/>", "<is></is>")
+            .replace("<t/>", "<t></t>")
+            .replace("<rPh/>", "<rPh></rPh>")
+            .replace(r#"<f t="shared"/>"#, r#"<f t="shared"></f>"#);
+        let styles = [
+            crate::CellStyle::default(),
+            crate::CellStyle {
+                number_format: Some("0.00".into()),
+                ..crate::CellStyle::default()
+            },
+        ];
+        let source = Worksheet::new("Data").unwrap();
+        let mut compact_sheet = source.clone();
+        let mut expanded_sheet = source;
+        for sheet in [&mut compact_sheet, &mut expanded_sheet] {
+            sheet
+                .set_value("B2".parse().unwrap(), CellValue::Number(7.))
+                .unwrap();
+            sheet
+                .set_formula_with_cached_value("F2".parse().unwrap(), "A2", CellValue::Blank)
+                .unwrap();
+        }
+        let mut compact_warnings = Vec::new();
+        let mut expanded_warnings = Vec::new();
+        let compact_spills = apply_sheet_text(
+            compact.as_bytes(),
+            &[],
+            &mut compact_sheet,
+            &styles,
+            &mut compact_warnings,
+        )
+        .unwrap();
+        let expanded_spills = apply_sheet_text(
+            expanded.as_bytes(),
+            &[],
+            &mut expanded_sheet,
+            &styles,
+            &mut expanded_warnings,
+        )
+        .unwrap();
+        assert_eq!(compact_sheet, expanded_sheet);
+        assert_eq!(compact_warnings, expanded_warnings);
+        assert_eq!(
+            compact_sheet.get("B2".parse().unwrap()).unwrap().value,
+            CellValue::Number(7.)
+        );
+        assert_eq!(compact_spills, expanded_spills);
+        assert_eq!(
+            compact_sheet.presentation().tab_color,
+            Some([0x12, 0x34, 0x56])
+        );
+        assert_eq!(
+            compact_sheet.get("A2".parse().unwrap()).unwrap().style,
+            styles[1]
+        );
+        assert_eq!(
+            compact_sheet
+                .get("F2".parse().unwrap())
+                .unwrap()
+                .formula
+                .as_deref(),
+            Some("A2")
+        );
+        assert_eq!(compact_warnings.len(), 1);
     }
 }

@@ -1,5 +1,9 @@
 //! Bounded ZIP entry expansion.
+use super::appended_worksheets::AppendedWorksheets;
+use super::bounded_buffer::BoundedBuffer;
+use super::worksheet_archive::WorksheetArchive;
 use super::xml::xml;
+use super::zip_append_buffer::ZipAppendBuffer;
 use crate::{IoError, ReadOptions};
 use std::{
     collections::BTreeMap,
@@ -42,7 +46,19 @@ impl<'a> ImportPackage<'a> {
         let mut total = 0u64;
         let mut entries = BTreeMap::new();
         for index in 0..zip.len() {
-            let file = zip.by_index(index).map_err(xml)?;
+            let mut file = zip.by_index_raw(index).map_err(xml)?;
+            // Raw access checks the local entry bounds without allocating a reader.
+            // Let the normal reader enforce admission for nonstandard metadata.
+            if file.encrypted()
+                || !matches!(
+                    file.compression(),
+                    zip::CompressionMethod::Stored | zip::CompressionMethod::Deflated
+                )
+                || file.extra_data_fields().next().is_some()
+            {
+                drop(file);
+                file = zip.by_index(index).map_err(xml)?;
+            }
             total = total
                 .checked_add(file.size())
                 .ok_or(IoError::SizeOverflow)?;
@@ -80,6 +96,205 @@ impl<'a> ImportPackage<'a> {
             zip,
             entries,
             max_entry_bytes: options.max_zip_entry_bytes,
+        })
+    }
+
+    /// Reuse checked worksheet expansions within a bounded temporary ZIP.
+    pub(crate) fn worksheet_archive(
+        &mut self,
+        plan: &crate::opc::OpcReadPlan,
+        input_bytes: usize,
+    ) -> Option<WorksheetArchive> {
+        const MAX_COPY_BYTES: usize = 8 * 1024 * 1024;
+        const MIN_COMPRESSED_BYTES: u64 = 8 * 1024;
+        // Small packages rarely repay allocating a second archive.
+        if input_bytes < 16 * 1024 {
+            return None;
+        }
+        let expansion_limit = MAX_COPY_BYTES.checked_sub(input_bytes)? as u64;
+        let mut candidates = BTreeMap::new();
+        let mut compressed_size = 0u64;
+        let mut expanded_size = 0u64;
+        for sheet in plan.sheets.iter().filter(|s| s.supported) {
+            let index = *self.entries.get(&sheet.part)?;
+            let raw = self.zip.by_index_raw(index).ok()?;
+            if raw.compression() == zip::CompressionMethod::Deflated {
+                compressed_size = compressed_size.checked_add(raw.compressed_size())?;
+                expanded_size = expanded_size.checked_add(raw.size())?;
+                candidates.insert(index, sheet.part.as_str());
+            }
+        }
+        if compressed_size < MIN_COMPRESSED_BYTES || expanded_size > expansion_limit {
+            return None;
+        }
+        let estimate = input_bytes.checked_add(usize::try_from(expanded_size).ok()?)?;
+        let discarded = std::cell::Cell::new(false);
+        let mut archive = ZipWriter::new(BoundedBuffer::new(estimate, MAX_COPY_BYTES, &discarded)?);
+        let mut remaining = expansion_limit;
+        for index in 0..self.zip.len() {
+            let raw = self.zip.by_index_raw(index).ok()?;
+            // Use the original reader for nonstandard ZIP metadata. Raw copies
+            // retain filenames, entry order and compressed bytes.
+            if raw.encrypted()
+                || raw.is_symlink()
+                || !matches!(
+                    raw.compression(),
+                    zip::CompressionMethod::Stored | zip::CompressionMethod::Deflated
+                )
+                || raw.extra_data_fields().next().is_some()
+            {
+                return None;
+            }
+            if let Some(&name) = candidates.get(&index) {
+                if raw.name_raw() != name.as_bytes() || !name.is_ascii() {
+                    return None;
+                }
+                let declared = raw.size();
+                drop(raw);
+                let limit = self.max_entry_bytes.min(remaining);
+                let mut file = self.zip.by_index(index).ok()?;
+                archive
+                    .start_file(
+                        name,
+                        SimpleFileOptions::default()
+                            .compression_method(zip::CompressionMethod::Stored),
+                    )
+                    .ok()?;
+                let copied = std::io::copy(
+                    &mut file.by_ref().take(limit.saturating_add(1)),
+                    &mut archive,
+                )
+                .ok()?;
+                if copied != declared || copied > limit {
+                    return None;
+                }
+                remaining = remaining.checked_sub(copied)?;
+            } else {
+                archive.raw_copy_file(raw).ok()?;
+            }
+            if discarded.get() {
+                return None;
+            }
+        }
+        let mut stored = archive.finish_into_readable().ok()?;
+        if discarded.get() {
+            return None;
+        }
+        let mut ranges = BTreeMap::new();
+        for name in candidates.into_values() {
+            let part = stored.by_name(name).ok()?;
+            let start = usize::try_from(part.data_start()?).ok()?;
+            let end = start.checked_add(usize::try_from(part.size()).ok()?)?;
+            ranges.insert(name.to_owned(), start..end);
+        }
+        WorksheetArchive::new(stored.into_inner().into_bytes()?, ranges)
+    }
+
+    /// Retain expanded worksheets in a new ZIP suffix, borrowing all original file records.
+    pub(crate) fn appended_worksheets(
+        &mut self,
+        plan: &crate::opc::OpcReadPlan,
+        bytes: &'a [u8],
+    ) -> Option<AppendedWorksheets<'a>> {
+        const TOTAL_COPY_LIMIT: usize = 8 * 1024 * 1024;
+        const MIN_COMPRESSED_BYTES: u64 = 2 * 1024;
+        let limit = TOTAL_COPY_LIMIT.checked_sub(bytes.len())?;
+        let boundary = self.zip.central_directory_start();
+        let prefix_len = usize::try_from(boundary).ok()?;
+        if self.zip.offset() != 0 {
+            return None;
+        }
+        let mut parts = BTreeMap::new();
+        let mut compressed = 0u64;
+        let mut estimate = bytes.len().checked_sub(prefix_len)?;
+        for sheet in plan.sheets.iter().filter(|sheet| sheet.supported) {
+            let index = *self.entries.get(&sheet.part)?;
+            let file = self.zip.by_index_raw(index).ok()?;
+            if file.compression() == zip::CompressionMethod::Deflated && !parts.contains_key(&index)
+            {
+                compressed = compressed.checked_add(file.compressed_size())?;
+                estimate = estimate.checked_add(usize::try_from(file.size()).ok()?)?;
+                // Allow room for the replaced local header; the backing buffer still checks every write.
+                estimate = estimate.checked_add(30)?.checked_add(sheet.part.len())?;
+                parts.insert(index, sheet.part.as_str());
+            }
+        }
+        if compressed < MIN_COMPRESSED_BYTES || estimate > limit {
+            return None;
+        }
+        let mut names = std::collections::BTreeSet::new();
+        for index in 0..self.zip.len() {
+            let raw = self.zip.by_index_raw(index).ok()?;
+            let name = raw.name().ok()?;
+            // Match the path identity used by Calamine 0.38.0 (MIT), revision
+            // a4dba3b5309d81b2774018a13be39e68d938c3c7, src/utils.rs.
+            // https://github.com/tafia/calamine/blob/a4dba3b5309d81b2774018a13be39e68d938c3c7/src/utils.rs
+            // Reordering replacements is harmless only without normalized aliases.
+            if !name.is_ascii()
+                || name.contains('\\')
+                || !names.insert(name.to_ascii_lowercase())
+                || raw.encrypted()
+                || raw.is_symlink()
+                || !matches!(
+                    raw.compression(),
+                    zip::CompressionMethod::Stored | zip::CompressionMethod::Deflated
+                )
+                || raw.extra_data_fields().next().is_some()
+                || raw.data_start()?.checked_add(raw.compressed_size())? > boundary
+            {
+                return None;
+            }
+        }
+
+        let mut output =
+            ZipWriter::new_append(ZipAppendBuffer::new(bytes, prefix_len, estimate, limit)?)
+                .ok()?;
+        let mut remaining = limit as u64;
+        for (&index, &name) in &parts {
+            let mut file = self.zip.by_index(index).ok()?;
+            if file.name_raw() != name.as_bytes() {
+                return None;
+            }
+            let declared = file.size();
+            let available = self.max_entry_bytes.min(remaining);
+            output.hide_file(name).ok()?;
+            output
+                .start_file(
+                    name,
+                    SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored),
+                )
+                .ok()?;
+            let copied = std::io::copy(
+                &mut file.by_ref().take(available.saturating_add(1)),
+                &mut output,
+            )
+            .ok()?;
+            if copied != declared || copied > available {
+                return None;
+            }
+            remaining = remaining.checked_sub(copied)?;
+        }
+        let mut stored = output.finish_into_readable().ok()?;
+        let mut worksheets = BTreeMap::new();
+        for name in parts.into_values() {
+            let file = stored.by_name(name).ok()?;
+            let start = usize::try_from(file.data_start()?)
+                .ok()?
+                .checked_sub(prefix_len)?;
+            let end = start.checked_add(usize::try_from(file.size()).ok()?)?;
+            worksheets.insert(name.to_owned(), start..end);
+        }
+        let (prefix, suffix) = stored.into_inner().finish()?;
+        if worksheets
+            .values()
+            .any(|range| suffix.get(range.clone()).is_none())
+        {
+            return None;
+        }
+        Some(AppendedWorksheets {
+            prefix,
+            suffix,
+            worksheets,
         })
     }
 
@@ -127,11 +342,11 @@ impl<'a> ImportPackage<'a> {
         })
     }
 
-    /// Resolve OPC identities using catalog names and only relationship/workbook XML.
+    /// Resolve OPC identities and return the expanded workbook XML for import.
     pub(crate) fn plan(
         &mut self,
         policy: crate::opc::OpcImportPolicy,
-    ) -> Result<crate::opc::OpcReadPlan, IoError> {
+    ) -> Result<(crate::opc::OpcReadPlan, Vec<u8>), IoError> {
         // Empty nonmetadata entries are catalog existence markers only. The
         // planner reads XML exclusively from the three expanded metadata parts.
         let mut inventory = crate::opc::PackageInventory {
@@ -143,7 +358,8 @@ impl<'a> ImportPackage<'a> {
         };
         let root = crate::opc::relationship_part("");
         inventory.parts.insert(root.clone(), self.read(&root)?);
-        let workbook = inventory.workbook_part(policy)?;
+        let mut warnings = Vec::new();
+        let workbook = inventory.workbook_part(policy, &mut warnings)?;
         let relationships = crate::opc::relationship_part(&workbook);
         inventory
             .parts
@@ -151,7 +367,11 @@ impl<'a> ImportPackage<'a> {
         inventory
             .parts
             .insert(relationships.clone(), self.read(&relationships)?);
-        inventory.plan_with_policy(policy)
+        let plan = inventory.plan_from_workbook(policy, workbook.clone(), warnings)?;
+        let workbook_xml = inventory.parts.remove(&workbook).ok_or(IoError::Opc(
+            crate::opc::OpcError::MissingPart { path: workbook },
+        ))?;
+        Ok((plan, workbook_xml))
     }
 }
 
@@ -359,10 +579,11 @@ mod tests {
             .unwrap();
         bytes[offset] ^= 1;
         let mut package = ImportPackage::new(&bytes, ReadOptions::default()).unwrap();
-        let plan = package
+        let (plan, workbook_xml) = package
             .plan(crate::opc::OpcImportPolicy::default())
             .unwrap();
         assert_eq!(plan.workbook_part, "meta/book.xml");
+        assert_eq!(workbook_xml, package.read(&plan.workbook_part).unwrap());
         assert_eq!(plan.sheets[0].part, "cells/data.xml");
         assert_eq!(
             package.read(&plan.sheets[0].part).unwrap(),
@@ -401,6 +622,26 @@ mod tests {
     }
 
     #[test]
+    fn catalog_rejects_an_encrypted_entry_before_planning() {
+        let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
+        zip.start_file("unused.bin", SimpleFileOptions::default())
+            .unwrap();
+        zip.write_all(b"unused").unwrap();
+        let mut bytes = zip.finish().unwrap().into_inner();
+        // Set the ZIP encryption flag on both headers of the one unused part.
+        for (signature, flag_offset) in [(b"PK\x03\x04", 6), (b"PK\x01\x02", 8)] {
+            let offset = bytes.windows(4).position(|word| word == signature).unwrap();
+            bytes[offset + flag_offset] |= 1;
+        }
+        assert!(matches!(
+            ImportPackage::new(&bytes, ReadOptions::default()),
+            Err(IoError::Xml(crate::XmlCodecError::Zip(
+                zip::result::ZipError::UnsupportedArchive(zip::result::ZipError::PASSWORD_REQUIRED,)
+            ))),
+        ));
+    }
+
+    #[test]
     fn planning_retains_missing_relationship_target_errors() {
         let bytes = fixture();
         let mut package = ImportPackage::new(&bytes, ReadOptions::default()).unwrap();
@@ -408,5 +649,124 @@ mod tests {
         assert!(
             matches!(package.plan(crate::opc::OpcImportPolicy::default()), Err(IoError::Opc(crate::opc::OpcError::MissingPart {path:part})) if part == "cells/data.xml")
         );
+    }
+}
+
+#[cfg(test)]
+mod worksheet_archive_tests {
+    use super::ImportPackage;
+    use crate::ReadOptions;
+    use crate::opc::{OpcReadPlan, SheetIdentity};
+    use std::io::{Cursor, Read, Write};
+    use zip::{CompressionMethod, ZipArchive, ZipWriter, write::SimpleFileOptions};
+
+    const PART: &str = "xl/worksheets/sheet1.xml";
+    const OTHER: &str = "xl/other.xml";
+
+    /// Build a checked-identity fixture with a worksheet large enough for reuse.
+    fn fixture() -> (Vec<u8>, Vec<u8>, OpcReadPlan) {
+        let mut state = 0xda093f84u32;
+        let sheet = (0..32 * 1024)
+            .map(|_| {
+                state ^= state << 13;
+                state ^= state >> 17;
+                state ^= state << 5;
+                state as u8
+            })
+            .collect::<Vec<_>>();
+        let mut archive = ZipWriter::new(Cursor::new(Vec::new()));
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+        archive.start_file(PART, options).unwrap();
+        archive.write_all(&sheet).unwrap();
+        archive.start_file(OTHER, options).unwrap();
+        archive.write_all(b"metadata").unwrap();
+        let bytes = archive.finish().unwrap().into_inner();
+        let plan = OpcReadPlan {
+            workbook_part: "xl/workbook.xml".to_owned(),
+            styles_part: None,
+            theme_part: None,
+            shared_strings_part: None,
+            sheets: vec![SheetIdentity {
+                source_index: 0,
+                name: "Data".to_owned(),
+                sheet_id: "1".to_owned(),
+                relationship_id: "rId1".to_owned(),
+                part: PART.to_owned(),
+                supported: true,
+            }],
+            warnings: Vec::new(),
+        };
+        (bytes, sheet, plan)
+    }
+
+    #[test]
+    fn reuses_checked_payload_and_preserves_other_part_bytes() {
+        let (bytes, sheet, plan) = fixture();
+        let mut source = ImportPackage::new(&bytes, ReadOptions::default()).unwrap();
+        assert!(source.worksheet_archive(&plan, 8 * 1024 * 1024).is_none());
+        let archive = source.worksheet_archive(&plan, bytes.len()).unwrap();
+        assert_eq!(archive.worksheet(PART), Some(sheet.as_slice()));
+        assert!(archive.worksheet(OTHER).is_none());
+        let mut rebuilt = ZipArchive::new(Cursor::new(archive.bytes())).unwrap();
+        assert_eq!(
+            rebuilt.by_name(PART).unwrap().compression(),
+            CompressionMethod::Stored
+        );
+        let mut other = rebuilt.by_name(OTHER).unwrap();
+        assert_eq!(other.compression(), CompressionMethod::Deflated);
+        let mut text = String::new();
+        other.read_to_string(&mut text).unwrap();
+        assert_eq!(text, "metadata");
+    }
+
+    #[test]
+    fn appended_records_preserve_original_prefix_and_checked_payload() {
+        let (bytes, sheet, plan) = fixture();
+        let mut source = ImportPackage::new(&bytes, ReadOptions::default()).unwrap();
+        let archive = source.appended_worksheets(&plan, &bytes).unwrap();
+        assert!(std::ptr::eq(archive.prefix.as_ptr(), bytes.as_ptr()));
+        assert_eq!(
+            archive.prefix.len() as u64,
+            source.zip.central_directory_start()
+        );
+        assert_eq!(archive.worksheet(PART), Some(sheet.as_slice()));
+        let mut rebuilt = ZipArchive::new(archive.reader()).unwrap();
+        let mut value = Vec::new();
+        let mut saved = rebuilt.by_name(PART).unwrap();
+        assert_eq!(saved.compression(), CompressionMethod::Stored);
+        saved.read_to_end(&mut value).unwrap();
+        assert_eq!(value, sheet);
+        drop(saved);
+        let mut other = rebuilt.by_name(OTHER).unwrap();
+        assert_eq!(other.compression(), CompressionMethod::Deflated);
+        let mut value = String::new();
+        other.read_to_string(&mut value).unwrap();
+        assert_eq!(value, "metadata");
+    }
+
+    #[test]
+    fn appending_does_not_reorder_backend_path_aliases() {
+        let (bytes, _, plan) = fixture();
+        let mut zip = ZipWriter::new_append(Cursor::new(bytes)).unwrap();
+        zip.start_file("xl/WORKSHEETS/SHEET1.xml", SimpleFileOptions::default())
+            .unwrap();
+        zip.write_all(b"Different worksheet bytes").unwrap();
+        let bytes = zip.finish().unwrap().into_inner();
+        let mut source = ImportPackage::new(&bytes, ReadOptions::default()).unwrap();
+        assert!(source.appended_worksheets(&plan, &bytes).is_none());
+    }
+
+    #[test]
+    fn corrupt_worksheet_is_left_to_the_original_reader() {
+        let (mut bytes, _, plan) = fixture();
+        let start = {
+            let mut archive = ZipArchive::new(Cursor::new(&bytes)).unwrap();
+            archive.by_name(PART).unwrap().data_start().unwrap() as usize
+        };
+        bytes[start] = 0xff;
+        let mut source = ImportPackage::new(&bytes, ReadOptions::default()).unwrap();
+        assert!(source.worksheet_archive(&plan, bytes.len()).is_none());
+        assert!(source.appended_worksheets(&plan, &bytes).is_none());
+        assert!(source.read(PART).is_err());
     }
 }
