@@ -1,6 +1,7 @@
 //! Authored cell content resolved through scenario overrides.
 
 use crate::eval::config::ArrayResultPolicy;
+use crate::eval::inputs::EffectiveWorkbook;
 use crate::eval::session::composition::Session;
 use crate::model::CellAddress;
 use crate::model::CellValue::Blank;
@@ -34,16 +35,12 @@ impl<'a> ResolvedSource<'a> {
         if address.validate().is_err() {
             return None;
         }
-        let worksheet = session.sources.workbook.sheet(sheet)?;
-        let cell = crate::eval::inputs::EffectiveWorkbook::new(
-            session.sources.workbook,
-            session.sources.inputs,
-        )
-        .cell(sheet, address);
+        let (cell, saved_child) =
+            EffectiveWorkbook::new(session.sources.workbook, session.sources.inputs)
+                .cell_with_spill(sheet, address, &session.sources.source_pages)?;
         Some(ResolvedSource::new(
-            worksheet,
-            address,
             cell,
+            saved_child,
             session.policies.array_result_policy,
         ))
     }
@@ -60,25 +57,23 @@ impl<'a> ResolvedSource<'a> {
         }
         let worksheet = session.sources.workbook.sheet(sheet)?;
         Some(ResolvedSource::new(
-            worksheet,
-            address,
             cell,
+            worksheet.spill_owner(address).is_some(),
             session.policies.array_result_policy,
         ))
     }
 
     /// Classify incoming ownership from already selected immutable worksheet content.
     fn new(
-        worksheet: &crate::model::Worksheet,
-        address: CellAddress,
         cell: Option<&'a crate::model::Cell>,
+        saved_child: bool,
         policy: ArrayResultPolicy,
     ) -> Self {
         Self {
             cell,
             accepts_spill: policy == ArrayResultPolicy::DynamicSpill
-                && (cell.is_none_or(|cell| cell.formula.is_none() && cell.value == Blank)
-                    || worksheet.spill_owner(address).is_some()),
+                && (cell.is_none_or(|cell| cell.formula.is_none() && matches!(cell.value, Blank))
+                    || saved_child),
         }
     }
 }

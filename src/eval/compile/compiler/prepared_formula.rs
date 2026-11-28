@@ -54,6 +54,11 @@ impl PreparedFormula {
 
     /// Return the exact source text for either a program or a deferred failure.
     pub fn source(&self) -> &str {
+        self.source_arc()
+    }
+
+    /// Share the source allocation with the compiler's exact-source index.
+    pub(super) fn source_arc(&self) -> &Arc<str> {
         match self {
             Self::Ready(formula) => &formula.source,
             Self::ParseFailure { source, .. }

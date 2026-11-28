@@ -24,20 +24,21 @@ pub(super) fn builtin_registry() -> &'static AdapterRegistry {
     &REGISTRY
 }
 
-pub(super) fn builtin_chain() -> AdapterRegistry {
-    SearchAdapter
-        .chain(ReferenceAdapter)
-        .chain(MathAdapter)
-        .chain(StatisticsAdapter)
-        .chain(DatabaseAdapter)
-        .chain(DateAdapter)
-        .chain(LogicalAdapter)
-        .chain(InformationAdapter)
-        .chain(FinancialAdapter)
-        .chain(EngineeringAdapter)
-        .chain(MatrixAdapter)
-        .chain(CriteriaAdapter)
-        .chain(TextAdapter)
+fn builtin_chain() -> AdapterRegistry {
+    let mut registry = AdapterRegistry::from_adapter(SearchAdapter);
+    registry.register(ReferenceAdapter);
+    registry.register(MathAdapter);
+    registry.register(StatisticsAdapter);
+    registry.register(DatabaseAdapter);
+    registry.register(DateAdapter);
+    registry.register(LogicalAdapter);
+    registry.register(InformationAdapter);
+    registry.register(FinancialAdapter);
+    registry.register(EngineeringAdapter);
+    registry.register(MatrixAdapter);
+    registry.register(CriteriaAdapter);
+    registry.register(TextAdapter);
+    registry
 }
 
 /// Dispatch a typed builtin through the complete family adapter set.

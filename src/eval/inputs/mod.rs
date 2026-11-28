@@ -16,10 +16,8 @@ mod input_cells;
 mod input_column;
 /// One authored mutation of a cell.
 mod input_error;
-/// Merged base and overlay source iteration.
-mod overlay_cells;
-/// Bounded merged iteration for sparse range consumers.
-mod overlay_range;
+/// Address-ordered cursor over authoritative edits.
+mod input_rows;
 /// Sparse scenario assignments bound to one workbook source.
 mod run_inputs;
 /// A merge cursor's borrowed source before tombstone filtering.

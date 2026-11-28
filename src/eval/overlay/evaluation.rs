@@ -164,7 +164,7 @@ impl<'a, W: Borrow<Workbook>> Evaluation<'a, W> {
         &mut self,
         targets: &[EvaluationTarget],
     ) -> Result<Vec<crate::eval::values::CellEvaluation>, EvaluationError> {
-        self.perform(|session| output::outputs(session, targets))
+        self.perform(|session| output::outputs::<false>(session, targets))
     }
 
     /// Calculate occupied cells and any spill cells produced by their formulas.

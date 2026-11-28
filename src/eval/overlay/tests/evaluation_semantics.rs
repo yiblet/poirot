@@ -497,3 +497,80 @@ fn shared_providers_move_with_used_workspaces_and_snapshot_attachments() {
     .join()
     .unwrap();
 }
+
+#[test]
+fn warm_direct_batch_preserves_order_formatting_and_read_accounting() {
+    let mut book = workbook(&[("A1", "2+3"), ("B1", "5+6")]);
+    book.sheet_mut(0)
+        .unwrap()
+        .get_mut("A1")
+        .unwrap()
+        .unwrap()
+        .style
+        .number_format = Some("0.00".into());
+    let mut run = overlay::Evaluation::with_workbook(&book)
+        .build(Default::default())
+        .unwrap();
+    assert_eq!(run.cell(at("A1")).unwrap(), CellValue::Number(5.));
+    let before = run.usage().clone();
+    let targets = [at("A1"), at("A1"), at("B1"), at("A1")];
+    let outputs = run.outputs(&targets).unwrap();
+    assert_eq!(
+        outputs.iter().map(|out| out.target).collect::<Vec<_>>(),
+        targets
+    );
+    assert_eq!(
+        outputs
+            .iter()
+            .map(|out| out.value.clone())
+            .collect::<Vec<_>>(),
+        [
+            CellValue::Number(5.),
+            CellValue::Number(5.),
+            CellValue::Number(11.),
+            CellValue::Number(5.)
+        ]
+    );
+    for index in [0, 1, 3] {
+        assert_eq!(
+            outputs[index]
+                .formatting
+                .as_ref()
+                .unwrap()
+                .number_format
+                .as_deref(),
+            Some("0.00")
+        );
+    }
+    assert_eq!(run.usage().session_memo_hits - before.session_memo_hits, 3);
+    assert_eq!(
+        run.usage().formula_executions - before.formula_executions,
+        1
+    );
+}
+
+#[test]
+fn warm_direct_batch_attributes_an_exhausted_read_to_the_requested_cell() {
+    let book = workbook(&[("A1", "2+3")]);
+    let target = at("A1");
+    let mut run = overlay::Evaluation::with_workbook(&book)
+        .build(Default::default())
+        .unwrap();
+    assert_eq!(run.cell(target).unwrap(), CellValue::Number(5.));
+    let cold_work = run.finish().outcome.usage().work_units;
+
+    // One unit remains for the batch's materialized output slot.
+    let mut context = crate::eval::config::EvaluationContext::default();
+    context.limits = context.limits.max_work(cold_work + 1);
+    let mut run = overlay::Evaluation::with_workbook(&book)
+        .build(context)
+        .unwrap();
+    assert_eq!(run.cell(target).unwrap(), CellValue::Number(5.));
+    let Err(EvaluationError::Budget(failure)) = run.outputs(&[target]) else {
+        panic!("the cached cell read must charge work");
+    };
+    assert_eq!(failure.target, Some(target));
+    assert_eq!(failure.consumed, cold_work + 1);
+    assert_eq!(failure.requested, 1);
+    assert_eq!(run.cached_value(target), Some(&CellValue::Number(5.)));
+}

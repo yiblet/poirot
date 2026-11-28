@@ -1,5 +1,6 @@
 //! Demand selection, retry, rollback and settlement through a constrained execution port.
 use super::execution::Execution;
+use super::settled_candidate_prefix::SettledCandidatePrefix;
 use crate::eval::coordinates::{CellSet, EvaluationTarget};
 use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError};
 use crate::eval::session;
@@ -77,7 +78,8 @@ impl<'a, P: Execution<'a>> Settlement<'_, P> {
         };
         let state = self.execution.state();
         if self.execution.inspect(area.sheet, |p| {
-            p.possible_in(area, None)
+            let prefix = SettledCandidatePrefix::end(state.settled_prefix, area.sheet, p);
+            p.possible_in(area, None, prefix)
                 .iter()
                 .all(|c| !c.intersects(area) || state.settled.contains(&(area.sheet, c.anchor)))
         })? {

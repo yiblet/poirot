@@ -25,7 +25,7 @@ impl Default for RowBlock {
 }
 /// Physical page coordinate independent of logical worksheet cell addresses.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-struct PageId {
+pub(super) struct PageId {
     row: u32,
     col: u32,
 }
@@ -36,6 +36,15 @@ impl PageId {
             col: address.col / WIDTH,
         }
     }
+    /// Spread neighboring tiles among four direct-mapped cache entries.
+    pub(super) fn cache_index(self) -> usize {
+        ((self.row ^ self.col) & 3) as usize
+    }
+
+    /// Return the tile's vertical band.
+    pub(super) fn row_band(self) -> u32 {
+        self.row
+    }
 }
 fn offset<const HEIGHT: u32, const WIDTH: u32>(address: CellAddress) -> usize {
     (address.col % WIDTH) as usize * HEIGHT as usize + (address.row % HEIGHT) as usize
@@ -44,11 +53,19 @@ fn offset<const HEIGHT: u32, const WIDTH: u32>(address: CellAddress) -> usize {
 /// Slots retain logical cell addresses alongside payloads so ordered iteration can
 /// return worksheet coordinates without exposing page geometry.
 #[derive(Debug, Clone)]
-struct Page<T = Cell, const HEIGHT: u32 = 32, const WIDTH: u32 = 4> {
+pub(super) struct Page<T = Cell, const HEIGHT: u32 = 32, const WIDTH: u32 = 4> {
     slots: Box<[Option<(CellAddress, T)>]>,
     len: usize,
 }
 impl<T, const HEIGHT: u32, const WIDTH: u32> Page<T, HEIGHT, WIDTH> {
+    /// Read within this tile; the caller has matched the address to its page ID.
+    pub(super) fn get(&self, address: CellAddress) -> Option<&T> {
+        self.slots
+            .get(offset::<HEIGHT, WIDTH>(address))?
+            .as_ref()
+            .map(|(_, cell)| cell)
+    }
+
     fn new() -> Self {
         Self {
             slots: std::iter::repeat_with(|| None)
@@ -128,12 +145,43 @@ impl<T, const HEIGHT: u32, const WIDTH: u32> CellStore<T, HEIGHT, WIDTH> {
 
     /// Borrow a payload at a coordinate without allocating a page.
     pub fn get(&self, address: &CellAddress) -> Option<&T> {
-        self.pages
-            .get(&PageId::of::<HEIGHT, WIDTH>(*address))?
-            .slots
-            .get(offset::<HEIGHT, WIDTH>(*address))?
-            .as_ref()
-            .map(|(_, cell)| cell)
+        self.page(self.page_id(*address))?.get(*address)
+    }
+
+    /// Locate the tile containing an address using this store's geometry.
+    pub(super) fn page_id(&self, address: CellAddress) -> PageId {
+        PageId::of::<HEIGHT, WIDTH>(address)
+    }
+
+    /// Borrow the storage for an already selected tile.
+    pub(super) fn page(&self, id: PageId) -> Option<&Page<T, HEIGHT, WIDTH>> {
+        self.pages.get(&id)
+    }
+
+    /// Borrow the ordered page IDs of a tile band inside inclusive column bounds.
+    pub(super) fn page_columns(
+        &self,
+        band: u32,
+        first_col: u32,
+        last_col: u32,
+    ) -> btree_set::Range<'_, PageId> {
+        // SAFETY: This is compile-time only; zero page widths are invalid.
+        const { assert!(WIDTH > 0) };
+        let first = PageId {
+            row: band,
+            col: first_col / WIDTH,
+        };
+        let last = PageId {
+            row: band,
+            col: last_col / WIDTH,
+        };
+        if first <= last {
+            // SAFETY: The inclusive bounds were checked to be in order.
+            self.page_ids.range(first..=last)
+        } else {
+            // SAFETY: The equal bounds describe an empty interval.
+            self.page_ids.range(first..first)
+        }
     }
     /// Borrow an existing payload mutably.
     pub fn get_mut(&mut self, address: &CellAddress) -> Option<&mut T> {
@@ -296,6 +344,13 @@ impl<'a, T, const HEIGHT: u32, const WIDTH: u32> WorksheetCells<'a, T, HEIGHT, W
         CellRange::new(self.store, bounds)
     }
 }
+
+impl<'a> WorksheetCells<'a> {
+    /// Reuse the ordered page seek across rows in a bounded worksheet rectangle.
+    pub(crate) fn row_page_range(self, first_col: u32, last_col: u32) -> super::RowPageRange<'a> {
+        super::RowPageRange::new(self.store, first_col, last_col)
+    }
+}
 impl<T: PartialEq, const HEIGHT: u32, const WIDTH: u32> PartialEq
     for WorksheetCells<'_, T, HEIGHT, WIDTH>
 {
@@ -384,29 +439,22 @@ impl<'a, T, const HEIGHT: u32, const WIDTH: u32> RowCursor<'a, T, HEIGHT, WIDTH>
         const {
             assert!(WIDTH > 0 && HEIGHT > 0);
         }
-        let first = first_col / WIDTH;
-        let last = last_col / WIDTH;
         let col = if reverse { last_col } else { first_col };
+        let pages = store.page_columns(row / HEIGHT, first_col, last_col);
+        Self::from_pages(store, row, col, pages)
+    }
+
+    /// Start within an already bounded set of pages for this row.
+    fn from_pages(
+        store: &'a CellStore<T, HEIGHT, WIDTH>,
+        row: u32,
+        col: u32,
+        pages: btree_set::Range<'a, PageId>,
+    ) -> Self {
         Self {
             store,
             row,
-            pages: if first <= last {
-                // SAFETY: first <= last was checked locally and both PageIds use the same row.
-                store.page_ids.range(
-                    PageId {
-                        row: row / HEIGHT,
-                        col: first,
-                    }..=PageId {
-                        row: row / HEIGHT,
-                        col: last,
-                    },
-                )
-            } else {
-                // SAFETY: Equal included/excluded bounds form an empty, ordered range.
-                store
-                    .page_ids
-                    .range(PageId { row: 0, col: 0 }..PageId { row: 0, col: 0 })
-            },
+            pages,
             page: None,
             col: col as i32,
         }
@@ -511,6 +559,29 @@ fn before(a: CellAddress) -> Option<CellAddress> {
     }
 }
 impl<'a, T, const HEIGHT: u32, const WIDTH: u32> CellRange<'a, T, HEIGHT, WIDTH> {
+    /// Open one row with its indexed pages already selected.
+    pub(super) fn row_with_pages(
+        store: &'a CellStore<T, HEIGHT, WIDTH>,
+        row: u32,
+        first_col: u32,
+        last_col: u32,
+        reverse: bool,
+        pages: btree_set::Range<'a, PageId>,
+    ) -> Self {
+        let first = CellAddress {
+            row,
+            col: first_col,
+        };
+        let last = CellAddress { row, col: last_col };
+        let mut range = Self::new(store, first..=last);
+        if reverse {
+            range.backward = Some(RowCursor::from_pages(store, row, last_col, pages));
+        } else {
+            range.forward = Some(RowCursor::from_pages(store, row, first_col, pages));
+        }
+        range
+    }
+
     fn new(store: &'a CellStore<T, HEIGHT, WIDTH>, bounds: impl RangeBounds<CellAddress>) -> Self {
         let first = match bounds.start_bound() {
             Bound::Included(a) => Some(*a),
@@ -580,12 +651,17 @@ impl<'a, T, const HEIGHT: u32, const WIDTH: u32> CellRange<'a, T, HEIGHT, WIDTH>
                 }
                 continue;
             }
-            let mut rows = OccupiedRows::new(self.store, first.row, last.row);
-            let row = if reverse {
-                rows.next_back()
+            let row = if first.row == last.row {
+                // A bounded row cursor can seek its columns directly.
+                first.row
             } else {
-                rows.next()
-            }?;
+                let mut rows = OccupiedRows::new(self.store, first.row, last.row);
+                if reverse {
+                    rows.next_back()
+                } else {
+                    rows.next()
+                }?
+            };
             let first_col = if row == first.row { first.col } else { 0 };
             let last_col = if row == last.row {
                 last.col

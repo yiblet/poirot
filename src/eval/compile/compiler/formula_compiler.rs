@@ -6,12 +6,11 @@ use super::preparation_policy::PreparationPolicy;
 use super::prepared_formula::PreparedFormula;
 use super::source_fingerprint::fingerprint;
 use super::source_identity::SourceIdentity;
+use super::template_lexemes::TemplateLexemes;
 use super::template_pool::TemplatePool;
-use super::templates::{
-    classified_cell_count, executable_hash, rebound, reusable_template, scalar_classification_key,
-};
+use super::templates::{executable_hash, scalar_classification_key};
 use crate::model::Workbook;
-use poirot_parsing::formula::parse_formula_with_policy;
+use poirot_parsing::formula::parse_expression_with_policy;
 use std::{collections::HashMap, sync::Arc};
 
 /// Prepared formulas of one policy keyed by exact source text.
@@ -34,6 +33,7 @@ pub struct FormulaCompiler {
     pub(super) templates: Vec<TemplatePool>,
     pub(super) template_hits: u64,
     pub(super) classification_key: Vec<u8>,
+    pub(super) template_lexemes: TemplateLexemes,
     pub(super) classification_cells: Vec<(usize, usize)>,
 }
 
@@ -204,38 +204,30 @@ impl FormulaCompiler {
             self.templates.push(TemplatePool::default());
             self.pool.len() - 1
         });
-        let normalized = poirot_parsing::formula::classified::normalized_hash(source).ok();
-        if let Some(bucket) =
-            // SAFETY: The entry check requires templates.len() == pool.len(); position returns a valid pool index, or this function pushes one element into both vectors before indexing.
-            normalized.and_then(|hash| self.templates[pool_index].classified.get(&hash))
+        let classified = self.template_lexemes.scan(source, policy).is_some();
+        // SAFETY: The entry check and pool creation above guarantee a live template pool.
+        if classified
+            && let Some(formula) = self.templates[pool_index].rebind(source, &self.template_lexemes)
         {
-            for exemplar in bucket {
-                if poirot_parsing::formula::classified::normalized_equal(source, &exemplar.source)
-                    == Ok(true)
-                    && let Some(cell_count) = classified_cell_count(source, policy)
-                    && let Some(formula) = rebound(exemplar, source, cell_count)
-                {
-                    self.template_hits += 1;
-                    let prepared = Arc::new(PreparedFormula::Ready(Arc::new(formula)));
-                    // SAFETY: The entry check requires templates.len() == pool.len(); position returns a valid pool index, or this function pushes one element into both vectors before indexing.
-                    self.pool[pool_index]
-                        .1
-                        .insert(Arc::from(source), Arc::clone(&prepared));
-                    return prepared;
-                }
-            }
+            self.template_hits += 1;
+            let prepared = Arc::new(PreparedFormula::Ready(Arc::new(formula)));
+            // SAFETY: The entry check and pool creation above guarantee a live source pool.
+            self.pool[pool_index]
+                .1
+                .insert(Arc::clone(prepared.source_arc()), Arc::clone(&prepared));
+            return prepared;
         }
         self.usage.parse_attempts += 1;
-        let prepared = match parse_formula_with_policy(source, policy.parse) {
+        let prepared = match parse_expression_with_policy(source, policy.parse) {
             Err(error) => PreparedFormula::ParseFailure {
                 source: Arc::from(source),
                 policy: policy.clone(),
                 error,
             },
-            Ok(parsed) => {
+            Ok(expression) => {
                 self.usage.bind_attempts += 1;
                 let mut bytecode = match crate::eval::compile::bytecode::compile_with_registry(
-                    parsed.expression(),
+                    &expression,
                     registry,
                 ) {
                     Ok(program) => program,
@@ -248,11 +240,11 @@ impl FormulaCompiler {
                         // SAFETY: The entry check requires templates.len() == pool.len(); position returns a valid pool index, or this function pushes one element into both vectors before indexing.
                         self.pool[pool_index]
                             .1
-                            .insert(Arc::from(source), Arc::clone(&prepared));
+                            .insert(Arc::clone(prepared.source_arc()), Arc::clone(&prepared));
                         return prepared;
                     }
                 };
-                let Some(potential) = potential(parsed.expression(), &bytecode) else {
+                let Some(potential) = potential(&expression, &bytecode) else {
                     return Arc::new(PreparedFormula::CompilationFailure {
                         source: Arc::from(source),
                         policy: policy.clone(),
@@ -273,7 +265,7 @@ impl FormulaCompiler {
                     bucket.push(Arc::clone(&bytecode.executable));
                 }
                 PreparedFormula::Ready(Arc::new(CompiledFormula {
-                    source: Arc::from(parsed.source()),
+                    source: Arc::from(source),
                     bytecode,
                     potential,
                     policy: policy.clone(),
@@ -281,22 +273,14 @@ impl FormulaCompiler {
             }
         };
         let prepared = Arc::new(prepared);
-        if let (Some(hash), PreparedFormula::Ready(formula)) = (normalized, prepared.as_ref()) {
-            // Only templates whose complete lexical bindings match executable slots
-            // can bypass parsing; truncation and unsupported references fall back.
-            if reusable_template(formula) {
-                // SAFETY: The entry check requires templates.len() == pool.len(); position returns a valid pool index, or this function pushes one element into both vectors before indexing.
-                self.templates[pool_index]
-                    .classified
-                    .entry(hash)
-                    .or_default()
-                    .push(Arc::clone(formula));
-            }
+        if classified && let PreparedFormula::Ready(formula) = prepared.as_ref() {
+            // SAFETY: The entry check and pool creation above guarantee a live template pool.
+            self.templates[pool_index].admit_template(&self.template_lexemes, formula, None);
         }
         // SAFETY: The entry check requires templates.len() == pool.len(); position returns a valid pool index, or this function pushes one element into both vectors before indexing.
         self.pool[pool_index]
             .1
-            .insert(Arc::from(source), Arc::clone(&prepared));
+            .insert(Arc::clone(prepared.source_arc()), Arc::clone(&prepared));
         prepared
     }
 

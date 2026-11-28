@@ -28,7 +28,7 @@ pub use ast::{BinaryOp, CellReference, Expr, SheetSpanReference, UnaryOp};
 pub use function_name::{CommonFunction, FunctionName};
 // Parsed source with explicit limits and spans for diagnostics and rewriting.
 pub use metadata::{FormulaParsePolicy, FormulaSpan, FunctionInvocation, ParsedFormula};
-pub use parser::{parse_formula, parse_formula_with_policy};
+pub use parser::{parse_expression_with_policy, parse_formula, parse_formula_with_policy};
 pub use syntax::{FormulaPrinter, GroupingContext, needs_parentheses};
 pub use table_columns::TableColumns;
 pub use table_reference::TableReference;

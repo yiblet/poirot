@@ -10,6 +10,8 @@
 // Excel's 15 digit comparison, derived from POI NumberComparer,
 // NormalisedDecimal and MutableFPNumber: Rust adaptations of Apache-2.0 sources.
 // <https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/poi/src/main/java/org/apache/poi/ss/util>
+mod bounded;
+
 use crate::scalar::CellError;
 use num_bigint::BigUint;
 use std::cmp::Ordering;
@@ -48,10 +50,24 @@ pub fn compare(a: f64, b: f64) -> Result<Ordering, CellError> {
     if be == 0 {
         return Ok(across_threshold(ar, br, negative));
     }
+    // Distinct integers with at most ten decimal digits remain distinct under
+    // fifteen-digit normalization. Within one sign, raw bits order magnitude.
+    if small_exact_integer(ar, ae) && small_exact_integer(br, be) {
+        return Ok(reverse(ar.cmp(&br)));
+    }
     Ok(reverse(
         decimal(ar, ae - 1023)?.cmp(&decimal(br, be - 1023)?),
     ))
 }
+
+/// Check for an integral magnitude below 2^33 from its unbiased fraction bits.
+#[inline]
+fn small_exact_integer(bits: u64, biased_exponent: i32) -> bool {
+    (1023..=1055).contains(&biased_exponent)
+        // SAFETY: The exponent range bounds the difference to 20 through 52.
+        && bits.trailing_zeros() >= (1075 - biased_exponent) as u32
+}
+
 fn across_threshold(normal: u64, subnormal: u64, negative: bool) -> Ordering {
     let fraction = subnormal & FRACTION;
     let anomalous = fraction != 0 && (normal & FRACTION) <= 7 && fraction >= 0x000f_ffff_ffff_fffa;
@@ -128,11 +144,22 @@ fn decimal(bits: u64, exponent: i32) -> Result<(i32, u64), CellError> {
     if !(-1022..=1024).contains(&exponent) {
         return Err(CellError::Num);
     }
-    let mut power = if !(46..=49).contains(&exponent) {
+    let power = if !(46..=49).contains(&exponent) {
+        // SAFETY: The exponent check above bounds all integer arithmetic here.
         -(((29 << 19) - exponent * 315653 + (1 << 19)) >> 20)
     } else {
         0
     };
+    if (-32..=45).contains(&exponent)
+        && let Some((power, exponent, significand)) = bounded::normalize(bits, exponent, power)
+    {
+        return decimal_parts(power, exponent, significand);
+    }
+    decimal_general(bits, exponent, power)
+}
+
+/// Normalize with the arbitrary-width arithmetic supplied by the source algorithm.
+fn decimal_general(bits: u64, exponent: i32, mut power: i32) -> Result<(i32, u64), CellError> {
     let mut binary = Binary {
         significand: BigUint::from((bits & FRACTION) | (1 << 52)) << 11usize,
         exponent,
@@ -156,18 +183,28 @@ fn decimal(bits: u64, exponent: i32) -> Result<(i32, u64), CellError> {
     }
     binary.normalize();
     let words = binary.significand.to_u64_digits();
-    let significand = *words.first().ok_or(CellError::Num)?;
-    if !(0..=63).contains(&binary.exponent) {
+    decimal_parts(
+        power,
+        binary.exponent,
+        *words.first().ok_or(CellError::Num)?,
+    )
+}
+
+/// Assemble the same decimal comparator key from either binary scaling path.
+fn decimal_parts(mut power: i32, exponent: i32, significand: u64) -> Result<(i32, u64), CellError> {
+    if !(0..=63).contains(&exponent) {
         return Err(CellError::Num);
     }
-    let fraction = ((significand as u32).wrapping_shl((binary.exponent - 39) as u32)) & 0x00ff_ff80;
-    let mut whole = significand >> (63 - binary.exponent) as usize;
+    // SAFETY: The guarded exponent bounds the signed subtraction and shift count.
+    let fraction = ((significand as u32).wrapping_shl((exponent - 39) as u32)) & 0x00ff_ff80;
+    // SAFETY: The guarded exponent puts the shift in 0..=63.
+    let mut whole = significand >> (63 - exponent) as usize;
     if fraction >= 0x0080_0000 {
-        whole += 1;
+        whole = whole.checked_add(1).ok_or(CellError::Num)?;
     }
     if whole >= 1_000_000_000_000_000 {
         whole /= 10;
-        power += 1;
+        power = power.checked_add(1).ok_or(CellError::Num)?;
     }
     Ok((power, whole))
 }
@@ -269,6 +306,73 @@ pub fn convert_number_bits_to_text(raw: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn small_exact_integers_follow_the_decimal_comparator() {
+        let legacy = |value: f64| {
+            let bits = value.to_bits();
+            let exponent = ((bits >> 52) & 2047) as i32;
+            decimal(bits, exponent - 1023).unwrap()
+        };
+        let compare_neighbors = |value: u64| {
+            let a = value as f64;
+            let b = (value + 1) as f64;
+            let expected = legacy(a).cmp(&legacy(b));
+            assert_eq!(compare(a, b), Ok(expected), "{value}");
+            assert_eq!(compare(-a, -b), Ok(expected.reverse()), "{value}");
+        };
+        for exponent in 1..=33 {
+            let boundary = 1u64 << exponent;
+            for value in boundary - 1..=boundary + 1 {
+                compare_neighbors(value);
+            }
+        }
+        for exponent in 1..=10 {
+            let boundary = 10u64.pow(exponent);
+            for value in boundary - 1..=boundary + 1 {
+                compare_neighbors(value);
+            }
+        }
+        let mut state = 1u64;
+        for _ in 0..8192 {
+            state = state.wrapping_mul(6364136223846793005).wrapping_add(1);
+            compare_neighbors(((state >> 31) & ((1 << 33) - 1)).max(1));
+        }
+        assert!(!small_exact_integer(4.25f64.to_bits(), 1025));
+        assert!(!small_exact_integer(((1u64 << 33) as f64).to_bits(), 1056));
+    }
+
+    #[test]
+    fn bounded_scaling_matches_the_reference_arithmetic() {
+        let mut random = 0x8765_4321_0123_4567u64;
+        let mut supported = 0;
+        for exponent in -32..=45 {
+            let scale = -(((29 << 19) - exponent * 315653 + (1 << 19)) >> 20);
+            let sign_and_exponent = ((exponent + 1023) as u64) << 52;
+            let boundary = (1u64 << 52).saturating_sub(1);
+            for fraction in (0..16)
+                .chain((boundary - 15)..=boundary)
+                .chain((0..2048).map(|_| {
+                    random = random.wrapping_mul(6364136223846793005).wrapping_add(1);
+                    random & FRACTION
+                }))
+            {
+                let bits = sign_and_exponent | fraction;
+                if let Some((power, binary_exponent, significand)) =
+                    bounded::normalize(bits, exponent, scale)
+                {
+                    supported += 1;
+                    assert_eq!(
+                        decimal_parts(power, binary_exponent, significand),
+                        decimal_general(bits, exponent, scale),
+                        "{exponent} {fraction:013x}"
+                    );
+                }
+            }
+        }
+        assert!(supported > 100_000);
+    }
+
     #[test]
     fn pinned_number_comparison_step_transitions() {
         for (a, b, expected) in [

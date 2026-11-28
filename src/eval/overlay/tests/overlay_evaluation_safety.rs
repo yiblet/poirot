@@ -2,7 +2,7 @@ use super::super::incremental::Overlay;
 use crate::eval::config::EvaluationContext;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::EvaluationError;
-use crate::model::{CellAddress, CellValue, Workbook};
+use crate::model::{CellAddress, CellValue, Workbook, WorkbookChange};
 
 #[test]
 fn separate_public_calls_preserve_complete_exports_while_reusing_empty_buffers() {
@@ -23,7 +23,7 @@ fn separate_public_calls_preserve_complete_exports_while_reusing_empty_buffers()
     assert!(reads.fresh_results.is_empty());
     assert!(reads.completed.is_empty());
     assert!(reads.fresh_results.capacity() > 0);
-    assert!(reads.completed.capacity() > 0);
+    assert!(evaluation.completed.capacity() > 0);
     assert!(
         evaluation
             .session
@@ -36,6 +36,9 @@ fn separate_public_calls_preserve_complete_exports_while_reusing_empty_buffers()
             .is_empty()
     );
     assert_eq!(evaluation.cell(target("B5")).unwrap(), CellValue::from(4.));
+    let reads = evaluation.session.reuse.overlay_reads.as_ref().unwrap();
+    assert!(reads.completed.is_empty());
+    assert!(reads.completed.capacity() > 0);
     let changes = evaluation.result_changes().unwrap();
     assert!(first.iter().all(|change| changes.contains(change)));
     let mut published = workbook.clone();
@@ -126,4 +129,42 @@ fn conflicting_cache_borrow_returns_stale_plan() {
         evaluation.result_changes(),
         Err(EvaluationError::StalePlan)
     ));
+}
+
+#[test]
+fn first_mixed_publication_exports_retained_and_computed_results_once() {
+    let mut workbook = Workbook::new();
+    let sheet = workbook.add_sheet("S").unwrap();
+    sheet.set_formula("A1", "2+3").unwrap();
+    sheet.set_formula("A2", "2+4").unwrap();
+    sheet.set_formula("A3", "2+5").unwrap();
+    let mut overlay = Overlay::with_workbook(&workbook).build().unwrap();
+    let context = EvaluationContext::default();
+    let target = |address: &str| EvaluationTarget {
+        sheet: 0,
+        address: address.parse().unwrap(),
+    };
+    overlay
+        .evaluation(&context)
+        .unwrap()
+        .cell(target("A1"))
+        .unwrap();
+    let mut evaluation = overlay.evaluation(&context).unwrap();
+    evaluation
+        .outputs(&[target("A1"), target("A2"), target("A1")])
+        .unwrap();
+    assert_eq!(evaluation.usage().formula_executions, 1);
+    let first = evaluation.result_changes().unwrap();
+    let cached_count = |changes: &[WorkbookChange]| {
+        changes
+            .iter()
+            .filter(|change| matches!(change, WorkbookChange::SetCachedValue { .. }))
+            .count()
+    };
+    assert_eq!(cached_count(&first), 2);
+    evaluation.outputs(&[target("A1"), target("A3")]).unwrap();
+    assert_eq!(evaluation.usage().formula_executions, 2);
+    let changes = evaluation.result_changes().unwrap();
+    assert_eq!(cached_count(&changes), 3);
+    assert!(first.iter().all(|change| changes.contains(change)));
 }

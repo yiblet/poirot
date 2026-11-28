@@ -1,18 +1,19 @@
 //! Recursive cell reads: source resolution, memo and cache reuse, execution and completion.
 
-use super::bookkeeping::copy_cached_value;
+use super::bookkeeping::record_memo_hit;
+use super::bookkeeping::{cell_allocation_failure, copy_cached_value, record_external_hit};
 use super::cell_attempt::CellAttempt;
 use super::completion_context::CompletionContext;
 use super::resolved_source::ResolvedSource;
 use crate::eval::config::ArrayResultPolicy;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{EvalResult, EvaluationError, WorkKind};
-use crate::eval::ports::{CellProvenance, DependencyRead};
+use crate::eval::ports::CellProvenance;
 use crate::eval::session::composition::Session;
 use crate::eval::session::reads::ReadRecorder;
 use crate::eval::spill::SpillQuery;
-use crate::eval::values::numeric_outcome;
 use crate::eval::values::signed_reference::GridRead;
+use crate::eval::values::{CellEvaluation, numeric_outcome};
 use crate::model::CellValue::{Blank, Number};
 use crate::model::{CellAddress, CellValue};
 
@@ -65,7 +66,7 @@ impl<'s, 'a> CellEvaluator<'s, 'a> {
         let Some(cell) = source.and_then(|source| {
             source.cell.filter(|cell| {
                 cell.formula.is_none()
-                    && cell.value != Blank
+                    && !matches!(cell.value, Blank)
                     && !source.accepts_spill
                     && (self.session.policies.array_result_policy
                         == ArrayResultPolicy::DynamicSpill
@@ -89,7 +90,7 @@ impl<'s, 'a> CellEvaluator<'s, 'a> {
                 failure.set_target(target);
                 failure
             })?;
-        ReadRecorder::new(self.session).read_lazy(|| DependencyRead::Cell(target));
+        ReadRecorder::new(self.session).read_cell(target);
         self.session
             .state
             .runtime
@@ -99,24 +100,22 @@ impl<'s, 'a> CellEvaluator<'s, 'a> {
                 failure.set_target(target);
                 failure
             })?;
-        // Retain the literal's frame for quota attribution, but not its value: the
-        // immutable source already owns it. Memo quotas count only retained entries.
-        self.session.state.runtime.budget.push_cell(target);
+        let budget = &mut self.session.state.runtime.budget;
         let value = if let Some(text) = cell.value.text_ref() {
-            self.session
-                .state
-                .runtime
-                .budget
+            // Only a text copy can incur a charge attributed to this literal.
+            budget.push_cell(target);
+            let value = budget
                 .text(text.storage_bytes())
-                .map(|()| cell.value.clone())
+                .map(|()| cell.value.clone());
+            budget.pop_cell();
+            value
         } else {
             Ok(match &cell.value {
                 Number(value) => numeric_outcome::convert_numeric_outcome(*value),
                 value => value.clone(),
             })
         };
-        self.session.state.runtime.budget.pop_cell();
-        self.session.state.runtime.budget.leave_depth();
+        budget.leave_depth();
         value
     }
 
@@ -128,6 +127,119 @@ impl<'s, 'a> CellEvaluator<'s, 'a> {
     ) -> EvalResult<CellValue> {
         let source = ResolvedSource::resolve(self.session, sheet, address);
         self.cell_from_source(sheet, address, source)
+    }
+
+    /// Calculate a worksheet cell and reuse its resolved source for output formatting.
+    pub(in crate::eval) fn output(
+        &mut self,
+        target: EvaluationTarget,
+    ) -> EvalResult<CellEvaluation> {
+        let source = ResolvedSource::resolve(self.session, target.sheet, target.address);
+        let value = self.cell_from_source(target.sheet, target.address, source)?;
+        Ok(CellEvaluation::from_source(
+            target,
+            value,
+            source.and_then(|source| source.cell),
+        ))
+    }
+
+    /// Whether a caller-ordered batch can try its authored roots against the local memo.
+    pub(in crate::eval) fn has_local_output_cache(&self) -> bool {
+        let session = &*self.session;
+        let runtime = &*session.state.runtime;
+        !runtime.memo.cache.is_empty()
+            && runtime.stack.consumer.is_none()
+            && !runtime.preparation.failed()
+            && !SpillQuery::new(session).settling()
+            && session.ports.dependency_sink.is_none()
+            && session.ports.cell_observer.is_none()
+            && session.reuse.overlay_reads.is_none()
+    }
+
+    /// Project a memoized authored root with the same read charges as ordinary execution.
+    pub(in crate::eval) fn local_output(
+        &mut self,
+        target: EvaluationTarget,
+    ) -> Option<EvalResult<CellEvaluation>> {
+        let source = ResolvedSource::resolve(self.session, target.sheet, target.address)?;
+        if source.accepts_spill {
+            return None;
+        }
+        let runtime = &mut *self.session.state.runtime;
+        let value = runtime.memo.cache.get(&(target.sheet, target.address))?;
+        Some((|| {
+            runtime
+                .budget
+                .charge(WorkKind::CellRead, 1)
+                .map_err(|mut failure| {
+                    failure.set_target(target);
+                    failure
+                })?;
+            record_memo_hit(&mut runtime.budget, &mut runtime.run_usage);
+            let value = copy_cached_value(&mut runtime.budget, target, value)?;
+            Ok(CellEvaluation::from_source(target, value, source.cell))
+        })())
+    }
+
+    /// Borrow clean overlay results before the batch begins any local computation.
+    pub(in crate::eval) fn retained_output_cache(
+        &self,
+    ) -> Option<std::cell::Ref<'a, crate::eval::reuse::Cache>> {
+        let session = &*self.session;
+        let cache = session.reuse.overlay_cache?;
+        let runtime = &*session.state.runtime;
+        if session.policies.producer_policy != crate::eval::config::ProducerPolicy::Compute
+            || runtime.stack.consumer.is_some()
+            || !runtime.memo.cache.is_empty()
+            || runtime.preparation.failed()
+            || SpillQuery::new(session).settling()
+            || session.ports.cell_reader.is_some()
+            || session.ports.dependency_sink.is_some()
+            || session.ports.cell_observer.is_some()
+            || session.ports.execution_observer.is_some()
+            || session.ports.builtin_invocation_observer.is_some()
+            || session.reuse.overlay_reads.is_none()
+        {
+            return None;
+        }
+        let cache = cache.try_borrow().ok()?;
+        (cache.len() != 0).then_some(cache)
+    }
+
+    /// Project one clean scalar retained result, keeping admission and writeback accounting.
+    /// The caller stops using this path as soon as ordinary evaluation starts.
+    pub(in crate::eval) fn retained_output(
+        &mut self,
+        cache: &crate::eval::reuse::Cache,
+        target: EvaluationTarget,
+    ) -> Option<EvalResult<CellEvaluation>> {
+        let entry = cache.get((target.sheet, target.address))?;
+        if entry.dependencies.spill != crate::eval::reuse::SpillRole::None
+            || entry.dependencies.spill_sensitive
+        {
+            return None;
+        }
+        let source = ResolvedSource::resolve(self.session, target.sheet, target.address)?;
+        let reads = self.session.reuse.overlay_reads.as_mut()?;
+        let runtime = &mut *self.session.state.runtime;
+        Some((|| {
+            runtime
+                .budget
+                .charge(WorkKind::CellRead, 1)
+                .map_err(|mut failure| {
+                    failure.set_target(target);
+                    failure
+                })?;
+            record_external_hit(runtime);
+            let value = copy_cached_value(&mut runtime.budget, target, &entry.value)?;
+            reads
+                .cached_outputs
+                .try_reserve(1)
+                .map_err(|source| cell_allocation_failure(target, source))?;
+            // SAFETY: The successful reservation guarantees one output coordinate slot.
+            reads.cached_outputs.push((target.sheet, target.address));
+            Ok(CellEvaluation::from_source(target, value, source.cell))
+        })())
     }
 
     /// Preserve the ordinary read lifecycle around an already resolved immutable source.
@@ -150,6 +262,12 @@ impl<'s, 'a> CellEvaluator<'s, 'a> {
         let read = attempt.read(self.session, source);
         self.session.state.expression_demand = previous_demand;
         let settling_spills = SpillQuery::new(self.session).settling();
+        if !settling_spills
+            && self.session.reuse.overlay_reads.is_none()
+            && self.session.ports.cell_observer.is_none()
+        {
+            return read.result;
+        }
         let runtime = &mut *self.session.state.runtime;
         read.complete(CompletionContext {
             array_result_policy: self.session.policies.array_result_policy,

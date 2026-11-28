@@ -52,6 +52,8 @@ mod publication;
 mod self_read;
 /// Marks a requested rectangle whose possible producers have already been discovered and settled.
 mod settled_area;
+/// Remembers the source-ordered prefix of settled producer candidates.
+mod settled_candidate_prefix;
 /// Demand selection, retry, rollback and settlement.
 mod settlement;
 /// Rollback state for one connected group of competing array producers.

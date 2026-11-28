@@ -1,5 +1,7 @@
 //! Indexed source style records; component IDs describe the direct cell XF.
-use super::codec::{Token, argb, boolean, choice, color, number, valid};
+use super::codec::{Token, argb, boolean, choice, color, number, parse_boolean, parse_number};
+use super::component_ids::ComponentIds;
+use super::metadata_xml::MetadataXml;
 use crate::IoError;
 use crate::ooxml::xml::{attr, xml};
 use crate::{
@@ -7,12 +9,9 @@ use crate::{
     ImportDiagnosticKind, PatternFill, PatternType, RotationDegrees, StyleContext, TextRotation,
     Underline, VisualStyle,
 };
-use quick_xml::{
-    NsReader,
-    events::{BytesStart, Event},
-};
+use quick_xml::events::{BytesStart, Event, attributes::Attribute};
 use std::{
-    collections::{BTreeMap, BTreeSet, HashSet},
+    collections::{BTreeMap, BTreeSet, HashMap},
     sync::Arc,
 };
 
@@ -45,18 +44,16 @@ fn push<T>(records: &mut Vec<T>, value: T) -> Result<(), IoError> {
 }
 /// Visit direct children, letting each visitor consume its own subtree.
 fn children(
-    reader: &mut NsReader<&[u8]>,
-    mut visit: impl FnMut(&mut NsReader<&[u8]>, &BytesStart<'_>) -> Result<(), IoError>,
+    reader: &mut MetadataXml<'_>,
+    mut visit: impl FnMut(&mut MetadataXml<'_>, &BytesStart<'_>) -> Result<(), IoError>,
 ) -> Result<(), IoError> {
     loop {
-        match reader.read_event().map_err(xml)? {
+        match reader.read_event()? {
             Event::Start(e) => {
-                let (ns, _) = reader.resolver().resolve_element(e.name());
-                if matches!(ns, quick_xml::name::ResolveResult::Bound(n) if n.as_ref() == "http://schemas.openxmlformats.org/spreadsheetml/2006/main")
-                {
+                if reader.in_namespace() {
                     visit(reader, &e)?;
                 } else {
-                    reader.read_to_end(e.name()).map_err(xml)?;
+                    reader.skip_subtree()?;
                 }
             }
             Event::End(_) => return Ok(()),
@@ -65,132 +62,32 @@ fn children(
                     crate::StyleDecodeError::TruncatedStyleRecord,
                 ));
             }
-            Event::DocType(_) => {
-                return Err(IoError::Style(crate::StyleDecodeError::DtdInStyleMetadata));
-            }
             _ => {}
         }
     }
 }
 /// Skip an unrepresented record and retain one warning per element family.
 fn skip(
-    reader: &mut NsReader<&[u8]>,
+    reader: &mut MetadataXml<'_>,
     e: &BytesStart<'_>,
     losses: &mut BTreeSet<String>,
 ) -> Result<(), IoError> {
     losses.insert(e.local_name().as_ref().to_string());
-    reader.read_to_end(e.name()).map_err(xml)?;
+    reader.skip_subtree()?;
     Ok(())
-}
-/// Validate standalone XML metadata without DTDs, unresolved references, or multiple roots.
-fn validate_root(bytes: &[u8], local: &str, namespace: &str) -> Result<bool, IoError> {
-    use quick_xml::name::ResolveResult;
-    let mut reader = NsReader::from_reader(bytes);
-    reader.config_mut().expand_empty_elements = true;
-    let mut depth = 0usize;
-    let mut seen = false;
-    let mut foreign = false;
-    let mut declaration = false;
-    loop {
-        match reader.read_event().map_err(xml)? {
-            Event::Start(e) => {
-                if depth == 0 {
-                    let (ns, name) = reader.resolver().resolve_element(e.name());
-                    if seen
-                        || name.as_ref() != local
-                        || !matches!(ns, ResolveResult::Bound(n) if n.as_ref() == namespace)
-                    {
-                        return Err(IoError::Style(
-                            crate::StyleDecodeError::MetadataRootNamespace,
-                        ));
-                    }
-                    seen = true;
-                }
-                let (ns, _) = reader.resolver().resolve_element(e.name());
-                foreign |= !matches!(ns, ResolveResult::Bound(n) if n.as_ref() == namespace);
-                depth = depth
-                    .checked_add(1)
-                    .ok_or(IoError::Style(crate::StyleDecodeError::XmlDepth))?;
-                for a in e.attributes() {
-                    let a = a.map_err(xml)?;
-                    let value = a
-                        .normalized_value(quick_xml::XmlVersion::Implicit1_0)
-                        .map_err(xml)?;
-                    valid(&value)?;
-                }
-            }
-            Event::End(_) => {
-                depth = depth
-                    .checked_sub(1)
-                    .ok_or(IoError::Style(crate::StyleDecodeError::XmlDepth))?
-            }
-            Event::DocType(_) => {
-                return Err(IoError::Style(crate::StyleDecodeError::DtdInMetadata));
-            }
-            Event::Decl(_) => {
-                if seen || declaration {
-                    return Err(IoError::Style(
-                        crate::StyleDecodeError::MisplacedXmlDeclaration,
-                    ));
-                }
-                declaration = true;
-            }
-            Event::CData(e) => {
-                if depth == 0 {
-                    return Err(IoError::Style(
-                        crate::StyleDecodeError::CdataOutsideMetadataRoot,
-                    ));
-                }
-                valid(e.as_ref())?;
-            }
-            Event::GeneralRef(e) => {
-                if depth == 0 {
-                    return Err(IoError::Style(
-                        crate::StyleDecodeError::ReferenceOutsideMetadataRoot,
-                    ));
-                }
-                if let Some(c) = e.resolve_char_ref().map_err(xml)? {
-                    valid(&c.to_string())?;
-                }
-                if e.resolve_char_ref().map_err(xml)?.is_none()
-                    && !matches!(e.as_ref(), "amp" | "lt" | "gt" | "apos" | "quot")
-                {
-                    return Err(IoError::Style(
-                        crate::StyleDecodeError::UnknownEntityInMetadata,
-                    ));
-                }
-            }
-            Event::Text(t) => {
-                let value = t.xml10_content();
-                valid(&value)?;
-                if depth == 0 && !value.trim().is_empty() {
-                    return Err(IoError::Style(
-                        crate::StyleDecodeError::TextOutsideMetadataRoot,
-                    ));
-                }
-            }
-            Event::Eof => break,
-            _ => {}
-        }
-    }
-    if !seen || depth != 0 {
-        return Err(IoError::Style(
-            crate::StyleDecodeError::IncompleteMetadataRoot,
-        ));
-    }
-    Ok(foreign)
 }
 /// Validate authored or imported DrawingML themes before retaining or packaging bytes.
 pub(crate) fn validate_theme(bytes: &[u8]) -> Result<(), IoError> {
-    validate_root(
+    MetadataXml::new(
         bytes,
         "theme",
         "http://schemas.openxmlformats.org/drawingml/2006/main",
+        false,
     )
-    .map(|_| ())
+    .validate()
 }
 /// Decode one ordinary font record without resolving theme or indexed colors.
-fn font(reader: &mut NsReader<&[u8]>, losses: &mut BTreeSet<String>) -> Result<FontStyle, IoError> {
+fn font(reader: &mut MetadataXml<'_>, losses: &mut BTreeSet<String>) -> Result<FontStyle, IoError> {
     let mut f = FontStyle::default();
     children(reader, |r, e| {
         match e.local_name().as_ref() {
@@ -239,14 +136,14 @@ fn font(reader: &mut NsReader<&[u8]>, losses: &mut BTreeSet<String>) -> Result<F
             }
             _ => return skip(r, e, losses),
         }
-        r.read_to_end(e.name()).map_err(xml)?;
+        r.skip_subtree()?;
         Ok(())
     })?;
     Ok(f)
 }
 /// Decode a pattern fill, reporting gradients rather than claiming preservation.
 fn fill(
-    reader: &mut NsReader<&[u8]>,
+    reader: &mut MetadataXml<'_>,
     losses: &mut BTreeSet<String>,
 ) -> Result<Option<PatternFill>, IoError> {
     let mut result = None;
@@ -265,7 +162,7 @@ fn fill(
                 "bgColor" => fill.background = Some(color(e)?),
                 _ => return skip(r, e, losses),
             }
-            r.read_to_end(e.name()).map_err(xml)?;
+            r.skip_subtree()?;
             Ok(())
         })?;
         result = Some(fill);
@@ -275,7 +172,7 @@ fn fill(
 }
 /// Decode four independent edges; omitted edge records remain omitted.
 fn borders(
-    reader: &mut NsReader<&[u8]>,
+    reader: &mut MetadataXml<'_>,
     start: &BytesStart<'_>,
     losses: &mut BTreeSet<String>,
 ) -> Result<Borders, IoError> {
@@ -309,7 +206,7 @@ fn borders(
                 return skip(r, e, losses);
             }
             s.color = Some(color(e)?);
-            r.read_to_end(e.name()).map_err(xml)?;
+            r.skip_subtree()?;
             Ok(())
         })?;
         *side = Some(s);
@@ -353,35 +250,98 @@ fn alignment(e: &BytesStart<'_>, losses: &mut BTreeSet<String>) -> Result<Alignm
         reading_order: choice(e, "readingOrder")?,
     })
 }
+/// Find the selected attributes without opening a new XML iterator for each field.
+fn attributes<'a, const N: usize>(
+    event: &'a BytesStart<'_>,
+    names: [&str; N],
+) -> Result<[Option<Attribute<'a>>; N], IoError> {
+    let mut found: [Option<Attribute<'a>>; N] = [const { None }; N];
+    for attribute in event.attributes().with_checks(false) {
+        let attribute = attribute.map_err(xml)?;
+        if let Some(index) = names
+            .iter()
+            .position(|name| *name == attribute.key.as_ref())
+            && let Some(slot) = found.get_mut(index)
+            && slot.is_none()
+        {
+            *slot = Some(attribute);
+        }
+    }
+    Ok(found)
+}
+
+/// Normalize a selected attribute when its field is due for validation.
+fn attribute_text(
+    attribute: Option<Attribute<'_>>,
+) -> Result<Option<std::borrow::Cow<'_, str>>, IoError> {
+    attribute
+        .map(|value| {
+            value
+                .normalized_value(quick_xml::XmlVersion::Implicit1_0)
+                .map_err(xml)
+        })
+        .transpose()
+}
+
 /// Decode an XF while preserving its own components, independently of apply flags.
 fn xf(
-    reader: &mut NsReader<&[u8]>,
+    reader: &mut MetadataXml<'_>,
     e: &BytesStart<'_>,
     losses: &mut BTreeSet<String>,
 ) -> Result<Xf, IoError> {
-    for name in [
-        "applyFont",
-        "applyFill",
-        "applyBorder",
-        "applyAlignment",
-        "applyNumberFormat",
-        "applyProtection",
-        "pivotButton",
-        "quotePrefix",
+    let [
+        apply_font,
+        apply_fill,
+        apply_border,
+        apply_alignment,
+        apply_number,
+        apply_protection,
+        pivot,
+        quote,
+        font,
+        fill,
+        border,
+        number,
+        parent,
+    ] = attributes(
+        e,
+        [
+            "applyFont",
+            "applyFill",
+            "applyBorder",
+            "applyAlignment",
+            "applyNumberFormat",
+            "applyProtection",
+            "pivotButton",
+            "quotePrefix",
+            "fontId",
+            "fillId",
+            "borderId",
+            "numFmtId",
+            "xfId",
+        ],
+    )?;
+    for flag in [
+        apply_font,
+        apply_fill,
+        apply_border,
+        apply_alignment,
+        apply_number,
+        apply_protection,
     ] {
-        if attr(e, name)?.is_some() {
-            boolean(e, name, false)?;
-        }
+        parse_boolean(attribute_text(flag)?.as_deref(), false)?;
     }
-    if boolean(e, "quotePrefix", false)? || boolean(e, "pivotButton", false)? {
+    let pivot = parse_boolean(attribute_text(pivot)?.as_deref(), false)?;
+    let quote = parse_boolean(attribute_text(quote)?.as_deref(), false)?;
+    if quote || pivot {
         losses.insert("XF flags".into());
     }
     let mut xf = Xf {
-        font: number(e, "fontId")?.unwrap_or(0),
-        fill: number(e, "fillId")?.unwrap_or(0),
-        border: number(e, "borderId")?.unwrap_or(0),
-        number: number(e, "numFmtId")?.unwrap_or(0),
-        parent: number(e, "xfId")?,
+        font: parse_number(attribute_text(font)?.as_deref())?.unwrap_or(0),
+        fill: parse_number(attribute_text(fill)?.as_deref())?.unwrap_or(0),
+        border: parse_number(attribute_text(border)?.as_deref())?.unwrap_or(0),
+        number: parse_number(attribute_text(number)?.as_deref())?.unwrap_or(0),
+        parent: parse_number(attribute_text(parent)?.as_deref())?,
         alignment: None,
     };
     children(reader, |r, e| {
@@ -389,7 +349,7 @@ fn xf(
             return skip(r, e, losses);
         }
         xf.alignment = Some(alignment(e, losses)?);
-        r.read_to_end(e.name()).map_err(xml)?;
+        r.skip_subtree()?;
         Ok(())
     })?;
     Ok(xf)
@@ -418,26 +378,41 @@ pub(crate) fn read_styles(
             context: StyleContext::new(theme, vec![])?,
         });
     };
-    let foreign = validate_root(
-        bytes,
-        "styleSheet",
-        "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
-    )?;
+    let reader = || {
+        MetadataXml::new(
+            bytes,
+            "styleSheet",
+            "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+            true,
+        )
+    };
+    match decode_styles(reader(), theme, warnings) {
+        Ok(styles) => Ok(styles),
+        Err(error) => {
+            // The old reader validated the complete XML document before decoding
+            // any fields. Preserve that diagnostic priority on a failed read.
+            reader().validate()?;
+            Err(error)
+        }
+    }
+}
+
+/// Decode components while validating their XML, including skipped records.
+fn decode_styles(
+    mut reader: MetadataXml<'_>,
+    theme: Option<Vec<u8>>,
+    warnings: &mut Vec<ImportDiagnostic>,
+) -> Result<ImportedStyles, IoError> {
     let mut fonts = Vec::new();
     let mut fills = Vec::new();
     let mut edges = Vec::new();
     let mut xfs = Vec::new();
     let mut parents = Vec::new();
     let mut palette = Vec::new();
-    let mut formats = BTreeMap::new();
+    let mut formats: BTreeMap<u32, Arc<str>> = BTreeMap::new();
     let mut losses = BTreeSet::new();
-    if foreign {
-        losses.insert("foreign namespace extensions".into());
-    }
-    let mut reader = NsReader::from_reader(bytes);
-    reader.config_mut().expand_empty_elements = true;
     loop {
-        match reader.read_event().map_err(xml)? {
+        match reader.read_event()? {
             Event::Start(root) if root.local_name().as_ref() == "styleSheet" => {
                 children(&mut reader, |r, e| match e.local_name().as_ref() {
                     "fonts" => children(r, |r, e| {
@@ -480,10 +455,10 @@ pub(crate) fn read_styles(
                         let code = attr(e, "formatCode")?.ok_or({
                             IoError::Style(crate::StyleDecodeError::MissingFormatcode)
                         })?;
-                        if formats.insert(id, code).is_some() {
+                        if formats.insert(id, Arc::from(code)).is_some() {
                             return Err(IoError::Style(crate::StyleDecodeError::DuplicateNumfmtid));
                         }
-                        r.read_to_end(e.name()).map_err(xml)?;
+                        r.skip_subtree()?;
                         Ok(())
                     }),
                     "colors" => children(r, |r, e| {
@@ -505,7 +480,7 @@ pub(crate) fn read_styles(
                                     IoError::Style(crate::StyleDecodeError::PaletteRgb)
                                 })?)?,
                             )?;
-                            r.read_to_end(e.name()).map_err(xml)?;
+                            r.skip_subtree()?;
                             Ok(())
                         })
                     }),
@@ -515,6 +490,9 @@ pub(crate) fn read_styles(
             Event::Eof => break,
             _ => {}
         }
+    }
+    if reader.foreign() {
+        losses.insert("foreign namespace extensions".into());
     }
     // Microsoft MS-OE376 2.1.747 defines cellXF apply* as future named-style
     // propagation flags. The current direct component IDs are not parent merges.
@@ -534,42 +512,61 @@ pub(crate) fn read_styles(
     if xfs.is_empty() {
         xfs.push(Xf::default());
     }
+    let fonts = ComponentIds::new(&fonts, |font| {
+        (font != &FontStyle::default()).then_some(font)
+    })?;
+    let fills = ComponentIds::new(&fills, |fill| {
+        fill.as_ref().filter(|fill| {
+            fill.pattern != PatternType::None
+                || fill.foreground.is_some()
+                || fill.background.is_some()
+        })
+    })?;
+    let edges = ComponentIds::new(&edges, |edge| (edge != &Borders::default()).then_some(edge))?;
     let mut cells = Vec::new();
-    let mut visuals: HashSet<Arc<VisualStyle>> = HashSet::new();
+    let mut visuals: HashMap<_, Arc<VisualStyle>> = HashMap::new();
     for xf in xfs {
-        let visual = VisualStyle {
-            font: component(&fonts, xf.font)?
-                .filter(|f| **f != FontStyle::default())
-                .cloned(),
-            fill: component(&fills, xf.fill)?.cloned().flatten().filter(|f| {
-                f.pattern != PatternType::None || f.foreground.is_some() || f.background.is_some()
-            }),
-            borders: component(&edges, xf.border)?
-                .filter(|b| **b != Borders::default())
-                .cloned(),
-            alignment: xf.alignment,
-        };
+        let font = fonts.get(xf.font)?;
+        let fill = fills.get(xf.fill)?;
+        let borders = edges.get(xf.border)?;
+        let key = (
+            font.map(|(id, _)| id),
+            fill.map(|(id, _)| id),
+            borders.map(|(id, _)| id),
+            xf.alignment,
+        );
         let number_format = if xf.number == 0 {
             None
         } else {
-            formats
-                .get(&xf.number)
-                .cloned()
-                .or_else(|| super::super::metadata::builtin(xf.number).map(str::to_owned))
+            match formats.entry(xf.number) {
+                std::collections::btree_map::Entry::Occupied(entry) => {
+                    Some(Arc::clone(entry.get()))
+                }
+                std::collections::btree_map::Entry::Vacant(entry) => {
+                    super::super::metadata::builtin(xf.number)
+                        .map(|code| Arc::clone(entry.insert(Arc::from(code))))
+                }
+            }
         };
         if xf.number != 0 && number_format.is_none() {
             losses.insert("locale-dependent built-in number formats".into());
         }
-        let visual = if visual == VisualStyle::default() {
+        let visual = if key == Default::default() {
             None
-        } else if let Some(shared) = visuals.get(&visual) {
+        } else if let Some(shared) = visuals.get(&key) {
             Some(Arc::clone(shared))
         } else {
             visuals.try_reserve(1).map_err(|source| {
                 IoError::Allocation(crate::AllocationError::SharedStyles(source))
             })?;
-            let shared = Arc::new(visual);
-            visuals.insert(Arc::clone(&shared));
+            // SAFETY: VisualStyle has a fixed-size layout, so this Arc size cannot overflow.
+            let shared = Arc::new(VisualStyle {
+                font: font.map(|(_, value)| value.clone()),
+                fill: fill.map(|(_, value)| value.clone()),
+                borders: borders.map(|(_, value)| value.clone()),
+                alignment: key.3.clone(),
+            });
+            visuals.insert(key, Arc::clone(&shared));
             Some(shared)
         };
         push(

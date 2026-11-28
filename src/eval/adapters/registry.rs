@@ -37,44 +37,49 @@ pub struct AdapterRegistry {
 impl AdapterRegistry {
     /// Collect registrations and retain the adapter's executor behind shared ownership.
     pub(in crate::eval) fn from_adapter<A: FunctionAdapter + 'static>(adapter: A) -> Self {
-        let registrations = adapter
-            .functions()
-            .map(|descriptor| Registration {
-                descriptor,
-                executor: 0,
-            })
-            .collect();
-        let adapter = Arc::new(adapter);
-        let executor: Arc<Executor> = Arc::new(move |context, function, parameters| {
-            adapter.execute(context, function, parameters)
-        });
         let mut registry = Self {
-            executors: vec![executor],
-            registrations,
+            executors: Vec::new(),
+            registrations: Vec::new(),
             names: FunctionNames::new(),
             handlers: vec![None; FunctionId::SLOT_COUNT],
         };
-        registry.index();
+        registry.register(adapter);
         registry
+    }
+
+    /// Append an adapter directly and index only its new registrations.
+    pub(super) fn register<A: FunctionAdapter + 'static>(&mut self, adapter: A) {
+        let owner = self.executors.len();
+        let start = self.registrations.len();
+        self.registrations
+            .extend(adapter.functions().map(|descriptor| Registration {
+                descriptor,
+                executor: owner,
+            }));
+        self.executors
+            .push(Arc::new(move |context, function, parameters| {
+                adapter.execute(context, function, parameters)
+            }));
+        self.index_from(start);
     }
 
     /// Flatten another registry while preserving earlier duplicate precedence.
     pub(in crate::eval) fn append(mut self, next: Self) -> Self {
         let offset = self.executors.len();
+        let start = self.registrations.len();
         self.executors.extend(next.executors);
         self.registrations
             .extend(next.registrations.into_iter().map(|mut entry| {
                 entry.executor += offset;
                 entry
             }));
-        self.index();
+        self.index_from(start);
         self
     }
 
-    fn index(&mut self) {
-        self.names = FunctionNames::new();
-        self.handlers.fill(None);
-        for (index, entry) in self.registrations.iter().enumerate() {
+    /// Index new registrations in their insertion order.
+    fn index_from(&mut self, start: usize) {
+        for (index, entry) in self.registrations.iter().enumerate().skip(start) {
             if let Some(slot) = self.handlers.get_mut(entry.descriptor.handler.index()) {
                 slot.get_or_insert(entry.executor);
             }

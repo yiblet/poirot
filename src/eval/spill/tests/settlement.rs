@@ -45,6 +45,7 @@ impl ScriptedExecution {
             SheetCandidates {
                 candidates,
                 ending_rows: vec![0, 0],
+                columns: Some((0, 2)),
                 ..Default::default()
             },
         );

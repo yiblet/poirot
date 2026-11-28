@@ -2,8 +2,8 @@
 //! Eager signatures admit geometry; selectors bind deferred roles without admission.
 //!
 //! Depends on: host (CallHost), vm (deferred arguments and broadcasting), spill (spill
-//! extents), limits (budgets and copying), values (value channels)
-//! and observe (error-handler observation); siblings reference and text (shared
+//! extents), limits (budgets and copying), values (value channels), session
+//! (captured sparse cell sources), and observe (error-handler observation); siblings reference and text (shared
 //! kernels).
 
 /// A source shape whose binding never reads a member or coerces a value.
@@ -12,6 +12,7 @@ mod argument_role;
 mod broadcast;
 pub(super) mod collections;
 pub(super) mod controls;
+mod coordinate_collection;
 /// Eager and lazy argument demand policies.
 mod demand;
 /// Argument role for one scalar control selected with the host's scalar-intersection rules.

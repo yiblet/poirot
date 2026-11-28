@@ -95,7 +95,7 @@ fn omitted_arguments_keep_ast_invocations_and_expression_spans() {
 
 #[test]
 fn rejected_omission_preserves_outer_metadata_checkpoint_and_depth_cleanup() {
-    let mut parser = Parser {
+    let mut parser = Parser::<true> {
         input: "SUM(OK(),,)",
         pos: 0,
         depth: 0,

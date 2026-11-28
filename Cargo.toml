@@ -88,3 +88,6 @@ workspace = true
 [[test]]
 name = "integration"
 path = "tests/main.rs"
+
+[profile.release.package.poirot]
+codegen-units = 1

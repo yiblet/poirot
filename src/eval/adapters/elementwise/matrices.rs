@@ -258,7 +258,7 @@ pub(in crate::eval::adapters) fn visit(
     }
     if let Some(positions) = OperandReader::new(host).stored_positions(index)? {
         host.charge_work(positions.len() as u64)?;
-        for (row, column) in positions {
+        for (row, column) in positions.positions() {
             let operand = OperandReader::new(host).read_cell(index, row, column)?;
             consume(host, row, column, operand)?;
         }

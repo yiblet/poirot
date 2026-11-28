@@ -58,9 +58,13 @@ pub use numeric_bits::{IeeeNumberBits, IeeeNumberClass};
 pub use poirot_functions::scalar::{
     CellError, CellValue, ExcelText, TextRef, TextUnits, TextUnitsError,
 };
+mod cell_page_cache;
 mod cell_pages;
 // Generic sparse storage and ordered views used by workbook and overlay grids.
+pub(crate) use cell_page_cache::CellPageCache;
 pub use cell_pages::{CellRange, CellStore, ColumnCells, OccupiedRows, WorksheetCells};
+mod row_page_range;
+pub(crate) use row_page_range::RowPageRange;
 mod rows;
 // Borrowed row access and explicit visibility metadata.
 pub use poirot_io::RowVisibility;

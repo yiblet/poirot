@@ -184,9 +184,11 @@ impl Discovery<'_, '_> {
                     .is_some_and(|(old, new)| old.anchor > new.anchor);
                 // SAFETY: The successful reservation admits every staged candidate.
                 discovery.candidates.extend_from_slice(&added);
+                discovery.include_columns(&added);
                 if interleaved {
                     discovery.candidates.sort_unstable_by_key(|c| c.anchor);
                     discovery.ending_rows.clear();
+                    discovery.order_revision = discovery.order_revision.saturating_add(1);
                 }
                 let mut ending_row = discovery.ending_rows.last().copied().unwrap_or(0);
                 for candidate in discovery

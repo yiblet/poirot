@@ -461,12 +461,11 @@ impl ResultRule {
                 .iter()
                 .copied()
                 .fold(ShapeBounds::SCALAR, ShapeBounds::join),
-            Self::Array
-            | Self::TrimRange
-            | Self::Reference
-            | Self::SpillRange
-            | Self::Index
-            | Self::Any => ShapeBounds::UNKNOWN,
+            // All INDEX forms select within one source rectangle.
+            Self::Index => args.first().copied().unwrap_or(ShapeBounds::UNKNOWN),
+            Self::Array | Self::TrimRange | Self::Reference | Self::SpillRange | Self::Any => {
+                ShapeBounds::UNKNOWN
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 //! Sparse range membership: discovery guards, occupied-coordinate collection and members.
 
 use super::read_recorder::ReadRecorder;
+use super::sparse_batch::SparseBatch;
 use super::sparse_member::SparseMember;
 use crate::eval::config::ArrayResultPolicy;
 use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError, WorkKind};
@@ -75,23 +76,48 @@ impl<'s, 'a> SparseReader<'s, 'a> {
         self.collect_sparse(
             area,
             prefix_members,
+            Vec::new(),
             |address, _| address,
             |address| *address,
         )
     }
 
     /// Preserve authored cells from the membership prepass for internal value consumers.
-    pub(in crate::eval) fn sparse_members(
-        &mut self,
-        area: Area,
-    ) -> EvalResult<Vec<SparseMember<'a>>> {
+    pub(in crate::eval) fn sparse_members(&mut self, area: Area) -> EvalResult<SparseBatch<'a>> {
         self.prepare_sparse_area(area)?;
-        self.collect_sparse(
-            area,
-            0,
-            |address, cell| SparseMember { address, cell },
-            |member| member.address,
-        )
+        let mut batch = std::mem::take(&mut self.session.reuse.sparse_members);
+        let runtime = &*self.session.state.runtime;
+        let can_reuse = !runtime.budget.tracks_work()
+            && runtime.budget.limits.materialized_values == usize::MAX
+            && runtime.preparation.admitted_cells().len() == 0
+            && self.session.ports.cell_reader.is_none();
+        let workbook = self.session.sources.workbook;
+        let inputs = self.session.sources.inputs;
+        if let Some(tail) = batch.missing_tail(area, workbook, inputs, can_reuse) {
+            batch.members = self.collect_sparse(
+                tail,
+                0,
+                batch.members,
+                |address, cell| SparseMember { address, cell },
+                |member| member.address,
+            )?;
+        }
+        batch.source = (can_reuse && batch.members.len() >= 16).then_some((area, workbook, inputs));
+        Ok(batch)
+    }
+
+    /// Retain bounded member storage after the caller has consumed this traversal.
+    pub(super) fn recycle_sparse_members(&mut self, mut batch: SparseBatch<'a>) {
+        const MAX_RECYCLED_MEMBERS: usize = 4096;
+        let spare = &mut self.session.reuse.sparse_members;
+        if batch.members.capacity() <= MAX_RECYCLED_MEMBERS
+            && batch.members.capacity() > spare.members.capacity()
+        {
+            if batch.source.is_none() {
+                batch.members.clear();
+            }
+            *spare = batch;
+        }
     }
 
     /// Admit the complete member batch before any referenced body executes.
@@ -99,6 +125,7 @@ impl<'s, 'a> SparseReader<'s, 'a> {
         &mut self,
         area: Area,
         prefix_members: usize,
+        mut addresses: Vec<T>,
         project: impl Fn(CellAddress, Option<&'a crate::model::Cell>) -> T,
         coordinate: impl Fn(&T) -> CellAddress,
     ) -> EvalResult<Vec<T>> {
@@ -121,27 +148,37 @@ impl<'s, 'a> SparseReader<'s, 'a> {
         );
         // Admit each coordinate before growing the private collection. Finish
         // collecting before consumers execute any referenced cell bodies.
-        let mut addresses = Vec::new();
         let mut cells = view
             .stored(membership)
             .map_err(|_| EvaluationError::StalePlan)?;
-        while let Some((address, cell)) = sparse_next(&mut cells, &mut runtime.budget)? {
-            runtime.budget.check_allocation(
-                prefix_members
-                    .saturating_add(addresses.len())
-                    .saturating_add(1),
-            )?;
-            runtime.budget.charge(WorkKind::Materialization, 1)?;
-            addresses
-                .try_reserve(1)
-                .map_err(|reservation_source| EvaluationError::Resource {
-                    kind: crate::eval::limits::ResourceFailureKind::Allocation,
-                    capability: CapabilityId::FunctionAdapter,
-                    target: runtime.stack.consumer,
-                    reason: (crate::eval::limits::EvaluationReasonError::SparseCoordinateAllocationFailed).with_reservation_source(reservation_source),
-                })?;
-            // SAFETY: The successful reservation provides room for this one push.
-            addresses.push(project(address, Some(cell)));
+        if !runtime.budget.tracks_work() && runtime.budget.limits.materialized_values == usize::MAX
+        {
+            // An unmetered run still reserves the actual storage fallibly.
+            for (address, cell) in cells {
+                push_authored(
+                    &mut addresses,
+                    *address,
+                    cell,
+                    &project,
+                    runtime.stack.consumer,
+                )?;
+            }
+        } else {
+            while let Some((address, cell)) = sparse_next(&mut cells, &mut runtime.budget)? {
+                runtime.budget.check_allocation(
+                    prefix_members
+                        .saturating_add(addresses.len())
+                        .saturating_add(1),
+                )?;
+                runtime.budget.charge(WorkKind::Materialization, 1)?;
+                push_authored(
+                    &mut addresses,
+                    address,
+                    cell,
+                    &project,
+                    runtime.stack.consumer,
+                )?;
+            }
         }
         // Effective stored coordinates are already unique and row-major. Only
         // merging generated spill cells can disturb that order or add duplicates.
@@ -169,12 +206,38 @@ impl<'s, 'a> SparseReader<'s, 'a> {
     }
 }
 
+/// Append an authored member without growing the working collection infallibly.
+#[inline]
+fn push_authored<'a, T>(
+    addresses: &mut Vec<T>,
+    address: CellAddress,
+    cell: &'a crate::model::Cell,
+    project: &impl Fn(CellAddress, Option<&'a crate::model::Cell>) -> T,
+    target: Option<crate::eval::coordinates::EvaluationTarget>,
+) -> EvalResult<()> {
+    addresses
+        .try_reserve(1)
+        .map_err(|reservation_source| EvaluationError::Resource {
+            kind: crate::eval::limits::ResourceFailureKind::Allocation,
+            capability: CapabilityId::FunctionAdapter,
+            target,
+            reason: (crate::eval::limits::EvaluationReasonError::SparseCoordinateAllocationFailed)
+                .with_reservation_source(reservation_source),
+        })?;
+    // SAFETY: The successful reservation provides room for this one push.
+    addresses.push(project(address, Some(cell)));
+    Ok(())
+}
+
 /// Charge seeks and visits after every iterator step, including the terminating step.
 /// Empty rows/columns can require seeks even when no stored cell is returned.
 fn sparse_next<'a>(
     cells: &mut crate::eval::inputs::EffectiveStoredCells<'a>,
     budget: &mut BudgetMeter,
 ) -> EvalResult<Option<(CellAddress, &'a crate::model::Cell)>> {
+    if !budget.tracks_work() {
+        return Ok(cells.next().map(|(address, cell)| (*address, cell)));
+    }
     let before = cells.counters();
     let address = cells.next().map(|(address, cell)| (*address, cell));
     let after = cells.counters();

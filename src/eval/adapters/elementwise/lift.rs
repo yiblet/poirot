@@ -149,6 +149,17 @@ impl Lift {
         address: CellAddress,
         mut evaluate: impl FnMut(&mut CallHost<'_, '_>, usize, usize) -> FunctionResult<CellValue>,
     ) -> FunctionResult<Value> {
+        let mut member = |host: &mut CallHost<'_, '_>, row, column| {
+            host.charge_work(1)?;
+            match evaluate(host, row, column) {
+                Ok(value) => Ok(value),
+                Err(FunctionError::Spreadsheet(error)) => Ok(Error(error)),
+                Err(error) => Err(error),
+            }
+        };
+        if self.rows == 1 && self.columns == 1 {
+            return member(host, 0, 0).map(Value::Scalar);
+        }
         let mut result = Vec::new();
         result
             .try_reserve_exact(self.rows)
@@ -159,25 +170,12 @@ impl Lift {
                 .try_reserve_exact(self.columns)
                 .map_err(|reservation_source| host.reservation_failure(reservation_source))?;
             for column in 0..self.columns {
-                host.charge_work(1)?;
-                let value = match evaluate(host, row, column) {
-                    Ok(value) => value,
-                    Err(FunctionError::Spreadsheet(error)) => Error(error),
-                    Err(error) => return Err(error),
-                };
+                let value = member(host, row, column)?;
                 // SAFETY: Exactly columns pushes follow the local columns reservation.
                 values.push(value);
             }
             // SAFETY: Exactly rows pushes follow the local rows reservation.
             result.push(values);
-        }
-        if self.rows == 1 && self.columns == 1 {
-            return result
-                .into_iter()
-                .next()
-                .and_then(|row| row.into_iter().next())
-                .map(Value::Scalar)
-                .ok_or(VALUE_ERROR.into());
         }
         Ok(Value::Array(ArrayView::anchored(result, Some(address))))
     }

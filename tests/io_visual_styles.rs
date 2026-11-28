@@ -66,6 +66,13 @@ fn handwritten_components_context_default_blank_and_formula_are_preserved() {
     assert!(book.sheet(0).unwrap().get("F1").unwrap().is_none());
     let s = &cell(&book, "B1").style;
     assert_eq!(s.number_format.as_deref(), Some("0.000&\" kg\""));
+    let format = s.number_format.as_ref().unwrap();
+    for address in ["C1", "D1"] {
+        assert!(std::sync::Arc::ptr_eq(
+            format,
+            cell(&book, address).style.number_format.as_ref().unwrap(),
+        ));
+    }
     let v = s.visual.as_deref().unwrap();
     let f = v.font.as_ref().unwrap();
     assert_eq!(f.name.as_deref(), Some("Example & Font"));
@@ -280,7 +287,7 @@ fn namespace_extensions_do_not_spoof_components_and_font_names_share_across_xfs(
     let styles = STYLES
         .replace(
             "<sz val=\"11.5\"/>",
-            "<x:sz xmlns:x=\"urn:extension\" val=\"999\"/><sz val=\"11.5\"/>",
+            "<x:sz xmlns:x=\"urn:extension\" val=\"999\"/><sz xmlns=\"\"><sz val=\"0\"/></sz><sz val=\"11.5\"/>",
         )
         .replace("<xf fontId=\"2\"/>", "<xf fontId=\"1\"/>");
     let theme = THEME.replace(
@@ -345,4 +352,84 @@ fn missing_required_font_values_and_unsafe_xml_text_fail() {
         .style
         .number_format = Some("bad\u{0}format".into());
     assert!(write_xlsx_to_buffer(&book).is_err());
+}
+
+#[test]
+fn late_xml_failure_precedes_a_semantic_style_error() {
+    let styles = STYLES
+        .replace(r#"<name val="Base"/>"#, "<name/>")
+        .replace("</styleSheet>", "<extLst>&undefined;</extLst></styleSheet>");
+    assert!(matches!(
+        read_workbook_bytes::<Workbook>(&fixture(&styles, SHEET, THEME)),
+        Err(IoError::Style(
+            poirot_io::StyleDecodeError::UnknownEntityInMetadata
+        )),
+    ));
+}
+
+#[test]
+fn ignored_style_attributes_validate_characters_and_entities() {
+    let read = |value| {
+        let styles = STYLES.replace(
+            "</styleSheet>",
+            &format!("<extLst value=\"{value}\"/></styleSheet>"),
+        );
+        read_workbook_bytes::<Workbook>(&fixture(&styles, SHEET, THEME))
+    };
+    assert!(read("plain ASCII 127").is_ok());
+    assert!(read("A\t\n文本 &amp; &#x26;").is_ok());
+    for value in ["x\u{1}y", "x\u{fffe}y", "x&#x1;y"] {
+        assert!(matches!(
+            read(value),
+            Err(IoError::Unsupported(
+                poirot_io::WorkbookFeatureError::StyleStringContainsInvalidXmlCharacter
+            )),
+        ));
+    }
+    assert!(matches!(read("x&undefined;y"), Err(IoError::Xml(_))));
+}
+
+#[test]
+fn ignored_theme_subtrees_still_check_namespace_declarations() {
+    let theme = THEME.replace(
+        "</a:theme>",
+        "<a:extLst><a:ext xmlns:xml=\"urn:reserved\"/></a:extLst></a:theme>",
+    );
+    assert!(matches!(
+        read_workbook_bytes::<Workbook>(&fixture(STYLES, SHEET, &theme)),
+        Err(IoError::Xml(poirot_io::XmlCodecError::Parse(
+            quick_xml::Error::Namespace(quick_xml::name::NamespaceError::InvalidXmlPrefixBind(_))
+        ))),
+    ));
+}
+
+#[test]
+fn equal_components_with_distinct_source_ids_share_visuals() {
+    let styles = r#"<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+        <fonts><font/><font><b/></font><font><b/></font></fonts>
+        <fills><fill/><fill><patternFill patternType="solid"/></fill><fill><patternFill patternType="solid"/></fill></fills>
+        <borders><border/><border><left style="thin"/></border><border><left style="thin"/></border></borders>
+        <cellXfs>
+            <xf/>
+            <xf fontId="1" fillId="1" borderId="1"/>
+            <xf fontId="2" fillId="2" borderId="2" numFmtId="2"/>
+            <xf fontId="2" fillId="2" borderId="2"><alignment/></xf>
+        </cellXfs>
+    </styleSheet>"#;
+    let sheet = SHEET.replace("<c r=\"D1\" s=\"1\">", "<c r=\"D1\" s=\"3\">");
+    let book = read_workbook_bytes::<Workbook>(&fixture(styles, &sheet, THEME)).unwrap();
+    let plain = &cell(&book, "B1").style;
+    let formatted = &cell(&book, "E1").style;
+    let aligned = &cell(&book, "D1").style;
+    assert_eq!(plain.number_format, None);
+    assert_eq!(formatted.number_format.as_deref(), Some("0.00"));
+    assert!(Arc::ptr_eq(
+        plain.visual.as_ref().unwrap(),
+        formatted.visual.as_ref().unwrap()
+    ));
+    assert_eq!(plain.visual.as_ref().unwrap().alignment, None);
+    assert_eq!(
+        aligned.visual.as_ref().unwrap().alignment,
+        Some(Alignment::default())
+    );
 }

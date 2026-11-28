@@ -43,6 +43,12 @@ pub(in crate::eval) struct Dependencies {
 }
 
 impl Dependencies {
+    /// Record the first-occurrence order and invalidation evidence for a value read.
+    pub(super) fn cell_value(&mut self, key: Key) {
+        self.value_read(key);
+        self.cell(key);
+    }
+
     pub(super) fn value_read(&mut self, (sheet, at): Key) {
         if let Some(last) = self.value_reads.last_mut() {
             if last.contains(sheet, at) {

@@ -13,6 +13,10 @@ pub(in crate::eval) struct SheetCandidates {
     pub(super) candidates: Vec<ProducerCandidate>,
     /// Monotone maximum possible ending row through each ordered candidate.
     pub(super) ending_rows: Vec<u32>,
+    /// Changes when new candidates move existing candidate positions.
+    pub(super) order_revision: u64,
+    /// Inclusive column bounds of all discovered possible producers.
+    pub(super) columns: Option<(u32, u32)>,
     /// Maximal prefix endpoints keyed by column; rows strictly decrease.
     pub(super) inspected: std::collections::BTreeMap<u32, u32>,
     /// Saved children without declared geometry cannot supply finite bounds.
@@ -29,12 +33,30 @@ impl SheetCandidates {
             .is_some_and(|(_, row)| *row >= last.row)
     }
 
-    /// Bound candidate tests by possible ending rows and source-priority starts.
+    /// Expand the worksheet's column bounds for newly discovered producers.
+    pub(super) fn include_columns(&mut self, added: &[ProducerCandidate]) {
+        for candidate in added {
+            let area = candidate.area;
+            self.columns = Some(match self.columns {
+                Some((first, last)) => (first.min(area.c0), last.max(area.c1)),
+                None => (area.c0, area.c1),
+            });
+        }
+    }
+
+    /// Bound candidate tests by worksheet columns, ending rows and source priority.
     pub(super) fn possible_in(
         &self,
         area: Area,
         before: Option<CellAddress>,
+        settled_prefix: usize,
     ) -> &[ProducerCandidate] {
+        if self
+            .columns
+            .is_none_or(|(first, last)| area.c1 < first || area.c0 > last)
+        {
+            return &[];
+        }
         let end = match before {
             Some(anchor) => self.candidates.partition_point(|c| c.anchor < anchor),
             None => self.candidates.partition_point(|c| c.anchor.row <= area.r1),
@@ -42,6 +64,7 @@ impl SheetCandidates {
         let start = self
             .ending_rows
             .partition_point(|row| *row < area.r0)
+            .max(settled_prefix)
             .min(end);
         self.candidates.get(start..end).unwrap_or_default()
     }

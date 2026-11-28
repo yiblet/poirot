@@ -335,8 +335,12 @@ impl PackageInventory {
         )
     }
     /// Resolve the root workbook before loading only its planning metadata.
-    pub(crate) fn workbook_part(&self, policy: OpcImportPolicy) -> Result<String, IoError> {
-        let roots = self.relationships("", &mut Vec::new(), policy)?;
+    pub(crate) fn workbook_part(
+        &self,
+        policy: OpcImportPolicy,
+        warnings: &mut Vec<ImportDiagnostic>,
+    ) -> Result<String, IoError> {
+        let roots = self.relationships("", warnings, policy)?;
         select_relationship(&roots, "officeDocument", true)?.ok_or_else(|| {
             fail(OpcError::MissingRelationship {
                 id: "officeDocument".into(),
@@ -350,13 +354,17 @@ impl PackageInventory {
     /// Resolve checked package topology under an explicit external-link policy.
     pub fn plan_with_policy(&self, policy: OpcImportPolicy) -> Result<OpcReadPlan, IoError> {
         let mut warnings = Vec::new();
-        let roots = self.relationships("", &mut warnings, policy)?;
-        let workbook_part =
-            select_relationship(&roots, "officeDocument", true)?.ok_or_else(|| {
-                fail(OpcError::MissingRelationship {
-                    id: "officeDocument".into(),
-                })
-            })?;
+        let workbook_part = self.workbook_part(policy, &mut warnings)?;
+        self.plan_from_workbook(policy, workbook_part, warnings)
+    }
+
+    /// Finish planning from the checked root relationship and its diagnostics.
+    pub(crate) fn plan_from_workbook(
+        &self,
+        policy: OpcImportPolicy,
+        workbook_part: String,
+        mut warnings: Vec<ImportDiagnostic>,
+    ) -> Result<OpcReadPlan, IoError> {
         let rels = self.relationships(&workbook_part, &mut warnings, policy)?;
         let styles_part = select_relationship(&rels, "styles", false)?;
         let theme_part = select_relationship(&rels, "theme", false)?;

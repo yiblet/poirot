@@ -35,3 +35,47 @@ pub(super) fn copy_cached_value(
     }
     Ok(value.clone())
 }
+
+/// Count one retained result lookup after its cell read was admitted.
+#[inline]
+pub(super) fn record_external_hit(runtime: &mut crate::eval::session::runtime::Runtime) {
+    if runtime.budget.profiling {
+        runtime.run_usage.external_cache_hits =
+            runtime.run_usage.external_cache_hits.saturating_add(1);
+        runtime.budget.usage.cache_hits = runtime.budget.usage.cache_hits.saturating_add(1);
+    }
+}
+
+/// Count an admitted read served by the local memo.
+#[inline]
+pub(super) fn record_memo_hit(budget: &mut BudgetMeter, usage: &mut crate::eval::limits::RunUsage) {
+    if budget.profiling {
+        usage.session_memo_hits = usage.session_memo_hits.saturating_add(1);
+        budget.usage.cache_hits = budget.usage.cache_hits.saturating_add(1);
+    }
+}
+
+/// Stage a successful point result for atomic overlay publication.
+#[inline]
+pub(super) fn record_overlay_completion(
+    reads: &mut crate::eval::reuse::Reads,
+    target: EvaluationTarget,
+    provenance: crate::eval::ports::CellProvenance,
+) -> EvalResult<()> {
+    let key = (target.sheet, target.address);
+    reads
+        .completed
+        .try_reserve(1)
+        .map_err(|source| cell_allocation_failure(target, source))?;
+    if provenance == crate::eval::ports::CellProvenance::Evaluated {
+        reads
+            .fresh_results
+            .try_reserve(1)
+            .map_err(|source| cell_allocation_failure(target, source))?;
+        // SAFETY: One slot was reserved and its key hashes only integer coordinates.
+        reads.fresh_results.insert(key);
+    }
+    // SAFETY: One slot was reserved before any write to the completed set.
+    reads.completed.insert(key);
+    Ok(())
+}

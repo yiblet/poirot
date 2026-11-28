@@ -23,15 +23,17 @@ fn rejected_range_shapes_do_not_accumulate_template_candidates_after_restore() {
 }
 
 /// Bucket keys and exemplar sources of the first policy's rebinding index.
-fn template_index(compiler: &FormulaCompiler) -> Vec<(u64, Vec<String>)> {
-    let mut index: Vec<_> = compiler.templates[0]
+fn template_index(compiler: &FormulaCompiler) -> Vec<(u64, String)> {
+    let templates = &compiler.templates[0];
+    let mut index: Vec<_> = templates
         .classified
-        .iter()
-        .map(|(hash, bucket)| {
-            let mut sources: Vec<_> = bucket.iter().map(|f| f.source.to_string()).collect();
-            sources.sort();
-            (*hash, sources)
-        })
+        .values()
+        .map(|entry| (entry.snapshot_hash, entry.formula.source.to_string()))
+        .chain(templates.restored.iter().flat_map(|(hash, bucket)| {
+            bucket
+                .iter()
+                .map(|formula| (*hash, formula.source.to_string()))
+        }))
         .collect();
     index.sort();
     index
@@ -57,11 +59,16 @@ fn restored_template_index_matches_the_captured_compiler_without_reparsing() {
     assert_eq!(compiler.template_hits(), 1);
     let expected = template_index(&compiler);
     // Only freshly compiled formulas become exemplars; the rebound "B2+1" does not.
-    let sources: Vec<_> = expected.iter().flat_map(|(_, s)| s.clone()).collect();
+    let sources: Vec<_> = expected.iter().map(|(_, source)| source.clone()).collect();
     assert!(sources.contains(&"A1+1".to_owned()));
     assert!(!sources.contains(&"B2+1".to_owned()));
     let mut restored = restore_encoded(&compiler, &policy);
     assert_eq!(template_index(&restored), expected);
+    assert!(restored.templates[0].classified.is_empty());
+    restored.compile_formula("A1+1", &policy);
+    assert!(restored.templates[0].classified.is_empty());
+    let restored_again = restore_encoded(&restored, &policy);
+    assert_eq!(template_index(&restored_again), expected);
     // Restored exemplars rebind new sources exactly as a fresh compiler prepares them.
     for source in ["D4+1", "E5*2", "C$1-$D7"] {
         let reused = restored.compile_formula(source, &policy);
@@ -79,6 +86,8 @@ fn restored_template_index_matches_the_captured_compiler_without_reparsing() {
     }
     assert_eq!(restored.usage().parse_attempts, 0);
     assert_eq!(restored.template_hits(), 3);
+    assert_eq!(restored.templates[0].classified.len(), 3);
+    assert_eq!(template_index(&restored), expected);
 }
 
 #[test]
@@ -87,15 +96,18 @@ fn wrong_template_keys_only_miss_rebinding() {
     let mut compiler = FormulaCompiler::new();
     compiler.compile_formula("A1+1", &policy);
     compiler.compile_formula("SUM(A1)*3", &policy);
-    let mut restored = restore_encoded(&compiler, &policy);
-    // Simulate untrusted keys: file each exemplar under the other's key.
-    let classified = &mut restored.templates[0].classified;
+    // Preserve the valid source but file each exemplar under the other's wire hint.
     let plus = poirot_parsing::formula::classified::normalized_hash("A1+1").unwrap();
     let sum = poirot_parsing::formula::classified::normalized_hash("SUM(A1)*3").unwrap();
-    let plus_bucket = classified.remove(&plus).unwrap();
-    let sum_bucket = classified.remove(&sum).unwrap();
-    classified.insert(plus, sum_bucket);
-    classified.insert(sum, plus_bucket);
+    for candidate in compiler.templates[0].classified.values_mut() {
+        candidate.snapshot_hash = if candidate.snapshot_hash == plus {
+            sum
+        } else {
+            plus
+        };
+    }
+    let mut restored = restore_encoded(&compiler, &policy);
+    assert!(restored.templates[0].classified.is_empty());
     for source in ["B2+1", "SUM(B2)*3"] {
         let prepared = restored.compile_formula(source, &policy);
         let fresh = FormulaCompiler::new().compile_formula(source, &policy);

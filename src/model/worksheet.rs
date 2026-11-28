@@ -360,6 +360,17 @@ impl Worksheet {
             |spill| spill.source.as_ref(),
         )
     }
+    /// Read authored content with its saved spill flag, using cached base tiles.
+    pub(crate) fn source_cell_cached<'a>(
+        &'a self,
+        address: CellAddress,
+        cache: &crate::model::CellPageCache<'a>,
+    ) -> (Option<&'a Cell>, bool) {
+        match self.spill_cache.get(&address) {
+            Some(spill) => (spill.source.as_ref(), true),
+            None => (cache.get(&self.cells, address), false),
+        }
+    }
     /// Iterate derived cached children and their source anchors without visiting authored cells.
     pub fn spill_children(&self) -> impl Iterator<Item = (CellAddress, CellAddress)> + '_ {
         self.spill_cache

@@ -2,6 +2,7 @@
 //! Only the safe single-character lookup and generated tables are reused.
 //! <https://github.com/github/rust-gems/blob/b8c6e27652f7f198a3a0f2183179948cd69be0c1/crates/casefold/src/simple_fold.rs>
 //! Indexing and UTF-8 decoding use checked access; the bulk/unsafe APIs are omitted.
+use crate::scalar::TextRef;
 use std::cmp::Ordering;
 #[path = "fold_data.rs"]
 mod data;
@@ -79,4 +80,49 @@ pub fn compare_utf16(
     right: impl IntoIterator<Item = u16>,
 ) -> Ordering {
     utf16(left).cmp(utf16(right))
+}
+
+/// Compare borrowed spreadsheet text using Unicode simple folding.
+pub fn compare_text(left: TextRef<'_>, right: TextRef<'_>) -> Ordering {
+    match (left, right) {
+        (TextRef::Utf8(left), TextRef::Utf8(right)) => compare(left, right),
+        _ => compare_utf16(left.units(), right.units()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{TextRef, compare_text, compare_utf16};
+
+    #[test]
+    fn comparison_preserves_order_across_representations() {
+        let strings = [
+            "",
+            "ref-09",
+            "REF-10",
+            "σ",
+            "ς",
+            "ß",
+            "SS",
+            "\u{10400}",
+            "\u{10428}",
+            "\u{e000}",
+        ];
+        for left in strings {
+            for right in strings {
+                let left_units: Vec<_> = left.encode_utf16().collect();
+                let right_units: Vec<_> = right.encode_utf16().collect();
+                let expected =
+                    compare_utf16(left_units.iter().copied(), right_units.iter().copied());
+                for left in [TextRef::Utf8(left), TextRef::Utf16(&left_units)] {
+                    for right in [TextRef::Utf8(right), TextRef::Utf16(&right_units)] {
+                        assert_eq!(compare_text(left, right), expected);
+                    }
+                }
+            }
+        }
+        let lone_surrogate = TextRef::Utf16(&[0xd800]);
+        assert!(compare_text(lone_surrogate, TextRef::Utf8("\u{e000}")).is_lt());
+        assert!(compare_text(TextRef::Utf8("\u{fffd}"), lone_surrogate).is_gt());
+    }
 }

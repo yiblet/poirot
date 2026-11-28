@@ -33,16 +33,6 @@ impl WholeCollection {
         OperandReader::new(host).describe(self.argument)
     }
 
-    /// Read an aligned cell through the bound collection's source identity.
-    pub(in crate::eval::adapters) fn read_at(
-        &self,
-        host: &mut CallHost<'_, '_>,
-        row: usize,
-        column: usize,
-    ) -> FunctionResult<ScalarOperand> {
-        OperandReader::new(host).read_cell(self.argument, row, column)
-    }
-
     /// Return the bounded collection length using the shared host admission.
     pub(in crate::eval::adapters) fn len(
         &self,

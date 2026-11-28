@@ -11,7 +11,7 @@ fn address(row: u32, col: u32) -> CellAddress {
 }
 
 #[test]
-fn full_width_intervals_preserve_bounded_effective_sources_in_both_directions() {
+fn intervals_and_rectangles_preserve_bounded_effective_sources_in_both_directions() {
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     let last_col = crate::model::MAX_COLUMNS - 1;
@@ -104,6 +104,27 @@ fn full_width_intervals_preserve_bounded_effective_sources_in_both_directions() 
             assert!(cells.next().is_none());
         }
     }
+
+    let narrow = RangeMembership::new(0, address(1, 1), address(5, 2)).unwrap();
+    let want = [address(2, 1), address(2, 2), address(4, 2)];
+    for reverse in [false, true] {
+        let mut cells = if reverse {
+            view.stored_reverse(narrow)
+        } else {
+            view.stored(narrow)
+        }
+        .unwrap();
+        let actual: Vec<_> = cells.by_ref().map(|(at, _)| *at).collect();
+        let wanted = if reverse {
+            want.into_iter().rev().collect::<Vec<_>>()
+        } else {
+            want.to_vec()
+        };
+        assert_eq!(actual, wanted);
+        assert_eq!(cells.counters().row_seeks, 5);
+        assert_eq!(cells.counters().column_seeks, 5);
+        assert_eq!(cells.counters().cells_visited, 3);
+    }
 }
 
 #[test]
@@ -160,4 +181,59 @@ fn contiguous_empty_queries_and_narrow_neighbors_keep_their_work_contracts() {
             key_lookups: 0
         }
     );
+}
+
+#[test]
+fn bounded_edit_cursor_skips_column_runs_without_losing_later_rows() {
+    let mut book = Workbook::new();
+    let sheet = book.add_sheet("S").unwrap();
+    sheet.set_value(address(1, 4), 14.).unwrap();
+    sheet.set_value(address(3, 4), 34.).unwrap();
+    let mut input = RunInputs::empty();
+    let edits = input.sheets.entry(0).or_default();
+    for row in 0..5 {
+        for column in (0..3).chain(6..30) {
+            edits.set(address(row, column), CellEdit::Delete).unwrap();
+        }
+    }
+    edits.set(address(3, 4), CellEdit::Delete).unwrap();
+    edits
+        .set_cell(address(3, 5), crate::model::Cell::new(35.0), false)
+        .unwrap();
+    edits
+        .set_cell(address(4, 3), crate::model::Cell::new(43.0), false)
+        .unwrap();
+
+    let area = RangeMembership::new(0, address(0, 3), address(4, 5)).unwrap();
+    let view = EffectiveWorkbook::new(&book, Some(&input));
+    for reverse in [false, true] {
+        let mut cells = if reverse {
+            view.stored_reverse(area)
+        } else {
+            view.stored(area)
+        }
+        .unwrap();
+        let actual: Vec<_> = cells
+            .by_ref()
+            .map(|(at, cell)| (*at, cell.value.clone()))
+            .collect();
+        let mut expected = vec![
+            (address(1, 4), CellValue::Number(14.)),
+            (address(3, 5), CellValue::Number(35.)),
+            (address(4, 3), CellValue::Number(43.)),
+        ];
+        if reverse {
+            expected.reverse();
+        }
+        assert_eq!(actual, expected);
+        assert_eq!(
+            cells.counters(),
+            QueryCounters {
+                row_seeks: 5,
+                column_seeks: 5,
+                cells_visited: 3,
+                key_lookups: 0,
+            },
+        );
+    }
 }

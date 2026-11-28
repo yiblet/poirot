@@ -1,18 +1,21 @@
 //! One cell read attempt: admission, reuse, spill resolution and execution.
 
-use super::bookkeeping::{cell_allocation_failure, copy_cached_value};
+use super::bookkeeping::{
+    cell_allocation_failure, copy_cached_value, record_external_hit, record_memo_hit,
+};
 use super::cell_evaluator::CellEvaluator;
 use super::cell_read::CellRead;
 use super::cell_reuse::CellReuse;
 use super::formula_execution::FormulaExecution;
 use super::resolved_source::ResolvedSource;
-use crate::eval::config::ArrayResultPolicy;
+use crate::eval::config::{ArrayResultPolicy, ProducerPolicy};
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{EvalResult, WorkKind};
 use crate::eval::ports::{CellProvenance, DependencyRead, ReadEvent};
 use crate::eval::session::composition::Session;
 use crate::eval::session::projection::ResultProjection;
 use crate::eval::session::reads::ReadRecorder;
+use crate::eval::session::runtime::Runtime;
 use crate::eval::spill;
 use crate::eval::spill::{SpillDemand, SpillPublisher, SpillQuery};
 use crate::eval::values::numeric_outcome;
@@ -60,7 +63,7 @@ impl CellAttempt {
                 failure.set_target(self.target);
                 failure
             })?;
-        ReadRecorder::new(session).read_lazy(|| DependencyRead::Cell(self.target));
+        ReadRecorder::new(session).read_cell(self.target);
         match self.reuse(session, source)? {
             CellReuse::Value(value) => Ok(value),
             CellReuse::Execute { needs_validation } => {
@@ -77,11 +80,26 @@ impl CellAttempt {
     ) -> EvalResult<CellReuse> {
         let EvaluationTarget { sheet, address } = self.target;
         let incoming = source.accepts_spill;
-        // A clean unowned blank certificate already includes its empty-owner
-        // query guard. Owned coordinates still restore a whole footprint for
-        // coherent export and spill-reference readiness. Active arbitration and
-        // locally admitted values retain their ordinary protocol.
-        if incoming
+        // A locally admitted authored cell cannot acquire a different spill
+        // owner in this immutable session. At top level it can reuse its memo;
+        // blank and saved-child reads still need ownership checks.
+        if !incoming
+            && session.state.runtime.stack.consumer.is_none()
+            && !session.state.runtime.preparation.failed()
+            && !SpillQuery::new(session).settling()
+            && let Some(value) = self.memo_hit(&mut session.state.runtime)
+        {
+            return value.map(CellReuse::Value);
+        }
+        // An unowned blank retains its empty-owner query guard. A clean scalar
+        // formula also certifies that it cannot produce a footprint when it
+        // executed under Compute policy. Possible producers and owned cells
+        // still use ordinary settlement to restore their results and geometry.
+        if let Some(cache) = session.reuse.overlay_cache
+            && (incoming
+                || (session.policies.producer_policy == ProducerPolicy::Compute
+                    && session.ports.cell_reader.is_none()
+                    && !session.state.runtime.preparation.failed()))
             && !SpillQuery::new(session).settling()
             && !session
                 .state
@@ -89,36 +107,28 @@ impl CellAttempt {
                 .memo
                 .cache
                 .contains_key(&(sheet, address))
-            && let Some(value) = session.reuse.overlay_cache.and_then(|cache| {
-                let cache = cache.try_borrow().ok()?;
+            && let Some(value) = cache.try_borrow().ok().and_then(|cache| {
                 let entry = cache.get((sheet, address))?;
-                if entry.dependencies.spill.owner(address).is_some() {
+                if entry.dependencies.spill.owner(address).is_some()
+                    || (!incoming && entry.dependencies.spill_sensitive)
+                {
                     return None;
                 }
-                Some(std::sync::Arc::clone(&entry.value))
+                Some(copy_cached_value(
+                    &mut session.state.runtime.budget,
+                    self.target,
+                    &entry.value,
+                ))
             })
         {
-            self.completion_candidate = true;
+            self.completion_candidate = incoming;
             self.external_hit(session);
-            return copy_cached_value(
-                &mut session.state.runtime.budget,
-                self.target,
-                value.as_ref(),
-            )
-            .map(CellReuse::Value);
+            return value.map(CellReuse::Value);
         }
         self.resolve_spills(session, source)?;
         self.completion_candidate = incoming;
-        let runtime = &mut *session.state.runtime;
-        if let Some(value) = runtime.memo.cache.get(&(sheet, address)) {
-            self.provenance = CellProvenance::SessionMemo;
-            if runtime.budget.profiling {
-                runtime.run_usage.session_memo_hits =
-                    runtime.run_usage.session_memo_hits.saturating_add(1);
-                runtime.budget.usage.cache_hits = runtime.budget.usage.cache_hits.saturating_add(1);
-            }
-            return copy_cached_value(&mut runtime.budget, self.target, value)
-                .map(CellReuse::Value);
+        if let Some(value) = self.memo_hit(&mut session.state.runtime) {
+            return value.map(CellReuse::Value);
         }
         if session.sources.inputs.is_none()
             && let Some(reader) = &mut session.ports.cell_reader
@@ -165,24 +175,20 @@ impl CellAttempt {
         Ok(CellReuse::Execute { needs_validation })
     }
 
+    /// Copy a locally admitted value and account for the session memo hit.
+    #[inline]
+    fn memo_hit(&mut self, runtime: &mut Runtime) -> Option<EvalResult<CellValue>> {
+        let key = (self.target.sheet, self.target.address);
+        let value = runtime.memo.cache.get(&key)?;
+        self.provenance = CellProvenance::SessionMemo;
+        record_memo_hit(&mut runtime.budget, &mut runtime.run_usage);
+        Some(copy_cached_value(&mut runtime.budget, self.target, value))
+    }
+
     /// Retain cache provenance before copying a value, including a copy-budget failure.
     fn external_hit(&mut self, session: &mut Session<'_>) {
         self.provenance = CellProvenance::ExternalCache;
-        if session.state.runtime.budget.profiling {
-            session.state.runtime.run_usage.external_cache_hits = session
-                .state
-                .runtime
-                .run_usage
-                .external_cache_hits
-                .saturating_add(1);
-            session.state.runtime.budget.usage.cache_hits = session
-                .state
-                .runtime
-                .budget
-                .usage
-                .cache_hits
-                .saturating_add(1);
-        }
+        record_external_hit(&mut session.state.runtime);
     }
 
     /// Attribute ownership queries to the coordinate, then restore the consuming cell.
@@ -260,11 +266,10 @@ impl CellAttempt {
         // updates runtime ownership and values, never the authored source cell.
         let cell = source.cell;
         self.completion_candidate |= cell.is_some_and(|cell| cell.formula.is_some());
-        // Scalar literals and absent cells cannot recurse. Dynamic spill execution
-        // also uses visiting for ownership and footprint tracking, so retain its path.
-        let track_visiting = session.policies.array_result_policy
-            == ArrayResultPolicy::DynamicSpill
-            || cell.is_some_and(|cell| cell.formula.is_some());
+        // Authored nonblank literals cannot recurse or participate as spill
+        // owners. Retain visiting for formulas and for reads of possible spill children.
+        let track_visiting =
+            source.accepts_spill || cell.is_some_and(|cell| cell.formula.is_some());
         if track_visiting
             && session
                 .state
@@ -341,13 +346,13 @@ impl CellAttempt {
                 .stack
                 .visiting
                 .remove(&(sheet, address));
+            session
+                .state
+                .runtime
+                .preparation
+                .producer_reads
+                .forget((sheet, address));
         }
-        session
-            .state
-            .runtime
-            .preparation
-            .producer_reads
-            .forget((sheet, address));
         result
     }
 

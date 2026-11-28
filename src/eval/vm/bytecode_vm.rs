@@ -413,9 +413,21 @@ impl<'s, 'a> Vm<'s, 'a> {
         args: ArgumentsRef<'_>,
     ) -> EvalResult<Value> {
         let call = program.calls.get(index).ok_or(EvaluationError::StalePlan)?;
+        if let CallTarget::Builtin(handler) = call.target
+            && self.session.ports.builtin_invocation_observer.is_none()
+        {
+            // The compiler emits checked spellings and both snapshot loaders
+            // validate them. Only an observer needs that text for a bound call.
+            return adapters::execute(
+                self.session,
+                EvaluationTarget { sheet, address: at },
+                handler,
+                args,
+            );
+        }
         let handler = self.handler(program, index);
         let parsed_spelling = program.source_spelling(index)?;
-        let resolved_spelling = program.resolved_spelling(index)?;
+        let resolved_spelling = call.resolved_name.as_deref().unwrap_or(parsed_spelling);
         self.session
             .ports
             .observe_resolved_call(handler.map(|handler| ConsumedBuiltinInvocation {

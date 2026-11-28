@@ -151,6 +151,7 @@ fn candidate_row_filter_matches_an_independent_rectangle_oracle() {
                 .unwrap_or(0)
                 .max(candidate.area.r1),
         );
+        discovery.include_columns(&[candidate]);
         discovery.candidates.push(candidate);
     }
     for r0 in 0..10 {
@@ -183,7 +184,7 @@ fn candidate_row_filter_matches_an_independent_rectangle_oracle() {
                             .map(|c| c.anchor)
                             .collect();
                         let actual: Vec<_> = discovery
-                            .possible_in(area, before)
+                            .possible_in(area, before, 0)
                             .iter()
                             .filter(|c| c.intersects(area))
                             .map(|c| c.anchor)
@@ -197,7 +198,9 @@ fn candidate_row_filter_matches_an_independent_rectangle_oracle() {
 }
 
 #[test]
-fn interleaved_discovery_rebuilds_the_candidate_row_summary() {
+fn interleaved_discovery_updates_candidate_bounds() {
+    use super::super::settled_candidate_prefix::SettledCandidatePrefix;
+
     let mut book = Workbook::new();
     let sheet = book.add_sheet("S").unwrap();
     sheet
@@ -209,6 +212,16 @@ fn interleaved_discovery_rebuilds_the_candidate_row_summary() {
     let mut session = Session::with_context(&book, Default::default());
     SpillAccess::new(&mut session)
         .discover(0, CellAddress { row: 9, col: 0 })
+        .unwrap();
+    let late = CellAddress { row: 8, col: 0 };
+    let early = CellAddress { row: 2, col: 4 };
+    let settled = [(0, late)].into_iter().collect();
+    let prefix = SpillQuery::new(&session)
+        .inspect(0, |p| {
+            let prefix = SettledCandidatePrefix::advance(None, 0, p, &settled);
+            assert_eq!(SettledCandidatePrefix::end(Some(prefix), 0, p), 1);
+            prefix
+        })
         .unwrap();
     SpillAccess::new(&mut session)
         .discover(0, CellAddress { row: 4, col: 4 })
@@ -223,6 +236,17 @@ fn interleaved_discovery_rebuilds_the_candidate_row_summary() {
                 [2, 8]
             );
             assert_eq!(p.ending_rows, [4, 9]);
+            assert_eq!(p.columns, Some((0, 4)));
+            assert_eq!(SettledCandidatePrefix::end(Some(prefix), 0, p), 0);
+            let updated = SettledCandidatePrefix::advance(Some(prefix), 0, p, &settled);
+            assert_eq!(SettledCandidatePrefix::end(Some(updated), 0, p), 0);
+            let updated = SettledCandidatePrefix::advance(
+                Some(updated),
+                0,
+                p,
+                &[(0, late), (0, early)].into_iter().collect(),
+            );
+            assert_eq!(SettledCandidatePrefix::end(Some(updated), 0, p), 2);
         })
         .unwrap();
 }

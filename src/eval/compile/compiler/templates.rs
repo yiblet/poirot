@@ -3,6 +3,8 @@ use super::potential_reference::PotentialReference;
 use super::preparation_policy::PreparationPolicy;
 use super::scalar_locality::ScalarLocality;
 use super::scalar_matcher::ScalarMatcher;
+use super::template_lexemes::TemplateLexemes;
+use poirot_parsing::formula::classified::{CellCoordinates, TokenKind};
 use std::{
     hash::{Hash, Hasher},
     sync::Arc,
@@ -24,7 +26,6 @@ pub(super) fn scalar_classification_key(
         let Ok(token) = token else {
             return None;
         };
-        use poirot_parsing::formula::classified::TokenKind;
         if matches!(token.kind, TokenKind::Cell(_)) {
             point_cells = point_cells.saturating_add(1);
             if point_cells > ScalarMatcher::MAX_CELLS {
@@ -107,65 +108,41 @@ pub(super) fn executable_hash(program: &crate::eval::compile::bytecode::Executab
     hash.finish()
 }
 
-pub(super) fn classified_cell_count(source: &str, policy: &PreparationPolicy) -> Option<usize> {
-    let mut count = 0;
-    for token in poirot_parsing::formula::classified::Tokens::new(source) {
-        if let poirot_parsing::formula::classified::TokenKind::Cell(cell) = token.ok()?.kind {
-            if cell.row >= policy.parse.max_rows || cell.column >= policy.parse.max_columns {
-                return None;
-            }
-            count += 1;
-        }
-    }
-    Some(count)
+/// Check that the executable and potential dependencies use point bindings only.
+fn has_cell_bindings(formula: &CompiledFormula) -> bool {
+    let slots = &formula.bytecode.references.slots;
+    let potential = &formula.potential.references;
+    slots.len() == potential.len()
+        && slots
+            .iter()
+            .all(|slot| slot.kind == crate::eval::compile::bytecode::ReferenceKind::Cell)
+        && potential
+            .iter()
+            .all(|reference| matches!(reference, PotentialReference::Cell(_)))
 }
 
-// Keep formulas that rebound() must reject out of its candidate buckets. Otherwise
-// a copied range-shaped formula adds another failed candidate on every compile.
-pub(super) fn reusable_template(formula: &CompiledFormula) -> bool {
-    classified_cell_count(&formula.source, &formula.policy)
-        .is_some_and(|count| rebound(formula, &formula.source, count).is_some())
+/// Verify that a completely classified source can share point-binding geometry.
+pub(super) fn reusable_template(formula: &CompiledFormula, lexemes: &TemplateLexemes) -> bool {
+    has_cell_bindings(formula)
+        && lexemes.cells.len() == formula.bytecode.references.slots.len()
+        // Rebound range endpoints can change a producer's dimensions.
+        && !(lexemes.point_range && formula.properties().is_some_and(|p| p.result.may_spill()))
 }
 
+/// Bind new point coordinates after the caller matched the complete fixed token key.
 pub(super) fn rebound(
     exemplar: &CompiledFormula,
     source: &str,
-    cell_count: usize,
+    cells: &[CellCoordinates],
 ) -> Option<CompiledFormula> {
     let program = &exemplar.bytecode;
-    // Rebinding point cells preserves shape. Range endpoints can change a
-    // producer's dimensions, so those bounds must be compiled again.
-    if exemplar.properties().is_some_and(|p| p.result.may_spill())
-        && poirot_parsing::formula::classified::Tokens::new(source)
-            .any(|token| token.is_ok_and(|token| token.raw == ":"))
-    {
-        return None;
-    }
-    if program.references.slots.len() != cell_count
-        || program
-            .references
-            .slots
-            .iter()
-            .any(|slot| slot.kind != crate::eval::compile::bytecode::ReferenceKind::Cell)
-    {
-        return None;
-    }
-    if exemplar.potential.references.len() != cell_count
-        || exemplar
-            .potential
-            .references
-            .iter()
-            .any(|reference| !matches!(reference, PotentialReference::Cell(_)))
-    {
+    let cell_count = program.references.slots.len();
+    if cells.len() != cell_count {
         return None;
     }
     let mut references = program.references.clone();
     let mut potential = exemplar.potential.clone();
-    let mut index = 0;
-    for token in poirot_parsing::formula::classified::Tokens::new(source) {
-        let poirot_parsing::formula::classified::TokenKind::Cell(cell) = token.ok()?.kind else {
-            continue;
-        };
+    for (index, cell) in cells.iter().enumerate() {
         let slot = references.slots.get(index)?;
         for (word, value) in [
             cell.row,
@@ -193,7 +170,6 @@ pub(super) fn rebound(
         reference.column = cell.column;
         reference.row_absolute = cell.row_absolute;
         reference.column_absolute = cell.column_absolute;
-        index += 1;
     }
     Some(CompiledFormula {
         source: Arc::from(source),

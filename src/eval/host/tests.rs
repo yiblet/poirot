@@ -51,6 +51,49 @@ fn expression(formula: &str) -> Expression {
 }
 
 #[test]
+fn stored_positions_preserve_offsets_from_a_clipped_reference_origin() {
+    let mut workbook = workbook();
+    let sheet = workbook.sheet_mut(0).unwrap();
+    sheet.set_value("A1", 1.0).unwrap();
+    sheet.set_value("C2", 2.0).unwrap();
+    sheet.set_value("D2", 3.0).unwrap();
+    let arguments = [expression("1")];
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    let mut host = CallHost::new_inheriting(&mut session, 0, AT, &arguments);
+    let area =
+        crate::eval::values::signed_reference::SignedArea::new(AreaKind::Area, 0, (-1, 2), (-1, 2))
+            .unwrap();
+    host.session
+        .state
+        .runtime
+        .vm
+        .operands
+        .push(Some(HostOperand::from_value(Value::SignedRefs(vec![area]))));
+    host.argument_slots = 1;
+    let positions = OperandReader::new(&mut host)
+        .stored_positions(0)
+        .unwrap()
+        .unwrap();
+    assert_eq!(positions.len(), 2);
+    assert!(positions.positions().eq([(1, 1), (2, 3)]));
+    let members = OperandReader::new(&mut host)
+        .stored_members(0)
+        .unwrap()
+        .unwrap();
+    let sheet = members.sheet();
+    let mut visited = Vec::new();
+    session::SOURCE_RESOLUTIONS.with(|counter| counter.set(0));
+    for (row, column, member) in members.members(|member| member.address) {
+        let value = OperandReader::new(&mut host)
+            .read_stored_member(sheet, member)
+            .unwrap();
+        visited.push((row, column, value));
+    }
+    assert_eq!(visited, [(1, 1, Number(1.)), (2, 3, Number(2.))]);
+    assert_eq!(session::SOURCE_RESOLUTIONS.with(|counter| counter.get()), 0);
+}
+
+#[test]
 fn one_shot_aggregate_arguments_do_not_accumulate_vm_slots() {
     let workbook = workbook();
     let arguments = [
@@ -954,20 +997,22 @@ fn indexed_reads_preserve_reference_kind_and_resize_only_references() {
         OperandReader::new(&mut host).read_cell(1, 1, 0),
         Err(FunctionError::Spreadsheet(Ref))
     ));
+    let relative_reference = OperandReader::new(&mut host).bind_relative(1).unwrap();
     assert_eq!(
         OperandReader::new(&mut host)
-            .read_relative_cell(1, 1, 0)
+            .read_relative(relative_reference, 1, 0)
             .unwrap()
             .value,
         Number(42.)
     );
     assert_eq!(host.session.state.runtime.budget.usage.cell_reads, 1);
+    let relative_array = OperandReader::new(&mut host).bind_relative(2).unwrap();
     assert!(matches!(
-        OperandReader::new(&mut host).read_relative_cell(2, 1, 0),
+        OperandReader::new(&mut host).read_relative(relative_array, 1, 0),
         Err(FunctionError::Spreadsheet(Ref))
     ));
     assert!(matches!(
-        OperandReader::new(&mut host).read_relative_cell(1, MAX_ROWS as usize, 0),
+        OperandReader::new(&mut host).read_relative(relative_reference, MAX_ROWS as usize, 0),
         Err(FunctionError::Spreadsheet(Ref))
     ));
 }
