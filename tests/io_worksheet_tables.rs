@@ -817,6 +817,33 @@ fn combined_table_sections_roundtrip_and_track_included_rows() {
 }
 
 #[test]
+fn combined_data_and_totals_exclude_the_insert_placeholder() {
+    use poirot::model::CellValue;
+
+    // MS-OI29500 defines the combined selector as the union of its two sections.
+    // The fixture's A2, A3 and A4 contain 3, 7 and 10 respectively.
+    let bytes = rewrite_table(|xml| xml.replace(r#"ref="A1:B4""#, r#"ref="A1:B4" insertRow="1""#));
+    let mut book = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    let sheet = book.sheet_mut(0).unwrap();
+    sheet
+        .set_formula("D3", "SUM(Sales[[#Data],[#Totals],[Amount]])")
+        .unwrap();
+    sheet
+        .set_formula(
+            "D4",
+            r#"SUM(INDIRECT("Sales[[#Data],[#Totals],[Amount]]"))"#,
+        )
+        .unwrap();
+    book.recalculate().unwrap();
+    for address in ["D3", "D4"] {
+        assert_eq!(
+            book.stored_cell("Data", address).unwrap().unwrap().value,
+            CellValue::Number(13.)
+        );
+    }
+}
+
+#[test]
 fn combined_table_sections_require_each_selected_section() {
     use poirot::eval::{EvaluationOutcome, run_formula};
     use poirot::model::{CellError, CellValue};
