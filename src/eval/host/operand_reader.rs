@@ -7,7 +7,7 @@ use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, WorkKind};
 use crate::eval::session::{ArgumentReader, CellEvaluator, SparseReader};
 use crate::eval::spill::SpillDemand;
 use crate::eval::values::{
-    Area, AreaKind, FunctionResult, OperandOrigin, VALUE_ERROR, Value,
+    Area, AreaKind, FunctionResult, OperandOrigin, ReferenceAreas, VALUE_ERROR, Value,
     convert_legacy_missing_blank, copy_cell,
 };
 use crate::model::CellError::{Num, Ref};
@@ -99,6 +99,60 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
             })
             .collect::<FunctionResult<Vec<_>>>()?;
         Ok(Some(positions))
+    }
+
+    /// Select a slice from a reference without reading its cell values.
+    pub(in crate::eval) fn reference_slice(
+        &mut self,
+        index: usize,
+        rows: std::ops::RangeInclusive<usize>,
+        columns: std::ops::RangeInclusive<usize>,
+        kind: AreaKind,
+    ) -> FunctionResult<Option<Value>> {
+        self.host.prepare(index)?;
+        let operand = self.host.operand(index).ok_or(VALUE_ERROR)?;
+        let value = match &operand.value {
+            Value::Refs(areas) | Value::SheetSpan(areas) if areas.len() == 1 => {
+                let area = *areas.first().ok_or(VALUE_ERROR)?;
+                let first = CellReadPlan::relative(area, *rows.start(), *columns.start())?;
+                let last = CellReadPlan::relative(area, *rows.end(), *columns.end())?;
+                if !area.contains(first.address) || !area.contains(last.address) {
+                    return Err(Ref.into());
+                }
+                Value::Refs(ReferenceAreas::One(Area {
+                    kind,
+                    sheet: area.sheet,
+                    r0: first.address.row,
+                    r1: last.address.row,
+                    c0: first.address.col,
+                    c1: last.address.col,
+                }))
+            }
+            Value::SignedRefs(areas) if areas.len() == 1 => {
+                let area = *areas.first().ok_or(VALUE_ERROR)?;
+                let (height, width) = area.positive_shape().ok_or(Ref)?;
+                if *rows.end() >= height || *columns.end() >= width {
+                    return Err(Ref.into());
+                }
+                self.host.check_values(1)?;
+                let mut slice = Vec::new();
+                slice
+                    .try_reserve_exact(1)
+                    .map_err(|source| self.host.reservation_failure(source))?;
+                // SAFETY: The reservation admits this one signed area.
+                slice.push(crate::eval::values::SignedArea {
+                    kind,
+                    sheet: area.sheet,
+                    r0: area.r0.wrapping_add(*rows.start() as i32),
+                    r1: area.r0.wrapping_add(*rows.end() as i32),
+                    c0: area.c0.wrapping_add(*columns.start() as i32),
+                    c1: area.c0.wrapping_add(*columns.end() as i32),
+                });
+                Value::SignedRefs(slice)
+            }
+            _ => return Ok(None),
+        };
+        Ok(Some(value))
     }
 
     /// Read one logical member at zero-based offsets, preserving origin and omission.

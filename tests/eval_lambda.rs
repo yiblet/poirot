@@ -391,6 +391,37 @@ fn callback_arrays_publish_values_and_dimensions() {
 }
 
 #[test]
+fn array_callbacks_keep_range_members_and_slices_as_references() {
+    let mut book = worksheet();
+    book.sheet_mut(0).unwrap().set_value("A3", 9.).unwrap();
+    // MAP's callback can use the current member as a range endpoint.
+    // https://trumpexcel.com/excel-functions/map-function/
+    // SCAN can likewise use it as the anchor of OFFSET.
+    // https://stackoverflow.com/questions/79857888/excel-nested-scan-formula-by-columns
+    for (formula, expected) in [
+        ("SUM(MAP(A1:A3,LAMBDA(item,COUNTIF(A1:item,item))))", 3.),
+        ("SUM(MAP(A1:A3,LAMBDA(item,ROW(item))))", 6.),
+        ("SUM(MAP(A1:A3+0,LAMBDA(item,IF(ISREF(item),0,item))))", 19.),
+        ("SUM(BYROW(A1:A3,LAMBDA(item,ROW(item))))", 6.),
+        (
+            "SUM(BYCOL(A1:A3,LAMBDA(items,IF(ISREF(items),SUM(items),0))))",
+            19.,
+        ),
+        (
+            "SUM(SCAN(,A1:A3,LAMBDA(acc,item,acc+item-OFFSET(item,-1,0))))",
+            19.,
+        ),
+        ("REDUCE(0,A1:A3,LAMBDA(acc,item,acc+ROW(item)))", 6.),
+    ] {
+        assert_eq!(
+            value(&book, formula),
+            CellValue::Number(expected),
+            "{formula}"
+        );
+    }
+}
+
+#[test]
 fn callback_arrays_validate_counts_and_reject_nested_results() {
     let book = worksheet();
     for (formula, error) in [
