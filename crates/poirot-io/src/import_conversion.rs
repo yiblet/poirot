@@ -87,7 +87,7 @@ fn read_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
     options: ReadOptions,
 ) -> Result<W, IoError> {
     let mut package = ooxml::ImportPackage::new(bytes, options)?;
-    let plan = package.plan(options.xlsx_policy)?;
+    let (plan, workbook_xml) = package.plan(options.xlsx_policy)?;
     let mut warnings = fidelity_warnings(FileFormat::Xlsx);
     warnings.extend(plan.warnings.iter().cloned());
     let styles = plan
@@ -106,21 +106,32 @@ fn read_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
     } else {
         None
     };
-    let mut workbook = match decode_xlsx::<W>(adapted.as_deref().unwrap_or(bytes), &plan) {
+    let appended = adapted
+        .is_none()
+        .then(|| package.appended_worksheets(&plan, bytes))
+        .flatten();
+    let worksheets = (adapted.is_none() && appended.is_none())
+        .then(|| package.worksheet_archive(&plan, bytes.len()))
+        .flatten();
+    let backend_bytes = adapted
+        .as_deref()
+        .or_else(|| worksheets.as_ref().map(|archive| archive.bytes()))
+        .unwrap_or(bytes);
+    let decoded = match &appended {
+        Some(archive) => decode_xlsx::<W>(archive.reader(), &plan),
+        None => decode_xlsx::<W>(std::io::Cursor::new(backend_bytes), &plan),
+    };
+    let mut workbook = match decoded {
         Err(XlsxDecodeError::NeedsAdapter) if adapted.is_none() => {
             let adapted = ooxml::backend_package(&mut package, &plan)?;
-            decode_xlsx::<W>(&adapted, &plan).map_err(XlsxDecodeError::into_io)?
+            decode_xlsx::<W>(std::io::Cursor::new(&adapted), &plan)
+                .map_err(XlsxDecodeError::into_io)?
         }
         result => result.map_err(XlsxDecodeError::into_io)?,
     };
     drop(adapted);
     workbook.set_style_context(styles.context);
-    ooxml::apply_workbook_metadata(
-        &package.read(&plan.workbook_part)?,
-        &plan,
-        &mut workbook,
-        &mut warnings,
-    )?;
+    ooxml::apply_workbook_metadata(&workbook_xml, &plan, &mut workbook, &mut warnings)?;
     let shared = {
         let bytes = plan
             .shared_strings_part
@@ -130,11 +141,25 @@ fn read_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
         ooxml::shared_strings(bytes.as_deref())?
     };
     for identity in plan.sheets.iter().filter(|s| s.supported) {
-        let bytes = package.read(&identity.part)?;
+        let owned;
+        let bytes = match appended
+            .as_ref()
+            .and_then(|archive| archive.worksheet(&identity.part))
+            .or_else(|| {
+                worksheets
+                    .as_ref()
+                    .and_then(|archive| archive.worksheet(&identity.part))
+            }) {
+            Some(bytes) => bytes,
+            None => {
+                owned = package.read(&identity.part)?;
+                &owned
+            }
+        };
         let tables = ooxml::read_sheet_tables(
             &mut package,
             &identity.part,
-            &bytes,
+            bytes,
             options.xlsx_policy,
             &mut warnings,
         )?;
@@ -162,8 +187,8 @@ fn read_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
         for table in tables {
             sheet.import_table(table)?;
         }
-        if ooxml::apply_sheet_text(&bytes, &shared, sheet, &styles.cells, &mut warnings)? {
-            ooxml::apply_sheet_spills(&bytes, &identity.name, &mut workbook)?;
+        if ooxml::apply_sheet_text(bytes, &shared, sheet, &styles.cells, &mut warnings)? {
+            ooxml::apply_sheet_spills(bytes, &identity.name, &mut workbook)?;
         }
     }
     identifier_warnings(&workbook, &mut warnings);
@@ -176,7 +201,7 @@ fn read_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
 
 /// Stream decoded cells directly into Poirot without allocating a second workbook.
 fn decode_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
-    bytes: &[u8],
+    input: impl std::io::Read + std::io::Seek,
     plan: &crate::opc::OpcReadPlan,
 ) -> Result<W, XlsxDecodeError> {
     use calamine::{Reader, Xlsx, XlsxFormulaMetadata};
@@ -188,7 +213,7 @@ fn decode_xlsx<W: WorkbookSink<Sheet: SheetSink>>(
         // Calamine owns this classification; retain every unmatched dependency cause.
         _ => XlsxDecodeError::Input(IoError::Xlsx(error)),
     };
-    let mut reader = Xlsx::new(std::io::Cursor::new(bytes)).map_err(backend_error)?;
+    let mut reader = Xlsx::new(input).map_err(backend_error)?;
     let mut workbook = W::default();
     workbook.set_date_system(if reader.has_1904_epoch() {
         DateSystem::Excel1904

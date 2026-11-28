@@ -44,7 +44,12 @@ pub(super) fn invalid(value: impl Into<String>) -> IoError {
 }
 /// Parse a present XML boolean, retaining the element's specified default.
 pub(super) fn boolean(e: &BytesStart<'_>, name: &str, default: bool) -> Result<bool, IoError> {
-    match attr(e, name)?.as_deref() {
+    parse_boolean(attr(e, name)?.as_deref(), default)
+}
+
+/// Check an optional normalized boolean with the element's specified default.
+pub(super) fn parse_boolean(value: Option<&str>, default: bool) -> Result<bool, IoError> {
+    match value {
         None => Ok(default),
         Some("1" | "true") => Ok(true),
         Some("0" | "false") => Ok(false),
@@ -56,8 +61,15 @@ pub(super) fn number<T: std::str::FromStr>(
     e: &BytesStart<'_>,
     name: &str,
 ) -> Result<Option<T>, IoError> {
-    attr(e, name)?
-        .map(|v| v.parse().map_err(|_| invalid(v)))
+    parse_number(attr(e, name)?.as_deref())
+}
+
+/// Check an optional normalized number without truncation.
+pub(super) fn parse_number<T: std::str::FromStr>(
+    value: Option<&str>,
+) -> Result<Option<T>, IoError> {
+    value
+        .map(|text| text.parse().map_err(|_| invalid(text)))
         .transpose()
 }
 /// Parse an optional enumerated attribute.

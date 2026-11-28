@@ -69,10 +69,14 @@ fn shared_styles_keep_value_equality_and_compact_cell_storage() {
         first.visual.as_ref().unwrap(),
         clone.visual.as_ref().unwrap()
     ));
-    let old = std::mem::size_of::<Option<String>>();
-    let new = std::mem::size_of::<CellStyle>();
-    eprintln!("CellStyle bytes: former {old}, shared visual {new}");
-    assert_eq!(new, old + std::mem::size_of::<Option<Arc<VisualStyle>>>());
+    assert!(Arc::ptr_eq(
+        first.number_format.as_ref().unwrap(),
+        clone.number_format.as_ref().unwrap()
+    ));
+    assert_eq!(
+        std::mem::size_of::<CellStyle>(),
+        std::mem::size_of::<Option<Arc<str>>>() + std::mem::size_of::<Option<Arc<VisualStyle>>>()
+    );
 }
 
 #[test]

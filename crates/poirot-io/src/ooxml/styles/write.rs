@@ -88,7 +88,10 @@ impl<'a> StyleExport<'a> {
                 empty(
                     &mut w,
                     "numFmt",
-                    &[("numFmtId", format_id(i)?), ("formatCode", code.clone())],
+                    &[
+                        ("numFmtId", format_id(i)?),
+                        ("formatCode", code.to_string()),
+                    ],
                 )?;
             }
         }
