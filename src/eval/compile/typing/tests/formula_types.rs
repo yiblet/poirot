@@ -81,6 +81,28 @@ fn selection_types_include_array_conditions_and_indices() {
 }
 
 #[test]
+fn grouping_properties_include_effects_of_deferred_reducers() {
+    for source in [
+        r#"GROUPBY(A1:A3,B1:B3,LAMBDA(values,INDIRECT("D1")))"#,
+        "PIVOTBY(A1:A3,B1:B3,C1:C3,LAMBDA(values,RAND()))",
+        "GROUPBY(A1:A3,B1:B3,SUM)",
+    ] {
+        let effects = properties(source).effects;
+        assert!(
+            effects
+                .possible_reads
+                .contains(DependencyPolicy::CALLABLE_READS),
+            "{source}"
+        );
+        assert_eq!(
+            effects.external,
+            compile::typing::ExternalBehavior::Opaque,
+            "{source}"
+        );
+    }
+}
+
+#[test]
 fn every_registry_entry_declares_an_alias_consistent_monotone_result_rule() {
     let arguments = [
         FormulaType::scalar(ScalarKinds::NUMBER),

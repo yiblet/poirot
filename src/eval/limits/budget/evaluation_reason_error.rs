@@ -16,14 +16,9 @@ pub enum EvaluationReasonError {
     /// PIVOTBY cannot output field headers; use field_headers 0 or 1.
     #[error("PIVOTBY field-header publication is not supported; use field_headers 0 or 1")]
     PivotFieldHeaderPublication,
-    /// PIVOTBY currently supports one value column and one built-in reducer.
-    #[error("PIVOTBY currently supports one value column and one built-in reducer")]
+    /// PIVOTBY currently supports one value column and one reducer.
+    #[error("PIVOTBY currently supports one value column and one reducer")]
     PivotMultipleValuesOrReducers,
-    /// PIVOTBY requires a supported built-in reduction handle; callable values are not implemented.
-    #[error(
-        "PIVOTBY requires a supported built-in reduction handle; callable values are not implemented"
-    )]
-    PivotCallableReducer,
     /// The selected byte-text language requires unverified DBCS semantics.
     #[error("DBCS byte text is outside the verified non-DBCS contract")]
     DbcsByteText,
@@ -467,7 +462,6 @@ impl EvaluationReasonError {
             | Self::CellUnmodeledMetadata
             | Self::PivotFieldHeaderPublication
             | Self::PivotMultipleValuesOrReducers
-            | Self::PivotCallableReducer
             | Self::CellSelectedUiReference
             | Self::DbcsByteText
             | Self::Xml(..)

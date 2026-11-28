@@ -54,7 +54,7 @@ registry! {
 "SEARCHB" => Text(TextFunction::SearchB), 2, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
 "REPLACEB" => Text(TextFunction::ReplaceB), 4, 4, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
 "FILTERXML" => Text(TextFunction::FilterXml), 2, 2, FamilyControlled, NUMERIC_COERCION, Any;
-"PIVOTBY" => Matrix(MatrixFunction::Pivotby), 4, 11, FamilyControlled, NUMERIC_COERCION, Array;
+"PIVOTBY" => Matrix(MatrixFunction::Pivotby), 4, 11, FamilyControlled, CALLABLE_READS, Array;
 "ASC" => Text(TextFunction::Asc), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
 "DBCS" => Text(TextFunction::Dbcs), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
 "JIS" => Text(TextFunction::Dbcs), 1, 1, FamilyControlled, NUMERIC_COERCION, ElementwiseText;
@@ -492,7 +492,7 @@ registry! {
 "ODDLYIELD" => Financial(FinancialFunction::Oddlyield), 7, 8, FamilyControlled, DATE_FAMILY, ElementwiseNumber;
 "EUROCONVERT" => Financial(FinancialFunction::Euroconvert), 3, 5, FamilyControlled, NUMERIC_COERCION, ElementwiseNumber;
 "XOR" => Logical(LogicalFunction::Xor), 1, 254, FamilyControlled, REFERENCE_READS, Scalar;
-"GROUPBY" => Matrix(MatrixFunction::Groupby), 3, 8, FamilyControlled, NUMERIC_COERCION, Array;
+"GROUPBY" => Matrix(MatrixFunction::Groupby), 3, 8, FamilyControlled, CALLABLE_READS, Array;
 "PERCENTOF" => Matrix(MatrixFunction::Percentof), 2, 2, FamilyControlled, NUMERIC_COERCION, Number;
 "REGEXTEST" => Text(TextFunction::RegexTest), 2, 3, FamilyControlled, NUMERIC_COERCION, ElementwiseBoolean;
 "REGEXEXTRACT" => Text(TextFunction::RegexExtract), 2, 4, FamilyControlled, NUMERIC_COERCION, RegexExtract;
