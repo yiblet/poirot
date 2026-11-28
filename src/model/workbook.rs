@@ -460,7 +460,8 @@ impl Workbook {
     }
 
     /// Configure a rename of `sheet` (zero-based) that also updates references to it
-    /// in cell formulas and defined names. Call `apply` to perform the edit.
+    /// in cell formulas, defined names, and calculated-column definitions.
+    /// Call `apply` to perform the edit.
     pub fn rename_sheet(
         &mut self,
         sheet: usize,
@@ -759,6 +760,23 @@ impl Workbook {
                     .get_mut(index)
                     .ok_or(ModelError::MissingRenameDefinedName { index })?
                     .formula
+                    .clone_from(&edit.replacement),
+                FormulaSource::CalculatedColumn {
+                    sheet,
+                    table,
+                    column,
+                } => self
+                    .sheets
+                    .get_mut(sheet)
+                    .and_then(|worksheet| worksheet.tables.get_mut(table))
+                    .and_then(|table| table.columns.get_mut(column))
+                    .and_then(|column| column.calculated_formula.as_mut())
+                    .ok_or(ModelError::MissingRenameCalculatedColumn {
+                        sheet,
+                        table,
+                        column,
+                    })?
+                    .text
                     .clone_from(&edit.replacement),
             }
         }

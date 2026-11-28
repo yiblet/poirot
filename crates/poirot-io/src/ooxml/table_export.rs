@@ -2,11 +2,12 @@
 
 use super::budget::next_total;
 use super::package::Package;
+use super::text;
 use super::xml::{events, part, write_event, xml};
-use crate::{IoError, WorksheetTable, WriteOptions};
+use crate::{IoError, TableAutoFilter, WorksheetTable, WriteOptions};
 use quick_xml::{
     Writer,
-    events::{BytesEnd, BytesStart, Event},
+    events::{BytesEnd, BytesStart, BytesText, Event},
 };
 
 const MAIN: &str = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
@@ -87,12 +88,13 @@ fn encode(table: &WorksheetTable) -> Result<Vec<u8>, IoError> {
     let address = format!("{}:{}", table.first, table.last);
     let mut root = BytesStart::new("table");
     if let Some(name) = &table.name {
-        root.push_attribute(("name", name.as_str()));
+        push_escaped_attr(&mut root, "name", name);
     }
+    let display_name = text::encode_attribute(&table.display_name);
     for attribute in [
         ("xmlns", MAIN),
         ("id", id.as_str()),
-        ("displayName", table.display_name.as_str()),
+        ("displayName", display_name.as_str()),
         ("ref", address.as_str()),
         ("headerRowCount", if table.header_row { "1" } else { "0" }),
         ("totalsRowCount", if table.totals_row { "1" } else { "0" }),
@@ -103,6 +105,9 @@ fn encode(table: &WorksheetTable) -> Result<Vec<u8>, IoError> {
         root.push_attribute(("insertRow", "1"));
     }
     write_event(&mut writer, Event::Start(root))?;
+    if let Some(filter) = &table.auto_filter {
+        write_filter(&mut writer, filter)?;
+    }
     let mut columns = BytesStart::new("tableColumns");
     let count = table.columns.len().to_string();
     columns.push_attribute(("count", count.as_str()));
@@ -111,12 +116,92 @@ fn encode(table: &WorksheetTable) -> Result<Vec<u8>, IoError> {
         let mut node = BytesStart::new("tableColumn");
         let id = column.id.to_string();
         node.push_attribute(("id", id.as_str()));
-        node.push_attribute(("name", column.name.as_str()));
-        write_event(&mut writer, Event::Empty(node))?;
+        push_escaped_attr(&mut node, "name", &column.name);
+        if let Some(formula) = &column.calculated_formula {
+            write_event(&mut writer, Event::Start(node))?;
+            let mut definition = BytesStart::new("calculatedColumnFormula");
+            push_flag(&mut definition, "array", formula.array);
+            write_event(&mut writer, Event::Start(definition))?;
+            let text = if formula.text.contains('\r') {
+                // Preserve carriage returns decoded from character references in the source.
+                BytesText::from_escaped(
+                    quick_xml::escape::escape(formula.text.as_str()).replace('\r', "&#13;"),
+                )
+            } else {
+                BytesText::new(&formula.text)
+            };
+            write_event(&mut writer, Event::Text(text))?;
+            write_event(
+                &mut writer,
+                Event::End(BytesEnd::new("calculatedColumnFormula")),
+            )?;
+            write_event(&mut writer, Event::End(BytesEnd::new("tableColumn")))?;
+        } else {
+            write_event(&mut writer, Event::Empty(node))?;
+        }
     }
     write_event(&mut writer, Event::End(BytesEnd::new("tableColumns")))?;
+    if let Some(style) = &table.style {
+        let mut node = BytesStart::new("tableStyleInfo");
+        if let Some(name) = &style.name {
+            push_escaped_attr(&mut node, "name", name);
+        }
+        push_flag(&mut node, "showFirstColumn", style.show_first_column);
+        push_flag(&mut node, "showLastColumn", style.show_last_column);
+        push_flag(&mut node, "showRowStripes", style.show_row_stripes);
+        push_flag(&mut node, "showColumnStripes", style.show_column_stripes);
+        write_event(&mut writer, Event::Empty(node))?;
+    }
     write_event(&mut writer, Event::End(BytesEnd::new("table")))?;
     Ok(writer.into_inner())
+}
+
+/// Write an ST_Xstring attribute with both Excel and XML escaping.
+fn push_escaped_attr(element: &mut BytesStart<'_>, key: &str, value: &str) {
+    element.push_attribute((key, text::encode_attribute(value).as_str()));
+}
+
+/// Write an explicitly stored boolean without introducing missing attributes.
+fn push_flag(element: &mut BytesStart<'_>, name: &str, value: Option<bool>) {
+    if let Some(value) = value {
+        element.push_attribute((name, if value { "1" } else { "0" }));
+    }
+}
+
+/// Write table filter controls and retained value criteria in schema order.
+fn write_filter(writer: &mut Writer<Vec<u8>>, filter: &TableAutoFilter) -> Result<(), IoError> {
+    let mut root = BytesStart::new("autoFilter");
+    if let Some((first, last)) = filter.range {
+        let range = format!("{first}:{last}");
+        root.push_attribute(("ref", range.as_str()));
+    }
+    if filter.columns.is_empty() {
+        return write_event(writer, Event::Empty(root));
+    }
+    write_event(writer, Event::Start(root))?;
+    for column in &filter.columns {
+        let mut node = BytesStart::new("filterColumn");
+        let index = column.index.to_string();
+        node.push_attribute(("colId", index.as_str()));
+        push_flag(&mut node, "hiddenButton", column.hidden_button);
+        push_flag(&mut node, "showButton", column.show_button);
+        if let Some(filters) = &column.filters {
+            write_event(writer, Event::Start(node))?;
+            let mut values = BytesStart::new("filters");
+            push_flag(&mut values, "blank", filters.blank);
+            write_event(writer, Event::Start(values))?;
+            for value in &filters.values {
+                let mut selected = BytesStart::new("filter");
+                push_escaped_attr(&mut selected, "val", value);
+                write_event(writer, Event::Empty(selected))?;
+            }
+            write_event(writer, Event::End(BytesEnd::new("filters")))?;
+            write_event(writer, Event::End(BytesEnd::new("filterColumn")))?;
+        } else {
+            write_event(writer, Event::Empty(node))?;
+        }
+    }
+    write_event(writer, Event::End(BytesEnd::new("autoFilter")))
 }
 
 /// Append one generated payload before the known root's ending tag.

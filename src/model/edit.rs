@@ -1,7 +1,7 @@
 //! Parser-independent, atomic application of source edit plans.
 use crate::model::{CellAddress, CellValue, ModelError, Workbook, normalize_formula};
 
-/// The location of a formula in a cell or defined name.
+/// The location of a stored workbook formula.
 ///
 /// Indices refer to the workbook used to create the edit plan, not persistent IDs.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -18,11 +18,50 @@ pub enum FormulaSource {
         /// Defined-name index in workbook source order.
         index: usize,
     },
+    /// Formula definition used to fill a worksheet table column.
+    CalculatedColumn {
+        /// Zero-based worksheet index.
+        sheet: usize,
+        /// Table index in worksheet source order.
+        table: usize,
+        /// Column index in table order.
+        column: usize,
+    },
 }
+
+impl FormulaSource {
+    /// Borrow the formula stored at this source, when present.
+    pub(crate) fn formula<'a>(&self, workbook: &'a Workbook) -> Option<&'a str> {
+        match *self {
+            Self::Cell { sheet, address } => workbook
+                .sheet(sheet)?
+                .get_validated(address)?
+                .formula
+                .as_deref(),
+            Self::DefinedName { index } => Some(&workbook.named_ranges.get(index)?.formula),
+            Self::CalculatedColumn {
+                sheet,
+                table,
+                column,
+            } => Some(
+                &workbook
+                    .sheet(sheet)?
+                    .tables()
+                    .get(table)?
+                    .columns
+                    .get(column)?
+                    .calculated_formula
+                    .as_ref()?
+                    .text,
+            ),
+        }
+    }
+}
+
 /// A formula replacement that checks the existing text before applying a change.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FormulaReplacement {
-    /// Location of the cell or defined-name formula to update.
+    /// Location of the formula to update.
     pub source: FormulaSource,
     /// Exact source required before applying the replacement.
     pub expected: String,
@@ -47,7 +86,7 @@ pub struct EditOutcome {
     pub previous_name: String,
     /// Validated worksheet spelling after the edit.
     pub new_name: String,
-    /// Locations of the cell and defined-name formulas rewritten by this edit.
+    /// Locations of the formulas rewritten by this edit.
     pub changed_sources: Vec<FormulaSource>,
 }
 impl RenameSheetPlan {
@@ -63,7 +102,7 @@ impl RenameSheetPlan {
         let mut seen = std::collections::BTreeSet::new();
         for edit in &replacements {
             if !seen.insert(edit.source.clone())
-                || formula(workbook, &edit.source) != Some(edit.expected.as_str())
+                || edit.source.formula(workbook) != Some(edit.expected.as_str())
             {
                 return Err(ModelError::InvalidFormulaReplacement {
                     target: edit.source.clone(),
@@ -88,16 +127,6 @@ impl RenameSheetPlan {
         &self.replacements
     }
 }
-fn formula<'a>(workbook: &'a Workbook, source: &FormulaSource) -> Option<&'a str> {
-    match source {
-        FormulaSource::Cell { sheet, address } => workbook
-            .sheet(*sheet)?
-            .get_validated(*address)?
-            .formula
-            .as_deref(),
-        FormulaSource::DefinedName { index } => Some(&workbook.named_ranges.get(*index)?.formula),
-    }
-}
 fn same_value(a: &CellValue, b: &CellValue) -> bool {
     match (a, b) {
         (CellValue::Number(a), CellValue::Number(b)) => a.to_bits() == b.to_bits(),
@@ -112,6 +141,7 @@ pub(super) fn same_source(a: &Workbook, b: &Workbook) -> bool {
         && a.sheets.len() == b.sheets.len()
         && a.sheets.iter().zip(&b.sheets).all(|(a, b)| {
             a.name == b.name
+                && a.tables() == b.tables()
                 && a.cells().len() == b.cells().len()
                 && a.cells().iter().zip(b.cells()).all(|((aa, ac), (ba, bc))| {
                     aa == ba

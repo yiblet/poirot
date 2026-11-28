@@ -89,6 +89,16 @@ pub enum ModelError {
         /// Zero-based index rejected by the operation.
         index: usize,
     },
+    /// A rename replacement targets an absent calculated-column formula.
+    #[error("calculated column {column} in table {table} on worksheet {sheet} is absent")]
+    MissingRenameCalculatedColumn {
+        /// Zero-based worksheet containing the target table.
+        sheet: usize,
+        /// Zero-based table index on that worksheet.
+        table: usize,
+        /// Zero-based column index in that table.
+        column: usize,
+    },
     /// A replacement repeats a target or mismatches its expected source.
     #[error("invalid or duplicate replacement for {target:?}")]
     InvalidFormulaReplacement {

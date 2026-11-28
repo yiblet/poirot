@@ -74,9 +74,38 @@ impl Worksheet {
     pub fn name(&self) -> &str {
         &self.name
     }
-    /// Borrow the file-authored tables attached to this worksheet.
+    /// Borrow the Excel tables attached to this worksheet.
     pub fn tables(&self) -> &[super::WorksheetTable] {
         &self.tables
+    }
+
+    /// Append data rows to an imported table and fill its calculated columns.
+    ///
+    /// Destinations may be absent or styled blanks. An insert placeholder becomes
+    /// the first new data row. A filter must end at the table bottom or just above
+    /// the insert placeholder. Tables with totals rows or array-style column
+    /// definitions are rejected. Zero additional rows leave the worksheet unchanged.
+    /// Create a new evaluation after editing the worksheet's table layout.
+    pub fn grow_table_rows(
+        &mut self,
+        display_name: &str,
+        additional_rows: u32,
+    ) -> Result<(), super::TableGrowthError> {
+        if additional_rows == 0 {
+            return Ok(());
+        }
+        let growth =
+            super::table_growth::TableGrowth::prepare(self, display_name, additional_rows)?;
+        let table = self.tables.get_mut(growth.index).ok_or_else(|| {
+            super::TableGrowthError::UnknownTable {
+                name: display_name.into(),
+            }
+        })?;
+        *table = growth.table;
+        for (address, cell) in growth.cells {
+            self.store_validated(address, cell);
+        }
+        Ok(())
     }
 
     /// Read durable sheet metadata.
@@ -143,12 +172,17 @@ impl Worksheet {
             cell.formula = Some(normalize_formula(f)?);
         }
         cell.validate_shared_formula()?;
+        Ok(self.store_validated(address, cell))
+    }
+
+    /// Store an already validated authored cell through normal spill and row handling.
+    fn store_validated(&mut self, address: CellAddress, cell: Cell) -> Option<Cell> {
         self.clear_spill_cache(address);
         if let Some(child) = self.spill_cache.remove(&address) {
             self.spill_extents.remove(&child.owner);
         }
         self.rows.insert(address.row);
-        Ok(self.cells.insert(address, cell))
+        self.cells.insert(address, cell)
     }
     /// Change display style while preserving authored content and saved spill ownership.
     pub fn set_style<A>(&mut self, address: A, style: CellStyle) -> Result<(), ModelError>

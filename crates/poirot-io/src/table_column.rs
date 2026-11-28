@@ -1,3 +1,5 @@
+use crate::CalculatedColumnFormula;
+
 /// A column's stable file identity and ordered header caption.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct TableColumn {
@@ -5,4 +7,6 @@ pub struct TableColumn {
     pub id: u32,
     /// Caption used to resolve structured references.
     pub name: String,
+    /// Stored formula definition for the column, when present.
+    pub calculated_formula: Option<CalculatedColumnFormula>,
 }

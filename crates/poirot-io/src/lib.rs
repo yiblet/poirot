@@ -117,6 +117,7 @@ pub use import_conversion::{
 
 /// Checked worksheet addresses and Excel dimensions.
 pub mod address;
+mod calculated_column_formula;
 /// File cell records and formula normalization.
 pub mod cell;
 /// File provenance and import diagnostics.
@@ -130,13 +131,18 @@ pub mod numeric_fidelity;
 mod rows_records;
 /// Stored presentation records.
 pub mod styles;
+mod table_auto_filter;
 mod table_column;
+mod table_filter_column;
+mod table_filter_values;
+mod table_style_info;
 /// Lossless saved scalar serialization.
 pub mod value_wire;
 mod workbook_records;
 mod worksheet_records;
 mod worksheet_table;
 pub use address::{CellAddress, MAX_COLUMNS, MAX_ROWS};
+pub use calculated_column_formula::CalculatedColumnFormula;
 pub use cell::{Cell, CellStyle, SharedFormula, SharedFormulaId};
 pub use file_metadata::{FileFormat, FileMetadata, ImportDiagnostic, ImportDiagnosticKind};
 pub use numeric_bits::{IeeeNumberBits, IeeeNumberClass};
@@ -153,7 +159,11 @@ pub use styles::{
     RotationDegrees, StyleColor, StyleContext, TextRotation, ThemeColor, Tint, Underline,
     VerticalAlignment, VisualStyle,
 };
+pub use table_auto_filter::TableAutoFilter;
 pub use table_column::TableColumn;
+pub use table_filter_column::TableFilterColumn;
+pub use table_filter_values::TableFilterValues;
+pub use table_style_info::TableStyleInfo;
 pub use workbook_records::NamedRange;
 pub use worksheet_records::{SheetPresentation, SheetVisibility};
 pub use worksheet_table::WorksheetTable;

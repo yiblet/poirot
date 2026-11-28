@@ -2,7 +2,7 @@ use crate::model::{FormulaSource, ModelError};
 use poirot_parsing::formula::ParseError;
 
 /// A workbook edit rejected by model validation, identifier comparison, or formula parsing.
-/// The formula source is retained when a particular cell or defined name caused failure.
+/// The formula source is retained when a particular formula caused failure.
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum EditError {
     /// Source mutation violates canonical model constraints.
@@ -20,7 +20,7 @@ pub enum EditError {
     /// Affected formula cannot be parsed or safely rewritten.
     #[error("cannot rewrite formula in {target:?}")]
     Formula {
-        /// Cell or defined-name identity of the rejected formula.
+        /// Source of the rejected formula.
         target: FormulaSource,
         /// Underlying formula diagnostic.
         #[source]

@@ -43,6 +43,22 @@ pub(super) fn decode(text: &str) -> ExcelText {
 /// Produces legal XML text, before XML entity escaping. Escape literal escape
 /// prefixes, disallowed XML units, and lone surrogates; preserve valid pairs.
 pub(super) fn encode(text: &ExcelText) -> String {
+    encode_in(text, TextContext::Element)
+}
+
+/// Encode a SpreadsheetML escaped-string attribute before XML entity escaping.
+pub(super) fn encode_attribute(text: &str) -> String {
+    encode_in(&ExcelText::from(text), TextContext::Attribute)
+}
+
+/// Location of an escaped string within an XML document.
+#[derive(Clone, Copy)]
+enum TextContext {
+    Element,
+    Attribute,
+}
+
+fn encode_in(text: &ExcelText, context: TextContext) -> String {
     use std::fmt::Write;
     let units = text.units();
     let mut output = String::new();
@@ -63,8 +79,11 @@ pub(super) fn encode(text: &ExcelText) -> String {
             at += 2;
             continue;
         }
+        // Excel also escapes CR everywhere and LF and TAB in attributes.
+        // https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/d34ae755-c53f-4a44-a363-c6dd3ee018a4
         if escape_at(units, at).is_some()
-            || unit == 13 // XML line-ending normalization would otherwise erase CR.
+            || unit == 13
+            || (matches!(context, TextContext::Attribute) && matches!(unit, 9 | 10))
             || (0xd800..=0xdfff).contains(&unit)
             || !matches!(unit, 9 | 10 | 13 | 0x20..=0xd7ff | 0xe000..=0xfffd)
         {

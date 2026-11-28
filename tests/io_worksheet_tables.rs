@@ -169,6 +169,36 @@ fn table_insert_row_must_fit_alongside_headers_and_totals() {
 }
 
 #[test]
+fn growing_an_empty_table_fills_its_insert_row_first() {
+    let bytes = rewrite_table(|xml| {
+        xml.replace(r#"ref="A1:B4""#, r#"ref="A1:B2" insertRow="1""#)
+            .replace(r#"totalsRowCount="1""#, r#"totalsRowCount="0""#)
+            .replace("<tableColumns", r#"<autoFilter ref="A1:B1"/><tableColumns"#)
+            .replace(
+                r#"<tableColumn id="2" name="Twice"/>"#,
+                r#"<tableColumn id="2" name="Twice"><calculatedColumnFormula>A2*2</calculatedColumnFormula></tableColumn>"#,
+            )
+    });
+    let mut book = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    let sheet = book.sheet_mut(0).unwrap();
+    sheet.remove("A2").unwrap();
+    sheet.remove("B2").unwrap();
+
+    sheet.grow_table_rows("Sales", 1).unwrap();
+    let table = &sheet.tables()[0];
+    assert!(!table.insert_row);
+    assert_eq!(table.last, "B2".parse().unwrap());
+    assert_eq!(
+        table.auto_filter.as_ref().unwrap().range.unwrap().1,
+        table.last
+    );
+    assert_eq!(
+        sheet.get("B2").unwrap().unwrap().formula.as_deref(),
+        Some("A2*2")
+    );
+}
+
+#[test]
 fn invalid_column_metadata_is_refused() {
     let bytes =
         rewrite_table(|xml| xml.replace(r#"id="2" name="Twice""#, r#"id="1" name="Twice""#));
@@ -197,7 +227,80 @@ fn optional_name_and_xml_escaped_caption_round_trip() {
     );
 }
 
+#[test]
+fn escaped_table_attributes_preserve_reference_captions_and_filter_values() {
+    use poirot::model::CellValue;
+
+    let bytes = rewrite_table(|xml| {
+        xml.replace(r#"displayName="Sales""#, r#"displayName="Sales_x005F_x0041_""#)
+            .replace(r#" name="Sales""#, r#" name="Internal_x005F_x0042_""#)
+            .replace(r#"name="Amount""#, r#"name="_x005F_x0041_""#)
+            .replace(
+                "<tableColumns",
+                r#"<autoFilter ref="A1:B3"><filterColumn colId="0"><filters><filter val="a_x0009_b_x000A_c_x000D_d_x0001_"/></filters></filterColumn></autoFilter><tableColumns"#,
+            )
+            .replace("</table>", r#"<tableStyleInfo name="Custom_x005F_x0043_"/></table>"#)
+    });
+    let mut book = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    book.sheet_mut(0)
+        .unwrap()
+        .set_formula("H1", "SUM(Sales_x0041_[_x0041_])")
+        .unwrap();
+    let table = &book.sheet(0).unwrap().tables()[0];
+    assert_eq!(table.name.as_deref(), Some("Internal_x0042_"));
+    assert_eq!(table.display_name, "Sales_x0041_");
+    assert_eq!(table.columns[0].name, "_x0041_");
+    assert_eq!(
+        table.style.as_ref().unwrap().name.as_deref(),
+        Some("Custom_x0043_")
+    );
+    let criteria = table.auto_filter.as_ref().unwrap().columns[0]
+        .filters
+        .as_ref()
+        .unwrap();
+    assert_eq!(criteria.values, ["a\tb\nc\rd\u{1}"]);
+
+    let exported = write_xlsx_to_buffer(&book).unwrap();
+    let mut package = zip::ZipArchive::new(Cursor::new(&exported)).unwrap();
+    let mut xml = String::new();
+    package
+        .by_name("xl/tables/table1.xml")
+        .unwrap()
+        .read_to_string(&mut xml)
+        .unwrap();
+    assert!(xml.contains(r#"name="_x005F_x0041_""#));
+    assert!(xml.contains(r#"val="a_x0009_b_x000A_c_x000D_d_x0001_""#));
+    let reopened = read_workbook_bytes::<Workbook>(&exported).unwrap();
+    assert_eq!(
+        reopened.sheet(0).unwrap().tables(),
+        std::slice::from_ref(table)
+    );
+
+    for mut workbook in [book, reopened] {
+        workbook.recalculate().unwrap();
+        assert_eq!(
+            workbook.stored_cell("Data", "H1").unwrap().unwrap().value,
+            CellValue::Number(10.)
+        );
+    }
+}
+
+#[test]
+fn table_attributes_with_lone_surrogate_escapes_are_refused() {
+    let bytes = rewrite_table(|xml| xml.replace(r#"name="Amount""#, r#"name="_xD800_""#));
+    assert!(matches!(
+        read_workbook_bytes::<Workbook>(&bytes),
+        Err(IoError::Model(
+            poirot_io::ModelError::InvalidWorksheetTable { .. }
+        ))
+    ));
+}
+
 fn rewrite_table(rewrite: impl Fn(&str) -> String) -> Vec<u8> {
+    rewrite_fixture_part("xl/tables/table1.xml", rewrite)
+}
+
+fn rewrite_fixture_part(path: &str, rewrite: impl Fn(&str) -> String) -> Vec<u8> {
     let mut input = zip::ZipArchive::new(Cursor::new(FIXTURE)).unwrap();
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..input.len() {
@@ -210,7 +313,7 @@ fn rewrite_table(rewrite: impl Fn(&str) -> String) -> Vec<u8> {
             .unwrap();
         let mut xml = String::new();
         entry.read_to_string(&mut xml).unwrap();
-        if entry.name().unwrap() == "xl/tables/table1.xml" {
+        if entry.name().unwrap() == path {
             xml = rewrite(&xml);
         }
         writer.write_all(xml.as_bytes()).unwrap();
@@ -753,4 +856,475 @@ fn combined_table_sections_require_each_selected_section() {
             "{from} -> {to}, {formula}"
         );
     }
+}
+
+#[test]
+fn table_definitions_survive_xlsx_and_source_snapshots() {
+    // Original input values and formula text. SpreadsheetML defines these records
+    // separately from sheet cells.
+    // https://learn.microsoft.com/en-us/office/open-xml/spreadsheet/working-with-tables
+    let bytes = rewrite_table(|xml| {
+        xml.replace(
+            "<tableColumns",
+            r#"<autoFilter ref="A1:B3"><filterColumn colId="0" hiddenButton="1" showButton="false"><filters blank="true"><filter val=" A&amp;&quot; "/><filter val=""/></filters></filterColumn></autoFilter><tableColumns"#,
+        )
+        .replace(
+            r#"<tableColumn id="2" name="Twice"/>"#,
+            r#"<tableColumn id="2" name="Twice"><calculatedColumnFormula array="1">IF([@Amount]&lt;7,&quot;A&amp;B&quot;,&quot;&quot;)&#13;</calculatedColumnFormula></tableColumn>"#,
+        )
+        .replace(
+            "</table>",
+            r#"<tableStyleInfo name="TableStyleMedium2" showFirstColumn="1" showLastColumn="0" showRowStripes="true" showColumnStripes="false"/></table>"#,
+        )
+    });
+    let book = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    let table = &book.sheet(0).unwrap().tables()[0];
+    let style = table.style.as_ref().unwrap();
+    assert_eq!(style.name.as_deref(), Some("TableStyleMedium2"));
+    assert_eq!(
+        [
+            style.show_first_column,
+            style.show_last_column,
+            style.show_row_stripes,
+            style.show_column_stripes
+        ],
+        [Some(true), Some(false), Some(true), Some(false)]
+    );
+    let filter = table.auto_filter.as_ref().unwrap();
+    assert_eq!(
+        filter.range,
+        Some(("A1".parse().unwrap(), "B3".parse().unwrap()))
+    );
+    let column = &filter.columns[0];
+    assert_eq!(
+        (column.index, column.hidden_button, column.show_button),
+        (0, Some(true), Some(false))
+    );
+    let criteria = column.filters.as_ref().unwrap();
+    assert_eq!(criteria.blank, Some(true));
+    assert_eq!(criteria.values, [" A&\" ", ""]);
+    let formula = table.columns[1].calculated_formula.as_ref().unwrap();
+    assert_eq!(formula.array, Some(true));
+    assert_eq!(formula.text, concat!(r#"IF([@Amount]<7,"A&B","")"#, "\r"));
+    for restored in [
+        read_workbook_bytes::<Workbook>(&write_xlsx_to_buffer(&book).unwrap()).unwrap(),
+        Workbook::restore_snapshot()
+            .from_bytes(&book.save_snapshot().to_buffer().unwrap())
+            .unwrap()
+            .into_evaluation(Default::default())
+            .unwrap()
+            .evaluation
+            .into_workbook(),
+    ] {
+        assert_eq!(
+            restored.sheet(0).unwrap().tables(),
+            std::slice::from_ref(table)
+        );
+        assert_eq!(
+            restored.sheet(0).unwrap().get("B2").unwrap(),
+            book.sheet(0).unwrap().get("B2").unwrap()
+        );
+    }
+}
+
+#[test]
+fn empty_filters_are_distinct_from_missing_filters_and_unmodeled_criteria_warn() {
+    let base = read_workbook_bytes::<Workbook>(FIXTURE).unwrap();
+    assert!(base.sheet(0).unwrap().tables()[0].auto_filter.is_none());
+    for filter in [
+        r#"<autoFilter ref="A1:B3"/>"#,
+        r#"<autoFilter ref="A1:B3"><filterColumn colId="0"><dynamicFilter type="today"/></filterColumn></autoFilter>"#,
+    ] {
+        let bytes =
+            rewrite_table(|xml| xml.replace("<tableColumns", &format!("{filter}<tableColumns")));
+        let book = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+        let table = &book.sheet(0).unwrap().tables()[0];
+        assert!(table.auto_filter.is_some());
+        if filter.contains("dynamicFilter") {
+            assert!(
+                book.file_metadata
+                    .as_ref()
+                    .unwrap()
+                    .import_warnings
+                    .iter()
+                    .any(|warning| warning
+                        .detail
+                        .contains("unmodeled metadata for Excel table"))
+            );
+        }
+        let reopened =
+            read_workbook_bytes::<Workbook>(&write_xlsx_to_buffer(&book).unwrap()).unwrap();
+        assert_eq!(
+            reopened.sheet(0).unwrap().tables(),
+            std::slice::from_ref(table)
+        );
+    }
+}
+
+#[test]
+fn malformed_table_filter_geometry_or_columns_are_rejected() {
+    for filter in [
+        r#"<autoFilter ref="A1:C3"/>"#,
+        r#"<autoFilter ref="A1:B3"><filterColumn colId="2"/></autoFilter>"#,
+        r#"<autoFilter ref="A1:B3"><filterColumn colId="0"/><filterColumn colId="0"/></autoFilter>"#,
+    ] {
+        let bytes =
+            rewrite_table(|xml| xml.replace("<tableColumns", &format!("{filter}<tableColumns")));
+        assert!(
+            matches!(
+                read_workbook_bytes::<Workbook>(&bytes),
+                Err(IoError::Model(
+                    poirot_io::ModelError::InvalidWorksheetTable { .. }
+                ))
+            ),
+            "{filter}"
+        );
+    }
+}
+
+#[test]
+fn table_definition_payloads_obey_export_and_snapshot_quotas() {
+    use poirot::snapshots::{SnapshotError, SnapshotLimits};
+    use poirot_io::{ExportLimitError, WriteOptions, plan_xlsx_export};
+
+    let base = read_workbook_bytes::<Workbook>(FIXTURE).unwrap();
+    let filter = format!(
+        r#"<autoFilter ref="A1:B3"><filterColumn colId="0"><filters><filter val="{}"/></filters></filterColumn></autoFilter>"#,
+        "p".repeat(10_000)
+    );
+    let bytes =
+        rewrite_table(|xml| xml.replace("<tableColumns", &format!("{filter}<tableColumns")));
+    let book = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    let base_bytes = plan_xlsx_export(&base, WriteOptions::default())
+        .unwrap()
+        .source_bytes();
+    let opts = WriteOptions {
+        max_source_bytes: base_bytes,
+        ..Default::default()
+    };
+    assert!(matches!(
+        plan_xlsx_export(&book, opts),
+        Err(IoError::Limit(ExportLimitError::SourceBytes { .. }))
+    ));
+
+    let limits = SnapshotLimits::default().max_decoded_bytes(4_000);
+    let base_snapshot = base.save_snapshot().to_buffer().unwrap();
+    assert!(
+        Workbook::restore_snapshot()
+            .limits(limits)
+            .from_bytes(&base_snapshot)
+            .is_ok()
+    );
+    let snapshot = book.save_snapshot().to_buffer().unwrap();
+    assert!(matches!(
+        Workbook::restore_snapshot()
+            .limits(limits)
+            .from_bytes(&snapshot),
+        Err(SnapshotError::Quota(_))
+    ));
+}
+
+#[test]
+fn external_table_relationships_are_refused() {
+    use poirot_io::opc::OpcError;
+
+    let bytes = rewrite_fixture_part("xl/worksheets/_rels/sheet1.xml.rels", |xml| {
+        xml.replace(
+            r#"Target="../tables/table1.xml""#,
+            r#"Target="https://example.invalid/table.xml" TargetMode="External""#,
+        )
+    });
+    assert!(matches!(
+        read_workbook_bytes::<Workbook>(&bytes),
+        Err(IoError::Opc(OpcError::ExternalRelationship { .. }))
+    ));
+}
+
+fn growable_table(formula: &str, filter_end: &str, array: bool) -> Workbook {
+    let bytes = rewrite_table(|xml| {
+        xml.replace(r#"ref="A1:B4""#, r#"ref="A1:B3""#)
+            .replace(r#"totalsRowCount="1""#, r#"totalsRowCount="0""#)
+            .replace("<tableColumns", &format!(r#"<autoFilter ref="A1:{filter_end}"/><tableColumns"#))
+            .replace(
+                r#"<tableColumn id="2" name="Twice"/>"#,
+                &format!(r#"<tableColumn id="2" name="Twice"><calculatedColumnFormula array="{}">{formula}</calculatedColumnFormula></tableColumn>"#, u8::from(array)),
+            )
+    });
+    let mut book = read_workbook_bytes::<Workbook>(&bytes).unwrap();
+    book.sheet_mut(0).unwrap().remove("A4").unwrap();
+    book
+}
+
+#[test]
+fn table_calculated_columns_follow_sheet_rename_and_fill_new_rows() {
+    use poirot::editing::FormulaSource;
+    use poirot::model::CellValue;
+
+    let mut book = growable_table("Inputs!A2", "B3", false);
+    let inputs = book.add_sheet("Inputs").unwrap();
+    inputs.set_value("A2", 12.).unwrap();
+    inputs.set_value("A4", 34.).unwrap();
+    book.sheet_mut(0)
+        .unwrap()
+        .set_formula("B2", "Inputs!A2")
+        .unwrap();
+
+    let outcome = book.rename_sheet(1, "Renamed Inputs").apply().unwrap();
+    assert_eq!(
+        outcome.changed_sources,
+        [
+            FormulaSource::Cell {
+                sheet: 0,
+                address: "B2".parse().unwrap(),
+            },
+            FormulaSource::CalculatedColumn {
+                sheet: 0,
+                table: 0,
+                column: 1,
+            },
+        ]
+    );
+
+    // Reload before growing to exercise the table definition written to XLSX.
+    let mut reopened =
+        read_workbook_bytes::<Workbook>(&write_xlsx_to_buffer(&book).unwrap()).unwrap();
+    let sheet = reopened.sheet_mut(0).unwrap();
+    let formula = sheet.tables()[0].columns[1]
+        .calculated_formula
+        .as_ref()
+        .unwrap();
+    assert_eq!(formula.text, "'Renamed Inputs'!A2");
+    assert_eq!(formula.array, Some(false));
+    sheet.grow_table_rows("Sales", 1).unwrap();
+    reopened.recalculate().unwrap();
+    for (address, formula, value) in [
+        ("B2", "'Renamed Inputs'!A2", 12.),
+        ("B4", "'Renamed Inputs'!A4", 34.),
+    ] {
+        let cell = reopened.stored_cell("Data", address).unwrap().unwrap();
+        assert_eq!(cell.formula.as_deref(), Some(formula));
+        assert_eq!(cell.value, CellValue::Number(value));
+    }
+}
+
+#[test]
+fn translating_a_calculated_column_changes_its_definition() {
+    use poirot::editing::{FormulaLocation, FormulaSource, TranslationRequest};
+
+    let mut book = growable_table("A2*2", "B3", false);
+    let source = FormulaSource::CalculatedColumn {
+        sheet: 0,
+        table: 0,
+        column: 1,
+    };
+    let original = book.stored_cell("Data", "B2").unwrap().cloned();
+    let changed = book
+        .translate_formulas()
+        .request(TranslationRequest {
+            source: source.clone(),
+            from: FormulaLocation { row: 1, column: 1 },
+            to: FormulaLocation { row: 2, column: 1 },
+        })
+        .apply()
+        .unwrap();
+    assert_eq!(changed, [source]);
+    assert_eq!(book.stored_cell("Data", "B2").unwrap().cloned(), original);
+    let table = &book.sheet(0).unwrap().tables()[0];
+    let formula = table.columns[1].calculated_formula.as_ref().unwrap();
+    assert_eq!(formula.text, "A3*2");
+    assert_eq!(formula.array, Some(false));
+}
+
+#[test]
+fn unsupported_calculated_column_formula_rejects_rename_atomically() {
+    use poirot::editing::{EditError, FormulaSource};
+
+    let mut book = growable_table("Inputs!A2+", "B3", false);
+    book.add_sheet("Inputs").unwrap();
+    book.sheet_mut(0)
+        .unwrap()
+        .set_formula("B2", "Inputs!A2")
+        .unwrap();
+    let before = book.clone();
+    assert!(matches!(
+        book.rename_sheet(1, "Renamed Inputs").apply(),
+        Err(EditError::Formula {
+            target: FormulaSource::CalculatedColumn {
+                sheet: 0,
+                table: 0,
+                column: 1,
+            },
+            ..
+        })
+    ));
+    assert_eq!(book, before);
+}
+
+#[test]
+fn explicit_table_growth_fills_calculated_columns_and_updates_spills() {
+    use poirot::model::{CellStyle, CellValue};
+
+    let mut book = growable_table("A2*2+$E$1", "B3", false);
+    let sheet = book.sheet_mut(0).unwrap();
+    sheet.set_value("E1", 1.).unwrap();
+    sheet
+        .set_formula("G1", "MAP(Sales[Amount],LAMBDA(x,x*10))")
+        .unwrap();
+    let style = CellStyle {
+        number_format: Some("0.00".into()),
+        ..Default::default()
+    };
+    sheet.set_style("B4", style.clone()).unwrap();
+    let original = sheet.get("B2").unwrap().unwrap().formula.clone();
+    book.recalculate().unwrap();
+    assert_eq!(
+        book.sheet(0).unwrap().spill_extent("G1".parse().unwrap()),
+        Some("G2".parse().unwrap())
+    );
+    let sheet = book.sheet_mut(0).unwrap();
+    sheet.grow_table_rows("sALES", 2).unwrap();
+    let table = &sheet.tables()[0];
+    assert_eq!(table.last, "B5".parse().unwrap());
+    assert_eq!(
+        table.auto_filter.as_ref().unwrap().range.unwrap().1,
+        "B5".parse().unwrap()
+    );
+    assert_eq!(sheet.get("B2").unwrap().unwrap().formula, original);
+    for (address, formula) in [("B4", "A4*2+$E$1"), ("B5", "A5*2+$E$1")] {
+        assert_eq!(
+            sheet.get(address).unwrap().unwrap().formula.as_deref(),
+            Some(formula)
+        );
+    }
+    assert_eq!(sheet.get("B4").unwrap().unwrap().style, style);
+    sheet.set_value("A4", 8.).unwrap();
+    sheet.set_value("A5", 9.).unwrap();
+    book.recalculate().unwrap();
+    let sheet = book.sheet(0).unwrap();
+    assert_eq!(
+        sheet.get("D1").unwrap().unwrap().value,
+        CellValue::Number(27.)
+    );
+    assert_eq!(
+        sheet.get("B4").unwrap().unwrap().value,
+        CellValue::Number(17.)
+    );
+    assert_eq!(
+        sheet.get("G4").unwrap().unwrap().value,
+        CellValue::Number(90.)
+    );
+    assert_eq!(
+        sheet.spill_extent("G1".parse().unwrap()),
+        Some("G4".parse().unwrap())
+    );
+
+    let mut reopened =
+        read_workbook_bytes::<Workbook>(&write_xlsx_to_buffer(&book).unwrap()).unwrap();
+    assert_eq!(reopened.sheet(0).unwrap().tables(), sheet.tables());
+    assert_eq!(
+        reopened
+            .sheet(0)
+            .unwrap()
+            .get("B5")
+            .unwrap()
+            .unwrap()
+            .formula
+            .as_deref(),
+        Some("A5*2+$E$1")
+    );
+    reopened.recalculate().unwrap();
+    assert_eq!(
+        reopened.sheet(0).unwrap().get("G4").unwrap().unwrap().value,
+        CellValue::Number(90.)
+    );
+    let mut scenario = reopened.overlay().build().unwrap();
+    let input = scenario.target("Data!A5").unwrap();
+    let sum = scenario.target("Data!D1").unwrap();
+    let calculated = scenario.target("Data!B5").unwrap();
+    let context = poirot::calculation::EvaluationContext::default();
+    assert_eq!(
+        scenario.evaluation(&context).unwrap().cell(sum).unwrap(),
+        CellValue::Number(27.)
+    );
+    scenario.set_value(input, 10.0).unwrap();
+    let mut evaluation = scenario.evaluation(&context).unwrap();
+    assert_eq!(evaluation.cell(sum).unwrap(), CellValue::Number(28.));
+    assert_eq!(evaluation.cell(calculated).unwrap(), CellValue::Number(21.));
+}
+
+#[test]
+fn table_growth_refuses_partial_and_conflicting_edits_atomically() {
+    use poirot::model::TableGrowthError as Error;
+    use poirot_io::data::SheetSink;
+
+    let mut book = growable_table("A1048574", "B3", false);
+    let before = book.clone();
+    assert!(matches!(
+        book.sheet_mut(0).unwrap().grow_table_rows("Sales", 2),
+        Err(Error::Formula { address, .. }) if address == "B5".parse().unwrap()
+    ));
+    assert_eq!(book, before);
+
+    let mut book = growable_table("A2*2", "B3", false);
+    let sheet = book.sheet_mut(0).unwrap();
+    sheet.set_value("A4", 100.).unwrap();
+    assert_eq!(sheet.tables()[0].last, "B3".parse().unwrap());
+    let before = sheet.clone();
+    assert!(matches!(
+        sheet.grow_table_rows("Sales", 1),
+        Err(Error::Occupied { address }) if address == "A4".parse().unwrap()
+    ));
+    assert!(matches!(
+        sheet.grow_table_rows("Sales", u32::MAX),
+        Err(Error::RowBounds)
+    ));
+    assert_eq!(*sheet, before);
+
+    sheet.remove("A4").unwrap();
+    sheet.set_formula("A4", "SEQUENCE(1,3)").unwrap();
+    sheet
+        .set_spill_extent(
+            "A4".parse().unwrap(),
+            "C4".parse().unwrap(),
+            "SEQUENCE(1,3)",
+        )
+        .unwrap();
+    let before = sheet.clone();
+    assert!(matches!(
+        sheet.grow_table_rows("Sales", 1),
+        Err(Error::Spill { anchor }) if anchor == "A4".parse().unwrap()
+    ));
+    assert_eq!(*sheet, before);
+    sheet.remove("A4").unwrap();
+
+    let mut peer = sheet.tables()[0].clone();
+    peer.id = 2;
+    peer.name = None;
+    peer.display_name = "NextTable".into();
+    peer.first = "A5".parse().unwrap();
+    peer.last = "B6".parse().unwrap();
+    peer.auto_filter = None;
+    SheetSink::import_table(sheet, peer).unwrap();
+    let before = sheet.clone();
+    assert!(matches!(
+        sheet.grow_table_rows("Sales", 2),
+        Err(Error::InvalidTable(_))
+    ));
+    assert_eq!(*sheet, before);
+
+    let mut original = read_workbook_bytes::<Workbook>(FIXTURE).unwrap();
+    let mut partial = growable_table("A2*2", "B2", false);
+    let mut array = growable_table("A2*2", "B3", true);
+    assert!(matches!(
+        original.sheet_mut(0).unwrap().grow_table_rows("Sales", 1),
+        Err(Error::TotalsRow)
+    ));
+    assert!(matches!(
+        partial.sheet_mut(0).unwrap().grow_table_rows("Sales", 1),
+        Err(Error::FilterRange)
+    ));
+    assert!(matches!(
+        array.sheet_mut(0).unwrap().grow_table_rows("Sales", 1),
+        Err(Error::ArrayFormula { .. })
+    ));
 }
