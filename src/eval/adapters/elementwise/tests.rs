@@ -244,3 +244,36 @@ fn demand_is_orthogonal_to_shape_and_deferred_broadcast_skips_admission() {
         3
     );
 }
+
+#[test]
+fn scalar_lift_charges_once_and_preserves_both_error_channels() {
+    use super::lift::Lift;
+    use crate::eval::limits::EvaluationError;
+    use crate::eval::values::FunctionError;
+    use crate::model::CellError::NA;
+    use crate::model::CellValue::Error;
+
+    let mut workbook = Workbook::new();
+    workbook.add_sheet("S").unwrap();
+    let mut session = Session::with_context(&workbook, EvaluationInputs::default());
+    let address = CellAddress { row: 0, col: 0 };
+    {
+        let mut host = CallHost::new_inheriting(&mut session, 0, address, &[]);
+        let lift = Lift::new(&mut host, 0).unwrap();
+        let value = lift.evaluate(&mut host, address, |_, row, col| {
+            assert_eq!((row, col), (0, 0));
+            Ok(Number(7.))
+        });
+        assert!(matches!(value, Ok(Value::Scalar(Number(7.)))));
+        let spreadsheet = lift.evaluate(&mut host, address, |_, _, _| Err(NA.into()));
+        assert!(matches!(spreadsheet, Ok(Value::Scalar(Error(NA)))));
+        let operational = lift.evaluate(&mut host, address, |_, _, _| {
+            Err(EvaluationError::StalePlan.into())
+        });
+        assert!(matches!(
+            operational,
+            Err(FunctionError::Operational(EvaluationError::StalePlan))
+        ));
+    }
+    assert_eq!(session.state.runtime.budget.usage.helper_operations, 3);
+}

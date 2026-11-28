@@ -95,10 +95,16 @@ impl BudgetMeter {
         })
     }
 
+    /// Whether work contributes to an enabled quota or the detailed report.
+    #[inline]
+    pub(in crate::eval) fn tracks_work(&self) -> bool {
+        self.profiling || self.run_limited || self.cell_limited
+    }
+
     /// Admit work against run and active-cell limits before updating counters.
     #[inline]
     pub fn charge(&mut self, kind: WorkKind, amount: u64) -> EvalResult<()> {
-        if amount == 0 || (!self.profiling && !self.run_limited && !self.cell_limited) {
+        if amount == 0 || !self.tracks_work() {
             return Ok(());
         }
         let ChargeRequest { kind, amount } = policy::admit_work(

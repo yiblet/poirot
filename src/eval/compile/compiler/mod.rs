@@ -59,6 +59,8 @@ mod source_dto;
 mod source_fingerprint;
 /// Exact formula, name, sheet, and visibility metadata guarding workbook plan reuse.
 mod source_identity;
+mod template_candidate;
+mod template_lexemes;
 /// Reuse indexes for one compiler policy: proven non-spilling formula classes, reference-rebinding candidates, and identical executable programs.
 mod template_pool;
 /// Structural validation of restored bytecode templates and reference bindings.

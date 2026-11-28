@@ -14,6 +14,7 @@ mod cache_error;
 mod cached;
 /// Reads and execution properties that determine when one cached result expires.
 mod dependencies;
+mod invalidation_buffers;
 /// Sheet index and cell address identifying a dependency graph node.
 mod key;
 mod lookup_prefix_error;
@@ -31,6 +32,7 @@ mod prefix_key;
 mod prefix_partition;
 /// Per-sheet lookup of consumers whose read rectangles contain a changed cell.
 mod range_index;
+mod range_node;
 /// Which dependency rectangles a range index resolves.
 mod range_purpose;
 /// Interval tree of read rectangles on one sheet.

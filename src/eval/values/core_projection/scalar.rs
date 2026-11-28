@@ -187,10 +187,7 @@ pub(in crate::eval) fn compare(
                 unsupported(crate::eval::limits::EvaluationReasonError::ComparisonWorkSizeOverflow)
             })?;
         budget.charge(WorkKind::Comparison, units as u64)?;
-        return Ok(poirot_functions::text_units::fold::compare_utf16(
-            a.units(),
-            b.units(),
-        ));
+        return Ok(poirot_functions::text_units::fold::compare_text(a, b));
     }
     Ok(match (a, b) {
         (Number(a), Number(b)) => a.partial_cmp(b).unwrap_or(Ordering::Equal),

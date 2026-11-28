@@ -14,6 +14,8 @@ mod item_folder;
 mod name_resolver;
 /// Consumed-read attribution and forwarding.
 mod read_recorder;
+/// Reusable authored membership from one sparse rectangle.
+mod sparse_batch;
 /// A sparse range member and its inspected source.
 mod sparse_member;
 /// Sparse range membership collection.
@@ -26,6 +28,7 @@ pub(in crate::eval) use argument_reader::ArgumentReader;
 pub(in crate::eval) use item_folder::ItemFolder;
 pub(in crate::eval) use name_resolver::NameResolver;
 pub(in crate::eval) use read_recorder::ReadRecorder;
+pub(in crate::eval) use sparse_batch::SparseBatch;
 pub(in crate::eval) use sparse_member::SparseMember;
 pub(in crate::eval) use sparse_reader::SparseReader;
 pub(in crate::eval) use table_resolver::TableResolver;

@@ -204,9 +204,10 @@ pub(super) fn evaluate(
     rows::select(
         host,
         source,
+        None,
         Field::Column(selected),
         PredicateErrors::Value,
-        |host, row, _| {
+        |host, row, _, _| {
             row_matches(
                 host,
                 row,

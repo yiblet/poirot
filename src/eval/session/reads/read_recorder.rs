@@ -1,6 +1,7 @@
 //! Consumed-read attribution and forwarding to dependency sinks.
 
 use crate::eval::config::ArrayResultPolicy;
+use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::ports::{DependencyRead, DependencyReadSink, ReadEvent};
 use crate::eval::session::composition::Session;
 use crate::eval::spill::{SpillPublisher, SpillQuery};
@@ -20,12 +21,32 @@ impl<'s, 'a> ReadRecorder<'s, 'a> {
 
     /// Construct dependency-only payloads only when a tracker or external sink needs them.
     pub(in crate::eval) fn read_lazy(&mut self, read: impl FnOnce() -> DependencyRead) {
-        if self.session.reuse.overlay_reads.is_some()
-            || self.session.ports.dependency_sink.is_some()
+        if self.session.ports.dependency_sink.is_some()
+            || (self.session.reuse.overlay_reads.is_some()
+                && self.session.state.runtime.stack.consumer.is_some())
             || SpillQuery::new(self.session).settling()
         {
             self.read(read());
         }
+    }
+
+    /// Attribute a point read without constructing a general event for internal-only traces.
+    #[inline]
+    pub(in crate::eval) fn read_cell(&mut self, target: EvaluationTarget) {
+        if self.session.ports.dependency_sink.is_some() || SpillQuery::new(self.session).settling()
+        {
+            self.read_observed_cell(target);
+        } else if let Some(reads) = &mut self.session.reuse.overlay_reads
+            && let Some(consumer) = self.session.state.runtime.stack.consumer
+        {
+            reads.record_cell(consumer, target);
+        }
+    }
+
+    /// Build the full event away from callers that normally use internal point evidence.
+    #[inline(never)]
+    fn read_observed_cell(&mut self, target: EvaluationTarget) {
+        self.read(DependencyRead::Cell(target));
     }
 
     /// Record spill geometry without claiming every coordinate's value was consumed.

@@ -59,7 +59,7 @@ fn escaped_strings_quoted_sheet_names_and_utf8_prefixes_do_not_fabricate_calls()
 }
 #[test]
 fn failed_outer_parse_discards_successful_inner_invocations() {
-    let mut parser = Parser {
+    let mut parser = Parser::<true> {
         input: "SUM(edate(1,2),BROKEN(",
         pos: 0,
         depth: 0,

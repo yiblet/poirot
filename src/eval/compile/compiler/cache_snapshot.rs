@@ -36,11 +36,8 @@ enum Body<'a> {
         program: usize,
         references: Cow<'a, crate::eval::compile::bytecode::ReferenceBindings>,
         potential: Cow<'a, PotentialDependencies>,
-        /// Normalized-source hash under which the compiler indexed this formula as a
-        /// rebinding exemplar. Restoration reuses it instead of re-tokenizing the
-        /// source; `normalized_hash` is a fixed algorithm, so keys stay valid across
-        /// toolchains. It is only a lookup hint: reuse still requires normalized-source
-        /// equality and a successful rebinding, so a wrong key can only miss.
+        /// Stable lookup hint for a potential rebinding exemplar.
+        /// A new source verifies the complete lexical match before rebinding.
         template: Option<u64>,
     },
     Failed(Cow<'a, ParseError>),
@@ -69,8 +66,15 @@ impl<'a> CacheSnapshot<'a> {
             .templates
             .get(index)
             .into_iter()
-            .flat_map(|templates| &templates.classified)
-            .flat_map(|(hash, bucket)| bucket.iter().map(|f| (Arc::as_ptr(f), *hash)))
+            .flat_map(|templates| {
+                templates
+                    .classified
+                    .values()
+                    .map(|candidate| (Arc::as_ptr(&candidate.formula), candidate.snapshot_hash))
+                    .chain(templates.restored.iter().flat_map(|(hash, bucket)| {
+                        bucket.iter().map(|formula| (Arc::as_ptr(formula), *hash))
+                    }))
+            })
             .collect();
         let mut programs = HashMap::new();
         let mut formulas: Vec<_> = pool.iter().collect();
@@ -229,7 +233,7 @@ impl<'a> CacheSnapshot<'a> {
                     });
                     if let Some(hash) = template {
                         templates
-                            .classified
+                            .restored
                             .entry(hash)
                             .or_default()
                             .push(Arc::clone(&formula));
@@ -256,5 +260,28 @@ impl<'a> CacheSnapshot<'a> {
             templates: vec![templates],
             ..FormulaCompiler::default()
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{CacheSnapshot, FormulaCompiler, PlanSnapshotError, PreparationPolicy};
+    use crate::eval::compile::bytecode::CallTarget;
+
+    #[test]
+    fn rejects_invalid_builtin_spelling_before_cached_execution() {
+        let mut compiler = FormulaCompiler::new();
+        let policy = PreparationPolicy::default();
+        compiler.compile_formula("SUM(1,2)", &policy);
+        let mut snapshot = CacheSnapshot::capture(&compiler, &policy)
+            .unwrap()
+            .into_owned();
+        let call = &mut snapshot.programs[0].to_mut().calls[0];
+        assert!(matches!(call.target, CallTarget::Builtin(_)));
+        call.source_offset = u32::MAX;
+        assert!(matches!(
+            snapshot.restore(&policy),
+            Err(PlanSnapshotError::CallSourceOffset)
+        ));
     }
 }

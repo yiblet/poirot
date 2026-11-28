@@ -16,6 +16,8 @@ pub(in crate::eval) struct Reads {
     pub fresh_results: CellSet,
     /// Cells whose results may be retained after successful execution.
     pub completed: CellSet,
+    /// Successful root cache reads, staged in caller order.
+    pub cached_outputs: Vec<Key>,
     /// Results whose old consumed trace was validated without executing their formula.
     pub validated: CellSet,
 }
@@ -64,6 +66,7 @@ impl Reads {
     /// Remove speculative consumers while preserving previously settled evidence.
     pub(in crate::eval) fn discard_consumers(&mut self, speculative: &CellSet) {
         self.flush();
+        self.cached_outputs.retain(|key| !speculative.contains(key));
         for key in speculative {
             self.traces.remove(key);
             self.completed.remove(key);
@@ -79,6 +82,16 @@ impl Reads {
         }
     }
 
+    /// Record a point value directly when only the incremental cache consumes it.
+    pub(in crate::eval) fn record_cell(
+        &mut self,
+        consumer: EvaluationTarget,
+        cell: EvaluationTarget,
+    ) {
+        self.trace((consumer.sheet, consumer.address))
+            .cell_value((cell.sheet, cell.address));
+    }
+
     /// Observe a read without copying payloads retained by an external sink.
     pub(in crate::eval) fn record(&mut self, event: &ReadEvent) {
         let Some(consumer) = event.consumer else {
@@ -86,10 +99,7 @@ impl Reads {
         };
         let trace = self.trace((consumer.sheet, consumer.address));
         match &event.read {
-            DependencyRead::Cell(cell) => {
-                trace.value_read((cell.sheet, cell.address));
-                trace.cell((cell.sheet, cell.address));
-            }
+            DependencyRead::Cell(cell) => trace.cell_value((cell.sheet, cell.address)),
             DependencyRead::CellMetadata(cell)
             | DependencyRead::FormulaMetadata(cell)
             | DependencyRead::SubtotalMetadata(cell) => {

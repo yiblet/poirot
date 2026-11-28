@@ -43,9 +43,8 @@ fn classified_hit_allocates_only_final_instance_storage() {
     let policy = PreparationPolicy::default();
     let first = compiler.compile_formula("A1+B2", &policy);
     let (second, allocations) = measure_allocations(|| compiler.compile_formula("C3+D4", &policy));
-    // Reference slots/data, potential references, source Arc, two prepared Arcs,
-    // and the source-index String. No syntax, bytecode or transient token buffers.
-    assert_eq!(allocations, 7);
+    // Reference slots/data, potential references, shared source, and two prepared Arcs.
+    assert_eq!(allocations, 6);
     assert_eq!(compiler.usage().parse_attempts, 1);
     assert_eq!(compiler.usage().bind_attempts, 1);
     assert_eq!(compiler.template_hits(), 1);

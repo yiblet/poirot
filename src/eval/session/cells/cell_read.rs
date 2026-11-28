@@ -1,6 +1,6 @@
 //! A finished cell attempt and its completion delivery.
 
-use super::bookkeeping::cell_allocation_failure;
+use super::bookkeeping::record_overlay_completion;
 use super::cell_attempt::CellAttempt;
 use super::completion_context::CompletionContext;
 use crate::eval::config::ArrayResultPolicy;
@@ -29,16 +29,14 @@ impl CellRead {
                 },
             mut result,
         } = self;
-        if context.array_result_policy == ArrayResultPolicy::DynamicSpill
+        if context.settling_spills
+            && context.array_result_policy == ArrayResultPolicy::DynamicSpill
             && matches!(result, Ok(Blank))
             && let Some(consumer) = consumer
         {
             // Private ownership arbitration tracks blank observations, including
             // memo hits: a producer can later grow into an ancestor's footprint.
             let tracked = (|| {
-                if !context.settling_spills {
-                    return Ok(());
-                }
                 // A dependency's blank can participate in an ancestor's future
                 // footprint as well as its immediate caller's footprint.
                 for owner in context
@@ -60,39 +58,17 @@ impl CellRead {
                 result = Err(failure);
             }
         }
-        if result.is_ok()
+        if let Some(reads) = context.reads
+            && result.is_ok()
             && provenance != CellProvenance::SessionMemo
             && (provenance == CellProvenance::ExternalCache
                 || completion_candidate
                 || (context.array_result_policy == ArrayResultPolicy::DynamicSpill
                     && context.preparation.has_admitted_role((sheet, address))))
-            && let Some(reads) = context.reads
+            && let Err(failure) =
+                record_overlay_completion(reads, EvaluationTarget { sheet, address }, provenance)
         {
-            let recorded = (|| {
-                let target = EvaluationTarget { sheet, address };
-                reads
-                    .completed
-                    .try_reserve(1)
-                    .map_err(|reservation_source| {
-                        cell_allocation_failure(target, reservation_source)
-                    })?;
-                if provenance == CellProvenance::Evaluated {
-                    reads
-                        .fresh_results
-                        .try_reserve(1)
-                        .map_err(|reservation_source| {
-                            cell_allocation_failure(target, reservation_source)
-                        })?;
-                    // SAFETY: One result slot was reserved above; coordinate hashing cannot panic.
-                    reads.fresh_results.insert((sheet, address));
-                }
-                // SAFETY: The completed set reserved one slot above with no intervening insertion.
-                reads.completed.insert((sheet, address));
-                Ok::<_, EvaluationError>(())
-            })();
-            if let Err(failure) = recorded {
-                result = Err(failure);
-            }
+            result = Err(failure);
         }
         {
             let notification = context.preparation.complete_cell(

@@ -4,13 +4,13 @@ use crate::eval::adapters::elementwise::rows::{
 };
 use crate::eval::adapters::elementwise::{FixedScalar, NumericParameter, NumericSignature};
 use crate::eval::functions::registry::CriteriaFunction;
-use crate::eval::host::{ArgumentCoercion, CallHost};
+use crate::eval::host::{ArgumentCoercion, CallHost, OperandReader};
 use crate::eval::limits::{CapabilityId, EvalResult};
 use crate::eval::session::Session;
 use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, err};
 use crate::eval::vm::ArgumentsRef;
 use crate::model::CellError::{Calc, GettingData, Num, Spill};
-use crate::model::CellValue::{Blank, Error, Number, Text};
+use crate::model::CellValue::{Error, Number, Text};
 use crate::model::{CellAddress, CellValue};
 use poirot_functions::criteria::{AggregateKind, Cell, Criterion};
 use poirot_parsing::criteria::Comparison;
@@ -36,20 +36,15 @@ pub(in crate::eval) fn execute(
 }
 
 /// Admit text payloads and reject error kinds unsupported by criteria helpers.
-pub(in crate::eval::adapters) fn preflight(
+fn preflight(
     host: &mut CallHost<'_, '_>,
-    values: &[&CellValue],
+    value: &CellValue,
+    pattern_bytes: usize,
 ) -> FunctionResult<()> {
-    let bytes = values
-        .iter()
-        .map(|v| v.text_storage_bytes())
-        .fold(0usize, usize::saturating_add);
+    let bytes = value.text_storage_bytes().saturating_add(pattern_bytes);
     host.check_text_capacity(bytes.saturating_mul(3))?;
     host.charge_work((bytes as u64).saturating_add(1))?;
-    if values
-        .iter()
-        .any(|v| matches!(v, Error(GettingData | Spill | Calc)))
-    {
+    if matches!(value, Error(GettingData | Spill | Calc)) {
         return Err(host.unsupported(
             CapabilityId::FunctionAdapter,
             crate::eval::limits::EvaluationReasonError::CriteriaDomainErrorCode,
@@ -99,7 +94,7 @@ pub(super) fn evaluate(
 
 /// Compile one admitted control without binding or traversing workbook arguments.
 pub(super) fn compile(host: &mut CallHost<'_, '_>, value: CellValue) -> FunctionResult<Criterion> {
-    preflight(host, &[&value])?;
+    preflight(host, &value, 0)?;
     let admitted =
         poirot_functions::coercion::criteria::coerce_criteria_excel_operand(cell(host, &value)?);
     let mut predicate = Criterion::parse(&admitted);
@@ -139,7 +134,7 @@ pub(super) fn aggregate(
         MaxIfs => AggregateKind::Max,
         Subtotal | CriteriaFunction::Aggregate => return Err(VALUE_ERROR.into()),
     };
-    let source = roles.source(
+    let (source, stored) = roles.source(
         host,
         criteria
             .first()
@@ -148,35 +143,39 @@ pub(super) fn aggregate(
     rows::select(
         host,
         source,
+        stored,
         roles.field(),
         PredicateErrors::Preserve,
-        |host, r, c| {
+        |host, r, c, member| {
             rows::any_all(host, 0..1, 0..roles.pairs().len(), |host, _, term| {
                 let (range, _) = roles.pairs().get(term).ok_or(VALUE_ERROR)?;
                 let criterion = criteria.get(term).ok_or(VALUE_ERROR)?;
-                let v = range.read_at(host, r, c)?.value;
-                let cv = match &criterion.value {
-                    Cell::Text(s) => Text(s.clone()),
-                    _ => Blank,
+                let v = if let (0, Some((sheet, member))) = (term, member) {
+                    OperandReader::new(host).read_stored_member(sheet, member)?
+                } else {
+                    range.read_at(host, r, c)?.value
                 };
-                preflight(host, &[&v, &cv])?;
-                let wildcard =
-                    if let (Cell::Text(pattern), Some(input)) = (&criterion.value, v.text_ref()) {
-                        if matches!(
-                            criterion.comparison,
-                            Comparison::None | Comparison::Eq | Comparison::Ne
-                        ) {
-                            Some((
-                                pattern.as_str(),
-                                ArgumentCoercion::new(host).project_text(input)?,
-                            ))
-                        } else {
-                            None
-                        }
+                let pattern = match &criterion.value {
+                    Cell::Text(pattern) => Some(pattern.as_str()),
+                    _ => None,
+                };
+                preflight(host, &v, pattern.map_or(0, str::len))?;
+                let wildcard = if let (Some(pattern), Some(input)) = (pattern, v.text_ref()) {
+                    if matches!(
+                        criterion.comparison,
+                        Comparison::None | Comparison::Eq | Comparison::Ne
+                    ) {
+                        Some((pattern, ArgumentCoercion::new(host).project_text(input)?))
                     } else {
                         None
-                    };
-                let projected = cell(host, &v)?;
+                    }
+                } else {
+                    None
+                };
+                let projected = match v {
+                    Text(text) => Cell::Text(text),
+                    value => cell(host, &value)?,
+                };
                 rows::matching(
                     host,
                     wildcard
@@ -214,7 +213,7 @@ pub(super) fn subtotal(host: &mut CallHost<'_, '_>) -> FunctionResult<Value> {
     }
     let cells = rows::visible_fold(host, 1, code > 100., Vec::new(), |host, cells, v| {
         let value = if v.missing { Number(0.) } else { v.value };
-        preflight(host, &[&value])?;
+        preflight(host, &value, 0)?;
         host.check_values(cells.len().saturating_add(1))?;
         cells
             .try_reserve(1)

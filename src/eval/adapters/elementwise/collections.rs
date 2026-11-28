@@ -1,5 +1,6 @@
 //! Checked source-ordered numerical collection materialization for typed kernels.
 use super::argument_role::ArgumentRole;
+use super::coordinate_collection::CoordinateCollection;
 use super::tuple_signature::Signature;
 use super::whole_collection::WholeCollection;
 use crate::eval::host::{ArgumentCoercion, CallHost, OperandKind, OperandReader};
@@ -245,9 +246,19 @@ pub(in crate::eval::adapters) fn fold<T>(
         let len = role.len(host)?;
         host.check_values(len)?;
         host.charge_work(len as u64)?;
-        for offset in 0..len {
-            let operand = role.read(host, offset)?;
-            step(host, &mut state, operand)?;
+        if let Some(area) = OperandReader::new(host).physical_area(role.argument())? {
+            for row in area.r0..=area.r1 {
+                for col in area.c0..=area.c1 {
+                    let operand = OperandReader::new(host)
+                        .read_collection_reference_cell(area.sheet, CellAddress { row, col })?;
+                    step(host, &mut state, operand)?;
+                }
+            }
+        } else {
+            for offset in 0..len {
+                let operand = role.read(host, offset)?;
+                step(host, &mut state, operand)?;
+            }
         }
     }
     Ok(state)
@@ -282,9 +293,10 @@ pub(in crate::eval::adapters) fn fold_stored<T>(
             continue;
         };
         let columns = role.describe(host)?.columns;
+        let role = CoordinateCollection::bind(host, role.argument())?;
         host.charge_work(positions.len() as u64)?;
         let mut next = 0usize;
-        for (row, column) in positions {
+        for (row, column) in positions.positions() {
             let offset = row
                 .checked_mul(columns)
                 .and_then(|start| start.checked_add(column))

@@ -37,8 +37,7 @@ pub(in crate::eval) fn formula_updates(
     session.state.runtime.budget.allocation(targets.len())?;
     let mut results = Vec::with_capacity(targets.len());
     for target in targets {
-        let value = CellEvaluator::new(session).cell(target.sheet, target.address)?;
-        results.push(session.sources.output(target, value));
+        results.push(CellEvaluator::new(session).output(target)?);
     }
     Ok(results)
 }

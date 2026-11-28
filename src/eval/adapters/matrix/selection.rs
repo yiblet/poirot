@@ -42,7 +42,7 @@ fn rank(value: &CellValue) -> u8 {
 
 pub(super) fn compare(a: &CellValue, b: &CellValue) -> Ordering {
     if let (Some(a), Some(b)) = (a.text_ref(), b.text_ref()) {
-        return poirot_functions::text_units::fold::compare_utf16(a.units(), b.units());
+        return poirot_functions::text_units::fold::compare_text(a, b);
     }
     match (a, b) {
         (Number(a), Number(b)) if a == b => Ordering::Equal,

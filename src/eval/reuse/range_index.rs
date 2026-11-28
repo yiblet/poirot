@@ -1,5 +1,6 @@
 use super::cached::Cached;
 use super::key::Key;
+use super::range_node::RangeNode;
 use super::range_purpose::RangePurpose;
 use super::range_tree::RangeTree;
 use crate::eval::coordinates::CellMap;
@@ -13,12 +14,16 @@ pub(super) struct RangeIndex {
 
 impl RangeIndex {
     pub(super) fn readers(&self, key: Key, out: &mut Vec<Key>) {
-        if let Some(tree) = self.sheets.get(&key.0)
-            && key.1.col >= tree.first_col
-            && key.1.col <= tree.last_col
-        {
-            tree.readers(1, 0, tree.entries.len(), key, out);
+        if let Some(tree) = self.sheets.get(&key.0) {
+            tree.readers(key.1, out);
         }
+    }
+
+    /// Whether every indexed rectangle on the sheet starts above and left of this point.
+    pub(super) fn after_all_starts(&self, (sheet, address): Key) -> bool {
+        self.sheets
+            .get(&sheet)
+            .is_none_or(|tree| tree.last_start.0 <= address.row && tree.last_start.1 <= address.col)
     }
 
     pub(super) fn new(entries: &CellMap<Cached>) -> Self {
@@ -41,21 +46,12 @@ impl RangeIndex {
                     .sheets
                     .entry(range.sheet)
                     .or_default()
-                    .entries
-                    .push((*range, (sheet, at)));
+                    .nodes
+                    .push(RangeNode::new(*range, (sheet, at)));
             }
         }
         for tree in index.sheets.values_mut() {
-            (tree.first_col, tree.last_col) = tree
-                .entries
-                .iter()
-                .fold((u32::MAX, 0), |(first, last), (range, _)| {
-                    (first.min(range.first.col), last.max(range.last.col))
-                });
-            tree.entries
-                .sort_unstable_by_key(|(range, _)| range.first.row);
-            tree.max_end.resize(tree.entries.len() * 4, None);
-            tree.build(1, 0, tree.entries.len());
+            tree.build();
         }
         index
     }

@@ -63,6 +63,8 @@ mod operand_reader;
 /// Builtin, text and regex policy reads with their recorded dependencies.
 /// Budgeted draws from the calling cell's reproducible random stream.
 mod random_draws;
+/// Prepared origin for aligned payload reads.
+mod relative_operand;
 /// Presents one deferred argument through the function-core scalar input interface.
 mod scalar_input;
 /// Selected scalar with its coercion provenance and omission flag.
@@ -73,6 +75,8 @@ mod scalar_selection;
 mod selected_reader;
 /// Selected arguments, selected rectangles and branch masks for selecting consumers.
 mod selection_access;
+/// Admitted sparse coordinates and their logical reference origin.
+mod stored_positions;
 /// Visibility-gated SUBTOTAL member reads.
 mod subtotal_reader;
 #[cfg(test)]
@@ -98,7 +102,9 @@ pub(in crate::eval) use operand_description::OperandDescription;
 pub(in crate::eval) use operand_kind::OperandKind;
 pub(in crate::eval) use operand_reader::OperandReader;
 pub(in crate::eval) use random_draws::RandomDraws;
+pub(in crate::eval) use relative_operand::RelativeOperand;
 pub(in crate::eval) use scalar_operand::ScalarOperand;
 pub(in crate::eval) use selected_reader::SelectedReader;
 pub(in crate::eval) use selection_access::SelectionAccess;
+pub(in crate::eval) use stored_positions::StoredPositions;
 pub(in crate::eval) use subtotal_reader::SubtotalReader;

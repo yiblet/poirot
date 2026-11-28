@@ -3,6 +3,7 @@
 //! Missing cells and scanned ranges are dependencies too: inserting a value there
 //! must invalidate a formula that previously observed a blank or an empty range.
 use super::cached::Cached;
+use super::invalidation_buffers::InvalidationBuffers;
 use super::key::Key;
 use super::range_index::RangeIndex;
 use super::range_purpose::RangePurpose;
@@ -34,6 +35,8 @@ pub(in crate::eval) struct Cache {
     pub(super) spill_ranges: RangeIndex,
     pub(super) ranges_dirty: bool,
     pub(super) next_version: u64,
+    /// Empty storage available for the next dependency walk.
+    pub(super) invalidation_buffers: InvalidationBuffers,
 }
 
 impl Cache {
@@ -206,65 +209,81 @@ impl Cache {
     }
 
     pub(super) fn invalidate_context(&mut self, seeds: impl IntoIterator<Item = Key>) {
-        self.invalidate_context_with_geometry(seeds, &CellSet::default());
+        self.invalidate_context_with_geometry(seeds.into_iter().collect(), &CellSet::default());
     }
 
     fn invalidate_context_with_geometry(
         &mut self,
-        seeds: impl IntoIterator<Item = Key>,
+        mut pending: Vec<Key>,
         geometry_seeds: &CellSet,
     ) {
-        let seeds: Vec<_> = seeds.into_iter().collect();
-        if seeds.is_empty() {
+        if pending.is_empty() {
             return;
         }
         if self.ranges_dirty {
             self.rebuild_ranges();
         }
-        let mut pending = seeds.clone();
-        let mut seen = CellSet::default();
-        for key in &seeds {
+        // Schedule a node once, while still recording each distinct incoming cause.
+        let mut buffers = std::mem::take(&mut self.invalidation_buffers);
+        let InvalidationBuffers {
+            seen,
+            readers,
+            geometry,
+        } = &mut buffers;
+        pending.retain(|key| {
             self.force(*key);
-        }
+            seen.insert(*key)
+        });
+        let mut covered_geometry: Option<Key> = None;
         while let Some(key) = pending.pop() {
-            if !seen.insert(key) {
-                continue;
-            }
-            let mut readers = Vec::new();
             if let Some(points) = self.reverse.get(&key) {
                 readers.extend(points.iter().copied());
             }
-            self.ranges.readers(key, &mut readers);
+            self.ranges.readers(key, readers);
             readers.sort_unstable();
             readers.dedup();
             // Geometry changes force the coordinate/producer that consumed the
             // membership guard. Its value readers remain conditionally valid.
-            let mut geometry = Vec::new();
-            if geometry_seeds.contains(&key)
-                || self.retained(key).is_some_and(|entry| {
+            let previous = self.retained(key);
+            let version = previous.map(|entry| entry.version);
+            if (geometry_seeds.contains(&key)
+                || previous.is_some_and(|entry| {
                     entry.dependencies.spill_sensitive
                         || matches!(
                             entry.dependencies.spill,
                             super::spill_role::SpillRole::Anchor { .. }
                         )
+                }))
+                && !covered_geometry.is_some_and(|(sheet, at)| {
+                    sheet == key.0 && at.row <= key.1.row && at.col <= key.1.col
                 })
             {
-                self.spill_ranges.readers(key, &mut geometry);
-            }
-            for reader in geometry {
-                if reader != key {
-                    self.force(reader);
-                    readers.push(reader);
+                self.spill_ranges.readers(key, geometry);
+                // Once every rectangle has started, later points can only lose
+                // matches. The query skips itself, so only remember a point
+                // whose own result is already forced or has been removed.
+                if previous.is_none_or(|entry| matches!(entry.validity, Validity::Forced))
+                    && self.spill_ranges.after_all_starts(key)
+                {
+                    covered_geometry = Some(key);
                 }
             }
-            let version = self.retained(key).map(|entry| entry.version);
-            for reader in readers {
-                if !seen.contains(&reader) {
+            // Force geometry readers before adding value causes to any reader.
+            for &reader in geometry.iter() {
+                if reader != key {
+                    self.force(reader);
+                }
+            }
+            for reader in readers.drain(..) {
+                if seen.insert(reader) {
                     pending.push(reader);
                 }
                 let Some(entry) = self.entries.get_mut(&reader) else {
                     continue;
                 };
+                if matches!(entry.validity, Validity::Forced) {
+                    continue;
+                }
                 let prior_bytes = entry.validity.retained_bytes();
                 // A spill child must resolve its owner again: the anchor's
                 // top-left scalar cannot certify the child's contents or extent.
@@ -301,12 +320,22 @@ impl Cache {
                     .saturating_sub(prior_bytes)
                     .saturating_add(entry.validity.retained_bytes());
             }
+            // Keep geometry readers after value readers in the worklist.
+            pending.extend(
+                geometry
+                    .drain(..)
+                    .filter(|reader| *reader != key && seen.insert(*reader)),
+            );
         }
-        self.lookup_prefixes.invalidate(&seen);
+        self.lookup_prefixes.invalidate(seen);
+        buffers.clear();
+        self.invalidation_buffers = buffers;
     }
 
     pub(super) fn force(&mut self, key: Key) {
-        if let Some(entry) = self.entries.get_mut(&key) {
+        if let Some(entry) = self.entries.get_mut(&key)
+            && !matches!(entry.validity, Validity::Forced)
+        {
             let prior_bytes = entry.validity.retained_bytes();
             entry.validity = Validity::Forced;
             self.retained_bytes = self
@@ -406,12 +435,8 @@ mod tests {
         assert_eq!(original.ranges_dirty, sibling.ranges_dirty);
         assert_eq!(original.spill_resets, sibling.spill_resets);
         assert_eq!(
-            original.ranges.sheets[&0].entries,
-            sibling.ranges.sheets[&0].entries
-        );
-        assert_eq!(
-            original.ranges.sheets[&0].max_end,
-            sibling.ranges.sheets[&0].max_end
+            original.ranges.sheets[&0].nodes,
+            sibling.ranges.sheets[&0].nodes
         );
         let before = original.retained(output).unwrap();
         let after = sibling.retained(output).unwrap();

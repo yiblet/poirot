@@ -102,6 +102,29 @@ fn array_geometry_is_never_reused_from_scalar_proof_keys() {
 }
 
 #[test]
+fn index_geometry_stays_within_its_source_rectangle() {
+    let policy = PreparationPolicy::default();
+    let mut compiler = FormulaCompiler::new();
+    for (source, expected) in [
+        ("INDEX(A1:A7,ROW())", ShapeBounds::new(7, 1)),
+        ("INDEX(A1:D1,0.9)", ShapeBounds::new(1, 4)),
+        ("INDEX(A1:D1,2)", ShapeBounds::new(1, 4)),
+        ("INDEX(A1:D7,3,0)", ShapeBounds::new(7, 4)),
+        ("INDEX(A1:D7,0,3)", ShapeBounds::new(7, 4)),
+        ("INDEX(A1:D7,3,2)", ShapeBounds::new(7, 4)),
+        ("INDEX(A1:D7,ROW(),COLUMN())", ShapeBounds::new(7, 4)),
+        ("INDEX(Data!A1:A7,MATCH(7,A1:A7,0))", ShapeBounds::new(7, 1)),
+        ("INDEX(unknown_name,2,0)", ShapeBounds::UNKNOWN),
+    ] {
+        assert_eq!(
+            compiler.spill_shape(source, &policy, None),
+            Some(expected),
+            "{source}"
+        );
+    }
+}
+
+#[test]
 fn grammar_grid_and_policy_failures_cannot_acquire_a_scalar_proof() {
     let policy = PreparationPolicy::default();
     let mut compiler = FormulaCompiler::new();

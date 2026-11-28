@@ -11,7 +11,7 @@ use crate::eval::config::{EvaluationContext, EvaluationPolicy};
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::inputs::CellEdit;
 use crate::eval::reuse::Key;
-use crate::model::{Cell, CellStyle, CellValue, ModelError, Workbook, WorkbookChange};
+use crate::model::{Cell, CellStyle, CellValue, ModelError, Workbook, WorkbookChange, Worksheet};
 use std::borrow::Borrow;
 use std::cell::RefCell;
 
@@ -95,15 +95,14 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         crate::eval::inputs::EffectiveWorkbook::new(self.workbook(), Some(&self.inputs))
     }
 
-    /// Reject invalid addresses and absent sheets before mutating source.
-    pub fn validate_target(&self, target: EvaluationTarget) -> Result<(), ModelError> {
+    /// Validate a target and return the baseline sheet that owns the coordinate.
+    pub fn validate_target(&self, target: EvaluationTarget) -> Result<&Worksheet, ModelError> {
         target.address.validate()?;
-        if self.workbook().sheet(target.sheet).is_none() {
-            return Err(ModelError::InvalidWorksheetIndex {
+        self.workbook()
+            .sheet(target.sheet)
+            .ok_or(ModelError::InvalidWorksheetIndex {
                 index: target.sheet,
-            });
-        }
-        Ok(())
+            })
     }
 
     fn remove_override(&mut self, target: EvaluationTarget) {
@@ -115,18 +114,13 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         }
     }
 
-    /// Classify literal writes before changing effective source or saved ownership.
-    pub fn change_kind(
-        &self,
-        target: EvaluationTarget,
+    /// Classify an admitted edit using the same source state that is about to change.
+    fn change_kind(
+        old: Option<&Cell>,
         new: Option<&Cell>,
         kind: EditKind,
+        saved_spill: bool,
     ) -> SourceChange {
-        let old = self.source_cell(target);
-        let saved_spill = self.workbook().sheet(target.sheet).is_some_and(|sheet| {
-            sheet.spill_owner(target.address).is_some()
-                || sheet.spill_extent(target.address).is_some()
-        });
         let style_unchanged = old.map(|cell| &cell.style) == new.map(|cell| &cell.style)
             || (old.is_none() && new.is_some_and(|cell| cell.style == CellStyle::default()));
         let occupancy_unchanged = old
@@ -145,48 +139,39 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
         }
     }
 
-    /// Replace source, dropping redundant overrides; report whether invalidation is needed.
+    /// Replace source and return the dependency kind affected by a real change.
     pub fn write_cell(
         &mut self,
         target: EvaluationTarget,
         cell: Cell,
         kind: EditKind,
-    ) -> Result<bool, ModelError> {
-        self.validate_target(target)?;
+    ) -> Result<Option<SourceChange>, ModelError> {
+        let sheet = self.validate_target(target)?;
+        let baseline = sheet.source_cell(target.address);
         let prior_edit = self.inputs.edit(target.sheet, target.address);
+        let old = prior_edit.map_or(baseline, CellEdit::cell);
         let prior_style_only = prior_edit.is_some_and(CellEdit::is_style_only);
-        let saved_ownership = self.workbook().sheet(target.sheet).is_some_and(|sheet| {
-            sheet.spill_owner(target.address).is_some()
-                || sheet.spill_extent(target.address).is_some()
-                || (sheet
-                    .source_cell(target.address)
-                    .is_some_and(|cell| cell.formula.is_some())
-                    && sheet
-                        .spill_children()
-                        .any(|(_, owner)| owner == target.address))
-        });
+        let saved_spill = sheet.spill_owner(target.address).is_some()
+            || sheet.spill_extent(target.address).is_some();
+        let saved_ownership = saved_spill
+            || (baseline.is_some_and(|cell| cell.formula.is_some())
+                && sheet
+                    .spill_children()
+                    .any(|(_, owner)| owner == target.address));
         let new_content_intent = kind == EditKind::Content
             && (prior_style_only
                 || (saved_ownership && prior_edit.and_then(CellEdit::cell).is_none()));
-        let style_only = kind == EditKind::Style && prior_edit.is_none_or(CellEdit::is_style_only);
-        if self
-            .source_cell(target)
-            .is_some_and(|old| same_cell(old, &cell))
-            && !new_content_intent
-        {
-            return Ok(false);
+        if old.is_some_and(|old| same_cell(old, &cell)) && !new_content_intent {
+            return Ok(None);
         }
-        let old_formula = self
-            .source_cell(target)
-            .and_then(|old| old.formula.as_deref());
-        if old_formula != cell.formula.as_deref() {
+        let style_only = kind == EditKind::Style && prior_edit.is_none_or(CellEdit::is_style_only);
+        let revert_override =
+            baseline.is_some_and(|old| same_cell(old, &cell)) && (style_only || !saved_ownership);
+        let change = Self::change_kind(old, Some(&cell), kind, saved_spill);
+        if old.and_then(|old| old.formula.as_deref()) != cell.formula.as_deref() {
             self.spill_candidates.get_mut().remove(&target.sheet);
         }
-        let baseline = self
-            .workbook()
-            .sheet(target.sheet)
-            .and_then(|s| s.source_cell(target.address));
-        if baseline.is_some_and(|old| same_cell(old, &cell)) && !(!style_only && saved_ownership) {
+        if revert_override {
             self.remove_override(target);
         } else {
             self.inputs
@@ -195,34 +180,39 @@ impl<'a, W: Borrow<Workbook>> Source<'a, W> {
                 .or_default()
                 .set_cell(target.address, cell, style_only)?;
         }
-        Ok(true)
+        Ok(Some(change))
     }
 
-    /// Hide baseline source or remove an override; report effective source changes.
-    pub fn remove_cell(&mut self, target: EvaluationTarget) -> Result<bool, ModelError> {
-        self.validate_target(target)?;
-        if self.source_cell(target).is_none() {
-            return Ok(false);
-        }
-        if self
-            .source_cell(target)
-            .is_some_and(|cell| cell.formula.is_some())
-        {
+    /// Hide effective source and return the dependency kind affected by its removal.
+    pub fn remove_cell(
+        &mut self,
+        target: EvaluationTarget,
+    ) -> Result<Option<SourceChange>, ModelError> {
+        let sheet = self.validate_target(target)?;
+        let baseline = sheet.source_cell(target.address);
+        let old = self
+            .inputs
+            .edit(target.sheet, target.address)
+            .map_or(baseline, CellEdit::cell);
+        let Some(old) = old else {
+            return Ok(None);
+        };
+        let saved_spill = sheet.spill_owner(target.address).is_some()
+            || sheet.spill_extent(target.address).is_some();
+        let change = Self::change_kind(Some(old), None, EditKind::Content, saved_spill);
+        let needs_delete = baseline.is_some();
+        if old.formula.is_some() {
             self.spill_candidates.get_mut().remove(&target.sheet);
         }
         self.remove_override(target);
-        if self
-            .workbook()
-            .sheet(target.sheet)
-            .is_some_and(|s| s.source_cell(target.address).is_some())
-        {
+        if needs_delete {
             self.inputs
                 .sheets
                 .entry(target.sheet)
                 .or_default()
                 .set(target.address, CellEdit::Delete)?;
         }
-        Ok(true)
+        Ok(Some(change))
     }
 
     /// Restore baseline inputs, invalidating source proofs only where formulas change.
@@ -445,12 +435,7 @@ macro_rules! edit_methods {
         }
         /// Remove effective authored content and invalidate results.
         pub fn remove_cell(&mut self, target: EvaluationTarget) -> Result<(), ModelError> {
-            let change = self.source.change_kind(
-                target,
-                None,
-                crate::eval::overlay::edit_kind::EditKind::Content,
-            );
-            if self.source.remove_cell(target)? {
+            if let Some(change) = self.source.remove_cell(target)? {
                 self.source_changed(target, change);
             }
             Ok(())
@@ -461,8 +446,7 @@ macro_rules! edit_methods {
             cell: Cell,
             kind: crate::eval::overlay::edit_kind::EditKind,
         ) -> Result<(), ModelError> {
-            let change = self.source.change_kind(target, Some(&cell), kind);
-            if self.source.write_cell(target, cell, kind)? {
+            if let Some(change) = self.source.write_cell(target, cell, kind)? {
                 self.source_changed(target, change);
             }
             Ok(())

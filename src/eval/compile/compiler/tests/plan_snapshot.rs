@@ -472,3 +472,21 @@ fn snapshot_rejects_unsupported_preparation_and_policy() {
     plan.policy.registry.builtin_contract_version += 1;
     assert!(PlanSnapshot::capture(&plan).is_err());
 }
+
+#[test]
+fn rejects_invalid_builtin_spelling_before_the_plan_can_execute() {
+    let mut workbook = Workbook::new();
+    workbook
+        .add_sheet("S")
+        .unwrap()
+        .set_formula("A1", "SUM(1,2)")
+        .unwrap();
+    let plan = FormulaCompiler::new().compile_workbook(&workbook, &PreparationPolicy::default());
+    let mut snapshot = PlanSnapshot::capture(&plan).unwrap().into_owned();
+    assert!(snapshot.programs[0].calls[0].builtin.is_some());
+    snapshot.programs[0].calls[0].source_offset = u32::MAX;
+    assert!(matches!(
+        snapshot.restore(),
+        Err(super::super::plan_snapshot_error::PlanSnapshotError::CallSourceOffset)
+    ));
+}

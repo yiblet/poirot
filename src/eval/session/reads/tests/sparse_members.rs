@@ -161,7 +161,8 @@ fn generated_spill_members_keep_ordinary_source_resolution() {
     let mut direct = session(&book, EvaluationBudgets::default());
     let members = SparseReader::new(&mut direct)
         .sparse_members(area(0, 2, 0, 0))
-        .unwrap();
+        .unwrap()
+        .into_members();
     assert_eq!(members.len(), 3);
     assert!(members[0].cell.is_some());
     assert!(members[1..].iter().all(|member| member.cell.is_none()));
@@ -177,6 +178,50 @@ fn generated_spill_members_keep_ordinary_source_resolution() {
         ]
     );
     assert_eq!(session::SOURCE_RESOLUTIONS.with(|counter| counter.get()), 2);
+}
+
+#[test]
+fn unprofiled_sparse_collection_still_refuses_a_finite_materialization_limit() {
+    let mut book = book();
+    let sheet = book.sheet_mut(0).unwrap();
+    sheet.set_value("A1", 7.0).unwrap();
+    sheet.set_value("A2", 9.0).unwrap();
+    let range = area(0, 2, 0, 0);
+    let mut ordinary = Session::new(
+        &book,
+        EvaluationInputs::default(),
+        BudgetMeter::configured(EvaluationBudgets::default(), false).unwrap(),
+    );
+    ordinary.policies.array_result_policy = ArrayResultPolicy::ScalarIntersection;
+    assert_eq!(
+        SparseReader::new(&mut ordinary)
+            .sparse_addresses(range)
+            .unwrap(),
+        ["A1".parse::<CellAddress>().unwrap(), "A2".parse().unwrap()],
+    );
+    let mut limited = Session::new(
+        &book,
+        EvaluationInputs::default(),
+        BudgetMeter::configured(
+            EvaluationBudgets {
+                materialized_values: 1,
+                ..Default::default()
+            },
+            false,
+        )
+        .unwrap(),
+    );
+    limited.policies.array_result_policy = ArrayResultPolicy::ScalarIntersection;
+    assert!(matches!(
+        SparseReader::new(&mut limited).sparse_addresses(range),
+        Err(EvaluationError::Budget(BudgetError {
+            kind: BudgetKind::Materialization,
+            limit: 1,
+            consumed: 0,
+            requested: 2,
+            ..
+        }))
+    ));
 }
 
 #[test]
@@ -362,4 +407,244 @@ fn whole_column_blank_coercion_and_error_order_are_preserved() {
             ..
         }
     ));
+}
+
+#[test]
+fn unmetered_authored_prefixes_extend_and_shrink_under_the_same_inputs() {
+    let mut workbook = book();
+    let sheet = workbook.sheet_mut(0).unwrap();
+    for row in 0..32u32 {
+        sheet.set_value((row, 0), f64::from(row + 1)).unwrap();
+        sheet.set_value((row, 1), 50.0).unwrap();
+    }
+    let limits = EvaluationBudgets {
+        run_work: u64::MAX,
+        cell_work: u64::MAX,
+        materialized_values: usize::MAX,
+        ..EvaluationBudgets::default()
+    };
+    let mut run = Session::new(
+        &workbook,
+        EvaluationInputs::default(),
+        BudgetMeter::configured(limits, false).unwrap(),
+    );
+    for (last, first_value) in [(8, 1.0), (20, 1.0), (19, 1.0), (19, 1.0)] {
+        let values = ItemFolder::new(&mut run)
+            .items(Value::Refs(vec![area(0, last, 0, 1)].into()))
+            .unwrap();
+        let expected = (0..=last)
+            .flat_map(|row| {
+                [
+                    (Number(f64::from(row) + first_value), true),
+                    (Number(50.0), true),
+                ]
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(values, expected);
+        assert_eq!(
+            run.reuse.sparse_members.members().len(),
+            (last as usize + 1) * 2
+        );
+    }
+    for (first, last) in [(2, 23), (4, 20), (7, 27), (30, 31), (0, 19)] {
+        let area = area(first, last, 0, 1);
+        let values = ItemFolder::new(&mut run)
+            .items(Value::Refs(vec![area].into()))
+            .unwrap();
+        let expected: Vec<_> = (first..=last)
+            .flat_map(|row| [(Number(f64::from(row + 1)), true), (Number(50.0), true)])
+            .collect();
+        assert_eq!(values, expected);
+    }
+    let inputs = crate::eval::inputs::RunInputs::new(
+        &workbook,
+        [(0, CellAddress { row: 0, col: 0 }, Number(999.0))],
+        1,
+        std::sync::Arc::new(()),
+    )
+    .unwrap();
+    run.sources.inputs = Some(&inputs);
+    let values = ItemFolder::new(&mut run)
+        .items(Value::Refs(vec![area(0, 19, 0, 1)].into()))
+        .unwrap();
+    assert_eq!(values[0], (Number(999.0), true));
+    assert_eq!(values[38], (Number(20.0), true));
+}
+
+#[test]
+fn cached_authored_prefix_yields_to_spill_discovery_and_finite_capacity() {
+    let mut workbook = book();
+    let sheet = workbook.sheet_mut(0).unwrap();
+    for row in 0..17u32 {
+        sheet.set_value((row, 0), f64::from(row + 1)).unwrap();
+        sheet.set_value((row, 1), 50.0).unwrap();
+    }
+    sheet.set_formula("B25", "SEQUENCE(4)").unwrap();
+    let open_limits = EvaluationBudgets {
+        run_work: u64::MAX,
+        cell_work: u64::MAX,
+        materialized_values: usize::MAX,
+        ..EvaluationBudgets::default()
+    };
+    let begin = || {
+        Session::new(
+            &workbook,
+            EvaluationInputs::default(),
+            BudgetMeter::configured(open_limits, false).unwrap(),
+        )
+    };
+    let narrow = area(0, 16, 0, 1);
+    let mut run = begin();
+    let original = ItemFolder::new(&mut run)
+        .items(Value::Refs(vec![narrow].into()))
+        .unwrap();
+    assert_eq!(original.len(), 34);
+    assert_eq!(run.reuse.sparse_members.members().len(), 34);
+
+    let mut expected = original.clone();
+    expected.extend([
+        (Number(1.0), true),
+        (Number(2.0), true),
+        (Number(3.0), true),
+    ]);
+    let widened = ItemFolder::new(&mut run)
+        .items(Value::Refs(vec![area(0, 26, 0, 1)].into()))
+        .unwrap();
+    assert_eq!(widened, expected);
+    assert!(run.reuse.sparse_members.members().is_empty());
+
+    let mut limited = begin();
+    let _ = ItemFolder::new(&mut limited)
+        .items(Value::Refs(vec![narrow].into()))
+        .unwrap();
+    assert_eq!(limited.reuse.sparse_members.members().len(), 34);
+    limited.state.runtime.budget = BudgetMeter::configured(
+        EvaluationBudgets {
+            materialized_values: 2,
+            ..open_limits
+        },
+        false,
+    )
+    .unwrap();
+    assert!(matches!(
+        SparseReader::new(&mut limited).sparse_members(area(2, 16, 0, 1)),
+        Err(EvaluationError::Budget(BudgetError {
+            kind: BudgetKind::Materialization,
+            limit: 2,
+            requested: 3,
+            ..
+        }))
+    ));
+
+    let collect_profiled = |session: &mut Session<'_>| {
+        session.state.runtime.budget = BudgetMeter::configured(open_limits, true).unwrap();
+        let values = ItemFolder::new(session)
+            .items(Value::Refs(vec![area(2, 16, 0, 1)].into()))
+            .unwrap();
+        let usage = &session.state.runtime.budget.usage;
+        (values, usage.sparse_entries, usage.materialized_values)
+    };
+    let mut with_cache = begin();
+    ItemFolder::new(&mut with_cache)
+        .items(Value::Refs(vec![narrow].into()))
+        .unwrap();
+    assert_eq!(with_cache.reuse.sparse_members.members().len(), 34);
+    let mut without_cache = begin();
+    ItemFolder::new(&mut without_cache)
+        .items(Value::Refs(vec![narrow].into()))
+        .unwrap();
+    // Both runs have identical prior spill discovery and memo state. Remove
+    // only the membership proof, then compare the newly metered reads.
+    without_cache.reuse.sparse_members.source = None;
+    without_cache.reuse.sparse_members.members.clear();
+    let uncached = collect_profiled(&mut without_cache);
+    let cached = collect_profiled(&mut with_cache);
+    assert_eq!(cached, uncached);
+    assert_eq!(cached.0.len(), 30);
+    assert!(cached.1 >= 30);
+    assert!(cached.2 >= 30);
+}
+
+#[test]
+fn recycled_member_storage_carries_no_range_state() {
+    let mut book = book();
+    let sheet = book.sheet_mut(0).unwrap();
+    sheet
+        .set_value(CellAddress { row: 1, col: 0 }, 8.0)
+        .unwrap();
+    sheet
+        .set_value(CellAddress { row: 2, col: 1 }, 13.0)
+        .unwrap();
+    let mut run = session(&book, EvaluationBudgets::default());
+    for (range, expected) in [(area(0, 3, 0, 0), 8.0), (area(2, 3, 1, 1), 13.0)] {
+        let seen = ItemFolder::new(&mut run)
+            .items(Value::Refs(vec![range].into()))
+            .unwrap();
+        assert_eq!(seen, vec![(Number(expected), true)]);
+        assert!(run.reuse.sparse_members.members().is_empty());
+        assert!(run.reuse.sparse_members.members.capacity() >= 1);
+    }
+}
+
+#[test]
+fn internal_point_recording_preserves_observed_order_and_retained_evidence() {
+    use super::super::read_recorder::ReadRecorder;
+    use crate::eval::coordinates::EvaluationTarget;
+    use crate::eval::ports::{DependencyRead, DependencyReadSink, ReadEvent};
+    use crate::eval::reuse::Reads;
+
+    /// Capture point reads forwarded through the public dependency port.
+    #[derive(Default)]
+    struct Events(Vec<ReadEvent>);
+
+    impl DependencyReadSink for Events {
+        fn read(&mut self, event: ReadEvent) {
+            self.0.push(event);
+        }
+    }
+
+    let book = book();
+    let mut events = Events::default();
+    let mut internal = session(&book, EvaluationBudgets::default());
+    let mut observed = session(&book, EvaluationBudgets::default());
+    internal.reuse.overlay_reads = Some(Reads::default());
+    observed.reuse.overlay_reads = Some(Reads::default());
+    observed.ports.dependency_sink = Some(&mut events);
+
+    let target = |row, col| EvaluationTarget {
+        sheet: 0,
+        address: CellAddress { row, col },
+    };
+    let consumer = Some(target(4, 4));
+    let another = Some(target(5, 4));
+    let reads = [
+        (None, target(0, 0)),
+        (consumer, target(0, 0)),
+        (consumer, target(0, 1)),
+        (another, target(0, 3)),
+        (consumer, target(0, 0)),
+        (consumer, target(0, 2)),
+    ];
+    for (consumer, point) in reads {
+        for session in [&mut internal, &mut observed] {
+            session.state.runtime.stack.consumer = consumer;
+            ReadRecorder::new(session).read_cell(point);
+        }
+    }
+    let traces = |mut reads: Reads| {
+        reads.flush();
+        reads.traces
+    };
+    assert_eq!(
+        traces(internal.reuse.overlay_reads.take().unwrap()),
+        traces(observed.reuse.overlay_reads.take().unwrap())
+    );
+    drop(observed);
+    assert_eq!(
+        events.0,
+        reads.map(|(consumer, point)| ReadEvent {
+            consumer,
+            read: DependencyRead::Cell(point),
+        })
+    );
 }

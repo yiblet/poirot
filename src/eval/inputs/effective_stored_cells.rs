@@ -1,9 +1,7 @@
 //! Merged iteration over effective stored cells.
 
 use super::column_traversal::ColumnTraversal;
-use super::input_cells::InputCells;
-use super::overlay_cells::OverlayCells;
-use super::overlay_range::{OverlayRange, advance};
+use super::input_rows::InputRows;
 use super::stored_source::StoredSource;
 use crate::model::query::{QueryCounters, RangeMembership};
 use crate::model::{Cell, CellAddress};
@@ -13,24 +11,48 @@ use crate::model::{Cell, CellAddress};
 /// second membership index; counters include source seeks and prefetched lookups.
 #[derive(Clone)]
 pub struct EffectiveStoredCells<'a> {
-    pub(super) baseline: crate::model::WorksheetCells<'a>,
+    pub(super) baseline_pages: Option<crate::model::RowPageRange<'a>>,
+    pub(super) baseline_rows: Option<crate::model::OccupiedRows<'a>>,
+    pub(super) baseline_next_row: Option<u32>,
     pub(super) baseline_sheet: &'a crate::model::Worksheet,
-    pub(super) overlay: Option<&'a InputCells>,
+    pub(super) input_rows: Option<InputRows<'a>>,
     pub(super) area: RangeMembership,
     pub(super) reverse: bool,
-    pub(super) next_row: Option<u32>,
-    pub(super) base_row: Option<OverlayRange<'a>>,
-    pub(super) input_row: Option<OverlayRange<'a>>,
+    pub(super) needs_row: bool,
+    pub(super) base_row: Option<crate::model::CellRange<'a>>,
     pub(super) base_next: Option<(&'a CellAddress, StoredSource<'a>)>,
     pub(super) input_next: Option<(&'a CellAddress, StoredSource<'a>)>,
     pub(super) column: Option<ColumnTraversal<'a>>,
     pub(super) counters: QueryCounters,
 }
 
-impl EffectiveStoredCells<'_> {
+impl<'a> EffectiveStoredCells<'a> {
     /// Return sparse traversal counters accumulated so far.
     pub fn counters(&self) -> QueryCounters {
         self.counters
+    }
+
+    /// Step the baseline cursor in its traversal direction.
+    pub(super) fn advance_base(
+        range: &mut Option<crate::model::CellRange<'a>>,
+        reverse: bool,
+    ) -> Option<(&'a CellAddress, StoredSource<'a>)> {
+        let range = range.as_mut()?;
+        let (at, cell) = if reverse {
+            range.next_back()
+        } else {
+            range.next()
+        }?;
+        Some((at, StoredSource::Baseline(cell)))
+    }
+
+    fn advance_input(&mut self, row: u32) -> Option<(&'a CellAddress, StoredSource<'a>)> {
+        let inputs = self.input_rows.as_mut()?;
+        if self.baseline_rows.is_some() {
+            inputs.take_in_row(row)
+        } else {
+            inputs.take()
+        }
     }
 }
 
@@ -56,25 +78,25 @@ impl<'a> Iterator for EffectiveStoredCells<'a> {
         loop {
             let selected = match (self.base_next, self.input_next) {
                 (Some(base), Some(input)) if base.0 == input.0 => {
-                    self.base_next = advance(&mut self.base_row, self.reverse);
-                    self.input_next = advance(&mut self.input_row, self.reverse);
+                    self.base_next = Self::advance_base(&mut self.base_row, self.reverse);
+                    self.input_next = self.advance_input(input.0.row);
                     Some(input)
                 }
                 (Some(base), Some(input)) => {
                     if (base.0 < input.0) != self.reverse {
-                        self.base_next = advance(&mut self.base_row, self.reverse);
+                        self.base_next = Self::advance_base(&mut self.base_row, self.reverse);
                         Some(base)
                     } else {
-                        self.input_next = advance(&mut self.input_row, self.reverse);
+                        self.input_next = self.advance_input(input.0.row);
                         Some(input)
                     }
                 }
                 (Some(base), None) => {
-                    self.base_next = advance(&mut self.base_row, self.reverse);
+                    self.base_next = Self::advance_base(&mut self.base_row, self.reverse);
                     Some(base)
                 }
                 (None, Some(input)) => {
-                    self.input_next = advance(&mut self.input_row, self.reverse);
+                    self.input_next = self.advance_input(input.0.row);
                     Some(input)
                 }
                 (None, None) => None,
@@ -93,37 +115,13 @@ impl<'a> Iterator for EffectiveStoredCells<'a> {
                 self.counters.cells_visited += 1;
                 return Some(item);
             }
-            let next = self.next_row?;
+            if !self.needs_row {
+                return None;
+            }
             self.counters.row_seeks += 1;
-            let first = CellAddress {
-                row: if self.reverse {
-                    self.area.first.row
-                } else {
-                    next
-                },
-                col: 0,
-            };
-            let last = CellAddress {
-                row: if self.reverse {
-                    next
-                } else {
-                    self.area.last.row
-                },
-                col: crate::model::MAX_COLUMNS - 1,
-            };
-            let row_in = |cells: OverlayCells<'a>| {
-                let mut range = cells.range(first..=last);
-                if self.reverse {
-                    range.next_back()
-                } else {
-                    range.next()
-                }
-            };
-            let base = row_in(OverlayCells::Base(self.baseline));
-            let input = self
-                .overlay
-                .and_then(|cells| row_in(OverlayCells::Input(cells)));
-            let row = match (base.map(|(a, _)| a.row), input.map(|(a, _)| a.row)) {
+            let base = self.baseline_next_row;
+            let input_row = self.input_rows.as_ref().and_then(InputRows::row);
+            let row = match (base, input_row) {
                 (Some(a), Some(b)) => {
                     if self.reverse {
                         a.max(b)
@@ -133,40 +131,34 @@ impl<'a> Iterator for EffectiveStoredCells<'a> {
                 }
                 (Some(a), None) | (None, Some(a)) => a,
                 (None, None) => {
-                    self.next_row = None;
+                    self.needs_row = false;
                     return None;
                 }
             };
-            self.next_row = if self.reverse {
-                (row > self.area.first.row).then(|| row - 1)
+            self.needs_row = if self.reverse {
+                row > self.area.first.row
             } else {
-                (row < self.area.last.row).then_some(row + 1)
+                row < self.area.last.row
             };
             self.counters.column_seeks += 1;
-            let first = CellAddress {
-                row,
-                col: self.area.first.col,
-            };
-            let last = CellAddress {
-                row,
-                col: self.area.last.col,
-            };
-            let prepare_row =
-                |cells: OverlayCells<'a>, selected: Option<(&'a CellAddress, StoredSource<'a>)>| {
-                    // A one-column query can use the cell that located its row.
-                    // Reopening a singleton range would seek the same B-tree twice.
-                    if first == last && selected.is_some_and(|(address, _)| *address == first) {
-                        (None, selected)
+            (self.base_row, self.base_next) = if base == Some(row) {
+                self.baseline_next_row = self.baseline_rows.as_mut().and_then(|rows| {
+                    if self.reverse {
+                        rows.next_back()
                     } else {
-                        let mut range = Some(cells.range(first..=last));
-                        let selected = advance(&mut range, self.reverse);
-                        (range, selected)
+                        rows.next()
                     }
-                };
-            (self.base_row, self.base_next) = prepare_row(OverlayCells::Base(self.baseline), base);
-            (self.input_row, self.input_next) = self.overlay.map_or((None, None), |cells| {
-                prepare_row(OverlayCells::Input(cells), input)
-            });
+                });
+                let mut range = self
+                    .baseline_pages
+                    .as_mut()
+                    .map(|pages| pages.row(row, self.reverse));
+                let selected = Self::advance_base(&mut range, self.reverse);
+                (range, selected)
+            } else {
+                (None, None)
+            };
+            self.input_next = self.advance_input(row);
         }
     }
 }

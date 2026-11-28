@@ -88,20 +88,40 @@ fn normalized_hits_preserve_literals_call_roles_and_policy() {
 }
 
 #[test]
-fn forced_normalized_bucket_collision_requires_complete_equality() {
+fn lexical_index_preserves_complete_token_keys_and_rebinds_coordinates() {
     let mut compiler = FormulaCompiler::new();
     let policy = PreparationPolicy::default();
-    let first = compiler.compile_formula("SUM(A1,1)", &policy);
-    let hash = poirot_parsing::formula::classified::normalized_hash("SUM(B2,2)").unwrap();
-    let PreparedFormula::Ready(first) = first.as_ref() else {
-        panic!()
-    };
-    compiler.templates[0]
-        .classified
-        .insert(hash, vec![Arc::clone(first)]);
-    compiler.compile_formula("SUM(B2,2)", &policy);
-    assert_eq!(compiler.usage().parse_attempts, 2);
+    for source in [
+        "SUM(A1,1)",
+        "SUM(B2,2)",
+        "SUM(Sheet1!C3,2)",
+        "SUM(Sheet2!D4,2)",
+        r#"IF(D5,"retained literal spelling with more than thirty-one bytes",4)"#,
+        r#"IF(F6,"retained literal Spelling with more than thirty-one bytes",4)"#,
+    ] {
+        compiler.compile_formula(source, &policy);
+    }
     assert_eq!(compiler.template_hits(), 0);
+    for source in [
+        "SUM(E7,2)",
+        "SUM(Sheet2!H7,2)",
+        r#"IF(G7,"retained literal spelling with more than thirty-one bytes",4)"#,
+    ] {
+        let reused = compiler.compile_formula(source, &policy);
+        let fresh = FormulaCompiler::new().compile_formula(source, &policy);
+        let (PreparedFormula::Ready(reused), PreparedFormula::Ready(fresh)) =
+            (reused.as_ref(), fresh.as_ref())
+        else {
+            panic!("{source} did not compile");
+        };
+        assert_eq!(reused.bytecode(), fresh.bytecode(), "{source}");
+        assert_eq!(
+            reused.potential_dependencies(),
+            fresh.potential_dependencies()
+        );
+    }
+    assert_eq!(compiler.template_hits(), 3);
+    assert_eq!(compiler.usage().parse_attempts, 6);
 }
 
 #[test]

@@ -2,6 +2,7 @@
 
 use super::candidate_index::CandidateIndex;
 use super::producer_candidate::ProducerCandidate;
+use super::settled_candidate_prefix::SettledCandidatePrefix;
 use super::spill_preparation::SpillPreparation;
 use crate::eval::coordinates::EvaluationTarget;
 use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError};
@@ -27,6 +28,7 @@ impl ProducerSelection<'_> {
         let SpillPreparation {
             candidates,
             settled,
+            settled_prefix,
             settlement,
             ..
         } = self.preparation;
@@ -35,8 +37,17 @@ impl ProducerSelection<'_> {
         let consumer = self.consumer;
         let mut select = |index: &CandidateIndex| -> EvalResult<()> {
             let discovery = index.get(&area.sheet).ok_or(EvaluationError::StalePlan)?;
+            if !settled.is_empty() {
+                *settled_prefix = Some(SettledCandidatePrefix::advance(
+                    *settled_prefix,
+                    area.sheet,
+                    discovery,
+                    settled,
+                ));
+            }
+            let prefix = SettledCandidatePrefix::end(*settled_prefix, area.sheet, discovery);
             for candidate in discovery
-                .possible_in(area, competitor.map(|c| c.anchor))
+                .possible_in(area, competitor.map(|c| c.anchor), prefix)
                 .iter()
                 .copied()
             {

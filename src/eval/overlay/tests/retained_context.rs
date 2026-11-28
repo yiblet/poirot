@@ -179,6 +179,50 @@ fn cached_text_budget_failure_is_operational_and_cannot_be_masked() {
 }
 
 #[test]
+fn retained_output_batches_preserve_order_and_publish_only_on_success() {
+    let w = book(&["2+3", "\"abc\""]);
+    let mut overlay = Overlay::with_workbook(&w).build().unwrap();
+    let normal = context();
+    let targets = [target(1), target(0), target(1)];
+    overlay
+        .evaluation(&normal)
+        .unwrap()
+        .outputs(&targets)
+        .unwrap();
+
+    let mut bounded = context();
+    bounded.limits = bounded.limits.max_text_bytes(0);
+    let mut failed = overlay.evaluation(&bounded).unwrap();
+    assert!(matches!(
+        failed.outputs(&[target(0), target(1)]),
+        Err(EvaluationError::Budget(_))
+    ));
+    assert!(failed.result_changes().unwrap().is_empty());
+    assert_eq!(failed.usage().external_cache_hits, 2);
+    assert_eq!(failed.usage().formula_executions, 0);
+    drop(failed);
+
+    let mut run = overlay.evaluation(&normal).unwrap();
+    let outputs = run.outputs(&targets).unwrap();
+    assert_eq!(
+        outputs
+            .iter()
+            .map(|result| result.target)
+            .collect::<Vec<_>>(),
+        targets
+    );
+    assert_eq!(outputs[0].value, CellValue::Text("abc".into()));
+    assert_eq!(outputs[1].value, CellValue::Number(5.));
+    assert_eq!(outputs[2].value, outputs[0].value);
+    assert_eq!(run.result_changes().unwrap().len(), 2);
+    assert_eq!(run.usage().external_cache_hits, 3);
+    let changes = run.result_changes().unwrap();
+    run.outputs(&[target(0), target(0)]).unwrap();
+    assert_eq!(run.result_changes().unwrap(), changes);
+    assert_eq!(run.usage().external_cache_hits, 5);
+}
+
+#[test]
 fn selected_branch_replacement_discards_obsolete_dependencies() {
     let mut w = book(&["IF(D1,B1,C1)", "2+3", "7+8"]);
     w.sheet_mut(0)

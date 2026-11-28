@@ -2,9 +2,11 @@
 use super::call_host::CallHost;
 use super::cell_read_plan::CellReadPlan;
 use super::operand_description::OperandDescription;
+use super::relative_operand::RelativeOperand;
 use super::scalar_operand::ScalarOperand;
+use super::stored_positions::StoredPositions;
 use crate::eval::limits::{CapabilityId, EvalResult, EvaluationError, WorkKind};
-use crate::eval::session::{ArgumentReader, CellEvaluator, SparseReader};
+use crate::eval::session::{ArgumentReader, CellEvaluator, ItemFolder, SparseMember, SparseReader};
 use crate::eval::spill::SpillDemand;
 use crate::eval::values::{
     Area, AreaKind, FunctionResult, OperandOrigin, VALUE_ERROR, Value,
@@ -13,6 +15,13 @@ use crate::eval::values::{
 use crate::model::CellError::{Num, Ref};
 use crate::model::CellValue::{Blank, Text};
 use crate::model::{CellAddress, CellError, CellValue, MAX_COLUMNS, MAX_ROWS};
+
+/// Physical intersection and unclipped origin of one eligible sparse operand.
+struct SparseOperand {
+    area: Option<Area>,
+    row: i64,
+    column: i64,
+}
 
 /// Reads a call's deferred operands by shape, coordinate and collection offset.
 pub(in crate::eval) struct OperandReader<'h, 'call, 'workbook> {
@@ -63,39 +72,144 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
     pub(in crate::eval) fn stored_positions(
         &mut self,
         index: usize,
-    ) -> FunctionResult<Option<Vec<(usize, usize)>>> {
+    ) -> FunctionResult<Option<StoredPositions>> {
+        let Some(operand) = self.sparse_operand(index)? else {
+            return Ok(None);
+        };
+        let Some(area) = operand.area else {
+            return Ok(Some(StoredPositions::default()));
+        };
+        let addresses = SparseReader::new(self.host.session).sparse_addresses(area)?;
+        self.host.check_values_capacity(addresses.len())?;
+        let positions =
+            StoredPositions::new(addresses, area, operand.row, operand.column).ok_or(Ref)?;
+        Ok(Some(positions))
+    }
+
+    /// Carry inspected source cells for immediate lazy selection from a sparse operand.
+    pub(in crate::eval) fn stored_members(
+        &mut self,
+        index: usize,
+    ) -> FunctionResult<Option<StoredPositions<SparseMember<'workbook>>>> {
+        let Some(operand) = self.sparse_operand(index)? else {
+            return Ok(None);
+        };
+        let Some(area) = operand.area else {
+            return Ok(Some(StoredPositions::default()));
+        };
+        let members = SparseReader::new(self.host.session)
+            .sparse_members(area)?
+            .into_members();
+        self.host.check_values_capacity(members.len())?;
+        let positions =
+            StoredPositions::new(members, area, operand.row, operand.column).ok_or(Ref)?;
+        Ok(Some(positions))
+    }
+
+    /// Read a captured source with ordinary admission and spill resolution.
+    pub(in crate::eval) fn read_stored_member(
+        &mut self,
+        sheet: usize,
+        member: SparseMember<'workbook>,
+    ) -> FunctionResult<CellValue> {
+        Ok(ItemFolder::new(self.host.session).sparse_member_value(sheet, member)?)
+    }
+
+    /// Resolve one rectangle eligible for sparse workbook membership.
+    fn sparse_operand(&mut self, index: usize) -> FunctionResult<Option<SparseOperand>> {
         self.host.prepare(index)?;
         // External readers may supply values at physically absent source cells.
         // Workbook membership alone cannot prove those cells are blank.
         if self.host.session.ports.cell_reader.is_some() {
             return Ok(None);
         }
-        let (area, row, column) = match &self.host.operand(index).ok_or(VALUE_ERROR)?.value {
+        Ok(match &self.host.operand(index).ok_or(VALUE_ERROR)?.value {
             Value::Refs(areas) | Value::SheetSpan(areas) if areas.len() == 1 => {
                 let area = *areas.first().ok_or(VALUE_ERROR)?;
-                (Some(area), i64::from(area.r0), i64::from(area.c0))
+                Some(SparseOperand {
+                    area: Some(area),
+                    row: i64::from(area.r0),
+                    column: i64::from(area.c0),
+                })
             }
             Value::SignedRefs(areas) if areas.len() == 1 => {
                 let area = *areas.first().ok_or(VALUE_ERROR)?;
-                (area.physical(), i64::from(area.r0), i64::from(area.c0))
+                Some(SparseOperand {
+                    area: area.physical(),
+                    row: i64::from(area.r0),
+                    column: i64::from(area.c0),
+                })
             }
-            _ => return Ok(None),
+            _ => None,
+        })
+    }
+
+    /// Capture a prepared operand's physical rectangle for repeated coordinate reads.
+    pub(in crate::eval) fn physical_area(&mut self, index: usize) -> FunctionResult<Option<Area>> {
+        self.host.prepare(index)?;
+        Ok(match &self.host.operand(index).ok_or(VALUE_ERROR)?.value {
+            Value::Refs(areas) | Value::SheetSpan(areas) if areas.len() == 1 => {
+                areas.first().copied()
+            }
+            _ => None,
+        })
+    }
+
+    /// Read a member of a bound physical operand using the ordinary range read protocol.
+    pub(in crate::eval) fn read_area_cell(
+        &mut self,
+        area: Area,
+        row: usize,
+        column: usize,
+    ) -> FunctionResult<ScalarOperand> {
+        let height = area
+            .r1
+            .checked_sub(area.r0)
+            .and_then(|size| size.checked_add(1))
+            .ok_or(Ref)?;
+        let width = area
+            .c1
+            .checked_sub(area.c0)
+            .and_then(|size| size.checked_add(1))
+            .ok_or(Ref)?;
+        if row as u64 >= u64::from(height) || column as u64 >= u64::from(width) {
+            return Err(Ref.into());
+        }
+        // SAFETY: The checked spans and offset bounds ensure both sums are at
+        // most their inclusive endpoints.
+        let address = CellAddress {
+            row: area.r0 + row as u32,
+            col: area.c0 + column as u32,
         };
-        let Some(area) = area else {
-            return Ok(Some(Vec::new()));
-        };
-        let addresses = SparseReader::new(self.host.session).sparse_addresses(area)?;
-        self.host.check_values_capacity(addresses.len())?;
-        let positions = addresses
-            .into_iter()
-            .map(|at| {
-                Ok((
-                    usize::try_from(i64::from(at.row) - row).map_err(|_| Ref)?,
-                    usize::try_from(i64::from(at.col) - column).map_err(|_| Ref)?,
-                ))
-            })
-            .collect::<FunctionResult<Vec<_>>>()?;
-        Ok(Some(positions))
+        self.read_physical_cell(area.sheet, address)
+    }
+
+    /// Read an enumerated worksheet member of a flattened reference.
+    pub(in crate::eval) fn read_collection_reference_cell(
+        &mut self,
+        sheet: usize,
+        address: CellAddress,
+    ) -> FunctionResult<ScalarOperand> {
+        self.host
+            .session
+            .state
+            .runtime
+            .budget
+            .charge(WorkKind::ReferencePair, 1)?;
+        self.read_physical_cell(sheet, address)
+    }
+
+    /// Read a physical worksheet coordinate with reference provenance.
+    fn read_physical_cell(
+        &mut self,
+        sheet: usize,
+        address: CellAddress,
+    ) -> FunctionResult<ScalarOperand> {
+        Ok(ScalarOperand {
+            value: CellEvaluator::new(self.host.session).range_cell(sheet, address)?,
+            origin: OperandOrigin::ReferencedCell,
+            missing: false,
+        })
     }
 
     /// Read one logical member at zero-based offsets, preserving origin and omission.
@@ -148,32 +262,8 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
                 )
             }
             Value::Refs(areas) | Value::SheetSpan(areas) if areas.len() == 1 => {
-                // SAFETY: Both reference match arms explicitly require areas.len() == 1.
-                let area = areas[0];
-                let height = area
-                    .r1
-                    .checked_sub(area.r0)
-                    .and_then(|size| size.checked_add(1))
-                    .ok_or(Ref)?;
-                let width = area
-                    .c1
-                    .checked_sub(area.c0)
-                    .and_then(|size| size.checked_add(1))
-                    .ok_or(Ref)?;
-                if row as u64 >= u64::from(height) || column as u64 >= u64::from(width) {
-                    return Err(Ref.into());
-                }
-                (
-                    CellEvaluator::new(self.host.session).range_cell(
-                        area.sheet,
-                        CellAddress {
-                            row: area.r0 + row as u32,
-                            col: area.c0 + column as u32,
-                        },
-                    )?,
-                    OperandOrigin::ReferencedCell,
-                    false,
-                )
+                let area = *areas.first().ok_or(VALUE_ERROR)?;
+                return self.read_area_cell(area, row, column);
             }
             Value::SignedRefs(areas) if areas.len() == 1 => {
                 // SAFETY: Both reference match arms explicitly require areas.len() == 1.
@@ -200,54 +290,59 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
         })
     }
 
-    /// Criteria resize reference ranges from their anchor; arrays retain original bounds.
-    pub(in crate::eval) fn read_relative_cell(
+    /// Prepare geometry for repeated relative member reads from this argument.
+    pub(in crate::eval) fn bind_relative(
         &mut self,
         index: usize,
+    ) -> FunctionResult<RelativeOperand> {
+        self.host.prepare(index)?;
+        match &self.host.operand(index).ok_or(VALUE_ERROR)?.value {
+            Value::Refs(areas) if areas.len() == 1 => Ok(RelativeOperand::Physical(
+                *areas.first().ok_or(VALUE_ERROR)?,
+            )),
+            Value::SignedRefs(areas) if areas.len() == 1 => {
+                Ok(RelativeOperand::Signed(*areas.first().ok_or(VALUE_ERROR)?))
+            }
+            Value::SignedRefs(_) | Value::Refs(_) => Err(VALUE_ERROR.into()),
+            _ => Ok(RelativeOperand::Indexed(index)),
+        }
+    }
+
+    /// Read one accepted payload with the ordinary per-coordinate accounting.
+    pub(in crate::eval) fn read_relative(
+        &mut self,
+        operand: RelativeOperand,
         row: usize,
         column: usize,
     ) -> FunctionResult<ScalarOperand> {
-        self.host.prepare(index)?;
-        if let Value::SignedRefs(areas) = &self.host.operand(index).ok_or(VALUE_ERROR)?.value {
-            if areas.len() != 1 {
-                return Err(VALUE_ERROR.into());
+        match operand {
+            RelativeOperand::Physical(area) => {
+                self.charge_reference_pair()?;
+                let plan = CellReadPlan::relative(area, row, column)?;
+                self.read_physical_cell(plan.sheet, plan.address)
             }
-            // SAFETY: Each reference branch returns unless areas.len() == 1 before reading element zero.
-            let area = areas[0];
-            self.host
-                .session
-                .state
-                .runtime
-                .budget
-                .charge(WorkKind::ReferencePair, 1)?;
-            let plan = area.relative(row, column).ok_or(Ref)?;
-            return Ok(ScalarOperand {
-                value: CellEvaluator::new(self.host.session).signed_range_read(plan)?,
-                origin: OperandOrigin::ReferencedCell,
-                missing: false,
-            });
-        }
-        if let Value::Refs(areas) = &self.host.operand(index).ok_or(VALUE_ERROR)?.value {
-            if areas.len() != 1 {
-                return Err(VALUE_ERROR.into());
+            RelativeOperand::Signed(area) => {
+                self.charge_reference_pair()?;
+                let plan = area.relative(row, column).ok_or(Ref)?;
+                Ok(ScalarOperand {
+                    value: CellEvaluator::new(self.host.session).signed_range_read(plan)?,
+                    origin: OperandOrigin::ReferencedCell,
+                    missing: false,
+                })
             }
-            // SAFETY: Each reference branch returns unless areas.len() == 1 before reading element zero.
-            let area = areas[0];
-            self.host
-                .session
-                .state
-                .runtime
-                .budget
-                .charge(WorkKind::ReferencePair, 1)?;
-            let plan = CellReadPlan::relative(area, row, column)?;
-            return Ok(ScalarOperand {
-                value: CellEvaluator::new(self.host.session)
-                    .range_cell(plan.sheet, plan.address)?,
-                origin: OperandOrigin::ReferencedCell,
-                missing: false,
-            });
+            RelativeOperand::Indexed(index) => self.read_cell(index, row, column),
         }
-        self.read_cell(index, row, column)
+    }
+
+    /// Account for one projection of a relative worksheet reference.
+    fn charge_reference_pair(&mut self) -> FunctionResult<()> {
+        Ok(self
+            .host
+            .session
+            .state
+            .runtime
+            .budget
+            .charge(WorkKind::ReferencePair, 1)?)
     }
 
     /// Inspect flattened collection length without traversing its cells.
@@ -357,12 +452,7 @@ impl<'h, 'call, 'workbook> OperandReader<'h, 'call, 'workbook> {
                             col: area.c0 + (remaining % width) as u32,
                         };
                         let sheet = area.sheet;
-                        return Ok(ScalarOperand {
-                            value: CellEvaluator::new(self.host.session)
-                                .range_cell(sheet, address)?,
-                            origin: OperandOrigin::ReferencedCell,
-                            missing: false,
-                        });
+                        return self.read_physical_cell(sheet, address);
                     }
                     remaining -= area.size();
                 }

@@ -14,6 +14,8 @@ use std::sync::Arc;
 pub(in crate::eval) struct RunSources<'a> {
     /// Authored workbook the run evaluates.
     pub(in crate::eval) workbook: &'a Workbook,
+    /// Borrowed tiles from the immutable workbook.
+    pub(in crate::eval) source_pages: crate::model::CellPageCache<'a>,
     /// Sparse scenario overrides layered over the workbook.
     pub(in crate::eval) inputs: Option<&'a RunInputs>,
     /// Compiled programs shared by an overlay, when available.
@@ -31,6 +33,7 @@ impl<'a> RunSources<'a> {
     pub(in crate::eval) fn new(workbook: &'a Workbook) -> Self {
         Self {
             workbook,
+            source_pages: Default::default(),
             inputs: None,
             plan: None,
             lazy_compiler: None,
@@ -45,16 +48,9 @@ impl<'a> RunSources<'a> {
         target: EvaluationTarget,
         value: CellValue,
     ) -> CellEvaluation {
-        let formatting = EffectiveWorkbook::new(self.workbook, self.inputs)
-            .cell(target.sheet, target.address)
-            .map(|cell| &cell.style)
-            .filter(|style| style.number_format.is_some() || style.visual.is_some())
-            .cloned();
-        CellEvaluation {
-            target,
-            value,
-            formatting,
-        }
+        let source =
+            EffectiveWorkbook::new(self.workbook, self.inputs).cell(target.sheet, target.address);
+        CellEvaluation::from_source(target, value, source)
     }
 
     /// Compile a reached source using the overlay's shared compiler when available.

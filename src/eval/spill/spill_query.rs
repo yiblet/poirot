@@ -1,5 +1,6 @@
 //! Read-only questions about a session's spill discovery and settlement state.
 use super::settled_area::SettledArea;
+use super::settled_candidate_prefix::SettledCandidatePrefix;
 use super::sheet_candidates::SheetCandidates;
 use crate::eval::limits::{EvalResult, EvaluationError};
 use crate::eval::session::Session;
@@ -58,10 +59,15 @@ impl<'s, 'a> SpillQuery<'s, 'a> {
                     && area.c1 <= ready.c1
             }) || self
                 .inspect(area.sheet, |discovery| {
+                    let prefix = SettledCandidatePrefix::end(
+                        preparation.settled_prefix,
+                        area.sheet,
+                        discovery,
+                    );
                     discovery.covers(CellAddress {
                         row: area.r1,
                         col: area.c1,
-                    }) && discovery.possible_in(area, None).iter().all(|c| {
+                    }) && discovery.possible_in(area, None, prefix).iter().all(|c| {
                         !c.intersects(area) || preparation.settled.contains(&(area.sheet, c.anchor))
                     })
                 })

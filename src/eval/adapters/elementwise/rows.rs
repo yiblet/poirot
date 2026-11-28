@@ -1,10 +1,15 @@
 //! Shared bounded conditional selection, payload demand, and result reduction.
 use super::argument_role::ArgumentRole;
 use super::broadcast::Broadcast;
+use super::coordinate_collection::CoordinateCollection;
 use super::lift::Lift;
 use super::whole_collection::WholeCollection;
-use crate::eval::host::{CallHost, OperandKind, OperandReader, ScalarOperand, SubtotalReader};
+use crate::eval::host::{
+    CallHost, OperandKind, OperandReader, RelativeOperand, ScalarOperand, StoredPositions,
+    SubtotalReader,
+};
 use crate::eval::limits::CapabilityId;
+use crate::eval::session::SparseMember;
 use crate::eval::values::{FunctionError, FunctionResult, VALUE_ERROR, Value, finite};
 use crate::model::CellError::{Div0, Num};
 use crate::model::CellValue::{Error, Number};
@@ -25,7 +30,6 @@ pub(in crate::eval::adapters) struct Rows {
     rows: usize,
     columns: usize,
     first: usize,
-    stored: Option<Vec<(usize, usize)>>,
 }
 
 impl Rows {
@@ -50,7 +54,6 @@ impl Rows {
             rows,
             columns,
             first: usize::from(matches!(layout, Layout::Records)),
-            stored: None,
         })
     }
 
@@ -70,16 +73,6 @@ impl Rows {
     /// Return the admitted rectangle.
     pub(in crate::eval::adapters) fn shape(&self) -> (usize, usize) {
         (self.rows, self.columns)
-    }
-
-    /// Exclude implicit blanks only after the first predicate proves them irrelevant.
-    pub(in crate::eval::adapters) fn sparse(
-        &mut self,
-        host: &mut CallHost<'_, '_>,
-        argument: usize,
-    ) -> FunctionResult<()> {
-        self.stored = OperandReader::new(host).stored_positions(argument)?;
-        Ok(())
     }
 }
 
@@ -116,15 +109,21 @@ pub(in crate::eval::adapters) trait Reducer {
 }
 
 /// Traverse one bounded row set with lazy predicates and selected payload demand.
-pub(in crate::eval::adapters) fn select<R: Reducer>(
-    host: &mut CallHost<'_, '_>,
+pub(in crate::eval::adapters) fn select<'w, R: Reducer>(
+    host: &mut CallHost<'_, 'w>,
     source: Rows,
+    stored: Option<StoredPositions<SparseMember<'w>>>,
     field: Field,
     errors: PredicateErrors,
-    mut predicate: impl FnMut(&mut CallHost<'_, '_>, usize, usize) -> FunctionResult<bool>,
+    mut predicate: impl FnMut(
+        &mut CallHost<'_, 'w>,
+        usize,
+        usize,
+        Option<(usize, SparseMember<'w>)>,
+    ) -> FunctionResult<bool>,
     mut reducer: R,
 ) -> FunctionResult<CellValue> {
-    let dense = if source.stored.is_some() {
+    let dense = if stored.is_some() {
         0
     } else {
         source
@@ -145,16 +144,21 @@ pub(in crate::eval::adapters) fn select<R: Reducer>(
         return Err(VALUE_ERROR.into());
     }
     let first = source.first.checked_mul(width).ok_or(Num)?;
-    let positions = source
-        .stored
+    let positions = stored
         .into_iter()
-        .flatten()
+        .flat_map(|positions| {
+            let sheet = positions.sheet();
+            positions
+                .members(|member| member.address)
+                .map(move |(row, column, member)| (row, column, Some((sheet, member))))
+        })
         .chain((first..dense).map(|i| {
             // SAFETY: the width == 0 guard above rejects zero divisors.
-            (i / width, i % width)
+            (i / width, i % width, None)
         }));
-    for (row, column) in positions {
-        let matched = match predicate(host, row, column) {
+    let mut relative: Option<RelativeOperand> = None;
+    for (row, column, member) in positions {
+        let matched = match predicate(host, row, column, member) {
             Err(FunctionError::Spreadsheet(_)) if matches!(errors, PredicateErrors::Value) => {
                 return Err(VALUE_ERROR.into());
             }
@@ -166,9 +170,16 @@ pub(in crate::eval::adapters) fn select<R: Reducer>(
         let value = match field {
             Field::Count | Field::Column(None) => Number(0.),
             Field::Relative(argument) => {
-                OperandReader::new(host)
-                    .read_relative_cell(argument, row, column)?
-                    .value
+                let mut reader = OperandReader::new(host);
+                let operand = match relative {
+                    Some(operand) => operand,
+                    None => {
+                        let operand = reader.bind_relative(argument)?;
+                        relative = Some(operand);
+                        operand
+                    }
+                };
+                reader.read_relative(operand, row, column)?.value
             }
             Field::Column(Some(column)) => {
                 OperandReader::new(host).read_cell(0, row, column)?.value
@@ -282,11 +293,11 @@ pub(in crate::eval::adapters) fn visible_fold<T>(
 }
 
 /// Evaluate disjunctions of conjunctions in order, skipping unneeded terms.
-pub(in crate::eval::adapters) fn any_all(
-    host: &mut CallHost<'_, '_>,
+pub(in crate::eval::adapters) fn any_all<'w>(
+    host: &mut CallHost<'_, 'w>,
     clauses: std::ops::Range<usize>,
     terms: std::ops::Range<usize>,
-    mut test: impl FnMut(&mut CallHost<'_, '_>, usize, usize) -> FunctionResult<bool>,
+    mut test: impl FnMut(&mut CallHost<'_, 'w>, usize, usize) -> FunctionResult<bool>,
 ) -> FunctionResult<bool> {
     for clause in clauses {
         let mut accepted = true;
@@ -319,7 +330,7 @@ pub(in crate::eval::adapters) enum PairLayout {
 /// Pairs condition ranges with their control arguments for conditional aggregation.
 /// It checks range alignment once and lets only broadcast controls determine the output rectangle.
 pub(in crate::eval::adapters) struct PairedCollections<R: ArgumentRole = Broadcast> {
-    pairs: Vec<(WholeCollection, R)>,
+    pairs: Vec<(CoordinateCollection, R)>,
     payload: Option<WholeCollection>,
     source: Rows,
     lift: Lift,
@@ -384,7 +395,7 @@ impl<R: ArgumentRole> PairedCollections<R> {
             OperandReader::new(host).describe(control)?;
             // SAFETY: count pairs and control indices were reserved before this count-iteration loop.
             pairs.push((
-                WholeCollection::bind(index, 0, true),
+                CoordinateCollection::bind(host, index)?,
                 R::bind(control, pair, true),
             ));
             // SAFETY: count indices were reserved and this loop pushes exactly count indices.
@@ -412,7 +423,7 @@ impl<R: ArgumentRole> PairedCollections<R> {
     }
 
     /// Borrow the bound ordered collection/control associations.
-    pub(in crate::eval::adapters) fn pairs(&self) -> &[(WholeCollection, R)] {
+    pub(in crate::eval::adapters) fn pairs(&self) -> &[(CoordinateCollection, R)] {
         &self.pairs
     }
 
@@ -422,17 +433,19 @@ impl<R: ArgumentRole> PairedCollections<R> {
             .map_or(Field::Count, |role| Field::Relative(role.argument()))
     }
 
-    /// Clone only source geometry, optionally excluding proven-irrelevant implicit blanks.
-    pub(in crate::eval::adapters) fn source(
+    /// Bind first-predicate members only when implicit blanks are irrelevant.
+    pub(in crate::eval::adapters) fn source<'w>(
         &self,
-        host: &mut CallHost<'_, '_>,
+        host: &mut CallHost<'_, 'w>,
         skip_blanks: bool,
-    ) -> FunctionResult<Rows> {
-        let mut source = self.source.clone();
-        if skip_blanks {
-            source.sparse(host, self.pairs.first().ok_or(VALUE_ERROR)?.0.argument())?;
-        }
-        Ok(source)
+    ) -> FunctionResult<(Rows, Option<StoredPositions<SparseMember<'w>>>)> {
+        let stored = if skip_blanks {
+            let argument = self.pairs.first().ok_or(VALUE_ERROR)?.0.argument();
+            OperandReader::new(host).stored_members(argument)?
+        } else {
+            None
+        };
+        Ok((self.source.clone(), stored))
     }
 
     /// Map typed controls into domain predicates and assemble each bounded output member.

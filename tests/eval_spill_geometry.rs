@@ -83,13 +83,19 @@ fn static_and_partial_bounds_follow_result_contracts() {
         ("A1#", S::UNKNOWN),
         ("ANCHORARRAY(A1)", S::UNKNOWN),
         ("INDIRECT(A1)", S::UNKNOWN),
-        ("INDEX(A1:C4,0,1)", S::UNKNOWN),
+        ("INDEX(A1:C4,0,1)", S::new(4, 3)),
         ("unbound_name", S::UNKNOWN),
         ("UNKNOWN()", S::SCALAR),
     ] {
         assert_eq!(properties(source).shape, expected, "{source}");
     }
 }
+#[test]
+fn index_can_spill_an_entire_selected_row_or_column() {
+    assert_eq!(value("INDEX({1,2;3,4},0,2)", "D11"), CellValue::Number(4.));
+    assert_eq!(value("INDEX({1,2;3,4},2,0)", "E10"), CellValue::Number(4.));
+}
+
 #[test]
 fn sequence_defaults_steps_and_reference_dimensions_are_public_results() {
     for (source, address, expected) in [

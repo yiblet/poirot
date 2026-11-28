@@ -15,6 +15,32 @@ pub fn parse_formula_with_policy(
     input: &str,
     policy: FormulaParsePolicy,
 ) -> Result<ParsedFormula, ParseError> {
+    let (expression, mut parser) = parse::<true>(input, policy)?;
+    parser
+        .function_invocations
+        .sort_by_key(|call| call.name_span.start);
+    Ok(ParsedFormula {
+        source: input.into(),
+        expression,
+        spans: parser.spans,
+        function_invocations: parser.function_invocations,
+        policy,
+    })
+}
+
+/// Parse a formula into an expression under supplied limits.
+/// Error locations use byte offsets in the original input.
+pub fn parse_expression_with_policy(
+    input: &str,
+    policy: FormulaParsePolicy,
+) -> Result<Expr, ParseError> {
+    parse::<false>(input, policy).map(|(expression, _)| expression)
+}
+
+fn parse<const METADATA: bool>(
+    input: &str,
+    policy: FormulaParsePolicy,
+) -> Result<(Expr, Parser<'_, METADATA>), ParseError> {
     let defaults = FormulaParsePolicy::default();
     if policy.max_expressions == 0
         || policy.max_depth == 0
@@ -85,24 +111,14 @@ pub fn parse_formula_with_policy(
             }
         }
     }
-    parser
-        .function_invocations
-        .sort_by_key(|call| call.name_span.start);
-    Ok(ParsedFormula {
-        source: input.into(),
-        expression: result,
-        spans: parser.spans,
-        function_invocations: parser.function_invocations,
-        policy,
-    })
+    Ok((result, parser))
 }
 /// Parse an expression, optionally beginning with `=`. Positions are UTF-8 byte offsets.
 pub fn parse_formula(input: &str) -> Result<Expr, ParseError> {
-    parse_formula_with_policy(input, FormulaParsePolicy::default())
-        .map(ParsedFormula::into_expression)
+    parse_expression_with_policy(input, FormulaParsePolicy::default())
 }
 /// Stateful syntax cursor carrying parser limits, source spans, and nesting counters.
-struct Parser<'a> {
+struct Parser<'a, const METADATA: bool> {
     input: &'a str,
     pos: usize,
     depth: usize,
@@ -111,7 +127,7 @@ struct Parser<'a> {
     spans: Vec<FormulaSpan>,
     function_invocations: Vec<FunctionInvocation>,
 }
-impl Parser<'_> {
+impl<const METADATA: bool> Parser<'_, METADATA> {
     fn fail<T>(&self, reason: ParseReasonError) -> Result<T, ParseError> {
         Err(ParseError {
             position: self.pos,
@@ -196,18 +212,25 @@ impl Parser<'_> {
                 depth: self.depth,
             });
         }
-        let start = self.pos + self.tail()?.len() - self.tail()?.trim_start().len();
+        let start = if METADATA {
+            let tail = self.tail()?;
+            self.pos + (tail.len() - tail.trim_start().len())
+        } else {
+            0
+        };
         self.depth += 1;
         let invocation_checkpoint = self.function_invocations.len();
         let result = self.expression_inner(min, union, range_rhs);
         self.depth -= 1;
-        if result.is_ok() {
-            self.spans.push(FormulaSpan {
-                start,
-                end: self.pos,
-            });
-        } else {
-            self.function_invocations.truncate(invocation_checkpoint);
+        if METADATA {
+            if result.is_ok() {
+                self.spans.push(FormulaSpan {
+                    start,
+                    end: self.pos,
+                });
+            } else {
+                self.function_invocations.truncate(invocation_checkpoint);
+            }
         }
         result
     }
@@ -456,16 +479,15 @@ impl Parser<'_> {
             position: start,
             reason: ParseReasonError::ExpectedExpression,
         })?;
-        let text = text.to_owned();
         self.pos = self.input.len() - rest.len();
         if self.take('!') {
             if sheet.is_some() {
                 return self.fail(ParseReasonError::RepeatedQualifier);
             }
-            return self.reference(Some(text));
+            return self.reference(Some(text.to_owned()));
         }
         if self.peek() == Some('[') && sheet.is_none() && !text.contains('$') {
-            return self.table_reference(Some(text));
+            return self.table_reference(Some(text.to_owned()));
         }
         let saved = self.pos;
         self.space();
@@ -474,8 +496,8 @@ impl Parser<'_> {
         // use '(' lookahead to override that priority. Retain whitespace for
         // the outer intersection grammar, e.g. A1 (A2).
         if self.peek() == Some('(')
-            && let Ok(Some(cell)) = cell_reference(&text, sheet.clone())
-            && crate::formula::reference_classes::return_class_insensitive(&text).is_none()
+            && let Ok(Some(cell)) = cell_reference(text, sheet.clone())
+            && crate::formula::reference_classes::return_class_insensitive(text).is_none()
         {
             self.pos = saved;
             return Ok(Expr::Cell(cell));
@@ -502,16 +524,17 @@ impl Parser<'_> {
                     self.expect(',')?;
                 }
             }
-            // No successful function branch rolls back its position. Failed outer
-            // expressions discard these entries at their metadata checkpoint.
-            self.function_invocations.push(FunctionInvocation {
-                name_span: FormulaSpan { start, end: saved },
-                expression_span: FormulaSpan {
-                    start,
-                    end: self.pos,
-                },
-                argument_count: args.len(),
-            });
+            if METADATA {
+                // Failed outer expressions discard these entries at their checkpoint.
+                self.function_invocations.push(FunctionInvocation {
+                    name_span: FormulaSpan { start, end: saved },
+                    expression_span: FormulaSpan {
+                        start,
+                        end: self.pos,
+                    },
+                    argument_count: args.len(),
+                });
+            }
             return Ok(Expr::Function {
                 // ATP lookup strips only the exact lowercase `_xlfn.` prefix.
                 // Keep that source spelling available to the namespace adapter.
@@ -519,7 +542,7 @@ impl Parser<'_> {
                     .get(..6)
                     .is_some_and(|prefix| prefix.eq_ignore_ascii_case("_xlfn."))
                 {
-                    text
+                    text.to_owned()
                 } else {
                     text.to_uppercase()
                 }
@@ -528,14 +551,14 @@ impl Parser<'_> {
             });
         }
         self.pos = saved;
-        if let Some(cell) = cell_reference(&text, sheet.clone()).map_err(|mut error| {
+        if let Some(cell) = cell_reference(text, sheet.clone()).map_err(|mut error| {
             error.position = start;
             error
         })? {
             return Ok(Expr::Cell(cell));
         }
         if text.contains('$') {
-            return partial_reference(&text, sheet).ok_or(ParseError {
+            return partial_reference(text, sheet).ok_or(ParseError {
                 position: start,
                 reason: ParseReasonError::InvalidAbsoluteReference,
             });
@@ -544,18 +567,23 @@ impl Parser<'_> {
             // A bare column-shaped identifier can also be a defined name.
             // Only range grammar turns it into a whole-column endpoint.
             if text.bytes().all(|c| c.is_ascii_digit()) {
-                return partial_reference(&text, Some(sheet)).ok_or(ParseError {
+                return partial_reference(text, Some(sheet)).ok_or(ParseError {
                     position: start,
                     reason: ParseReasonError::InvalidSheetReference,
                 });
             }
-            return Ok(Expr::QualifiedName { sheet, name: text });
+            return Ok(Expr::QualifiedName {
+                sheet,
+                name: text.to_owned(),
+            });
         }
-        match text.to_ascii_uppercase().as_str() {
-            "TRUE" => Ok(Expr::Bool(true)),
-            "FALSE" => Ok(Expr::Bool(false)),
-            _ => Ok(Expr::Name(text)),
+        if text.eq_ignore_ascii_case("TRUE") {
+            return Ok(Expr::Bool(true));
         }
+        if text.eq_ignore_ascii_case("FALSE") {
+            return Ok(Expr::Bool(false));
+        }
+        Ok(Expr::Name(text.to_owned()))
     }
     fn span_endpoint(&mut self) -> Result<Expr, ParseError> {
         let start = self.pos;

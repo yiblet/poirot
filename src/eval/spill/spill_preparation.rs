@@ -5,6 +5,7 @@ use super::producer_candidate::ProducerCandidate;
 use super::producer_read_evidence::ProducerReadEvidence;
 use super::publication::Publication;
 use super::settled_area::SettledArea;
+use super::settled_candidate_prefix::SettledCandidatePrefix;
 use super::settlement_slot::SettlementSlot;
 use crate::eval::coordinates::{CellMap, CellSet, EvaluationTarget};
 use crate::eval::limits::{BudgetMeter, CapabilityId, EvalResult, EvaluationError, WorkKind};
@@ -21,6 +22,7 @@ pub(in crate::eval) struct SpillPreparation {
     pub(super) failure: Option<EvaluationError>,
     pub(super) candidates: CandidateIndex,
     pub(super) settled: CellSet,
+    pub(super) settled_prefix: Option<SettledCandidatePrefix>,
     pub(super) settlement: SettlementSlot,
     /// One fully settled range in this unchanged evaluation cohort.
     pub(super) ready: Option<SettledArea>,

@@ -132,8 +132,8 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
                         continue;
                     };
                     let members = SparseReader::new(self.session).sparse_members(physical)?;
-                    length = reserve!(members.len());
-                    for member in members {
+                    length = reserve!(members.members().len());
+                    for member in members.members().iter().copied() {
                         let value = self.sparse_member_value(area.sheet, member)?;
                         consume(
                             &mut state,
@@ -144,13 +144,14 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
                             },
                         )?;
                     }
+                    SparseReader::new(self.session).recycle_sparse_members(members);
                 }
             }
-            Value::Refs(areas) => {
+            Value::Refs(areas) | Value::SheetSpan(areas) => {
                 for area in areas {
                     let members = SparseReader::new(self.session).sparse_members(area)?;
-                    length = reserve!(members.len());
-                    for member in members {
+                    length = reserve!(members.members().len());
+                    for member in members.members().iter().copied() {
                         let value = self.sparse_member_value(area.sheet, member)?;
                         consume(
                             &mut state,
@@ -161,25 +162,7 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
                             },
                         )?;
                     }
-                }
-            }
-            Value::SheetSpan(areas) => {
-                // Sheet spans retain source-sheet order. Their function-specific
-                // semantic error precedence is handled by the ordered consumer.
-                for area in areas {
-                    let members = SparseReader::new(self.session).sparse_members(area)?;
-                    length = reserve!(members.len());
-                    for member in members {
-                        let value = self.sparse_member_value(area.sheet, member)?;
-                        consume(
-                            &mut state,
-                            ScalarOperand {
-                                value,
-                                origin: OperandOrigin::ReferencedCell,
-                                missing: false,
-                            },
-                        )?;
-                    }
+                    SparseReader::new(self.session).recycle_sparse_members(members);
                 }
             }
         }
@@ -199,7 +182,7 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
         let mut length = 0usize;
         for area in areas {
             let members = SparseReader::new(self.session).sparse_members(area)?;
-            length = length.checked_add(members.len()).ok_or_else(|| {
+            length = length.checked_add(members.members().len()).ok_or_else(|| {
                 EvaluationError::Resource {
                     kind: crate::eval::limits::ResourceFailureKind::SizeOverflow,
                     capability: CapabilityId::FunctionAdapter,
@@ -213,8 +196,8 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
                 .state
                 .runtime
                 .budget
-                .charge(WorkKind::Materialization, members.len() as u64)?;
-            for member in members {
+                .charge(WorkKind::Materialization, members.members().len() as u64)?;
+            for member in members.members().iter().copied() {
                 let value = self.sparse_member_value(area.sheet, member)?;
                 let decision = consume(
                     &mut state,
@@ -228,6 +211,7 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
                     return Ok(state);
                 }
             }
+            SparseReader::new(self.session).recycle_sparse_members(members);
         }
         Ok(state)
     }
@@ -259,7 +243,7 @@ impl<'s, 'a> ItemFolder<'s, 'a> {
     }
 
     /// Read captured authored content while generated-only members resolve their current source.
-    fn sparse_member_value(
+    pub(in crate::eval) fn sparse_member_value(
         &mut self,
         sheet: usize,
         member: session::SparseMember<'a>,
