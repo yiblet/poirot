@@ -1,6 +1,8 @@
 use super::read_recorder::ReadRecorder;
 use crate::eval::coordinates::EvaluationTarget;
-use crate::eval::limits::{EvalResult, EvaluationError, WorkKind};
+use crate::eval::limits::{
+    CapabilityId, EvalResult, EvaluationError, EvaluationReasonError, WorkKind, reserve_exact,
+};
 use crate::eval::ports::DependencyRead;
 use crate::eval::session::composition::Session;
 use crate::eval::values::{Area, AreaKind, ReferenceAreas, Value, err, identifier_failure};
@@ -58,15 +60,40 @@ impl<'s, 'a> TableResolver<'s, 'a> {
                 (first, last)
             }
         };
-        self.session.state.runtime.budget.allocation(1)?;
-        Ok(Some(Value::Refs(ReferenceAreas::One(Area {
+        let area = Area {
             kind: AreaKind::Area,
             sheet,
             r0,
             r1,
             c0,
             c1,
-        }))))
+        };
+        let areas = if reference.section == TableSection::DataAndTotals && table.insert_row {
+            // The insert placeholder separates data from totals.
+            let totals = table.last.row;
+            self.session.state.runtime.budget.allocation(2)?;
+            let mut areas = Vec::new();
+            reserve_exact(
+                &mut areas,
+                2,
+                Some(target),
+                CapabilityId::FunctionAdapter,
+                EvaluationReasonError::AllocatingAFunctionResultOrScratchBuffer,
+            )?;
+            // SAFETY: The successful reservation admits both areas.
+            areas.push(area);
+            // SAFETY: The same reservation admits the remaining area.
+            areas.push(Area {
+                r0: totals,
+                r1: totals,
+                ..area
+            });
+            ReferenceAreas::Many(areas)
+        } else {
+            self.session.state.runtime.budget.allocation(1)?;
+            ReferenceAreas::One(area)
+        };
+        Ok(Some(Value::Refs(areas)))
     }
 
     /// Select a workbook-wide table by display name using the checked identifier policy.
@@ -176,7 +203,16 @@ fn table_rows(
             .map(|(_, last)| (table.first.row, last))
             .ok_or(CellError::Ref),
         TableSection::DataAndTotals if table.totals_row => data_rows(table)
-            .map(|(first, _)| (first, table.last.row))
+            .map(|(first, last)| {
+                (
+                    first,
+                    if table.insert_row {
+                        last
+                    } else {
+                        table.last.row
+                    },
+                )
+            })
             .ok_or(CellError::Ref),
         TableSection::HeadersAndData | TableSection::DataAndTotals => Err(CellError::Ref),
         TableSection::CurrentRow => data_rows(table)

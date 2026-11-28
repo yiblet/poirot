@@ -5,7 +5,7 @@ use crate::eval::functions::registry::{FunctionId, MatrixFunction};
 use crate::eval::host::{CallHost, OperandDescription, OperandReader};
 use crate::eval::limits::EvalResult;
 use crate::eval::session::Session;
-use crate::eval::values::{FunctionError, FunctionResult, Value, err};
+use crate::eval::values::{AreaKind, FunctionError, FunctionResult, Value, err};
 use crate::eval::vm::{ArgumentsRef, Shape};
 use crate::model::{CellAddress, CellError, CellValue, MAX_COLUMNS, MAX_ROWS};
 use poirot_functions::matrix::Axis;
@@ -76,9 +76,9 @@ impl<'call, 'workbook> ArrayCallbacks<'call, 'workbook> {
             .map_err(|source| host.small_vector_reservation_failure(source))?;
         let mut produce = |host: &mut CallHost<'_, '_>, row, column| {
             for index in 0..inputs {
-                let operand = OperandReader::new(host).read_cell(index, row, column)?;
+                let operand = Self::callback_member(host, index, row, column)?;
                 // SAFETY: The reservation admits inputs entries and the prior position drained the buffer.
-                values.push(operand.value.into());
+                values.push(operand);
             }
             Self::callback_scalar(host, &callback, values.drain(..))
         };
@@ -94,7 +94,7 @@ impl<'call, 'workbook> ArrayCallbacks<'call, 'workbook> {
         })
     }
 
-    /// Invoke the callback once per row or column, supplying the full slice as an array.
+    /// Invoke the callback once per row or column, preserving worksheet reference slices.
     fn by_axis(&mut self, axis: Axis) -> FunctionResult<Value> {
         let host = &mut self.host;
         let at = self.address;
@@ -105,6 +105,18 @@ impl<'call, 'workbook> ArrayCallbacks<'call, 'workbook> {
             Axis::Columns => (1, input.columns, input.rows, 1),
         };
         matrices::generate(host, rows, columns, at, |host, row, column| {
+            let (source_rows, source_columns) = match axis {
+                Axis::Rows => (row..=row, 0..=slice_columns.saturating_sub(1)),
+                Axis::Columns => (0..=slice_rows.saturating_sub(1), column..=column),
+            };
+            if let Some(slice) = OperandReader::new(host).reference_slice(
+                0,
+                source_rows,
+                source_columns,
+                AreaKind::Area,
+            )? {
+                return Self::callback_scalar(host, &callback, std::iter::once(slice));
+            }
             let slice = matrices::generate(host, slice_rows, slice_columns, at, |host, r, c| {
                 let (source_row, source_column) = match axis {
                     Axis::Rows => (row, c),
@@ -182,16 +194,32 @@ impl<'call, 'workbook> ArrayCallbacks<'call, 'workbook> {
         row: usize,
         column: usize,
     ) -> FunctionResult<Value> {
-        let value = OperandReader::new(host)
-            .read_cell(1, row, column)?
-            .value
-            .into();
         if let Some(state) = state {
+            let value = Self::callback_member(host, 1, row, column)?;
             return host
                 .invoke_callback(callback, [state, value].into_iter())
                 .map_err(Into::into);
         }
-        Ok(value)
+        Ok(OperandReader::new(host)
+            .read_cell(1, row, column)?
+            .value
+            .into())
+    }
+
+    /// Pass a worksheet reference to the callback, or read a computed member.
+    fn callback_member(
+        host: &mut CallHost<'_, '_>,
+        index: usize,
+        row: usize,
+        column: usize,
+    ) -> FunctionResult<Value> {
+        let mut reader = OperandReader::new(host);
+        if let Some(reference) =
+            reader.reference_slice(index, row..=row, column..=column, AreaKind::Cell)?
+        {
+            return Ok(reference);
+        }
+        Ok(reader.read_cell(index, row, column)?.value.into())
     }
 
     /// Inspect a single bounded input rectangle without reading its members.
