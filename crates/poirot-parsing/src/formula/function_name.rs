@@ -535,6 +535,7 @@ common_functions! {
     Bycol = 499 => "BYCOL";
     Makearray = 500 => "MAKEARRAY";
     Scan = 501 => "SCAN";
+    Reduce = 502 => "REDUCE";
 
 
 

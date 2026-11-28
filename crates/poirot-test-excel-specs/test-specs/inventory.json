@@ -14356,6 +14356,24 @@
       ]
     },
     {
+      "id": "function.REDUCE",
+      "kind": "function",
+      "name": "REDUCE",
+      "family": "Matrix",
+      "scope_status": "in_scope",
+      "implementation_status": "registered",
+      "source_urls": [
+        "https://support.microsoft.com/en-us/excel/functions/reduce-function"
+      ],
+      "obligations": [
+        {
+          "id": "function.REDUCE.valid",
+          "behavior": "Return the final accumulator after visiting input values in row order.",
+          "applicability": "applicable"
+        }
+      ]
+    },
+    {
       "id": "function.SCAN",
       "kind": "function",
       "name": "SCAN",
@@ -14767,6 +14785,7 @@
     "RANK.EQ",
     "RATE",
     "RECEIVED",
+    "REDUCE",
     "REGEXEXTRACT",
     "REGEXREPLACE",
     "REGEXTEST",

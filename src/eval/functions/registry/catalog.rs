@@ -523,6 +523,7 @@ registry! {
 "BYROW" => Matrix(MatrixFunction::Byrow), 2, 2, FamilyControlled, CALLABLE_READS, Array;
 "BYCOL" => Matrix(MatrixFunction::Bycol), 2, 2, FamilyControlled, CALLABLE_READS, Array;
 "MAKEARRAY" => Matrix(MatrixFunction::Makearray), 3, 3, FamilyControlled, CALLABLE_READS, Array;
+"REDUCE" => Matrix(MatrixFunction::Reduce), 3, 3, FamilyControlled, CALLABLE_READS, Any;
 "SCAN" => Matrix(MatrixFunction::Scan), 3, 3, FamilyControlled, CALLABLE_READS, Array;
 "SEQUENCE" => Matrix(MatrixFunction::Sequence), 1, 4, FamilyControlled, NUMERIC_COERCION, Sequence;
 "ANCHORARRAY" => Reference(ReferenceFunction::AnchorArray), 1, 1, FamilyControlled, REFERENCE_READS, SpillRange;

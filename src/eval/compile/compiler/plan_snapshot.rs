@@ -25,7 +25,7 @@ use std::sync::Arc;
 type Result<T> = std::result::Result<T, PlanSnapshotError>;
 
 /// Wire version of the plan snapshot layout.
-pub(super) const VERSION: u32 = 41;
+pub(super) const VERSION: u32 = 42;
 
 /// Serde view preserving source-to-program sharing for a trusted compiled workbook plan.
 #[derive(Clone, Serialize, Deserialize)]

@@ -25,7 +25,7 @@ check your model, then [validate it with representative inputs](#checking-your-w
 
 ## Supported functions
 
-Poirot implements **502 of 521 function names (96.4%)** in Microsoft's
+Poirot implements **503 of 521 function names (96.5%)** in Microsoft's
 [alphabetical function index](https://support.microsoft.com/en-us/excel/excel-functions-alphabetical),
 as counted on 2026-10-26. This counts names across Excel versions, including
 aliases; it does not measure workbook compatibility.
@@ -42,15 +42,15 @@ aliases; it does not measure workbook compatibility.
 | Lookup and reference | 37 / 40 | 92.5% |
 | Information | 20 / 22 | 90.9% |
 | Text | 47 / 50 | 94.0% |
-| Logical | 18 / 19 | 94.7% |
+| Logical | 19 / 19 | 100% |
 | Add-in and Automation | 1 / 3 | 33.3% |
 | Cube | 0 / 7 | 0% |
 | Web | 2 / 3 | 66.7% |
-| **Total** | **502 / 521** | **96.4%** |
+| **Total** | **503 / 521** | **96.5%** |
 
 ### Remaining function gaps
 
-`REDUCE` are pending. The other remaining functions require workbook data or application services such as
+The remaining functions require workbook data or application services such as
 stored phonetic annotations, PivotTable data and external services. They are
 `INFO`, `PHONETIC`, `GETPIVOTDATA`, `WEBSERVICE`, `STOCKHISTORY`,
 `TRANSLATE`, `DETECTLANGUAGE`, `IMAGE`, `CALL`, `REGISTER.ID`, `RTD`,
@@ -98,7 +98,7 @@ authored source remains portable.
 | Local bindings | `LET` evaluates up to 126 bindings once in source order and retains reference and array values for the final expression. An unused binding's worksheet error stays local to that binding, as observed in Excel 2024. | [Local binding tests](../tests/eval_let.rs), [Excel 2024 observations](https://www.helpaso.net/course/e_function/logical/let/) |
 | Formula-defined functions | `LAMBDA` creates a callable with lexical captures. Append an argument list to invoke it, or call it through a LET binding or a sheet-scoped or workbook defined name. Registered functions take precedence. Wrap a parameter name in brackets to declare it optional. The caller can leave trailing optional parameters out or leave individual argument slots empty. Poirot reads stored XLSX declarations prefixed with `_xlop.`. Excel import of formulas authored with bracketed parameters and then exported by Poirot is unverified. An uninvoked callable produces `#CALC!` at cell output. A call that would exceed 16 active LAMBDA bodies returns `#NUM!`. Deeply nested deferred arguments can reach an evaluator resource limit earlier. | [Inline function tests](../tests/eval_lambda.rs) |
 | Higher-order arrays | `MAP` spans the tallest and widest input rectangles. It runs the callback at positions shared by every input and fills unmatched positions with `#N/A`. A reported Excel run confirms the spill and errors for perpendicular ranges. Callback execution at unmatched positions still needs Excel verification. `BYROW` and `BYCOL` require one result per row or column. `MAKEARRAY` uses one-based row and column indices. Multi-cell callback results produce `#CALC!`. | [Array helper tests](../tests/eval_lambda.rs), [Excel report](https://techcommunity.microsoft.com/discussions/excelgeneral/use-map-function-on-perpendicular-ranges/3886074) |
-| Intermediate accumulation | `SCAN` returns one intermediate per input position in row order. When the initial slot is omitted, it uses the first input as the seed and first result. | [Accumulator tests](../tests/eval_lambda.rs) |
+| Accumulation and omission | `REDUCE` returns the final accumulator. `SCAN` returns one intermediate per input position in row order. Both use the first member when the initial slot is omitted. A published Excel example shows `SCAN` returning that member before invoking the callback on subsequent members. `ISOMITTED` distinguishes an omitted LAMBDA argument from a passed blank. | [Accumulator tests](../tests/eval_lambda.rs), [Worked Excel example](https://stackoverflow.com/questions/79857888/excel-nested-scan-formula-by-columns) |
 | Structured table references | Supports table data by name, qualified columns and adjacent column ranges, and one section selector such as `#Headers`, `#Data`, `#Totals` or `#All`. `Table[]` selects the same rows as `Table[#Data]`. Insert placeholders are excluded from data. Supports `@` and `#This Row` for the formula’s row, and unqualified selectors inside the enclosing table. Structured references built with `INDIRECT` are unsupported. | [Table integration tests](../tests/io_worksheet_tables.rs) |
 | Three-dimensional references | Supports aggregates such as `SUM(Sheet1:Sheet3!A1)`, `AVERAGE` and `COUNT`. Reversed sheet endpoints stop evaluation. If only the first endpoint is missing, the reference selects the first worksheet; a missing last endpoint stops evaluation. | [Sheet-span tests](https://github.com/yiblet/poirot/blob/master/tests/eval_sheet_spans.rs) |
 | Dynamic arrays | Implements `FILTER`, `SORT`, `SORTBY`, `UNIQUE`, `SEQUENCE`, `RANDARRAY`, `HSTACK`, `VSTACK`, `TAKE`, `DROP`, `CHOOSECOLS`, `CHOOSEROWS`, `EXPAND`, `TOCOL`, `TOROW`, `WRAPCOLS`, `WRAPROWS` and `TEXTSPLIT`. | [Array tests](https://github.com/yiblet/poirot/blob/master/tests/eval_internal_array_context.rs) |
